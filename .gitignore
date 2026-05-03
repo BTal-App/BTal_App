@@ -1,0 +1,42 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Local env (Firebase keys, etc.)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Capacitor build artifacts (the android/ and ios/ folders themselves stay tracked)
+.gradle
+local.properties
+*.keystore
+GoogleService-Info.plist
+google-services.json
+
+# Firebase emulator artifacts
+.firebase/
+firebase-debug.log
+firestore-debug.log

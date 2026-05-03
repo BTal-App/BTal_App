@@ -1,0 +1,97 @@
+/* ──────────────────────────────────────────────────────────
+   Ancen · Tema Ionic (basado en el diseño v2)
+   Dark mode forzado · Lima como accent · Cyan/Oro/Coral 2ºs
+   ────────────────────────────────────────────────────────── */
+
+:root {
+  /* Paleta base */
+  --ancen-bg:        #0a0e0c;
+  --ancen-bg-2:      #0d1311;
+  --ancen-surface:   #131816;
+  --ancen-surface-2: #1a201d;
+  --ancen-surface-3: #232a26;
+  --ancen-border:    #252b27;
+  --ancen-border-2:  #2e3530;
+
+  --ancen-lime:    #b5f037;
+  --ancen-lime-d:  #98cc28;
+  --ancen-cyan:    #37e0a8;
+  --ancen-gold:    #f0a838;
+  --ancen-coral:   #ff6b6b;
+  --ancen-violet:  #b07af0;
+  --ancen-blue:    #5aa8ff;
+
+  --ancen-t-1: #f0f4f0;
+  --ancen-t-2: #aab3a8;
+  --ancen-t-3: #6a756a;
+
+  /* ───── Ionic theme overrides ───── */
+  --ion-color-primary: var(--ancen-lime);
+  --ion-color-primary-rgb: 181,240,55;
+  --ion-color-primary-contrast: #0a0e0c;
+  --ion-color-primary-contrast-rgb: 10,14,12;
+  --ion-color-primary-shade: var(--ancen-lime-d);
+  --ion-color-primary-tint: #c4f562;
+
+  --ion-color-secondary: var(--ancen-cyan);
+  --ion-color-secondary-rgb: 55,224,168;
+  --ion-color-secondary-contrast: #0a0e0c;
+  --ion-color-secondary-contrast-rgb: 10,14,12;
+
+  --ion-color-warning: var(--ancen-gold);
+  --ion-color-danger: var(--ancen-coral);
+
+  --ion-background-color: var(--ancen-bg);
+  --ion-background-color-rgb: 10,14,12;
+  --ion-text-color: var(--ancen-t-1);
+  --ion-text-color-rgb: 240,244,240;
+
+  --ion-tab-bar-background: rgba(15,20,18,.85);
+  --ion-tab-bar-border-color: var(--ancen-border);
+  --ion-toolbar-background: transparent;
+  --ion-item-background: transparent;
+
+  --ion-color-step-50:   #11161300;
+  --ion-color-step-100:  #1a1f1c;
+  --ion-color-step-150:  #232a26;
+  --ion-color-step-200:  #2a3128;
+  --ion-color-step-250:  #353c34;
+  --ion-color-step-300:  #404640;
+  --ion-color-step-400:  #5a605a;
+  --ion-color-step-500:  #6a756a;
+  --ion-color-step-600:  #8a958a;
+  --ion-color-step-700:  #aab3a8;
+  --ion-color-step-800:  #c8d0c6;
+  --ion-color-step-900:  #f0f4f0;
+}
+
+html {
+  background: var(--ancen-bg);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bottom tab bar con glassmorphism (look v2) */
+ion-tab-bar {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--ancen-border);
+  padding-top: 4px;
+  height: calc(58px + env(safe-area-inset-bottom));
+}
+
+ion-tab-button {
+  --color: var(--ancen-t-3);
+  --color-selected: var(--ancen-lime);
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+ion-tab-button ion-icon {
+  font-size: 1.4rem;
+}
