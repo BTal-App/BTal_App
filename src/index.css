@@ -11,8 +11,8 @@ html, body, #root {
 }
 
 body {
-  background: var(--ancen-bg, #0a0e0c);
-  color: var(--ancen-t-1, #f0f4f0);
+  background: var(--btal-bg, #0a0e0c);
+  color: var(--btal-t-1, #f0f4f0);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

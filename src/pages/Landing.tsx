@@ -115,7 +115,8 @@ const Landing: React.FC = () => {
       <IonContent fullscreen>
         <div className="landing-bg">
           <div className="landing-hero">
-            <h1 className="landing-title">Ancen</h1>
+            <img src="/logo.png" alt="BTal" className="landing-logo" />
+            <h1 className="landing-title">BTal</h1>
             <p className="landing-tagline">
               Tu plan de nutrición y entreno, en un solo sitio.
             </p>

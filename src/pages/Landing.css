@@ -5,7 +5,7 @@
   background:
     radial-gradient(ellipse 80% 50% at 50% 0%, rgba(181, 240, 55, 0.08), transparent 60%),
     radial-gradient(ellipse 60% 40% at 80% 90%, rgba(55, 224, 168, 0.05), transparent 60%),
-    var(--ancen-bg);
+    var(--btal-bg);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -16,22 +16,36 @@
 .landing-hero {
   text-align: center;
   margin-bottom: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.landing-logo {
+  width: clamp(140px, 36vw, 180px);
+  height: auto;
+  margin-bottom: 8px;
+  /* Glow lima alrededor del círculo negro para integrarlo con la marca */
+  filter: drop-shadow(0 6px 22px rgba(181, 240, 55, 0.22));
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .landing-title {
-  font-size: clamp(3.5rem, 14vw, 5.5rem);
+  font-size: clamp(2.4rem, 9vw, 3.4rem);
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 0.95;
   margin: 0 0 8px;
-  background: linear-gradient(135deg, var(--ancen-lime), var(--ancen-cyan));
+  background: linear-gradient(135deg, var(--btal-lime), var(--btal-cyan));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .landing-tagline {
-  color: var(--ancen-t-2);
+  color: var(--btal-t-2);
   font-size: 0.95rem;
   margin: 0;
   max-width: 320px;
@@ -41,8 +55,8 @@
 .landing-card {
   width: 100%;
   max-width: 380px;
-  background: var(--ancen-surface);
-  border: 1px solid var(--ancen-border);
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
   border-radius: 20px;
   padding: 24px 22px;
   display: flex;
@@ -57,10 +71,10 @@
 
 .landing-input {
   width: 100%;
-  background: var(--ancen-bg-2);
-  border: 1px solid var(--ancen-border);
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
   border-radius: 12px;
-  color: var(--ancen-t-1);
+  color: var(--btal-t-1);
   font-family: inherit;
   font-size: 0.92rem;
   padding: 14px 16px 14px 44px;
@@ -69,12 +83,12 @@
 }
 
 .landing-input:focus {
-  border-color: var(--ancen-lime);
-  background: var(--ancen-surface-2);
+  border-color: var(--btal-lime);
+  background: var(--btal-surface-2);
 }
 
 .landing-input::placeholder {
-  color: var(--ancen-t-3);
+  color: var(--btal-t-3);
 }
 
 .landing-input-icon {
@@ -82,7 +96,7 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--ancen-t-3);
+  color: var(--btal-t-3);
   font-size: 1.1rem;
   pointer-events: none;
 }
@@ -94,7 +108,7 @@
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  color: var(--ancen-t-3);
+  color: var(--btal-t-3);
   cursor: pointer;
   padding: 8px;
   display: flex;
@@ -104,7 +118,7 @@
 }
 
 .landing-input-toggle:hover {
-  color: var(--ancen-t-1);
+  color: var(--btal-t-1);
   background: rgba(255, 255, 255, 0.04);
 }
 
@@ -118,19 +132,19 @@
 .landing-msg.error {
   background: rgba(255, 107, 107, 0.1);
   border: 1px solid rgba(255, 107, 107, 0.25);
-  color: var(--ancen-coral);
+  color: var(--btal-coral);
 }
 
 .landing-msg.info {
   background: rgba(55, 224, 168, 0.1);
   border: 1px solid rgba(55, 224, 168, 0.25);
-  color: var(--ancen-cyan);
+  color: var(--btal-cyan);
 }
 
 .landing-primary {
-  --background: var(--ancen-lime);
-  --background-hover: var(--ancen-lime-d);
-  --background-activated: var(--ancen-lime-d);
+  --background: var(--btal-lime);
+  --background-hover: var(--btal-lime-d);
+  --background-activated: var(--btal-lime-d);
   --color: #0a0e0c;
   --border-radius: 12px;
   --padding-top: 14px;
@@ -145,8 +159,8 @@
 .landing-google {
   --background: transparent;
   --background-hover: rgba(255, 255, 255, 0.04);
-  --color: var(--ancen-t-1);
-  --border-color: var(--ancen-border-2);
+  --color: var(--btal-t-1);
+  --border-color: var(--btal-border-2);
   --border-style: solid;
   --border-width: 1px;
   --border-radius: 12px;
@@ -164,7 +178,7 @@
   gap: 12px;
   margin: 4px 0;
   font-size: 0.72rem;
-  color: var(--ancen-t-3);
+  color: var(--btal-t-3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -174,13 +188,13 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--ancen-border);
+  background: var(--btal-border);
 }
 
 .landing-link {
   background: transparent;
   border: none;
-  color: var(--ancen-cyan);
+  color: var(--btal-cyan);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -190,20 +204,20 @@
 }
 
 .landing-link:hover {
-  color: var(--ancen-lime);
+  color: var(--btal-lime);
 }
 
 .landing-toggle {
   text-align: center;
   font-size: 0.85rem;
-  color: var(--ancen-t-2);
+  color: var(--btal-t-2);
   margin-top: 8px;
 }
 
 .landing-toggle button {
   background: transparent;
   border: none;
-  color: var(--ancen-lime);
+  color: var(--btal-lime);
   font-weight: 700;
   cursor: pointer;
   padding: 0 4px;
@@ -218,7 +232,7 @@
 .landing-version {
   margin-top: 24px;
   font-size: 0.7rem;
-  color: var(--ancen-t-3);
+  color: var(--btal-t-3);
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.05em;
 }

@@ -19,7 +19,7 @@ import '@ionic/react/css/text-transformation.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
 
-/* Tema Ancen */
+/* Tema BTal */
 import './theme/variables.css';
 
 setupIonicReact();
@@ -28,9 +28,15 @@ const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
       <IonRouterOutlet>
-        <Route exact path="/" component={Landing} />
-        <Route exact path="/app" component={Dashboard} />
-        <Redirect from="*" to="/" />
+        <Route exact path="/">
+          <Landing />
+        </Route>
+        <Route exact path="/app">
+          <Dashboard />
+        </Route>
+        <Route>
+          <Redirect to="/" />
+        </Route>
       </IonRouterOutlet>
     </IonReactRouter>
   </IonApp>

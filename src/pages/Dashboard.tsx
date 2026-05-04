@@ -70,7 +70,7 @@ const Dashboard: React.FC = () => {
               </h1>
               <p
                 style={{
-                  color: 'var(--ancen-t-2)',
+                  color: 'var(--btal-t-2)',
                   fontSize: '0.88rem',
                   margin: '4px 0 0',
                   fontFamily: 'JetBrains Mono, monospace',
@@ -83,7 +83,7 @@ const Dashboard: React.FC = () => {
               fill="clear"
               size="small"
               onClick={handleLogout}
-              style={{ '--color': 'var(--ancen-t-2)' } as React.CSSProperties}
+              style={{ '--color': 'var(--btal-t-2)' } as React.CSSProperties}
             >
               <IonIcon icon={logOutOutline} slot="icon-only" />
             </IonButton>
@@ -91,8 +91,8 @@ const Dashboard: React.FC = () => {
 
           <div
             style={{
-              background: 'var(--ancen-surface)',
-              border: '1px solid var(--ancen-border)',
+              background: 'var(--btal-surface)',
+              border: '1px solid var(--btal-border)',
               borderRadius: 20,
               padding: 24,
             }}
@@ -102,20 +102,20 @@ const Dashboard: React.FC = () => {
                 fontSize: '0.72rem',
                 textTransform: 'uppercase',
                 letterSpacing: '0.12em',
-                color: 'var(--ancen-t-3)',
+                color: 'var(--btal-t-3)',
                 fontWeight: 700,
                 margin: '0 0 12px',
               }}
             >
               Próximamente
             </h2>
-            <p style={{ color: 'var(--ancen-t-1)', margin: 0, lineHeight: 1.6 }}>
+            <p style={{ color: 'var(--btal-t-1)', margin: 0, lineHeight: 1.6 }}>
               Aquí va el dashboard del diseño v2 (Hoy / Menú / Compra / Entreno /
               Registro).
               <br />
               <br />
-              <span style={{ color: 'var(--ancen-t-2)', fontSize: '0.88rem' }}>
-                UID: <code style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--ancen-cyan)' }}>{user.uid}</code>
+              <span style={{ color: 'var(--btal-t-2)', fontSize: '0.88rem' }}>
+                UID: <code style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--btal-cyan)' }}>{user.uid}</code>
               </span>
             </p>
           </div>

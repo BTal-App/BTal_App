@@ -1,4 +1,4 @@
-# Ancen
+# BTal
 
 > Fitness & nutrition tracker · multi-usuario · PWA + nativo (iOS/Android)
 
@@ -6,7 +6,7 @@
 
 - **Frontend**: Vite + React 18 + TypeScript
 - **UI**: Ionic 8 (web components nativos en móvil)
-- **Móvil**: Capacitor (Android + iOS · `com.ancen.app`)
+- **Móvil**: Capacitor (Android + iOS · `com.btal.app`)
 - **Backend**: Firebase (Auth + Firestore + Cloud Functions)
 - **IA**: Gemini Flash-Lite (en Cloud Functions)
 - **Pagos**: Stripe (pago único 5€ · suscripción Pro 9,99€/mes)
