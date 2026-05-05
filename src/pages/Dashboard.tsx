@@ -83,6 +83,7 @@ const Dashboard: React.FC = () => {
           {user.email && !user.emailVerified && !user.isAnonymous && (
             <VerifyEmailBanner
               user={user}
+              place="dashboard"
               onRefreshed={() => setRefreshTick((t) => t + 1)}
             />
           )}

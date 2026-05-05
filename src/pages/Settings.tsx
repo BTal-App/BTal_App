@@ -95,7 +95,7 @@ const Settings: React.FC = () => {
           )}
 
           {!isAnonymous && user.email && !user.emailVerified && (
-            <VerifyEmailBanner user={user} onRefreshed={refresh} />
+            <VerifyEmailBanner user={user} place="settings" onRefreshed={refresh} />
           )}
 
           <section className="settings-section">

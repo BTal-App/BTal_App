@@ -13,6 +13,10 @@ import './VerifyEmailBanner.css';
 
 interface Props {
   user: User;
+  // Identifica desde dónde se muestra el banner. El cierre (X) se persiste
+  // por separado para cada `place` — cerrar en "dashboard" no afecta a
+  // "settings" ni viceversa.
+  place: 'dashboard' | 'settings';
   // Llamado tras user.reload() — el padre debería forzar re-render para
   // que el banner desaparezca si la verificación se completó.
   onRefreshed?: () => void;
@@ -30,16 +34,39 @@ function translateError(code: string): string {
   return map[code] ?? 'No hemos podido enviar el email. Inténtalo de nuevo.';
 }
 
+const dismissKey = (uid: string, place: string) =>
+  `btal_verify_dismissed_${uid}_${place}`;
+
 type LocalStage = 'idle' | 'sending' | 'error';
 
-export function VerifyEmailBanner({ user, onRefreshed }: Props) {
-  const { dismissed, sent, dismiss, markSent } = useVerifyBanner();
+export function VerifyEmailBanner({ user, place, onRefreshed }: Props) {
+  const { sent, markSent } = useVerifyBanner();
+
+  // Cierre local — se persiste por usuario+place. Lazy init: leemos
+  // localStorage solo en el primer render.
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(dismissKey(user.uid, place)) === '1';
+    } catch {
+      return false;
+    }
+  });
+
   const [stage, setStage] = useState<LocalStage>('idle');
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   // Si ya está cerrado o el email ya está verificado, no renderizamos nada.
   if (dismissed || user.emailVerified) return null;
+
+  const handleDismiss = () => {
+    try {
+      localStorage.setItem(dismissKey(user.uid, place), '1');
+    } catch {
+      /* ignore */
+    }
+    setDismissed(true);
+  };
 
   const handleSend = async () => {
     setError('');
@@ -135,7 +162,7 @@ export function VerifyEmailBanner({ user, onRefreshed }: Props) {
         className="verify-banner-close"
         onClick={(e) => {
           e.currentTarget.blur();
-          dismiss();
+          handleDismiss();
         }}
         aria-label="Cerrar aviso de verificación"
       >
