@@ -19,6 +19,7 @@ import {
   resetPassword,
   signInEmail,
   signInGoogle,
+  signInGuest,
   signUpEmail,
 } from '../services/auth';
 import './Landing.css';
@@ -40,6 +41,9 @@ function translateAuthError(code: string): string {
   return map[code] ?? 'Algo ha salido mal. Inténtalo de nuevo.';
 }
 
+const errorCode = (err: unknown): string =>
+  (err as { code?: string })?.code ?? '';
+
 const Landing: React.FC = () => {
   const history = useHistory();
   const { isAuthed, loading: authLoading } = useAuth();
@@ -57,10 +61,14 @@ const Landing: React.FC = () => {
     if (!authLoading && isAuthed) history.replace('/app');
   }, [authLoading, isAuthed, history]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const clearMessages = () => {
     setError('');
     setInfo('');
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    clearMessages();
     setBusy(true);
     try {
       if (mode === 'signin') {
@@ -70,25 +78,37 @@ const Landing: React.FC = () => {
         setInfo('Cuenta creada. Te hemos enviado un email de verificación.');
       }
     } catch (err) {
-      const code = (err as { code?: string }).code ?? '';
-      setError(translateAuthError(code));
+      setError(translateAuthError(errorCode(err)));
     } finally {
       setBusy(false);
     }
   };
 
   const handleGoogle = async () => {
-    setError('');
-    setInfo('');
+    clearMessages();
     setBusy(true);
     try {
       await signInGoogle();
+      // En PWA standalone esto inicia un redirect y la página se descarga
+      // antes de llegar al finally. En navegador, el popup completa aquí.
     } catch (err) {
-      const code = (err as { code?: string }).code ?? '';
+      const code = errorCode(err);
       // El usuario cierra el popup → no es un error real
       if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
         setError(translateAuthError(code));
       }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleGuest = async () => {
+    clearMessages();
+    setBusy(true);
+    try {
+      await signInGuest();
+    } catch (err) {
+      setError(translateAuthError(errorCode(err)));
     } finally {
       setBusy(false);
     }
@@ -99,15 +119,18 @@ const Landing: React.FC = () => {
       setError('Escribe tu email primero y vuelve a pulsar.');
       return;
     }
-    setError('');
-    setInfo('');
+    clearMessages();
     try {
       await resetPassword(email.trim());
       setInfo('Te hemos enviado un email para restablecer la contraseña.');
     } catch (err) {
-      const code = (err as { code?: string }).code ?? '';
-      setError(translateAuthError(code));
+      setError(translateAuthError(errorCode(err)));
     }
+  };
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    clearMessages();
   };
 
   return (
@@ -115,11 +138,9 @@ const Landing: React.FC = () => {
       <IonContent fullscreen>
         <div className="landing-bg">
           <div className="landing-hero">
-            <img src="/logo.png" alt="BTal" className="landing-logo" />
-            <h1 className="landing-title">BTal</h1>
-            <p className="landing-tagline">
-              Tu plan de nutrición y entreno, en un solo sitio.
-            </p>
+            <div className="landing-logo-wrap">
+              <img src="/logo.png" alt="BTal" className="landing-logo" />
+            </div>
           </div>
 
           <form className="landing-card" onSubmit={handleSubmit}>
@@ -139,7 +160,7 @@ const Landing: React.FC = () => {
             <div className="landing-input-wrap">
               <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
               <input
-                className="landing-input"
+                className="landing-input landing-input--password"
                 type={showPwd ? 'text' : 'password'}
                 placeholder="Contraseña"
                 autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
@@ -147,7 +168,6 @@ const Landing: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                style={{ paddingRight: 44 }}
               />
               <button
                 type="button"
@@ -196,18 +216,27 @@ const Landing: React.FC = () => {
               Continuar con Google
             </IonButton>
 
+            <button
+              type="button"
+              className="landing-guest"
+              onClick={handleGuest}
+              disabled={busy}
+            >
+              Probar como invitado →
+            </button>
+
             <div className="landing-toggle">
               {mode === 'signin' ? (
                 <>
                   ¿No tienes cuenta?{' '}
-                  <button type="button" onClick={() => { setMode('signup'); setError(''); setInfo(''); }}>
+                  <button type="button" onClick={() => switchMode('signup')}>
                     Crear cuenta
                   </button>
                 </>
               ) : (
                 <>
                   ¿Ya tienes cuenta?{' '}
-                  <button type="button" onClick={() => { setMode('signin'); setError(''); setInfo(''); }}>
+                  <button type="button" onClick={() => switchMode('signin')}>
                     Iniciar sesión
                   </button>
                 </>

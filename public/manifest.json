@@ -1,0 +1,26 @@
+{
+  "name": "BTal",
+  "short_name": "BTal",
+  "description": "Tu plan de nutrición y entreno, en un solo sitio.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0a0e0c",
+  "background_color": "#0a0e0c",
+  "lang": "es",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

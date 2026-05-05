@@ -10,6 +10,7 @@ import {
 import { logOutOutline } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
 import { signOut } from '../services/auth';
+import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const history = useHistory();
@@ -29,14 +30,7 @@ const Dashboard: React.FC = () => {
     return (
       <IonPage>
         <IonContent fullscreen>
-          <div
-            style={{
-              minHeight: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
+          <div className="dashboard-loading">
             <IonSpinner name="dots" />
           </div>
         </IonContent>
@@ -47,75 +41,36 @@ const Dashboard: React.FC = () => {
   return (
     <IonPage>
       <IonContent fullscreen>
-        <div style={{ padding: '32px 24px', maxWidth: 720, margin: '0 auto' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 32,
-              gap: 12,
-            }}
-          >
+        <div className="dashboard-wrap">
+          <div className="dashboard-header">
             <div>
-              <h1
-                style={{
-                  fontSize: '2rem',
-                  fontWeight: 800,
-                  letterSpacing: '-0.02em',
-                  margin: 0,
-                }}
-              >
+              <h1 className="dashboard-greeting">
                 ¡Hola!
+                {user.isAnonymous && <span className="dashboard-badge">Invitado</span>}
               </h1>
-              <p
-                style={{
-                  color: 'var(--btal-t-2)',
-                  fontSize: '0.88rem',
-                  margin: '4px 0 0',
-                  fontFamily: 'JetBrains Mono, monospace',
-                }}
-              >
-                {user.email ?? 'usuario anónimo'}
+              <p className="dashboard-email">
+                {user.isAnonymous ? 'Sesión temporal · sin cuenta' : user.email}
               </p>
             </div>
             <IonButton
               fill="clear"
               size="small"
               onClick={handleLogout}
-              style={{ '--color': 'var(--btal-t-2)' } as React.CSSProperties}
+              className="dashboard-logout"
             >
               <IonIcon icon={logOutOutline} slot="icon-only" />
             </IonButton>
           </div>
 
-          <div
-            style={{
-              background: 'var(--btal-surface)',
-              border: '1px solid var(--btal-border)',
-              borderRadius: 20,
-              padding: 24,
-            }}
-          >
-            <h2
-              style={{
-                fontSize: '0.72rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.12em',
-                color: 'var(--btal-t-3)',
-                fontWeight: 700,
-                margin: '0 0 12px',
-              }}
-            >
-              Próximamente
-            </h2>
-            <p style={{ color: 'var(--btal-t-1)', margin: 0, lineHeight: 1.6 }}>
+          <div className="dashboard-card">
+            <h2>Próximamente</h2>
+            <p>
               Aquí va el dashboard del diseño v2 (Hoy / Menú / Compra / Entreno /
               Registro).
               <br />
               <br />
-              <span style={{ color: 'var(--btal-t-2)', fontSize: '0.88rem' }}>
-                UID: <code style={{ fontFamily: 'JetBrains Mono, monospace', color: 'var(--btal-cyan)' }}>{user.uid}</code>
+              <span className="dashboard-uid">
+                UID: <code>{user.uid}</code>
               </span>
             </p>
           </div>

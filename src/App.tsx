@@ -4,6 +4,8 @@ import { IonReactRouter } from '@ionic/react-router';
 
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
+import { AuthProvider } from './hooks/AuthContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 /* Ionic core CSS — obligatorio */
 import '@ionic/react/css/core.css';
@@ -25,21 +27,25 @@ import './theme/variables.css';
 setupIonicReact();
 
 const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/">
-          <Landing />
-        </Route>
-        <Route exact path="/app">
-          <Dashboard />
-        </Route>
-        <Route>
-          <Redirect to="/" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
+  <ErrorBoundary>
+    <AuthProvider>
+      <IonApp>
+        <IonReactRouter>
+          <IonRouterOutlet>
+            <Route exact path="/">
+              <Landing />
+            </Route>
+            <Route exact path="/app">
+              <Dashboard />
+            </Route>
+            <Route>
+              <Redirect to="/" />
+            </Route>
+          </IonRouterOutlet>
+        </IonReactRouter>
+      </IonApp>
+    </AuthProvider>
+  </ErrorBoundary>
 );
 
 export default App;

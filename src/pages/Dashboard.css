@@ -1,0 +1,90 @@
+/* Dashboard · placeholder hasta llegar al diseño v2 (Hoy / Menú / Compra / Entreno / Registro) */
+
+.dashboard-wrap {
+  padding: 32px 24px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 12px;
+}
+
+.dashboard-greeting {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-badge {
+  display: inline-block;
+  background: rgba(240, 168, 56, 0.14);
+  color: var(--btal-gold);
+  border: 1px solid rgba(240, 168, 56, 0.32);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+}
+
+.dashboard-email {
+  color: var(--btal-t-2);
+  font-size: 0.88rem;
+  margin: 4px 0 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.dashboard-logout {
+  --color: var(--btal-t-2);
+}
+
+.dashboard-card {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.dashboard-card h2 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.dashboard-card p {
+  color: var(--btal-t-1);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.dashboard-uid {
+  color: var(--btal-t-2);
+  font-size: 0.88rem;
+}
+
+.dashboard-uid code {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--btal-cyan);
+}
+
+.dashboard-loading {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
