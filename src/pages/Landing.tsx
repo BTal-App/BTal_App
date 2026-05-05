@@ -14,6 +14,8 @@ import {
   logoGoogle,
   mailOutline,
 } from 'ionicons/icons';
+import { getMultiFactorResolver, type MultiFactorResolver } from 'firebase/auth';
+import { auth } from '../services/firebase';
 import { useAuth } from '../hooks/useAuth';
 import {
   signInEmail,
@@ -22,6 +24,7 @@ import {
   signUpEmail,
 } from '../services/auth';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
+import { TotpSignInModal } from '../components/TotpSignInModal';
 import './Landing.css';
 
 type Mode = 'signin' | 'signup';
@@ -66,6 +69,7 @@ const Landing: React.FC = () => {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [forgotOpen, setForgotOpen] = useState(false);
+  const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
 
   // Si ya hay sesión activa, salta directo al dashboard
   useEffect(() => {
@@ -102,7 +106,14 @@ const Landing: React.FC = () => {
         setInfo('Cuenta creada. Te hemos enviado un email de verificación (revisa también la carpeta de spam).');
       }
     } catch (err) {
-      setError(translateAuthError(errorCode(err)));
+      const code = errorCode(err);
+      // Si la cuenta tiene MFA activado, Firebase lanza este código.
+      // Sacamos el resolver del error y abrimos el modal de TOTP.
+      if (code === 'auth/multi-factor-auth-required') {
+        setMfaResolver(getMultiFactorResolver(auth, err as Parameters<typeof getMultiFactorResolver>[1]));
+      } else {
+        setError(translateAuthError(code));
+      }
     } finally {
       setBusy(false);
     }
@@ -292,6 +303,16 @@ const Landing: React.FC = () => {
           isOpen={forgotOpen}
           initialEmail={email}
           onClose={() => setForgotOpen(false)}
+        />
+
+        <TotpSignInModal
+          isOpen={mfaResolver !== null}
+          resolver={mfaResolver}
+          onClose={() => setMfaResolver(null)}
+          onSuccess={() => {
+            setMfaResolver(null);
+            // useAuth detecta el sign-in y redirige a /app vía useEffect.
+          }}
         />
       </IonContent>
     </IonPage>

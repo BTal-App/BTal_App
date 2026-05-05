@@ -50,6 +50,12 @@
   --color: var(--btal-t-2);
 }
 
+.dashboard-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 .dashboard-card {
   background: var(--btal-surface);
   border: 1px solid var(--btal-border);

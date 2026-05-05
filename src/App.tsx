@@ -5,6 +5,7 @@ import { IonReactRouter } from '@ionic/react-router';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import AuthAction from './pages/AuthAction';
+import Settings from './pages/Settings';
 import { AuthProvider } from './hooks/AuthContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -38,6 +39,9 @@ const App: React.FC = () => (
             </Route>
             <Route exact path="/app">
               <Dashboard />
+            </Route>
+            <Route exact path="/settings">
+              <Settings />
             </Route>
             <Route exact path="/auth/action">
               <AuthAction />

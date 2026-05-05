@@ -8,7 +8,7 @@ import {
   IonPage,
   IonSpinner,
 } from '@ionic/react';
-import { logOutOutline } from 'ionicons/icons';
+import { logOutOutline, settingsOutline } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
 import { signOut } from '../services/auth';
 import './Dashboard.css';
@@ -54,14 +54,26 @@ const Dashboard: React.FC = () => {
                 {user.isAnonymous ? 'Sesión temporal · sin cuenta' : user.email}
               </p>
             </div>
-            <IonButton
-              fill="clear"
-              size="small"
-              onClick={() => setConfirmLogoutOpen(true)}
-              className="dashboard-logout"
-            >
-              <IonIcon icon={logOutOutline} slot="icon-only" />
-            </IonButton>
+            <div className="dashboard-actions">
+              <IonButton
+                fill="clear"
+                size="small"
+                onClick={() => history.push('/settings')}
+                className="dashboard-logout"
+                aria-label="Ajustes"
+              >
+                <IonIcon icon={settingsOutline} slot="icon-only" />
+              </IonButton>
+              <IonButton
+                fill="clear"
+                size="small"
+                onClick={() => setConfirmLogoutOpen(true)}
+                className="dashboard-logout"
+                aria-label="Cerrar sesión"
+              >
+                <IonIcon icon={logOutOutline} slot="icon-only" />
+              </IonButton>
+            </div>
           </div>
 
           <div className="dashboard-card">

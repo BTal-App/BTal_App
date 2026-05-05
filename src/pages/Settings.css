@@ -1,0 +1,134 @@
+/* Settings · cuenta y seguridad */
+
+.settings-wrap {
+  padding: max(env(safe-area-inset-top), 24px) 24px 32px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.settings-back {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--btal-t-2);
+  cursor: pointer;
+  font-size: 1.4rem;
+  transition: background 0.18s, color 0.18s;
+  flex-shrink: 0;
+}
+
+.settings-back:hover {
+  background: var(--btal-surface-2);
+  color: var(--btal-t-1);
+}
+
+.settings-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--btal-t-1);
+}
+
+.settings-banner {
+  background: rgba(240, 168, 56, 0.1);
+  border: 1px solid rgba(240, 168, 56, 0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 0.88rem;
+  color: var(--btal-gold);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+}
+
+.settings-section-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  margin: 0 0 10px 4px;
+}
+
+.settings-row {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 18px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.settings-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.settings-row-label {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.settings-row-value {
+  font-size: 0.95rem;
+  color: var(--btal-t-1);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.settings-row-sub {
+  font-size: 0.85rem;
+  color: var(--btal-t-2);
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.settings-row-action {
+  --border-radius: 10px;
+  font-weight: 600;
+  text-transform: none;
+  flex-shrink: 0;
+}
+
+.settings-loading {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .settings-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .settings-row-action {
+    width: 100%;
+  }
+}
