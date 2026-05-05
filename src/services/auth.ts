@@ -27,11 +27,14 @@ const isStandalone = (): boolean => {
   return iosLegacy || window.matchMedia?.('(display-mode: standalone)').matches === true;
 };
 
-export const signUpEmail = async (email: string, password: string) => {
-  const cred = await createUserWithEmailAndPassword(auth, email, password);
-  await sendEmailVerification(cred.user);
-  return cred;
-};
+export const signUpEmail = (email: string, password: string) =>
+  createUserWithEmailAndPassword(auth, email, password);
+
+// El email de verificación NO se envía en signUp — se envía cuando el usuario
+// pulsa "Verificar" en el banner. Así sabe que está pasando algo, no le llega
+// un correo sorpresa que parece phishing.
+export const sendVerificationEmail = (user: User) =>
+  sendEmailVerification(user);
 
 export const signInEmail = (email: string, password: string) =>
   signInWithEmailAndPassword(auth, email, password);

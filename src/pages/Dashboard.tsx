@@ -11,12 +11,16 @@ import {
 import { logOutOutline, settingsOutline } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
 import { signOut } from '../services/auth';
+import { VerifyEmailBanner } from '../components/VerifyEmailBanner';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const history = useHistory();
   const { user, loading, isAuthed } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  // Tick para forzar re-render tras user.reload() en VerifyEmailBanner —
+  // emailVerified no dispara onAuthStateChanged.
+  const [, setRefreshTick] = useState(0);
 
   // Si no hay sesión, vuelve al landing
   useEffect(() => {
@@ -75,6 +79,13 @@ const Dashboard: React.FC = () => {
               </IonButton>
             </div>
           </div>
+
+          {user.email && !user.emailVerified && !user.isAnonymous && (
+            <VerifyEmailBanner
+              user={user}
+              onRefreshed={() => setRefreshTick((t) => t + 1)}
+            />
+          )}
 
           <div className="dashboard-card">
             <h2>Próximamente</h2>

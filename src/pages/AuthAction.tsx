@@ -74,6 +74,11 @@ const AuthAction: React.FC = () => {
         const op = actionInfo.operation;
         if (op === 'VERIFY_EMAIL') {
           await applyActionCode(auth, oobCode);
+          // Si el usuario está logueado en esta misma sesión, refrescamos
+          // para que emailVerified pase a true sin tener que cerrar sesión.
+          if (auth.currentUser) {
+            await auth.currentUser.reload().catch(() => {});
+          }
           if (!cancelled) setSuccessMsg('Email verificado correctamente.');
         } else if (op === 'RECOVER_EMAIL') {
           await applyActionCode(auth, oobCode);

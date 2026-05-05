@@ -103,7 +103,9 @@ const Landing: React.FC = () => {
         await signInEmail(email.trim(), password);
       } else {
         await signUpEmail(email.trim(), password);
-        setInfo('Cuenta creada. Te hemos enviado un email de verificación (revisa también la carpeta de spam).');
+        // El email de verificación NO se envía aquí — se envía cuando el
+        // usuario pulsa "Verificar" en el banner del dashboard.
+        setInfo('Cuenta creada. En el dashboard podrás verificar tu email.');
       }
     } catch (err) {
       const code = errorCode(err);

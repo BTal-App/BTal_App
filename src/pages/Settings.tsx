@@ -18,6 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getEnrolledTotpFactor, unenrollTotp } from '../services/auth';
 import { ChangeEmailModal } from '../components/ChangeEmailModal';
 import { EnableTotpModal } from '../components/EnableTotpModal';
+import { VerifyEmailBanner } from '../components/VerifyEmailBanner';
 import './Settings.css';
 
 const Settings: React.FC = () => {
@@ -91,6 +92,10 @@ const Settings: React.FC = () => {
             <div className="settings-banner">
               Estás como invitado. Para gestionar tu cuenta, regístrate o inicia sesión con email.
             </div>
+          )}
+
+          {!isAnonymous && user.email && !user.emailVerified && (
+            <VerifyEmailBanner user={user} onRefreshed={refresh} />
           )}
 
           <section className="settings-section">
