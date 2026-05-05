@@ -1,0 +1,78 @@
+/* Estado verificado · check verde + texto */
+.verify-row-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.verify-row-status ion-icon {
+  font-size: 1.05rem;
+}
+
+.verify-row-status--ok {
+  background: rgba(55, 224, 168, 0.12);
+  color: var(--btal-cyan);
+  border: 1px solid rgba(55, 224, 168, 0.32);
+}
+
+/* Acciones cuando el email ya se envió: botón principal + texto Reenviar */
+.verify-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.verify-row-link {
+  background: transparent;
+  border: none;
+  color: var(--btal-t-3);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s;
+}
+
+.verify-row-link:hover:not(:disabled) {
+  color: var(--btal-t-1);
+}
+
+.verify-row-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.verify-row-link ion-icon {
+  font-size: 0.95rem;
+}
+
+/* Mensaje de error en el row */
+.verify-row-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--btal-coral);
+  line-height: 1.4;
+}
+
+/* En móvil el row colapsa (≤480px). Las acciones ocupan ancho completo. */
+@media (max-width: 480px) {
+  .verify-row-actions {
+    align-items: stretch;
+    width: 100%;
+  }
+  .verify-row-status {
+    align-self: flex-start;
+  }
+}

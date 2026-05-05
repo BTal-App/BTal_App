@@ -18,7 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getEnrolledTotpFactor, unenrollTotp } from '../services/auth';
 import { ChangeEmailModal } from '../components/ChangeEmailModal';
 import { EnableTotpModal } from '../components/EnableTotpModal';
-import { VerifyEmailBanner } from '../components/VerifyEmailBanner';
+import { VerifyEmailRow } from '../components/VerifyEmailRow';
 import './Settings.css';
 
 const Settings: React.FC = () => {
@@ -94,10 +94,6 @@ const Settings: React.FC = () => {
             </div>
           )}
 
-          {!isAnonymous && user.email && !user.emailVerified && (
-            <VerifyEmailBanner user={user} place="settings" onRefreshed={refresh} />
-          )}
-
           <section className="settings-section">
             <h2 className="settings-section-title">Cuenta</h2>
 
@@ -127,6 +123,10 @@ const Settings: React.FC = () => {
                 </IonButton>
               )}
             </div>
+
+            {!isAnonymous && user.email && (
+              <VerifyEmailRow user={user} onRefreshed={refresh} />
+            )}
           </section>
 
           <section className="settings-section">
