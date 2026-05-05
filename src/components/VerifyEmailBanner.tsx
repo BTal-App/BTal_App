@@ -1,14 +1,20 @@
 import { useState } from 'react';
 import { IonIcon, IonSpinner } from '@ionic/react';
-import { checkmarkCircle, mailOutline, refreshOutline } from 'ionicons/icons';
+import {
+  checkmarkCircle,
+  closeOutline,
+  mailOutline,
+  refreshOutline,
+} from 'ionicons/icons';
 import type { User } from 'firebase/auth';
 import { sendVerificationEmail } from '../services/auth';
+import { useVerifyBanner } from '../hooks/useVerifyBanner';
 import './VerifyEmailBanner.css';
 
 interface Props {
   user: User;
-  // Llamado tras user.reload() — el padre debería forzar re-render para que
-  // el banner desaparezca si la verificación se completó.
+  // Llamado tras user.reload() — el padre debería forzar re-render para
+  // que el banner desaparezca si la verificación se completó.
   onRefreshed?: () => void;
 }
 
@@ -17,25 +23,31 @@ const errorCode = (err: unknown): string =>
 
 function translateError(code: string): string {
   const map: Record<string, string> = {
-    'auth/too-many-requests': 'Demasiados intentos. Espera unos minutos antes de pedir otro email.',
+    'auth/too-many-requests':
+      'Se ha superado el número máximo de intentos. Por favor, espere unos minutos antes de solicitar un nuevo correo electrónico.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
   };
   return map[code] ?? 'No hemos podido enviar el email. Inténtalo de nuevo.';
 }
 
-type Stage = 'idle' | 'sending' | 'sent' | 'error';
+type LocalStage = 'idle' | 'sending' | 'error';
 
 export function VerifyEmailBanner({ user, onRefreshed }: Props) {
-  const [stage, setStage] = useState<Stage>('idle');
+  const { dismissed, sent, dismiss, markSent } = useVerifyBanner();
+  const [stage, setStage] = useState<LocalStage>('idle');
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Si ya está cerrado o el email ya está verificado, no renderizamos nada.
+  if (dismissed || user.emailVerified) return null;
 
   const handleSend = async () => {
     setError('');
     setStage('sending');
     try {
       await sendVerificationEmail(user);
-      setStage('sent');
+      markSent();
+      setStage('idle');
     } catch (err) {
       setError(translateError(errorCode(err)));
       setStage('error');
@@ -48,7 +60,7 @@ export function VerifyEmailBanner({ user, onRefreshed }: Props) {
       await user.reload();
       onRefreshed?.();
     } catch {
-      // ignoramos; el banner se mantiene
+      /* el banner se mantiene */
     } finally {
       setRefreshing(false);
     }
@@ -60,7 +72,7 @@ export function VerifyEmailBanner({ user, onRefreshed }: Props) {
         <IonIcon icon={mailOutline} />
       </div>
       <div className="verify-banner-content">
-        {stage === 'sent' ? (
+        {sent ? (
           <>
             <p className="verify-banner-title">Email enviado a {user.email}</p>
             <p className="verify-banner-text">
@@ -78,7 +90,7 @@ export function VerifyEmailBanner({ user, onRefreshed }: Props) {
                 ) : (
                   <>
                     <IonIcon icon={checkmarkCircle} />
-                    Ya lo he verificado
+                    Confirmar verificación
                   </>
                 )}
               </button>
@@ -86,11 +98,19 @@ export function VerifyEmailBanner({ user, onRefreshed }: Props) {
                 type="button"
                 className="verify-banner-link verify-banner-link--ghost"
                 onClick={handleSend}
+                disabled={stage === 'sending'}
               >
-                <IonIcon icon={refreshOutline} />
-                Reenviar
+                {stage === 'sending' ? (
+                  <IonSpinner name="dots" />
+                ) : (
+                  <>
+                    <IonIcon icon={refreshOutline} />
+                    Reenviar
+                  </>
+                )}
               </button>
             </div>
+            {error && <p className="verify-banner-error">{error}</p>}
           </>
         ) : (
           <>
@@ -110,6 +130,17 @@ export function VerifyEmailBanner({ user, onRefreshed }: Props) {
           </>
         )}
       </div>
+      <button
+        type="button"
+        className="verify-banner-close"
+        onClick={(e) => {
+          e.currentTarget.blur();
+          dismiss();
+        }}
+        aria-label="Cerrar aviso de verificación"
+      >
+        <IonIcon icon={closeOutline} />
+      </button>
     </div>
   );
 }

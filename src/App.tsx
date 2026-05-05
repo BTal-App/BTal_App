@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import AuthAction from './pages/AuthAction';
 import Settings from './pages/Settings';
 import { AuthProvider } from './hooks/AuthContext';
+import { VerifyBannerProvider } from './hooks/VerifyBannerProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 /* Ionic core CSS — obligatorio */
@@ -31,6 +32,7 @@ setupIonicReact();
 const App: React.FC = () => (
   <ErrorBoundary>
     <AuthProvider>
+      <VerifyBannerProvider>
       <IonApp>
         <IonReactRouter>
           <IonRouterOutlet>
@@ -52,6 +54,7 @@ const App: React.FC = () => (
           </IonRouterOutlet>
         </IonReactRouter>
       </IonApp>
+      </VerifyBannerProvider>
     </AuthProvider>
   </ErrorBoundary>
 );
