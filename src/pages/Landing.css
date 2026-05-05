@@ -123,6 +123,13 @@
   padding-right: 44px;
 }
 
+.landing-hint {
+  margin: -4px 4px 0;
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  line-height: 1.5;
+}
+
 .landing-input-icon {
   position: absolute;
   left: 14px;

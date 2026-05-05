@@ -16,12 +16,12 @@ import {
 } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
 import {
-  resetPassword,
   signInEmail,
   signInGoogle,
   signInGuest,
   signUpEmail,
 } from '../services/auth';
+import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 import './Landing.css';
 
 type Mode = 'signin' | 'signup';
@@ -44,6 +44,15 @@ function translateAuthError(code: string): string {
 const errorCode = (err: unknown): string =>
   (err as { code?: string })?.code ?? '';
 
+// Reglas de contraseña para signup (signin acepta cualquier password existente).
+function validatePasswordStrength(pwd: string): string | null {
+  if (pwd.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
+  if (!/[A-Z]/.test(pwd)) return 'Debe incluir al menos una letra mayúscula.';
+  if (!/[0-9]/.test(pwd)) return 'Debe incluir al menos un número.';
+  if (!/[^A-Za-z0-9]/.test(pwd)) return 'Debe incluir al menos un carácter especial.';
+  return null;
+}
+
 const Landing: React.FC = () => {
   const history = useHistory();
   const { isAuthed, loading: authLoading } = useAuth();
@@ -51,10 +60,12 @@ const Landing: React.FC = () => {
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   // Si ya hay sesión activa, salta directo al dashboard
   useEffect(() => {
@@ -69,13 +80,26 @@ const Landing: React.FC = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearMessages();
+
+    if (mode === 'signup') {
+      const pwdError = validatePasswordStrength(password);
+      if (pwdError) {
+        setError(pwdError);
+        return;
+      }
+      if (password !== password2) {
+        setError('Las contraseñas no coinciden.');
+        return;
+      }
+    }
+
     setBusy(true);
     try {
       if (mode === 'signin') {
         await signInEmail(email.trim(), password);
       } else {
         await signUpEmail(email.trim(), password);
-        setInfo('Cuenta creada. Te hemos enviado un email de verificación.');
+        setInfo('Cuenta creada. Te hemos enviado un email de verificación (revisa también la carpeta de spam).');
       }
     } catch (err) {
       setError(translateAuthError(errorCode(err)));
@@ -114,22 +138,14 @@ const Landing: React.FC = () => {
     }
   };
 
-  const handleForgot = async () => {
-    if (!email.trim()) {
-      setError('Escribe tu email primero y vuelve a pulsar.');
-      return;
-    }
-    clearMessages();
-    try {
-      await resetPassword(email.trim());
-      setInfo('Te hemos enviado un email para restablecer la contraseña.');
-    } catch (err) {
-      setError(translateAuthError(errorCode(err)));
-    }
-  };
-
+  // Cambia de modo y limpia campos sensibles para evitar arrastrar email
+  // o passwords entre flujos distintos (por privacidad y UX limpia).
   const switchMode = (next: Mode) => {
     setMode(next);
+    setEmail('');
+    setPassword('');
+    setPassword2('');
+    setShowPwd(false);
     clearMessages();
   };
 
@@ -167,7 +183,7 @@ const Landing: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={mode === 'signup' ? 8 : 6}
               />
               <button
                 type="button"
@@ -178,6 +194,27 @@ const Landing: React.FC = () => {
                 <IonIcon icon={showPwd ? eyeOffOutline : eyeOutline} />
               </button>
             </div>
+
+            {mode === 'signup' && (
+              <>
+                <div className="landing-input-wrap">
+                  <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+                  <input
+                    className="landing-input"
+                    type={showPwd ? 'text' : 'password'}
+                    placeholder="Confirmar contraseña"
+                    autoComplete="new-password"
+                    value={password2}
+                    onChange={(e) => setPassword2(e.target.value)}
+                    required
+                    minLength={8}
+                  />
+                </div>
+                <p className="landing-hint">
+                  Mínimo 8 caracteres · 1 mayúscula · 1 número · 1 carácter especial
+                </p>
+              </>
+            )}
 
             {error && <div className="landing-msg error">{error}</div>}
             {info && <div className="landing-msg info">{info}</div>}
@@ -198,7 +235,11 @@ const Landing: React.FC = () => {
             </IonButton>
 
             {mode === 'signin' && (
-              <button type="button" className="landing-link" onClick={handleForgot}>
+              <button
+                type="button"
+                className="landing-link"
+                onClick={() => setForgotOpen(true)}
+              >
                 ¿Has olvidado tu contraseña?
               </button>
             )}
@@ -246,6 +287,12 @@ const Landing: React.FC = () => {
 
           <div className="landing-version">v0.1 · scaffold</div>
         </div>
+
+        <ForgotPasswordModal
+          isOpen={forgotOpen}
+          initialEmail={email}
+          onClose={() => setForgotOpen(false)}
+        />
       </IonContent>
     </IonPage>
   );

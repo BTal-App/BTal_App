@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonIcon,
@@ -15,6 +16,7 @@ import './Dashboard.css';
 const Dashboard: React.FC = () => {
   const history = useHistory();
   const { user, loading, isAuthed } = useAuth();
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
   // Si no hay sesión, vuelve al landing
   useEffect(() => {
@@ -55,7 +57,7 @@ const Dashboard: React.FC = () => {
             <IonButton
               fill="clear"
               size="small"
-              onClick={handleLogout}
+              onClick={() => setConfirmLogoutOpen(true)}
               className="dashboard-logout"
             >
               <IonIcon icon={logOutOutline} slot="icon-only" />
@@ -75,6 +77,27 @@ const Dashboard: React.FC = () => {
             </p>
           </div>
         </div>
+
+        <IonAlert
+          isOpen={confirmLogoutOpen}
+          onDidDismiss={() => setConfirmLogoutOpen(false)}
+          header="¿Cerrar sesión?"
+          message={
+            user.isAnonymous
+              ? 'Estás como invitado. Si cierras sesión, perderás los datos de esta prueba.'
+              : 'Vas a cerrar sesión en este dispositivo.'
+          }
+          buttons={[
+            { text: 'Cancelar', role: 'cancel' },
+            {
+              text: 'Cerrar sesión',
+              role: 'destructive',
+              handler: () => {
+                handleLogout();
+              },
+            },
+          ]}
+        />
       </IonContent>
     </IonPage>
   );
