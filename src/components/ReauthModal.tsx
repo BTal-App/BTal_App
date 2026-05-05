@@ -86,7 +86,10 @@ export function ReauthModal({ isOpen, user, reason, onClose, onSuccess }: Props)
         <button
           type="button"
           className="settings-modal-close"
-          onClick={onClose}
+          onClick={(e) => {
+            e.currentTarget.blur();
+            onClose();
+          }}
           aria-label="Cerrar"
         >
           <IonIcon icon={closeOutline} />

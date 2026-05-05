@@ -22,8 +22,12 @@ function translateError(code: string): string {
     'auth/invalid-verification-code': 'Código incorrecto. Mira la app authenticator y vuelve a intentarlo.',
     'auth/code-expired': 'Código caducado. Pide uno nuevo en tu app.',
     'auth/totp-challenge-timeout': 'Se ha agotado el tiempo. Vuelve a empezar.',
+    'auth/operation-not-allowed': 'TOTP no está habilitado. Actívalo en Firebase Console → Authentication → Sign-in method → Verificación en dos pasos.',
+    'auth/unverified-email': 'Necesitas verificar tu email antes de activar 2FA. Mira tu bandeja (y spam) y haz click en el enlace.',
+    'auth/admin-restricted-operation': 'Operación bloqueada por configuración del proyecto. Revisa Identity Platform.',
+    'auth/requires-recent-login': 'Tu sesión es vieja. Cierra sesión y vuelve a entrar.',
   };
-  return map[code] ?? 'No hemos podido activar MFA. Inténtalo de nuevo.';
+  return map[code] ?? `No hemos podido activar MFA (${code || 'error desconocido'}).`;
 }
 
 export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {
@@ -55,6 +59,7 @@ export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {
       setStage('qr');
     } catch (err) {
       const code = errorCode(err);
+      console.error('[BTal] startTotpEnrollment error:', code, err);
       if (code === 'auth/requires-recent-login') {
         setReauthOpen(true);
       } else {
@@ -97,7 +102,10 @@ export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {
           <button
             type="button"
             className="settings-modal-close"
-            onClick={onClose}
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
             aria-label="Cerrar"
           >
             <IonIcon icon={closeOutline} />

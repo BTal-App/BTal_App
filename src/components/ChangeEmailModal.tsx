@@ -74,7 +74,10 @@ export function ChangeEmailModal({ isOpen, user, onClose }: Props) {
           <button
             type="button"
             className="settings-modal-close"
-            onClick={onClose}
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
             aria-label="Cerrar"
           >
             <IonIcon icon={closeOutline} />

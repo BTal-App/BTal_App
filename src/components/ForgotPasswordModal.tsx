@@ -61,7 +61,10 @@ export function ForgotPasswordModal({ isOpen, initialEmail = '', onClose }: Prop
         <button
           type="button"
           className="forgot-close"
-          onClick={onClose}
+          onClick={(e) => {
+            e.currentTarget.blur();
+            onClose();
+          }}
           aria-label="Cerrar"
         >
           <IonIcon icon={closeOutline} />

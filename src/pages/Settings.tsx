@@ -73,7 +73,13 @@ const Settings: React.FC = () => {
             <button
               type="button"
               className="settings-back"
-              onClick={() => history.goBack()}
+              onClick={(e) => {
+                // Quitamos el foco antes de navegar — Ionic marca la página
+                // saliente con aria-hidden, y un foco activo dentro de un
+                // ancestro aria-hidden lanza warning de accesibilidad.
+                e.currentTarget.blur();
+                history.goBack();
+              }}
               aria-label="Volver"
             >
               <IonIcon icon={arrowBackOutline} />
