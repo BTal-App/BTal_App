@@ -72,7 +72,8 @@
     align-items: stretch;
     width: 100%;
   }
+  /* La fila se apila vertical en móvil: pill centrada bajo el texto. */
   .verify-row-status {
-    align-self: flex-start;
+    align-self: center;
   }
 }

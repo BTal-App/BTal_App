@@ -62,10 +62,7 @@ export function VerifyEmailRow({ user }: Props) {
 
   if (verified) {
     return (
-      // settings-row--inline: igual que --link, no se apila en móvil. Aquí
-      // no es un link clicable, pero queremos que la pill "Email verificado"
-      // siga a la derecha del texto en cualquier viewport.
-      <div className="settings-row settings-row--inline">
+      <div className="settings-row">
         <div className="settings-row-info">
           <span className="settings-row-label">Verificar email</span>
           <span className="settings-row-value settings-row-sub">

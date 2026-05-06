@@ -246,11 +246,9 @@ button.settings-row {
   /* Solo apilamos las filas con BOTÓN de acción (Activar, Cambiar,
      Desvincular, Eliminar...) para que el botón ocupe el ancho.
      Las filas tipo enlace (.settings-row--link) — Información,
-     Administrar cuenta, Soporte, etc. — y las filas con status
-     pill (.settings-row--inline, p.ej. "Email verificado") mantienen
-     su layout horizontal con el indicador a la derecha. Antes todas
-     se apilaban y los iconos/pills quedaban debajo del texto. */
-  .settings-row:not(.settings-row--link):not(.settings-row--inline) {
+     Administrar cuenta, Soporte, etc. — mantienen su layout
+     horizontal con el chevron / icono a la derecha. */
+  .settings-row:not(.settings-row--link) {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
