@@ -328,9 +328,11 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
           setForgotOpen(true);
         }}
       />
+      {/* Reset password sin email pre-rellenado — el usuario debe teclearlo
+          a propósito (suma seguridad y obliga a confirmar la dirección). */}
       <ForgotPasswordModal
         isOpen={forgotOpen}
-        initialEmail={user.email ?? ''}
+        initialEmail=""
         onClose={() => setForgotOpen(false)}
       />
       <EnableTotpModal

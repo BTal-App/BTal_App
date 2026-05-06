@@ -88,12 +88,6 @@ export function AccountInfoModal({ isOpen, user, onClose }: Props) {
                 )}
               </span>
             </div>
-            <div className="account-info-item">
-              <span className="account-info-label">UID</span>
-              <span className="account-info-value account-info-uid">
-                {user.uid}
-              </span>
-            </div>
           </div>
         </div>
       </div>
