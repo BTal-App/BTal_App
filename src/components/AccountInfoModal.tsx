@@ -1,7 +1,7 @@
 import { IonIcon, IonModal } from '@ionic/react';
 import { checkmarkCircle, closeOutline } from 'ionicons/icons';
 import type { User } from 'firebase/auth';
-import { formatLongDate, providerLabel } from '../utils/userDisplay';
+import { formatDate, providerLabel } from '../utils/userDisplay';
 import './SettingsModal.css';
 import './AccountManageModal.css';
 
@@ -65,13 +65,13 @@ export function AccountInfoModal({ isOpen, user, onClose }: Props) {
             <div className="account-info-item">
               <span className="account-info-label">Fecha de registro</span>
               <span className="account-info-value">
-                {formatLongDate(user.metadata.creationTime)}
+                {formatDate(user.metadata.creationTime)}
               </span>
             </div>
             <div className="account-info-item">
               <span className="account-info-label">Última conexión</span>
               <span className="account-info-value">
-                {formatLongDate(user.metadata.lastSignInTime)}
+                {formatDate(user.metadata.lastSignInTime)}
               </span>
             </div>
             <div className="account-info-item">

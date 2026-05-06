@@ -18,15 +18,16 @@ export function greetingName(user: User): string | null {
   return dn.split(/\s+/)[0] || null;
 }
 
-// Fecha legible en español: "5 de mayo de 2026".
+// Fecha numérica en formato dd/mm/aaaa (ej. "05/05/2026").
 // Acepta el string ISO que devuelve user.metadata.creationTime / lastSignInTime.
-export function formatLongDate(input: string | undefined | null): string {
+// Numérico para que entre en una sola línea en celdas estrechas (móvil).
+export function formatDate(input: string | undefined | null): string {
   if (!input) return '—';
   const d = new Date(input);
   if (Number.isNaN(d.getTime())) return '—';
   return new Intl.DateTimeFormat('es-ES', {
-    day: 'numeric',
-    month: 'long',
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
   }).format(d);
 }
