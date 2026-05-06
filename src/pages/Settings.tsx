@@ -146,7 +146,7 @@ const Settings: React.FC = () => {
                 <div className="settings-row-info">
                   <span className="settings-row-label">Administrar cuenta</span>
                   <span className="settings-row-value settings-row-sub">
-                    Cuenta · seguridad · sesiones · eliminar cuenta
+                    Cuenta · Seguridad · Eliminar cuenta
                   </span>
                 </div>
                 <IonIcon icon={chevronForwardOutline} className="settings-row-chevron" />

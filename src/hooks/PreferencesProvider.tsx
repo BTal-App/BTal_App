@@ -130,11 +130,21 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
+  // Guarda varias prefs de golpe (un único write a Firestore).
+  const setPreferences = useCallback(
+    (next: Preferences) => {
+      setPrefs(next);
+      persist(next);
+    },
+    [persist],
+  );
+
   const value: PreferencesState = {
     units: prefs.units,
     weekStart: prefs.weekStart,
     setUnits,
     setWeekStart,
+    setPreferences,
   };
 
   return (
