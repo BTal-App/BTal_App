@@ -5,6 +5,7 @@ import {
   type UserDocument,
   type UserProfile,
 } from '../templates/defaultUser';
+import type { Preferences } from '../utils/units';
 
 // Toda lectura/escritura a Firestore pasa por aquí.
 // Los componentes nunca llaman a Firestore directamente.
@@ -72,4 +73,13 @@ export async function touchLastActive(uid: string): Promise<void> {
   // updateDoc falla si el doc no existe; con setDoc + merge nunca crea
   // claves nuevas accidentalmente.
   await mod.setDoc(ref, { lastActive: Date.now() }, { merge: true });
+}
+
+// Guarda solo el bloque `preferences` (sin tocar profile, plan_pro, etc.).
+// Crea el doc si no existe (merge:true) — útil para usuarios reales que
+// aún no han pasado por onboarding.
+export async function setUserPreferences(uid: string, prefs: Preferences): Promise<void> {
+  const { mod, db } = await getDb();
+  const ref = mod.doc(db, 'users', uid);
+  await mod.setDoc(ref, { preferences: prefs }, { merge: true });
 }

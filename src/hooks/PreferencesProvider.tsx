@@ -1,18 +1,27 @@
-import { useCallback, useState, type ReactNode } from 'react';
-import type { UnitsSystem, WeekStart } from '../utils/units';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import type { Preferences, UnitsSystem, WeekStart } from '../utils/units';
+import { useAuth } from './useAuth';
+import { useProfile } from './useProfile';
+import { setUserPreferences } from '../services/db';
 import {
   DEFAULT_PREFERENCES,
   PreferencesContext,
-  type Preferences,
   type PreferencesState,
 } from './preferences-context';
 
-// Persiste las preferencias en localStorage (por dispositivo). Cuando el
-// usuario tenga Firestore activo y queramos sync cross-device, se puede
-// mover el storage a /users/{uid}/profile sin tocar consumidores.
+// Estrategia de almacenamiento:
+// - Invitado (anónimo): SOLO localStorage. Sin Firestore, sin sync.
+// - Usuario real: localStorage como caché rápida + Firestore como fuente
+//   de verdad para sync cross-device.
+//
+// Migración invitado → real:
+// Cuando un anónimo enlaza email/Google y se convierte en real, su
+// localStorage tiene sus prefs. La primera vez que cargamos su perfil de
+// Firestore, si NO hay preferences guardadas allí, copiamos las locales
+// arriba. Así sus elecciones (Imperial, Domingo) viajan con él.
 const STORAGE_KEY = 'btal_preferences';
 
-function loadPreferences(): Preferences {
+function loadFromLocal(): Preferences {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFERENCES;
@@ -26,33 +35,94 @@ function loadPreferences(): Preferences {
   }
 }
 
-function savePreferences(prefs: Preferences) {
+function saveToLocal(prefs: Preferences) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
   } catch {
-    /* private mode / disabled / etc. — fallback en memoria */
+    /* private mode / disabled — best effort */
   }
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  // Lazy init: leemos localStorage solo en el primer render.
-  const [prefs, setPrefs] = useState<Preferences>(loadPreferences);
+  const { user } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+  const uid = user?.uid ?? null;
+  const isAnonymous = user?.isAnonymous ?? false;
 
-  const setUnits = useCallback((units: UnitsSystem) => {
-    setPrefs((p) => {
-      const next = { ...p, units };
-      savePreferences(next);
-      return next;
-    });
-  }, []);
+  // Lazy init desde localStorage. Para un user real, esto puede sobrescribirse
+  // tras el sync con Firestore.
+  const [prefs, setPrefs] = useState<Preferences>(loadFromLocal);
 
-  const setWeekStart = useCallback((weekStart: WeekStart) => {
-    setPrefs((p) => {
-      const next = { ...p, weekStart };
-      savePreferences(next);
-      return next;
-    });
-  }, []);
+  // Track del UID con el que ya hemos sincronizado para no entrar en bucles
+  // ni re-sobrescribir cuando el usuario cambia las prefs después.
+  const [syncedFor, setSyncedFor] = useState<string | null>(null);
+
+  // Reset del syncedFor al cambiar de usuario (state-from-prop, sin effect).
+  const userKey = isAnonymous ? null : uid;
+  if (syncedFor !== null && syncedFor !== userKey) {
+    setSyncedFor(null);
+  }
+
+  // Sync / migración Firestore. Solo aplica a usuarios reales (no anónimos)
+  // y se ejecuta una vez por uid. Casos cubiertos:
+  //  · Login fresco con prefs guardadas → adoptamos las de Firestore.
+  //  · Primer login real (o anónimo→real) sin prefs en Firestore →
+  //    pusheamos las locales arriba.
+  useEffect(() => {
+    if (!uid || isAnonymous) return;
+    if (syncedFor === uid) return;
+    if (profileLoading) return;
+
+    if (profile?.preferences) {
+      // Firestore manda — actualizamos local + state.
+      const remote = profile.preferences;
+      saveToLocal(remote);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPrefs(remote);
+    } else if (profile) {
+      // Profile existe pero sin preferences → migramos las locales.
+      setUserPreferences(uid, prefs).catch((err) => {
+        console.warn('[BTal] migrate preferences error:', err);
+      });
+    }
+    // Si profile es null (no hay doc todavía — onboarding pendiente),
+    // esperamos a que se cree y reentramos por aquí en el siguiente cambio.
+    setSyncedFor(uid);
+  }, [uid, isAnonymous, profile, profileLoading, syncedFor, prefs]);
+
+  const persist = useCallback(
+    (next: Preferences) => {
+      saveToLocal(next);
+      if (uid && !isAnonymous) {
+        setUserPreferences(uid, next).catch((err) => {
+          console.warn('[BTal] save preferences error:', err);
+        });
+      }
+    },
+    [uid, isAnonymous],
+  );
+
+  const setUnits = useCallback(
+    (units: UnitsSystem) => {
+      setPrefs((p) => {
+        const next = { ...p, units };
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
+
+  const setWeekStart = useCallback(
+    (weekStart: WeekStart) => {
+      setPrefs((p) => {
+        const next = { ...p, weekStart };
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
 
   const value: PreferencesState = {
     units: prefs.units,

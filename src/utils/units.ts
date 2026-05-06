@@ -8,6 +8,20 @@
 export type UnitsSystem = 'metric' | 'imperial';
 export type WeekStart = 'monday' | 'sunday';
 
+// Forma del bloque "preferences" tanto en localStorage como en Firestore.
+// Vive aquí (utils) en vez de en hooks para que la capa de servicios
+// (db.ts) y el modelo de datos (templates/defaultUser.ts) puedan tipar
+// sin importar nada de React.
+export interface Preferences {
+  units: UnitsSystem;
+  weekStart: WeekStart;
+}
+
+export const DEFAULT_PREFERENCES: Preferences = {
+  units: 'metric',
+  weekStart: 'monday',
+};
+
 // ── Pesos ─────────────────────────────────────────────────────
 const KG_PER_LB = 0.45359237;
 

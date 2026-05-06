@@ -3,6 +3,8 @@
 // (plan_pro, fecha_expiracion, fecha_ultima_generacion) se gestionará desde
 // Cloud Functions cuando integremos Stripe + Gemini en Fase 6 y 7.
 
+import type { Preferences } from '../utils/units';
+
 export type Sexo = 'm' | 'f';
 
 export type NivelActividad =
@@ -55,6 +57,13 @@ export interface UserProfile {
 
 export interface UserDocument {
   profile: UserProfile;
+
+  // Preferencias UI (sistema de unidades, inicio de semana). Optional —
+  // se rellenan en cuanto el usuario las toca en Settings (o se migran
+  // automáticamente desde localStorage la primera vez que un invitado
+  // se hace cuenta real). Si está undefined, los consumidores caen a
+  // DEFAULT_PREFERENCES.
+  preferences?: Preferences;
 
   // Monetización · gestionados desde Cloud Functions, no desde el cliente
   plan_pro: boolean;

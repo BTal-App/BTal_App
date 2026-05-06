@@ -1,17 +1,9 @@
 import { createContext } from 'react';
-import type { UnitsSystem, WeekStart } from '../utils/units';
+import type { Preferences, UnitsSystem, WeekStart } from '../utils/units';
 
-export interface Preferences {
-  // 'metric' (kg, cm) o 'imperial' (lb, in)
-  units: UnitsSystem;
-  // Día con el que arranca la semana en calendarios / planes
-  weekStart: WeekStart;
-}
-
-export const DEFAULT_PREFERENCES: Preferences = {
-  units: 'metric',
-  weekStart: 'monday',
-};
+// Re-export por comodidad para los consumidores del hook.
+export type { Preferences } from '../utils/units';
+export { DEFAULT_PREFERENCES } from '../utils/units';
 
 export interface PreferencesState extends Preferences {
   setUnits: (u: UnitsSystem) => void;

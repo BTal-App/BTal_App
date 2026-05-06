@@ -19,6 +19,17 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('[BTal] ErrorBoundary:', error, info);
   }
 
+  // Botones usan window.location porque el ErrorBoundary vive por encima
+  // del router y no tiene acceso a useHistory.
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  handleGoHome = () => {
+    // replace para no acumular historial fallido detrás
+    window.location.replace('/');
+  };
+
   render() {
     if (!this.state.error) return this.props.children;
 
@@ -40,26 +51,59 @@ export class ErrorBoundary extends Component<Props, State> {
         <h1 style={{ fontSize: '1.4rem', margin: '0 0 12px', fontWeight: 800 }}>
           Algo ha salido mal
         </h1>
-        <p style={{ color: 'var(--btal-t-2, #aab3a8)', margin: '0 0 24px', fontSize: '0.92rem' }}>
-          Recarga la página para intentarlo de nuevo.
-        </p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
+        <p
           style={{
-            background: 'var(--btal-lime, #b5f037)',
-            color: '#0a0e0c',
-            border: 'none',
-            borderRadius: 12,
-            padding: '12px 24px',
-            fontSize: '0.95rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
+            color: 'var(--btal-t-2, #aab3a8)',
+            margin: '0 0 24px',
+            fontSize: '0.92rem',
+            maxWidth: 320,
           }}
         >
-          Recargar
-        </button>
+          Recarga la página para reintentar, o vuelve al inicio si el problema persiste.
+        </p>
+        <div
+          style={{
+            display: 'flex',
+            gap: 10,
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}
+        >
+          <button
+            type="button"
+            onClick={this.handleReload}
+            style={{
+              background: 'var(--btal-lime, #b5f037)',
+              color: '#0a0e0c',
+              border: 'none',
+              borderRadius: 12,
+              padding: '12px 22px',
+              fontSize: '0.95rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Recargar
+          </button>
+          <button
+            type="button"
+            onClick={this.handleGoHome}
+            style={{
+              background: 'transparent',
+              color: 'var(--btal-t-1, #f0f4f0)',
+              border: '1px solid var(--btal-border-2, #2e3530)',
+              borderRadius: 12,
+              padding: '12px 22px',
+              fontSize: '0.95rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Ir al inicio
+          </button>
+        </div>
       </div>
     );
   }
