@@ -1,16 +1,39 @@
-/* AccountManageModal · submenu expandido con secciones internas */
+/* AccountManageModal · usa IonContent para scroll nativo, el botón cerrar
+   queda fijo arriba a la derecha sobre el modal. */
 
-/* El modal puede ser largo — permite scroll */
+/* Botón cerrar fijo en la esquina superior derecha · sobre el IonContent */
+.account-manage-close-fixed {
+  position: absolute;
+  top: max(env(safe-area-inset-top), 16px);
+  right: 16px;
+  z-index: 10;
+}
+
+/* Wrapper interno · padding y centrado de la card */
 .account-manage-bg {
-  align-items: flex-start;
-  padding-top: max(env(safe-area-inset-top), 24px);
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(181, 240, 55, 0.08), transparent 60%),
+    var(--btal-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Padding-top mayor para dejar espacio al botón cerrar */
+  padding: max(env(safe-area-inset-top), 64px) 24px max(env(safe-area-inset-bottom), 32px);
 }
 
 .account-manage-card {
+  width: 100%;
   max-width: 480px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 20px;
   padding: 28px 22px 24px;
-  /* Permite que el contenido scrollee dentro del modal */
-  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  animation: settings-modal-entrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .account-manage-section-title {
@@ -26,7 +49,7 @@
   margin-top: 8px;
 }
 
-/* ── Información de la cuenta · solo lectura ─────────────────────── */
+/* ── Información de la cuenta · solo lectura (usado por AccountInfoModal) ── */
 .account-info-card {
   background: var(--btal-bg-2);
   border: 1px solid var(--btal-border);
@@ -67,6 +90,13 @@
   min-width: 0;
 }
 
+.account-info-uid {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--btal-t-2);
+  user-select: all;
+}
+
 .account-info-providers {
   display: flex;
   flex-wrap: wrap;
@@ -85,7 +115,7 @@
   font-weight: 600;
 }
 
-/* ── Badge "próximamente" en filas no implementadas ──────────── */
+/* Badge "próximamente" en filas no implementadas */
 .account-manage-soon {
   display: inline-block;
   font-size: 0.6rem;
@@ -100,4 +130,9 @@
   font-weight: 600;
   margin-left: 8px;
   vertical-align: middle;
+}
+
+/* IonContent · transparenta el background para que se vea el bg con gradiente */
+ion-modal.settings-modal ion-content {
+  --background: transparent;
 }

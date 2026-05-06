@@ -2,12 +2,13 @@ import { useState } from 'react';
 import {
   IonAlert,
   IonButton,
+  IonContent,
   IonIcon,
   IonModal,
 } from '@ionic/react';
 import {
-  checkmarkCircle,
   closeOutline,
+  informationCircleOutline,
   keyOutline,
   lockClosedOutline,
   logOutOutline,
@@ -16,6 +17,7 @@ import {
   shieldCheckmarkOutline,
 } from 'ionicons/icons';
 import type { User } from 'firebase/auth';
+import { AccountInfoModal } from './AccountInfoModal';
 import { ChangeEmailModal } from './ChangeEmailModal';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
@@ -31,7 +33,6 @@ import {
   unenrollTotp,
   unlinkProvider,
 } from '../services/auth';
-import { formatLongDate, providerLabel } from '../utils/userDisplay';
 import './SettingsModal.css';
 import './AccountManageModal.css';
 
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export function AccountManageModal({ isOpen, user, onClose }: Props) {
+  const [accountInfoOpen, setAccountInfoOpen] = useState(false);
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -52,8 +54,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [linkGoogleError, setLinkGoogleError] = useState('');
 
-  // Tick para forzar re-render tras user.reload (los providerData / MFA / etc.
-  // mutan en sitio pero no disparan onAuthStateChanged).
+  // Tick para forzar re-render tras cambios mutables en el user.
   const [tick, setTick] = useState(0);
   const refresh = () => setTick((t) => t + 1);
   void tick;
@@ -103,248 +104,216 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
     }
   };
 
-  const providers = user.providerData
-    .map((p) => providerLabel(p.providerId))
-    .filter((v, i, arr) => arr.indexOf(v) === i); // únicos
-
   return (
     <>
       <IonModal isOpen={isOpen} onDidDismiss={onClose} className="settings-modal">
-        <div className="settings-modal-bg account-manage-bg">
-          <button
-            type="button"
-            className="settings-modal-close"
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onClose();
-            }}
-            aria-label="Cerrar"
-          >
-            <IonIcon icon={closeOutline} />
-          </button>
+        {/* Botón cerrar fuera del IonContent — así no scrollea con el contenido */}
+        <button
+          type="button"
+          className="settings-modal-close account-manage-close-fixed"
+          onClick={(e) => {
+            e.currentTarget.blur();
+            onClose();
+          }}
+          aria-label="Cerrar"
+        >
+          <IonIcon icon={closeOutline} />
+        </button>
 
-          <div className="settings-modal-card account-manage-card">
-            <h2 className="settings-modal-title">Administrar cuenta</h2>
+        {/* IonContent provee scroll nativo cuando el contenido excede la altura */}
+        <IonContent>
+          <div className="account-manage-bg">
+            <div className="account-manage-card">
+              <h2 className="settings-modal-title">Administrar cuenta</h2>
 
-            {/* ════════ SECCIÓN CUENTA ════════ */}
-            <h3 className="account-manage-section-title">Cuenta</h3>
+              {/* ════════ SECCIÓN CUENTA ════════ */}
+              <h3 className="account-manage-section-title">Cuenta</h3>
 
-            {/* Información de la cuenta · solo lectura */}
-            <div className="account-info-card">
-              <div className="account-info-item">
-                <span className="account-info-label">Email</span>
-                <span className="account-info-value">
-                  {user.email ?? '—'}
-                  {user.emailVerified && (
-                    <IonIcon
-                      icon={checkmarkCircle}
-                      style={{
-                        color: 'var(--btal-cyan)',
-                        marginLeft: 6,
-                        verticalAlign: 'middle',
-                      }}
-                      aria-label="Verificado"
-                    />
-                  )}
-                </span>
-              </div>
-              <div className="account-info-item">
-                <span className="account-info-label">Fecha de registro</span>
-                <span className="account-info-value">
-                  {formatLongDate(user.metadata.creationTime)}
-                </span>
-              </div>
-              <div className="account-info-item">
-                <span className="account-info-label">Última conexión</span>
-                <span className="account-info-value">
-                  {formatLongDate(user.metadata.lastSignInTime)}
-                </span>
-              </div>
-              <div className="account-info-item">
-                <span className="account-info-label">Métodos</span>
-                <span className="account-info-value account-info-providers">
-                  {providers.length > 0 ? (
-                    providers.map((p) => (
-                      <span key={p} className="account-info-provider">
-                        {p}
-                      </span>
-                    ))
-                  ) : (
-                    '—'
-                  )}
-                </span>
-              </div>
-            </div>
-
-            {/* Verificar cuenta · sincroniza con el banner del Dashboard */}
-            {user.email && (
-              <VerifyEmailRow user={user} onRefreshed={refresh} />
-            )}
-
-            {/* Cambiar email */}
-            <button
-              type="button"
-              className="settings-row settings-row--link"
-              onClick={() => setChangeEmailOpen(true)}
-            >
-              <div className="settings-row-info">
-                <span className="settings-row-label">Cambiar email</span>
-                <span className="settings-row-value settings-row-sub">
-                  Te enviamos verificación a la nueva dirección antes del cambio.
-                </span>
-              </div>
-              <IonIcon icon={mailOutline} className="settings-row-chevron" />
-            </button>
-
-            {/* Cuenta de Google · vincular / desvincular */}
-            <div className="settings-row">
-              <div className="settings-row-info">
-                <span className="settings-row-label">Cuenta de Google</span>
-                <span className="settings-row-value settings-row-sub">
-                  {hasGoogle
-                    ? 'Vinculada · puedes iniciar sesión con Google'
-                    : 'Vincúlala para iniciar sesión también con Google'}
-                </span>
-                {!hasGoogle && isStandalone() && (
-                  <span className="settings-row-warn">
-                    En la app instalada el flujo de Google puede fallar (limitación de iOS PWA).
-                    Si no funciona, vincúlala desde el navegador.
+              <button
+                type="button"
+                className="settings-row settings-row--link"
+                onClick={() => setAccountInfoOpen(true)}
+              >
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Información de la cuenta</span>
+                  <span className="settings-row-value settings-row-sub">
+                    Email, fecha de registro, métodos de inicio.
                   </span>
-                )}
-                {linkGoogleError && (
-                  <span className="settings-row-error">{linkGoogleError}</span>
+                </div>
+                <IonIcon icon={informationCircleOutline} className="settings-row-chevron" />
+              </button>
+
+              {user.email && (
+                <VerifyEmailRow user={user} onRefreshed={refresh} />
+              )}
+
+              <button
+                type="button"
+                className="settings-row settings-row--link"
+                onClick={() => setChangeEmailOpen(true)}
+              >
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Cambiar email</span>
+                  <span className="settings-row-value settings-row-sub">
+                    Te enviamos verificación a la nueva dirección antes del cambio.
+                  </span>
+                </div>
+                <IonIcon icon={mailOutline} className="settings-row-chevron" />
+              </button>
+
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Cuenta de Google</span>
+                  <span className="settings-row-value settings-row-sub">
+                    {hasGoogle
+                      ? 'Vinculada · puedes iniciar sesión con Google'
+                      : 'Vincúlala para iniciar sesión también con Google'}
+                  </span>
+                  {!hasGoogle && isStandalone() && (
+                    <span className="settings-row-warn">
+                      En la app instalada el flujo de Google puede fallar (limitación de iOS PWA).
+                      Si no funciona, vincúlala desde el navegador.
+                    </span>
+                  )}
+                  {linkGoogleError && (
+                    <span className="settings-row-error">{linkGoogleError}</span>
+                  )}
+                </div>
+                {hasGoogle ? (
+                  <IonButton
+                    fill="outline"
+                    color="danger"
+                    size="small"
+                    className="settings-row-action"
+                    onClick={() => setConfirmUnlinkGoogleOpen(true)}
+                  >
+                    Desvincular
+                  </IonButton>
+                ) : (
+                  <IonButton
+                    fill="outline"
+                    size="small"
+                    className="settings-row-action"
+                    onClick={handleLinkGoogle}
+                  >
+                    <IonIcon icon={logoGoogle} slot="start" />
+                    Vincular
+                  </IonButton>
                 )}
               </div>
-              {hasGoogle ? (
+
+              {/* ════════ SECCIÓN SEGURIDAD ════════ */}
+              <h3 className="account-manage-section-title">Seguridad</h3>
+
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Verificación en dos pasos (TOTP)</span>
+                  <span className="settings-row-value settings-row-sub">
+                    {enrolledTotp
+                      ? 'Activada · te pediremos el código al iniciar sesión'
+                      : 'Añade una capa extra de seguridad con tu app authenticator'}
+                  </span>
+                </div>
+                {enrolledTotp ? (
+                  <IonButton
+                    fill="outline"
+                    color="danger"
+                    size="small"
+                    className="settings-row-action"
+                    onClick={() => setConfirmDisableTotpOpen(true)}
+                  >
+                    Desactivar
+                  </IonButton>
+                ) : (
+                  <IonButton
+                    fill="outline"
+                    size="small"
+                    className="settings-row-action"
+                    onClick={() => setEnableTotpOpen(true)}
+                  >
+                    <IonIcon icon={shieldCheckmarkOutline} slot="start" />
+                    Activar
+                  </IonButton>
+                )}
+              </div>
+
+              {hasPassword && (
+                <button
+                  type="button"
+                  className="settings-row settings-row--link"
+                  onClick={() => setChangePasswordOpen(true)}
+                >
+                  <div className="settings-row-info">
+                    <span className="settings-row-label">Cambiar contraseña</span>
+                    <span className="settings-row-value settings-row-sub">
+                      Confirma la actual y elige una nueva.
+                    </span>
+                  </div>
+                  <IonIcon icon={lockClosedOutline} className="settings-row-chevron" />
+                </button>
+              )}
+
+              {hasPassword && (
+                <button
+                  type="button"
+                  className="settings-row settings-row--link"
+                  onClick={() => setForgotOpen(true)}
+                >
+                  <div className="settings-row-info">
+                    <span className="settings-row-label">Restablecer contraseña</span>
+                    <span className="settings-row-value settings-row-sub">
+                      Te enviamos un enlace al email para crear una nueva sin necesitar la actual.
+                    </span>
+                  </div>
+                  <IonIcon icon={keyOutline} className="settings-row-chevron" />
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="settings-row settings-row--link"
+                onClick={() => setSignOutAlertOpen(true)}
+              >
+                <div className="settings-row-info">
+                  <span className="settings-row-label">
+                    Cerrar sesión en otros dispositivos
+                    <span className="account-manage-soon">próximamente</span>
+                  </span>
+                  <span className="settings-row-value settings-row-sub">
+                    Mantiene esta sesión y cierra el resto.
+                  </span>
+                </div>
+                <IonIcon icon={logOutOutline} className="settings-row-chevron" />
+              </button>
+
+              <div className="settings-row settings-row--danger">
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Eliminar cuenta</span>
+                  <span className="settings-row-value settings-row-sub">
+                    Borra tu cuenta de forma permanente. Esta acción no se puede deshacer.
+                  </span>
+                </div>
                 <IonButton
                   fill="outline"
                   color="danger"
                   size="small"
                   className="settings-row-action"
-                  onClick={() => setConfirmUnlinkGoogleOpen(true)}
+                  onClick={() => setDeleteAccountOpen(true)}
                 >
-                  Desvincular
+                  Eliminar cuenta
                 </IonButton>
-              ) : (
-                <IonButton
-                  fill="outline"
-                  size="small"
-                  className="settings-row-action"
-                  onClick={handleLinkGoogle}
-                >
-                  <IonIcon icon={logoGoogle} slot="start" />
-                  Vincular
-                </IonButton>
-              )}
-            </div>
-
-            {/* ════════ SECCIÓN SEGURIDAD ════════ */}
-            <h3 className="account-manage-section-title">Seguridad</h3>
-
-            <div className="settings-row">
-              <div className="settings-row-info">
-                <span className="settings-row-label">Verificación en dos pasos (TOTP)</span>
-                <span className="settings-row-value settings-row-sub">
-                  {enrolledTotp
-                    ? 'Activada · te pediremos el código al iniciar sesión'
-                    : 'Añade una capa extra de seguridad con tu app authenticator'}
-                </span>
               </div>
-              {enrolledTotp ? (
-                <IonButton
-                  fill="outline"
-                  color="danger"
-                  size="small"
-                  className="settings-row-action"
-                  onClick={() => setConfirmDisableTotpOpen(true)}
-                >
-                  Desactivar
-                </IonButton>
-              ) : (
-                <IonButton
-                  fill="outline"
-                  size="small"
-                  className="settings-row-action"
-                  onClick={() => setEnableTotpOpen(true)}
-                >
-                  <IonIcon icon={shieldCheckmarkOutline} slot="start" />
-                  Activar
-                </IonButton>
-              )}
-            </div>
-
-            {hasPassword && (
-              <button
-                type="button"
-                className="settings-row settings-row--link"
-                onClick={() => setChangePasswordOpen(true)}
-              >
-                <div className="settings-row-info">
-                  <span className="settings-row-label">Cambiar contraseña</span>
-                  <span className="settings-row-value settings-row-sub">
-                    Confirma la actual y elige una nueva.
-                  </span>
-                </div>
-                <IonIcon icon={lockClosedOutline} className="settings-row-chevron" />
-              </button>
-            )}
-
-            {hasPassword && (
-              <button
-                type="button"
-                className="settings-row settings-row--link"
-                onClick={() => setForgotOpen(true)}
-              >
-                <div className="settings-row-info">
-                  <span className="settings-row-label">Restablecer contraseña</span>
-                  <span className="settings-row-value settings-row-sub">
-                    Te enviamos un enlace al email para crear una nueva sin necesitar la actual.
-                  </span>
-                </div>
-                <IonIcon icon={keyOutline} className="settings-row-chevron" />
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="settings-row settings-row--link"
-              onClick={() => setSignOutAlertOpen(true)}
-            >
-              <div className="settings-row-info">
-                <span className="settings-row-label">
-                  Cerrar sesión en otros dispositivos
-                  <span className="account-manage-soon">próximamente</span>
-                </span>
-                <span className="settings-row-value settings-row-sub">
-                  Mantiene esta sesión y cierra el resto.
-                </span>
-              </div>
-              <IonIcon icon={logOutOutline} className="settings-row-chevron" />
-            </button>
-
-            {/* Eliminar cuenta · acción destructiva, en rojo, al final */}
-            <div className="settings-row settings-row--danger">
-              <div className="settings-row-info">
-                <span className="settings-row-label">Eliminar cuenta</span>
-                <span className="settings-row-value settings-row-sub">
-                  Borra tu cuenta de forma permanente. Esta acción no se puede deshacer.
-                </span>
-              </div>
-              <IonButton
-                fill="outline"
-                color="danger"
-                size="small"
-                className="settings-row-action"
-                onClick={() => setDeleteAccountOpen(true)}
-              >
-                Eliminar cuenta
-              </IonButton>
             </div>
           </div>
-        </div>
+        </IonContent>
       </IonModal>
 
       {/* ─── Sub-modales ───────────────────────────────────────── */}
+      <AccountInfoModal
+        isOpen={accountInfoOpen}
+        user={user}
+        onClose={() => setAccountInfoOpen(false)}
+      />
       <ChangeEmailModal
         isOpen={changeEmailOpen}
         user={user}
