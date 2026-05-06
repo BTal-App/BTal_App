@@ -170,8 +170,6 @@ const Settings: React.FC = () => {
           </section>
 
           <section className="settings-section settings-danger">
-            <h2 className="settings-section-title">Zona de peligro</h2>
-
             <div className="settings-row settings-row--danger">
               <div className="settings-row-info">
                 <span className="settings-row-label">Eliminar cuenta</span>
