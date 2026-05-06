@@ -7,13 +7,16 @@ import {
   lockClosedOutline,
 } from 'ionicons/icons';
 import type { User } from 'firebase/auth';
-import { reauthEmail, resetPassword } from '../services/auth';
+import { changePassword, reauthEmail } from '../services/auth';
 import './SettingsModal.css';
 
 interface Props {
   isOpen: boolean;
   user: User;
   onClose: () => void;
+  // Cuando el usuario pulsa "¿Has olvidado la contraseña?" en el primer paso.
+  // El padre debería cerrar este modal y abrir ForgotPasswordModal.
+  onForgot: () => void;
 }
 
 const errorCode = (err: unknown): string =>
@@ -23,50 +26,90 @@ function translateError(code: string): string {
   const map: Record<string, string> = {
     'auth/wrong-password': 'Contraseña actual incorrecta.',
     'auth/invalid-credential': 'Contraseña actual incorrecta.',
+    'auth/weak-password': 'Contraseña nueva débil.',
     'auth/too-many-requests':
       'Se ha superado el número máximo de intentos. Por favor, espere unos minutos.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
-    'auth/user-not-found': 'No existe cuenta con este email.',
   };
-  return map[code] ?? 'No hemos podido enviar el email. Inténtalo de nuevo.';
+  return map[code] ?? 'No hemos podido cambiar la contraseña. Inténtalo de nuevo.';
 }
 
-export function ChangePasswordModal({ isOpen, user, onClose }: Props) {
+function validatePasswordStrength(pwd: string): string | null {
+  if (pwd.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
+  if (!/[A-Z]/.test(pwd)) return 'Debe incluir al menos una letra mayúscula.';
+  if (!/[0-9]/.test(pwd)) return 'Debe incluir al menos un número.';
+  if (!/[^A-Za-z0-9]/.test(pwd)) return 'Debe incluir al menos un carácter especial.';
+  return null;
+}
+
+// Flujo en 2 pasos al estilo Instagram (sin el envío de código por email,
+// que requiere Cloud Functions; usamos la contraseña actual como gate
+// equivalente). Cuando se active el backend en la Fase 6 del roadmap se
+// puede insertar antes un paso de "código enviado a tu email".
+type Stage = 'verify' | 'new' | 'done';
+
+export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) {
+  const [stage, setStage] = useState<Stage>('verify');
   const [currentPwd, setCurrentPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [newPwd2, setNewPwd2] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
 
   const resetState = () => {
+    setStage('verify');
     setCurrentPwd('');
+    setNewPwd('');
+    setNewPwd2('');
     setShowPwd(false);
     setBusy(false);
     setError('');
-    setSent(false);
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleVerify = async (e: FormEvent) => {
     e.preventDefault();
-    if (!user.email) {
-      setError('Esta cuenta no tiene email — no puedes cambiar la contraseña por aquí.');
-      return;
-    }
     setError('');
     setBusy(true);
     try {
-      // Paso 1: confirma identidad reauth con la contraseña actual
-      // (Firebase lo exige y de paso valida que el usuario sabe la actual).
       await reauthEmail(user, currentPwd);
-      // Paso 2: dispara el flujo estándar de reset por email — el enlace del
-      // email abrirá /auth/action?mode=resetPassword donde se pone la nueva.
-      await resetPassword(user.email);
-      setSent(true);
+      setStage('new');
     } catch (err) {
       setError(translateError(errorCode(err)));
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleSetNew = async (e: FormEvent) => {
+    e.preventDefault();
+    setError('');
+    const pwdError = validatePasswordStrength(newPwd);
+    if (pwdError) {
+      setError(pwdError);
+      return;
+    }
+    if (newPwd !== newPwd2) {
+      setError('Las contraseñas nuevas no coinciden.');
+      return;
+    }
+    if (newPwd === currentPwd) {
+      setError('La nueva contraseña debe ser distinta de la actual.');
+      return;
+    }
+    setBusy(true);
+    try {
+      await changePassword(user, newPwd);
+      setStage('done');
+    } catch (err) {
+      setError(translateError(errorCode(err)));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleForgotClick = () => {
+    onForgot();
   };
 
   return (
@@ -92,27 +135,12 @@ export function ChangePasswordModal({ isOpen, user, onClose }: Props) {
         <div className="settings-modal-card">
           <h2 className="settings-modal-title">Cambiar contraseña</h2>
 
-          {sent ? (
+          {stage === 'verify' && (
             <>
               <p className="settings-modal-text">
-                Te hemos enviado un email a <strong>{user.email}</strong> con un enlace
-                seguro para crear una nueva contraseña.
+                Para tu seguridad, primero confirma tu contraseña actual.
               </p>
-              <p className="settings-modal-text" style={{ color: 'var(--btal-t-3)', fontSize: '0.82rem' }}>
-                Si no lo ves en unos minutos, revisa la carpeta de spam.
-              </p>
-              <IonButton expand="block" className="settings-modal-primary" onClick={onClose}>
-                Cerrar
-              </IonButton>
-            </>
-          ) : (
-            <>
-              <p className="settings-modal-text">
-                Para tu seguridad, te enviaremos un enlace por email. Antes confirma tu
-                contraseña actual.
-              </p>
-
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleVerify}>
                 <div className="landing-input-wrap">
                   <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
                   <input
@@ -143,9 +171,93 @@ export function ChangePasswordModal({ isOpen, user, onClose }: Props) {
                   className="settings-modal-primary"
                   disabled={busy || !currentPwd}
                 >
-                  {busy ? <IonSpinner name="dots" /> : 'Enviar enlace por email'}
+                  {busy ? <IonSpinner name="dots" /> : 'Continuar'}
+                </IonButton>
+
+                <button
+                  type="button"
+                  className="landing-link"
+                  onClick={handleForgotClick}
+                >
+                  ¿Has olvidado la contraseña?
+                </button>
+              </form>
+            </>
+          )}
+
+          {stage === 'new' && (
+            <>
+              <p className="settings-modal-text">
+                Identidad confirmada. Ahora elige una contraseña nueva.
+              </p>
+              <form onSubmit={handleSetNew}>
+                <div className="landing-input-wrap">
+                  <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+                  <input
+                    className="landing-input landing-input--password"
+                    type={showPwd ? 'text' : 'password'}
+                    placeholder="Contraseña nueva"
+                    autoComplete="new-password"
+                    value={newPwd}
+                    onChange={(e) => setNewPwd(e.target.value)}
+                    required
+                    minLength={8}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="landing-input-toggle"
+                    onClick={() => setShowPwd((v) => !v)}
+                    aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    <IonIcon icon={showPwd ? eyeOffOutline : eyeOutline} />
+                  </button>
+                </div>
+
+                <div className="landing-input-wrap">
+                  <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+                  <input
+                    className="landing-input"
+                    type={showPwd ? 'text' : 'password'}
+                    placeholder="Confirmar nueva"
+                    autoComplete="new-password"
+                    value={newPwd2}
+                    onChange={(e) => setNewPwd2(e.target.value)}
+                    required
+                    minLength={8}
+                  />
+                </div>
+
+                <p className="landing-hint">
+                  Mínimo 8 caracteres · 1 mayúscula · 1 número · 1 carácter especial
+                </p>
+
+                {error && <div className="landing-msg error">{error}</div>}
+
+                <IonButton
+                  type="submit"
+                  expand="block"
+                  className="settings-modal-primary"
+                  disabled={busy || !newPwd || !newPwd2}
+                >
+                  {busy ? <IonSpinner name="dots" /> : 'Guardar nueva contraseña'}
                 </IonButton>
               </form>
+            </>
+          )}
+
+          {stage === 'done' && (
+            <>
+              <p className="settings-modal-text">
+                Contraseña actualizada correctamente.
+              </p>
+              <p className="settings-modal-text" style={{ color: 'var(--btal-t-3)', fontSize: '0.82rem' }}>
+                Por seguridad, recomendamos cerrar sesión en otros dispositivos desde el siguiente
+                paso o iniciar sesión de nuevo en ellos.
+              </p>
+              <IonButton expand="block" className="settings-modal-primary" onClick={onClose}>
+                Cerrar
+              </IonButton>
             </>
           )}
         </div>

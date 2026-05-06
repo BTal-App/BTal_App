@@ -11,9 +11,9 @@ import {
 import {
   arrowBackOutline,
   checkmarkCircle,
+  chevronForwardOutline,
   helpCircleOutline,
   informationCircleOutline,
-  keyOutline,
   logoGoogle,
   mailOutline,
   pencilOutline,
@@ -23,15 +23,13 @@ import { useAuth } from '../hooks/useAuth';
 import {
   getEnrolledTotpFactor,
   hasGoogleProvider,
-  hasPasswordProvider,
   isStandalone,
   linkGoogle,
   unenrollTotp,
   unlinkProvider,
 } from '../services/auth';
 import { AboutModal } from '../components/AboutModal';
-import { ChangeEmailModal } from '../components/ChangeEmailModal';
-import { ChangePasswordModal } from '../components/ChangePasswordModal';
+import { AccountManageModal } from '../components/AccountManageModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { EnableTotpModal } from '../components/EnableTotpModal';
@@ -71,8 +69,7 @@ const Settings: React.FC = () => {
   const { user, loading, isAuthed } = useAuth();
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
-  const [changeEmailOpen, setChangeEmailOpen] = useState(false);
-  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [accountManageOpen, setAccountManageOpen] = useState(false);
   const [enableTotpOpen, setEnableTotpOpen] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [confirmUnlinkGoogleOpen, setConfirmUnlinkGoogleOpen] = useState(false);
@@ -103,7 +100,6 @@ const Settings: React.FC = () => {
 
   const isAnonymous = user.isAnonymous;
   const enrolledTotp = getEnrolledTotpFactor(user);
-  const hasPassword = hasPasswordProvider(user);
   const hasGoogle = hasGoogleProvider(user);
   // Forzamos lectura de tick para que el render se actualice tras cambios
   void tick;
@@ -221,42 +217,10 @@ const Settings: React.FC = () => {
                   )}
                 </span>
               </div>
-              {!isAnonymous && (
-                <IonButton
-                  fill="outline"
-                  size="small"
-                  className="settings-row-action"
-                  onClick={() => setChangeEmailOpen(true)}
-                >
-                  <IonIcon icon={mailOutline} slot="start" />
-                  Cambiar
-                </IonButton>
-              )}
             </div>
 
             {!isAnonymous && user.email && (
               <VerifyEmailRow user={user} onRefreshed={refresh} />
-            )}
-
-            {/* Cambiar contraseña — solo si la cuenta tiene provider password */}
-            {!isAnonymous && hasPassword && (
-              <div className="settings-row">
-                <div className="settings-row-info">
-                  <span className="settings-row-label">Contraseña</span>
-                  <span className="settings-row-value settings-row-sub">
-                    Cámbiala sin tener que pasar por el email.
-                  </span>
-                </div>
-                <IonButton
-                  fill="outline"
-                  size="small"
-                  className="settings-row-action"
-                  onClick={() => setChangePasswordOpen(true)}
-                >
-                  <IonIcon icon={keyOutline} slot="start" />
-                  Cambiar
-                </IonButton>
-              </div>
             )}
 
             {/* Vincular / desvincular Google */}
@@ -285,8 +249,6 @@ const Settings: React.FC = () => {
                     color="danger"
                     size="small"
                     className="settings-row-action"
-                    // Solo dejamos desvincular si queda otro método de login
-                    disabled={!hasPassword}
                     onClick={() => setConfirmUnlinkGoogleOpen(true)}
                   >
                     Desvincular
@@ -303,6 +265,24 @@ const Settings: React.FC = () => {
                   </IonButton>
                 )}
               </div>
+            )}
+
+            {/* Submenu Administrar cuenta — abre AccountManageModal con
+                cambiar email, contraseña, restablecer y cerrar sesiones. */}
+            {!isAnonymous && (
+              <button
+                type="button"
+                className="settings-row settings-row--link"
+                onClick={() => setAccountManageOpen(true)}
+              >
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Administrar cuenta</span>
+                  <span className="settings-row-value settings-row-sub">
+                    Cambiar email, contraseña y gestionar sesiones.
+                  </span>
+                </div>
+                <IonIcon icon={chevronForwardOutline} className="settings-row-chevron" />
+              </button>
             )}
           </section>
 
@@ -431,15 +411,10 @@ const Settings: React.FC = () => {
               onClose={() => setEditProfileOpen(false)}
               onUpdated={refresh}
             />
-            <ChangeEmailModal
-              isOpen={changeEmailOpen}
+            <AccountManageModal
+              isOpen={accountManageOpen}
               user={user}
-              onClose={() => setChangeEmailOpen(false)}
-            />
-            <ChangePasswordModal
-              isOpen={changePasswordOpen}
-              user={user}
-              onClose={() => setChangePasswordOpen(false)}
+              onClose={() => setAccountManageOpen(false)}
             />
             <EnableTotpModal
               isOpen={enableTotpOpen}

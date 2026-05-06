@@ -1,0 +1,83 @@
+/* AccountManageModal · estilo de submenu (similar a AboutModal) */
+
+.account-manage-card {
+  padding-top: 28px;
+}
+
+.account-manage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.account-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--btal-surface);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.account-manage-row:hover {
+  background: var(--btal-surface-2);
+}
+
+.account-manage-row > ion-icon {
+  font-size: 1.4rem;
+  color: var(--btal-t-3);
+  flex-shrink: 0;
+}
+
+.account-manage-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.account-manage-row-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--btal-t-1);
+  line-height: 1.3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.account-manage-row-sub {
+  font-size: 0.78rem;
+  color: var(--btal-t-2);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.account-manage-soon {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(240, 168, 56, 0.12);
+  color: var(--btal-gold);
+  border: 1px solid rgba(240, 168, 56, 0.32);
+  font-weight: 600;
+  vertical-align: middle;
+}
