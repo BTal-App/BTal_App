@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
-  IonAlert,
   IonButton,
   IonContent,
   IonIcon,
@@ -10,30 +9,17 @@ import {
 } from '@ionic/react';
 import {
   arrowBackOutline,
-  checkmarkCircle,
   chevronForwardOutline,
   helpCircleOutline,
   informationCircleOutline,
-  logoGoogle,
   mailOutline,
   pencilOutline,
-  shieldCheckmarkOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
-import {
-  getEnrolledTotpFactor,
-  hasGoogleProvider,
-  isStandalone,
-  linkGoogle,
-  unenrollTotp,
-  unlinkProvider,
-} from '../services/auth';
 import { AboutModal } from '../components/AboutModal';
 import { AccountManageModal } from '../components/AccountManageModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EditProfileModal } from '../components/EditProfileModal';
-import { EnableTotpModal } from '../components/EnableTotpModal';
-import { VerifyEmailRow } from '../components/VerifyEmailRow';
 import { initialsOf } from '../utils/userDisplay';
 import './Settings.css';
 
@@ -70,15 +56,10 @@ const Settings: React.FC = () => {
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [accountManageOpen, setAccountManageOpen] = useState(false);
-  const [enableTotpOpen, setEnableTotpOpen] = useState(false);
-  const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
-  const [confirmUnlinkGoogleOpen, setConfirmUnlinkGoogleOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [linkGoogleError, setLinkGoogleError] = useState('');
-  // Tick para forzar re-render tras enroll/unenroll/link (los datos están
-  // mutados en el objeto user pero no disparan onAuthStateChanged).
-  const [tick, setTick] = useState(0);
+  // Tick para forzar re-render tras cambios en el user (refresh manual).
+  const [, setTick] = useState(0);
   const refresh = () => setTick((t) => t + 1);
 
   // Si no hay sesión, vuelve al landing
@@ -99,52 +80,6 @@ const Settings: React.FC = () => {
   }
 
   const isAnonymous = user.isAnonymous;
-  const enrolledTotp = getEnrolledTotpFactor(user);
-  const hasGoogle = hasGoogleProvider(user);
-  // Forzamos lectura de tick para que el render se actualice tras cambios
-  void tick;
-
-  const handleDisableTotp = async () => {
-    try {
-      await unenrollTotp(user);
-      await user.reload();
-      refresh();
-    } catch (err) {
-      console.error('[BTal] unenroll error:', err);
-    }
-  };
-
-  const handleLinkGoogle = async () => {
-    setLinkGoogleError('');
-    try {
-      await linkGoogle(user);
-      await user.reload();
-      refresh();
-    } catch (err) {
-      const code = (err as { code?: string })?.code ?? '';
-      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-        return; // El usuario cerró el popup, no es un error real
-      }
-      if (code === 'auth/credential-already-in-use') {
-        setLinkGoogleError('Esa cuenta de Google ya está vinculada a otra cuenta de BTal.');
-      } else if (code === 'auth/provider-already-linked') {
-        setLinkGoogleError('Google ya está vinculado a esta cuenta.');
-      } else {
-        setLinkGoogleError('No hemos podido vincular Google. Inténtalo de nuevo.');
-      }
-    }
-  };
-
-  const handleUnlinkGoogle = async () => {
-    try {
-      await unlinkProvider(user, 'google.com');
-      await user.reload();
-      refresh();
-    } catch (err) {
-      console.error('[BTal] unlink google error:', err);
-    }
-  };
-
   const supportMailto = buildSupportMailto(user.email, user.uid, '[Soporte]');
   const bugMailto = buildSupportMailto(user.email, user.uid, '[BUG]');
 
@@ -173,7 +108,7 @@ const Settings: React.FC = () => {
             </div>
           )}
 
-          {/* Avatar grande clicable para editar perfil — solo no-invitados */}
+          {/* Avatar grande clickable para editar perfil — solo no-invitados */}
           {!isAnonymous && (
             <button
               type="button"
@@ -200,76 +135,9 @@ const Settings: React.FC = () => {
             </button>
           )}
 
-          <section className="settings-section">
-            <h2 className="settings-section-title">Cuenta</h2>
-
-            <div className="settings-row">
-              <div className="settings-row-info">
-                <span className="settings-row-label">Email</span>
-                <span className="settings-row-value">
-                  {user.email ?? 'Sin email (invitado)'}
-                  {!isAnonymous && user.emailVerified && (
-                    <IonIcon
-                      icon={checkmarkCircle}
-                      style={{ color: 'var(--btal-cyan)', marginLeft: 6, verticalAlign: 'middle' }}
-                      aria-label="Verificado"
-                    />
-                  )}
-                </span>
-              </div>
-            </div>
-
-            {!isAnonymous && user.email && (
-              <VerifyEmailRow user={user} onRefreshed={refresh} />
-            )}
-
-            {/* Vincular / desvincular Google */}
-            {!isAnonymous && (
-              <div className="settings-row">
-                <div className="settings-row-info">
-                  <span className="settings-row-label">Cuenta de Google</span>
-                  <span className="settings-row-value settings-row-sub">
-                    {hasGoogle
-                      ? 'Vinculada · puedes iniciar sesión con Google'
-                      : 'Vincúlala para iniciar sesión también con Google'}
-                  </span>
-                  {!hasGoogle && isStandalone() && (
-                    <span className="settings-row-warn">
-                      En la app instalada el flujo de Google puede fallar (limitación de iOS PWA).
-                      Si no funciona, vincúlala desde el navegador.
-                    </span>
-                  )}
-                  {linkGoogleError && (
-                    <span className="settings-row-error">{linkGoogleError}</span>
-                  )}
-                </div>
-                {hasGoogle ? (
-                  <IonButton
-                    fill="outline"
-                    color="danger"
-                    size="small"
-                    className="settings-row-action"
-                    onClick={() => setConfirmUnlinkGoogleOpen(true)}
-                  >
-                    Desvincular
-                  </IonButton>
-                ) : (
-                  <IonButton
-                    fill="outline"
-                    size="small"
-                    className="settings-row-action"
-                    onClick={handleLinkGoogle}
-                  >
-                    <IonIcon icon={logoGoogle} slot="start" />
-                    Vincular
-                  </IonButton>
-                )}
-              </div>
-            )}
-
-            {/* Submenu Administrar cuenta — abre AccountManageModal con
-                cambiar email, contraseña, restablecer y cerrar sesiones. */}
-            {!isAnonymous && (
+          {/* Único entry-point para todo lo de cuenta y seguridad */}
+          {!isAnonymous && (
+            <section className="settings-section">
               <button
                 type="button"
                 className="settings-row settings-row--link"
@@ -278,51 +146,13 @@ const Settings: React.FC = () => {
                 <div className="settings-row-info">
                   <span className="settings-row-label">Administrar cuenta</span>
                   <span className="settings-row-value settings-row-sub">
-                    Cambiar email, contraseña y gestionar sesiones.
+                    Cuenta · seguridad · sesiones · eliminar cuenta
                   </span>
                 </div>
                 <IonIcon icon={chevronForwardOutline} className="settings-row-chevron" />
               </button>
-            )}
-          </section>
-
-          <section className="settings-section">
-            <h2 className="settings-section-title">Seguridad</h2>
-
-            <div className="settings-row">
-              <div className="settings-row-info">
-                <span className="settings-row-label">Verificación en dos pasos (TOTP)</span>
-                <span className="settings-row-value settings-row-sub">
-                  {enrolledTotp
-                    ? 'Activada · te pediremos el código al iniciar sesión'
-                    : 'Añade una capa extra de seguridad con tu app authenticator'}
-                </span>
-              </div>
-              {!isAnonymous && (
-                enrolledTotp ? (
-                  <IonButton
-                    fill="outline"
-                    color="danger"
-                    size="small"
-                    className="settings-row-action"
-                    onClick={() => setConfirmDisableOpen(true)}
-                  >
-                    Desactivar
-                  </IonButton>
-                ) : (
-                  <IonButton
-                    fill="outline"
-                    size="small"
-                    className="settings-row-action"
-                    onClick={() => setEnableTotpOpen(true)}
-                  >
-                    <IonIcon icon={shieldCheckmarkOutline} slot="start" />
-                    Activar
-                  </IonButton>
-                )
-              )}
-            </div>
-          </section>
+            </section>
+          )}
 
           <section className="settings-section">
             <h2 className="settings-section-title">Soporte</h2>
@@ -372,36 +202,42 @@ const Settings: React.FC = () => {
             </button>
           </section>
 
-          <section className="settings-section settings-danger">
-            <div className="settings-row settings-row--danger">
-              <div className="settings-row-info">
-                <span className="settings-row-label">Eliminar cuenta</span>
-                <span className="settings-row-value settings-row-sub">
-                  {isAnonymous
-                    ? 'Borra esta sesión de invitado. Perderás los datos al instante.'
-                    : 'Borra tu cuenta de forma permanente. Esta acción no se puede deshacer.'}
-                </span>
+          {/* Eliminar cuenta accesible directamente solo para invitados —
+              los usuarios reales lo tienen dentro de "Administrar cuenta". */}
+          {isAnonymous && (
+            <section className="settings-section settings-danger">
+              <div className="settings-row settings-row--danger">
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Eliminar cuenta</span>
+                  <span className="settings-row-value settings-row-sub">
+                    Borra esta sesión de invitado. Perderás los datos al instante.
+                  </span>
+                </div>
+                <IonButton
+                  fill="outline"
+                  color="danger"
+                  size="small"
+                  className="settings-row-action"
+                  onClick={() => setDeleteAccountOpen(true)}
+                >
+                  Eliminar cuenta
+                </IonButton>
               </div>
-              <IonButton
-                fill="outline"
-                color="danger"
-                size="small"
-                className="settings-row-action"
-                onClick={() => setDeleteAccountOpen(true)}
-              >
-                Eliminar cuenta
-              </IonButton>
-            </div>
-          </section>
+            </section>
+          )}
         </div>
 
         <AboutModal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
 
-        <DeleteAccountModal
-          isOpen={deleteAccountOpen}
-          user={user}
-          onClose={() => setDeleteAccountOpen(false)}
-        />
+        {/* DeleteAccountModal aquí solo se usa para invitados (los registrados
+            lo abren desde dentro de AccountManageModal). */}
+        {isAnonymous && (
+          <DeleteAccountModal
+            isOpen={deleteAccountOpen}
+            user={user}
+            onClose={() => setDeleteAccountOpen(false)}
+          />
+        )}
 
         {!isAnonymous && (
           <>
@@ -415,44 +251,6 @@ const Settings: React.FC = () => {
               isOpen={accountManageOpen}
               user={user}
               onClose={() => setAccountManageOpen(false)}
-            />
-            <EnableTotpModal
-              isOpen={enableTotpOpen}
-              user={user}
-              onClose={() => setEnableTotpOpen(false)}
-              onEnrolled={refresh}
-            />
-            <IonAlert
-              isOpen={confirmDisableOpen}
-              onDidDismiss={() => setConfirmDisableOpen(false)}
-              header="¿Desactivar 2FA?"
-              message="Tu cuenta volverá a usar solo email y contraseña para iniciar sesión. Podrás reactivarla en cualquier momento."
-              buttons={[
-                { text: 'Cancelar', role: 'cancel' },
-                {
-                  text: 'Desactivar',
-                  role: 'destructive',
-                  handler: () => {
-                    handleDisableTotp();
-                  },
-                },
-              ]}
-            />
-            <IonAlert
-              isOpen={confirmUnlinkGoogleOpen}
-              onDidDismiss={() => setConfirmUnlinkGoogleOpen(false)}
-              header="¿Desvincular Google?"
-              message="Tu cuenta seguirá funcionando con email y contraseña. Podrás volver a vincular Google cuando quieras."
-              buttons={[
-                { text: 'Cancelar', role: 'cancel' },
-                {
-                  text: 'Desvincular',
-                  role: 'destructive',
-                  handler: () => {
-                    handleUnlinkGoogle();
-                  },
-                },
-              ]}
             />
           </>
         )}
