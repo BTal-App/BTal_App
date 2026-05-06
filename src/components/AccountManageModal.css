@@ -82,14 +82,23 @@
   letter-spacing: 0.06em;
   color: var(--btal-t-3);
   flex-shrink: 0;
+  /* La label no parte: en español ningún string supera los ~22 chars y entra
+     siempre. Si en futuro alguno crece, conviene revisar a mano. */
+  white-space: nowrap;
 }
 
 .account-info-value {
   font-size: 0.88rem;
   color: var(--btal-t-1);
   text-align: right;
+  /* overflow-wrap: anywhere → permite partir cualquier string (emails sin
+     espacios, fechas largas tipo "30 de septiembre de 2026") DENTRO de su
+     columna en lugar de saltar a otra fila. min-width: 0 deja que el flex
+     item efectivamente se reduzca por debajo de su tamaño intrínseco. */
+  overflow-wrap: anywhere;
   word-break: break-word;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .account-info-uid {
@@ -104,6 +113,9 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 5px;
+  /* Permite que el contenedor de pills se reduzca y los pills bajen a líneas
+     siguientes en lugar de empujar el ancho del row. */
+  min-width: 0;
 }
 
 .account-info-provider {
