@@ -77,8 +77,6 @@ export function AboutModal({ isOpen, onClose }: Props) {
           </div>
 
           <p className="about-credits">
-            Hecho con ♥ desde Spain.
-            <br />
             <span className="about-credits-mono">© BTal · {new Date().getFullYear()}</span>
           </p>
         </div>

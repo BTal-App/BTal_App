@@ -12,6 +12,7 @@ import { logOutOutline, settingsOutline } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
 import { signOut } from '../services/auth';
 import { VerifyEmailBanner } from '../components/VerifyEmailBanner';
+import { greetingName, initialsOf } from '../utils/userDisplay';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
@@ -49,14 +50,26 @@ const Dashboard: React.FC = () => {
       <IonContent fullscreen>
         <div className="dashboard-wrap">
           <div className="dashboard-header">
-            <div>
-              <h1 className="dashboard-greeting">
-                ¡Hola!
-                {user.isAnonymous && <span className="dashboard-badge">Invitado</span>}
-              </h1>
-              <p className="dashboard-email">
-                {user.isAnonymous ? 'Sesión temporal · sin cuenta' : user.email}
-              </p>
+            <div className="dashboard-identity">
+              <div className="dashboard-avatar">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="" />
+                ) : (
+                  <span>{initialsOf(user.displayName, user.email)}</span>
+                )}
+              </div>
+              <div>
+                <h1 className="dashboard-greeting">
+                  {(() => {
+                    const name = greetingName(user);
+                    return name ? `¡Hola, ${name}!` : '¡Hola!';
+                  })()}
+                  {user.isAnonymous && <span className="dashboard-badge">Invitado</span>}
+                </h1>
+                <p className="dashboard-email">
+                  {user.isAnonymous ? 'Sesión temporal · sin cuenta' : user.email}
+                </p>
+              </div>
             </div>
             <div className="dashboard-actions">
               <IonButton

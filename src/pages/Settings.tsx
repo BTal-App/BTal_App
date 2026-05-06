@@ -36,6 +36,7 @@ import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { EnableTotpModal } from '../components/EnableTotpModal';
 import { VerifyEmailRow } from '../components/VerifyEmailRow';
+import { initialsOf } from '../utils/userDisplay';
 import './Settings.css';
 
 declare const __APP_VERSION__: string;
@@ -63,12 +64,6 @@ function buildSupportMailto(
   return `mailto:soporte@btal.app?subject=${encodeURIComponent(
     subject,
   )}&body=${encodeURIComponent(body)}`;
-}
-
-function initialsOf(name: string | null | undefined, email: string | null | undefined) {
-  const source = (name?.trim() || email || '?').trim();
-  const parts = source.split(/[\s@._-]+/).filter(Boolean);
-  return (parts[0]?.[0] ?? '?').toUpperCase() + (parts[1]?.[0]?.toUpperCase() ?? '');
 }
 
 const Settings: React.FC = () => {

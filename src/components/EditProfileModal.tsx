@@ -9,6 +9,7 @@ import {
 import type { User } from 'firebase/auth';
 import { updateUserProfile } from '../services/auth';
 import { resizeImageToDataUrl } from '../utils/resizeImage';
+import { initialsOf } from '../utils/userDisplay';
 import './SettingsModal.css';
 import './EditProfileModal.css';
 
@@ -30,13 +31,6 @@ function translateError(code: string): string {
     'auth/requires-recent-login': 'Tu sesión es vieja. Cierra sesión y vuelve a entrar.',
   };
   return map[code] ?? 'No hemos podido guardar el perfil. Inténtalo de nuevo.';
-}
-
-// Si el name está vacío, usamos las iniciales del email.
-function initialsOf(user: User, name?: string | null) {
-  const source = (name?.trim() || user.displayName?.trim() || user.email || '?').trim();
-  const parts = source.split(/[\s@._-]+/).filter(Boolean);
-  return (parts[0]?.[0] ?? '?').toUpperCase() + (parts[1]?.[0]?.toUpperCase() ?? '');
 }
 
 export function EditProfileModal({ isOpen, user, onClose, onUpdated }: Props) {
@@ -144,7 +138,9 @@ export function EditProfileModal({ isOpen, user, onClose, onUpdated }: Props) {
               ) : photoUrl ? (
                 <img src={photoUrl} alt="Foto de perfil" />
               ) : (
-                <span className="profile-avatar-initials">{initialsOf(user, name)}</span>
+                <span className="profile-avatar-initials">
+                  {initialsOf(name || user.displayName, user.email)}
+                </span>
               )}
             </div>
             <div className="profile-avatar-actions">
