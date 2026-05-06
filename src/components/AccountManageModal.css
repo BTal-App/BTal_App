@@ -66,7 +66,9 @@
   gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid var(--btal-border);
-  flex-wrap: wrap;
+  /* Sin flex-wrap: el label queda a la izquierda y el valor a la derecha
+     siempre en la misma fila. Si el valor es largo, parte en líneas dentro
+     de su columna (word-break: break-word en .account-info-value). */
 }
 
 .account-info-item:last-child {
