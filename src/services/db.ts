@@ -1,4 +1,4 @@
-import type { DocumentData } from 'firebase/firestore';
+import type { DocumentData, Firestore } from 'firebase/firestore';
 import { app } from './firebase';
 
 // Toda lectura/escritura a Firestore pasa por aquí.
@@ -8,17 +8,26 @@ import { app } from './firebase';
 // bundle cuando se invoca alguna de estas funciones por primera vez.
 
 let firestorePromise: Promise<typeof import('firebase/firestore')> | null = null;
-const loadFirestore = () => (firestorePromise ??= import('firebase/firestore'));
+let firestoreInstance: Firestore | null = null;
+
+async function getDb() {
+  const fs = (firestorePromise ??= import('firebase/firestore'));
+  const mod = await fs;
+  // getFirestore es idempotente para el mismo app, pero cacheamos la instancia
+  // para no llamar a la fábrica en cada operación.
+  firestoreInstance ??= mod.getFirestore(app);
+  return { mod, db: firestoreInstance };
+}
 
 export async function getUserData(uid: string): Promise<DocumentData | null> {
-  const fs = await loadFirestore();
-  const ref = fs.doc(fs.getFirestore(app), 'users', uid);
-  const snap = await fs.getDoc(ref);
+  const { mod, db } = await getDb();
+  const ref = mod.doc(db, 'users', uid);
+  const snap = await mod.getDoc(ref);
   return snap.exists() ? snap.data() : null;
 }
 
 export async function setUserData(uid: string, data: DocumentData) {
-  const fs = await loadFirestore();
-  const ref = fs.doc(fs.getFirestore(app), 'users', uid);
-  await fs.setDoc(ref, data, { merge: true });
+  const { mod, db } = await getDb();
+  const ref = mod.doc(db, 'users', uid);
+  await mod.setDoc(ref, data, { merge: true });
 }

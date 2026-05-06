@@ -27,6 +27,9 @@ import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 import { TotpSignInModal } from '../components/TotpSignInModal';
 import './Landing.css';
 
+declare const __APP_VERSION__: string;
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
+
 type Mode = 'signin' | 'signup';
 
 function translateAuthError(code: string): string {
@@ -298,7 +301,7 @@ const Landing: React.FC = () => {
             </div>
           </form>
 
-          <div className="landing-version">v0.1 · scaffold</div>
+          <div className="landing-version">v{APP_VERSION}</div>
         </div>
 
         <ForgotPasswordModal

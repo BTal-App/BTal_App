@@ -3,13 +3,12 @@ import { IonButton, IonIcon, IonSpinner } from '@ionic/react';
 import { checkmarkCircle, mailOutline, refreshOutline } from 'ionicons/icons';
 import type { User } from 'firebase/auth';
 import { sendVerificationEmail } from '../services/auth';
+import { useAuth } from '../hooks/useAuth';
 import { useVerifyBanner } from '../hooks/useVerifyBanner';
 import './VerifyEmailRow.css';
 
 interface Props {
   user: User;
-  // Llamado tras user.reload() para que el padre fuerce re-render.
-  onRefreshed?: () => void;
 }
 
 const errorCode = (err: unknown): string =>
@@ -26,7 +25,8 @@ function translateError(code: string): string {
 
 type Stage = 'idle' | 'sending' | 'error';
 
-export function VerifyEmailRow({ user, onRefreshed }: Props) {
+export function VerifyEmailRow({ user }: Props) {
+  const { refreshUser } = useAuth();
   const { sent, markSent } = useVerifyBanner();
   const [stage, setStage] = useState<Stage>('idle');
   const [error, setError] = useState('');
@@ -50,10 +50,9 @@ export function VerifyEmailRow({ user, onRefreshed }: Props) {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await user.reload();
-      onRefreshed?.();
-    } catch {
-      /* mantenemos el estado actual */
+      // refreshUser hace user.reload() y propaga el cambio a todos los
+      // consumidores del AuthContext (Dashboard, AccountInfoModal...).
+      await refreshUser();
     } finally {
       setRefreshing(false);
     }

@@ -58,9 +58,6 @@ const Settings: React.FC = () => {
   const [accountManageOpen, setAccountManageOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  // Tick para forzar re-render tras cambios en el user (refresh manual).
-  const [, setTick] = useState(0);
-  const refresh = () => setTick((t) => t + 1);
 
   // Si no hay sesión, vuelve al landing
   useEffect(() => {
@@ -245,7 +242,6 @@ const Settings: React.FC = () => {
               isOpen={editProfileOpen}
               user={user}
               onClose={() => setEditProfileOpen(false)}
-              onUpdated={refresh}
             />
             <AccountManageModal
               isOpen={accountManageOpen}

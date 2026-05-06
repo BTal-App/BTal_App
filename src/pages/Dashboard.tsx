@@ -19,9 +19,6 @@ const Dashboard: React.FC = () => {
   const history = useHistory();
   const { user, loading, isAuthed } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
-  // Tick para forzar re-render tras user.reload() en VerifyEmailBanner —
-  // emailVerified no dispara onAuthStateChanged.
-  const [, setRefreshTick] = useState(0);
 
   // Si no hay sesión, vuelve al landing
   useEffect(() => {
@@ -94,11 +91,7 @@ const Dashboard: React.FC = () => {
           </div>
 
           {user.email && !user.emailVerified && !user.isAnonymous && (
-            <VerifyEmailBanner
-              user={user}
-              place="dashboard"
-              onRefreshed={() => setRefreshTick((t) => t + 1)}
-            />
+            <VerifyEmailBanner user={user} place="dashboard" />
           )}
 
           <div className="dashboard-card">

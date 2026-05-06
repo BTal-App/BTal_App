@@ -8,6 +8,7 @@ import {
 } from 'ionicons/icons';
 import type { User } from 'firebase/auth';
 import { sendVerificationEmail } from '../services/auth';
+import { useAuth } from '../hooks/useAuth';
 import { useVerifyBanner } from '../hooks/useVerifyBanner';
 import './VerifyEmailBanner.css';
 
@@ -17,9 +18,6 @@ interface Props {
   // por separado para cada `place` — cerrar en "dashboard" no afecta a
   // "settings" ni viceversa.
   place: 'dashboard' | 'settings';
-  // Llamado tras user.reload() — el padre debería forzar re-render para
-  // que el banner desaparezca si la verificación se completó.
-  onRefreshed?: () => void;
 }
 
 const errorCode = (err: unknown): string =>
@@ -39,7 +37,8 @@ const dismissKey = (uid: string, place: string) =>
 
 type LocalStage = 'idle' | 'sending' | 'error';
 
-export function VerifyEmailBanner({ user, place, onRefreshed }: Props) {
+export function VerifyEmailBanner({ user, place }: Props) {
+  const { refreshUser } = useAuth();
   const { sent, markSent } = useVerifyBanner();
 
   // Cierre local — se persiste por usuario+place. Lazy init: leemos
@@ -84,10 +83,9 @@ export function VerifyEmailBanner({ user, place, onRefreshed }: Props) {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await user.reload();
-      onRefreshed?.();
-    } catch {
-      /* el banner se mantiene */
+      // refreshUser propaga el cambio (emailVerified) al AuthContext;
+      // el banner desaparece automáticamente si user.emailVerified pasa a true.
+      await refreshUser();
     } finally {
       setRefreshing(false);
     }

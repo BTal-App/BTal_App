@@ -18,9 +18,6 @@ interface Props {
   isOpen: boolean;
   user: User;
   onClose: () => void;
-  // Para que el padre fuerce re-render tras updateProfile (el objeto User
-  // mutará in-place pero React no se entera).
-  onUpdated?: () => void;
 }
 
 const errorCode = (err: unknown): string =>
@@ -34,7 +31,7 @@ function translateError(code: string): string {
   return map[code] ?? 'No hemos podido guardar el perfil. Inténtalo de nuevo.';
 }
 
-export function EditProfileModal({ isOpen, user, onClose, onUpdated }: Props) {
+export function EditProfileModal({ isOpen, user, onClose }: Props) {
   const { refreshUser } = useAuth();
   const [name, setName] = useState(user.displayName ?? '');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user.photoURL ?? null);
@@ -77,7 +74,8 @@ export function EditProfileModal({ isOpen, user, onClose, onUpdated }: Props) {
         return;
       }
       setPhotoUrl(final);
-    } catch {
+    } catch (err) {
+      console.error('[BTal] resize image error:', err);
       setError('No hemos podido procesar la imagen.');
     } finally {
       setImgBusy(false);
@@ -99,7 +97,6 @@ export function EditProfileModal({ isOpen, user, onClose, onUpdated }: Props) {
       // refreshUser propaga el cambio (avatar/nombre) al Dashboard, Settings,
       // AccountInfoModal — todos los consumidores de AuthContext.
       await refreshUser();
-      onUpdated?.();
       onClose();
     } catch (err) {
       setError(translateError(errorCode(err)));

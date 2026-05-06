@@ -1,4 +1,4 @@
-import { useHistory, useLocation } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
 import { arrowBackOutline } from 'ionicons/icons';
 import './LegalPlaceholder.css';
@@ -11,9 +11,7 @@ const TITLES: Record<string, string> = {
 
 const LegalPlaceholder: React.FC = () => {
   const history = useHistory();
-  const location = useLocation();
-  // Última parte de la ruta /legal/<slug>
-  const slug = location.pathname.split('/').pop() ?? '';
+  const { slug = '' } = useParams<{ slug: string }>();
   const title = TITLES[slug] ?? 'Documento legal';
 
   return (

@@ -34,36 +34,32 @@ const App: React.FC = () => (
   <ErrorBoundary>
     <AuthProvider>
       <VerifyBannerProvider>
-      <IonApp>
-        <IonReactRouter>
-          <IonRouterOutlet>
-            <Route exact path="/">
-              <Landing />
-            </Route>
-            <Route exact path="/app">
-              <Dashboard />
-            </Route>
-            <Route exact path="/settings">
-              <Settings />
-            </Route>
-            <Route exact path="/auth/action">
-              <AuthAction />
-            </Route>
-            <Route exact path="/legal/privacidad">
-              <LegalPlaceholder />
-            </Route>
-            <Route exact path="/legal/terminos">
-              <LegalPlaceholder />
-            </Route>
-            <Route exact path="/legal/aviso-medico">
-              <LegalPlaceholder />
-            </Route>
-            <Route>
-              <Redirect to="/" />
-            </Route>
-          </IonRouterOutlet>
-        </IonReactRouter>
-      </IonApp>
+        <IonApp>
+          <IonReactRouter>
+            <IonRouterOutlet>
+              <Route exact path="/">
+                <Landing />
+              </Route>
+              <Route exact path="/app">
+                <Dashboard />
+              </Route>
+              <Route exact path="/settings">
+                <Settings />
+              </Route>
+              <Route exact path="/auth/action">
+                <AuthAction />
+              </Route>
+              {/* Una sola ruta para los 3 documentos legales — el componente
+                  lee el slug con useParams y muestra el título adecuado. */}
+              <Route exact path="/legal/:slug">
+                <LegalPlaceholder />
+              </Route>
+              <Route>
+                <Redirect to="/" />
+              </Route>
+            </IonRouterOutlet>
+          </IonReactRouter>
+        </IonApp>
       </VerifyBannerProvider>
     </AuthProvider>
   </ErrorBoundary>

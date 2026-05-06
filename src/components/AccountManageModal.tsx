@@ -140,9 +140,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                 <IonIcon icon={informationCircleOutline} className="settings-row-chevron" />
               </button>
 
-              {user.email && (
-                <VerifyEmailRow user={user} onRefreshed={refreshUser} />
-              )}
+              {user.email && <VerifyEmailRow user={user} />}
 
               <button
                 type="button"
