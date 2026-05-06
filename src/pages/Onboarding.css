@@ -1,0 +1,362 @@
+/* Onboarding · 3 pasos para capturar el perfil del usuario */
+
+.onboarding-bg {
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(181, 240, 55, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(55, 224, 168, 0.05), transparent 60%),
+    var(--btal-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: max(env(safe-area-inset-top), 32px) 24px max(env(safe-area-inset-bottom), 32px);
+}
+
+.onboarding-loading {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 20px;
+  padding: 28px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  animation: onboarding-entrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes onboarding-entrance {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-card {
+    animation: none;
+  }
+}
+
+/* ── Barra de progreso ────────────────────────────────────────── */
+.onboarding-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.onboarding-progress-dot {
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--btal-border);
+  transition: background 0.25s;
+}
+
+.onboarding-progress-dot.active {
+  background: var(--btal-lime);
+}
+
+.onboarding-progress-dot.done {
+  background: var(--btal-cyan);
+}
+
+.onboarding-progress-label {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  letter-spacing: 0.06em;
+}
+
+/* ── Cabecera de paso ────────────────────────────────────────── */
+.onboarding-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 6px 0 4px;
+  color: var(--btal-t-1);
+}
+
+.onboarding-text {
+  color: var(--btal-t-2);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0 0 6px;
+}
+
+/* ── Campos ──────────────────────────────────────────────────── */
+.onboarding-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.onboarding-field > span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-t-3);
+}
+
+.onboarding-field input[type="text"],
+.onboarding-field input[type="number"] {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.onboarding-field input[type="text"]:focus,
+.onboarding-field input[type="number"]:focus {
+  border-color: var(--btal-lime);
+  background: var(--btal-surface-2);
+}
+
+.onboarding-field input::placeholder {
+  color: var(--btal-t-3);
+}
+
+.onboarding-field-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-t-3);
+  margin-top: 6px;
+}
+
+.onboarding-optional {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--btal-t-3);
+  font-size: 0.7rem;
+  margin-left: 4px;
+}
+
+.onboarding-row {
+  display: flex;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .onboarding-row {
+    flex-direction: column;
+  }
+}
+
+/* ── Segmentos (sexo, etc.) ──────────────────────────────────── */
+.onboarding-segment {
+  display: flex;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.onboarding-segment button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--btal-t-2);
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s, color 0.18s;
+}
+
+.onboarding-segment button:hover:not(.active) {
+  color: var(--btal-t-1);
+}
+
+.onboarding-segment button.active {
+  background: var(--btal-lime);
+  color: #0a0e0c;
+}
+
+/* ── Días (0-7) ─────────────────────────────────────────────── */
+.onboarding-days {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.onboarding-day {
+  flex: 1;
+  min-width: 38px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  color: var(--btal-t-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.onboarding-day:hover:not(.active) {
+  border-color: var(--btal-border-2);
+  color: var(--btal-t-1);
+}
+
+.onboarding-day.active {
+  background: var(--btal-lime);
+  border-color: var(--btal-lime);
+  color: #0a0e0c;
+}
+
+/* ── Opciones grandes (actividad / equipamiento / objetivo) ── */
+.onboarding-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: -4px;
+}
+
+.onboarding-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  transition: all 0.18s;
+}
+
+.onboarding-option:hover:not(.active) {
+  border-color: var(--btal-border-2);
+  background: var(--btal-surface);
+}
+
+.onboarding-option.active {
+  border-color: var(--btal-lime);
+  background: rgba(181, 240, 55, 0.06);
+}
+
+.onboarding-option-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--btal-t-1);
+}
+
+.onboarding-option.active .onboarding-option-title {
+  color: var(--btal-lime);
+}
+
+.onboarding-option-sub {
+  font-size: 0.78rem;
+  color: var(--btal-t-2);
+  line-height: 1.4;
+}
+
+/* ── Pills (restricciones) ──────────────────────────────────── */
+.onboarding-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.onboarding-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 999px;
+  color: var(--btal-t-2);
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.onboarding-pill:hover:not(.active) {
+  border-color: var(--btal-border-2);
+  color: var(--btal-t-1);
+}
+
+.onboarding-pill.active {
+  background: rgba(181, 240, 55, 0.12);
+  border-color: var(--btal-lime);
+  color: var(--btal-lime);
+}
+
+.onboarding-pill ion-icon {
+  font-size: 0.95rem;
+}
+
+/* ── Navegación inferior ────────────────────────────────────── */
+.onboarding-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.onboarding-back {
+  --color: var(--btal-t-2);
+  --border-color: var(--btal-border-2);
+  --border-radius: 10px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.9rem;
+}
+
+.onboarding-next {
+  --background: var(--btal-lime);
+  --background-hover: var(--btal-lime-d);
+  --background-activated: var(--btal-lime-d);
+  --color: #0a0e0c;
+  --border-radius: 10px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 18px;
+  --padding-end: 18px;
+  font-weight: 700;
+  text-transform: none;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 480px) {
+  .onboarding-nav {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+  .onboarding-back,
+  .onboarding-next {
+    width: 100%;
+  }
+}

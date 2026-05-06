@@ -1,5 +1,10 @@
-import type { DocumentData, Firestore } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
 import { app } from './firebase';
+import {
+  defaultUserDocument,
+  type UserDocument,
+  type UserProfile,
+} from '../templates/defaultUser';
 
 // Toda lectura/escritura a Firestore pasa por aquí.
 // Los componentes nunca llaman a Firestore directamente.
@@ -19,15 +24,52 @@ async function getDb() {
   return { mod, db: firestoreInstance };
 }
 
-export async function getUserData(uid: string): Promise<DocumentData | null> {
+// ────────────────────────────────────────────────────────────────────────────
+// User document (/users/{uid})
+
+export async function getUserDocument(uid: string): Promise<UserDocument | null> {
   const { mod, db } = await getDb();
   const ref = mod.doc(db, 'users', uid);
   const snap = await mod.getDoc(ref);
-  return snap.exists() ? snap.data() : null;
+  if (!snap.exists()) return null;
+  return snap.data() as UserDocument;
 }
 
-export async function setUserData(uid: string, data: DocumentData) {
+// Guarda el perfil completo al terminar el onboarding. Si el documento no
+// existía, lo crea con los defaults (plan_pro=false, createdAt, etc.); si ya
+// existía (re-onboarding), solo actualiza el bloque `profile` y `lastActive`.
+export async function saveOnboardingProfile(
+  uid: string,
+  profile: UserProfile,
+): Promise<void> {
   const { mod, db } = await getDb();
   const ref = mod.doc(db, 'users', uid);
-  await mod.setDoc(ref, data, { merge: true });
+  const existing = await mod.getDoc(ref);
+  const now = Date.now();
+
+  if (existing.exists()) {
+    // Re-ejecutar onboarding: actualizamos solo profile + lastActive,
+    // preservamos plan_pro / fechas / createdAt.
+    await mod.updateDoc(ref, {
+      profile: { ...profile, completed: true },
+      lastActive: now,
+    });
+  } else {
+    // Primera vez: doc completo con defaults + el profile rellenado.
+    const initial: UserDocument = {
+      ...defaultUserDocument(),
+      profile: { ...profile, completed: true },
+    };
+    await mod.setDoc(ref, initial);
+  }
+}
+
+// Actualiza solo `lastActive` (cada vez que el user abre el dashboard).
+// No-op si el doc todavía no existe — el onboarding lo creará.
+export async function touchLastActive(uid: string): Promise<void> {
+  const { mod, db } = await getDb();
+  const ref = mod.doc(db, 'users', uid);
+  // updateDoc falla si el doc no existe; con setDoc + merge nunca crea
+  // claves nuevas accidentalmente.
+  await mod.setDoc(ref, { lastActive: Date.now() }, { merge: true });
 }

@@ -6,9 +6,11 @@ import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import AuthAction from './pages/AuthAction';
 import Settings from './pages/Settings';
+import Onboarding from './pages/Onboarding';
 import LegalPlaceholder from './pages/LegalPlaceholder';
 import { AuthProvider } from './hooks/AuthContext';
 import { VerifyBannerProvider } from './hooks/VerifyBannerProvider';
+import { ProfileProvider } from './hooks/ProfileProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 /* Ionic core CSS — obligatorio */
@@ -33,34 +35,39 @@ setupIonicReact();
 const App: React.FC = () => (
   <ErrorBoundary>
     <AuthProvider>
-      <VerifyBannerProvider>
-        <IonApp>
-          <IonReactRouter>
-            <IonRouterOutlet>
-              <Route exact path="/">
-                <Landing />
-              </Route>
-              <Route exact path="/app">
-                <Dashboard />
-              </Route>
-              <Route exact path="/settings">
-                <Settings />
-              </Route>
-              <Route exact path="/auth/action">
-                <AuthAction />
-              </Route>
-              {/* Una sola ruta para los 3 documentos legales — el componente
-                  lee el slug con useParams y muestra el título adecuado. */}
-              <Route exact path="/legal/:slug">
-                <LegalPlaceholder />
-              </Route>
-              <Route>
-                <Redirect to="/" />
-              </Route>
-            </IonRouterOutlet>
-          </IonReactRouter>
-        </IonApp>
-      </VerifyBannerProvider>
+      <ProfileProvider>
+        <VerifyBannerProvider>
+          <IonApp>
+            <IonReactRouter>
+              <IonRouterOutlet>
+                <Route exact path="/">
+                  <Landing />
+                </Route>
+                <Route exact path="/onboarding">
+                  <Onboarding />
+                </Route>
+                <Route exact path="/app">
+                  <Dashboard />
+                </Route>
+                <Route exact path="/settings">
+                  <Settings />
+                </Route>
+                <Route exact path="/auth/action">
+                  <AuthAction />
+                </Route>
+                {/* Una sola ruta para los 3 documentos legales — el componente
+                    lee el slug con useParams y muestra el título adecuado. */}
+                <Route exact path="/legal/:slug">
+                  <LegalPlaceholder />
+                </Route>
+                <Route>
+                  <Redirect to="/" />
+                </Route>
+              </IonRouterOutlet>
+            </IonReactRouter>
+          </IonApp>
+        </VerifyBannerProvider>
+      </ProfileProvider>
     </AuthProvider>
   </ErrorBoundary>
 );

@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Reglas Firestore — versión inicial. Estricto por defecto:
+// cada usuario solo puede leer y escribir su propio documento /users/{uid}.
+//
+// TODO (paso 11-1 del roadmap): añadir validación de tipos y rangos
+// (peso 30-300, edad 14-90, dias_entreno 0-7, objetivo en lista cerrada),
+// bloquear escritura directa a campos críticos (plan_pro, fecha_expiracion)
+// que solo deberían tocarse desde Cloud Functions con Admin SDK, y limitar
+// el tamaño de documento (request.resource.size < 100 * 1024).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Documento por usuario
+    match /users/{userId} {
+      allow read:  if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Bloqueo total para cualquier otra colección
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
