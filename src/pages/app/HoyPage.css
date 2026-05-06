@@ -1,0 +1,269 @@
+/* HoyPage · Tab "Hoy" del shell v2.
+   Hero card grande arriba + empty states reusables debajo.
+   En Fase 1 todos los estados son "vacío" porque aún no hay generador. */
+
+/* ─────────── BANNER INVITADO ─────────── */
+/* CTA permanente para registrarse · usa linkWithCredential bajo el capó
+   para conservar el uid → el menú demo y cualquier edición se transfieren
+   a la cuenta real en cuanto pulsa "Crear cuenta y guardar". */
+.hoy-guest-banner {
+  margin: 8px 16px 0;
+  width: calc(100% - 32px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(176, 122, 240, 0.16),
+    rgba(55, 224, 168, 0.06)
+  );
+  border: 1px solid rgba(176, 122, 240, 0.32);
+  border-radius: 16px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--btal-t-1);
+  transition: all 0.18s;
+}
+
+.hoy-guest-banner:hover {
+  border-color: rgba(176, 122, 240, 0.55);
+  background: linear-gradient(
+    135deg,
+    rgba(176, 122, 240, 0.22),
+    rgba(55, 224, 168, 0.08)
+  );
+}
+
+.hoy-guest-banner ion-icon {
+  font-size: 1.3rem;
+  color: var(--btal-violet);
+  flex-shrink: 0;
+}
+
+.hoy-guest-banner-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hoy-guest-banner-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--btal-violet);
+}
+
+.hoy-guest-banner-text {
+  font-size: 0.85rem;
+  color: var(--btal-t-2);
+  line-height: 1.5;
+}
+
+.hoy-guest-banner-text strong {
+  color: var(--btal-t-1);
+  font-weight: 700;
+}
+
+/* ─────────── HERO CARD ─────────── */
+.hoy-hero {
+  margin: 8px 16px 0;
+  background: linear-gradient(
+    155deg,
+    rgba(181, 240, 55, 0.1),
+    rgba(55, 224, 168, 0.04) 60%,
+    transparent
+  );
+  border: 1px solid rgba(181, 240, 55, 0.18);
+  border-radius: 24px;
+  padding: 22px 20px 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hoy-hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(181, 240, 55, 0.18), transparent 70%);
+  pointer-events: none;
+}
+
+/* Variante "vacío" — borde más sutil, gradiente más tenue */
+.hoy-hero--empty {
+  border-color: rgba(181, 240, 55, 0.12);
+  background: linear-gradient(
+    155deg,
+    rgba(181, 240, 55, 0.06),
+    rgba(55, 224, 168, 0.02) 60%,
+    transparent
+  );
+}
+
+.hoy-hero-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--btal-lime);
+  font-weight: 700;
+}
+
+.hoy-hero-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--btal-lime);
+  box-shadow: 0 0 12px var(--btal-lime);
+  animation: hoy-hero-pulse 2s infinite;
+}
+
+@keyframes hoy-hero-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoy-hero-dot {
+    animation: none;
+  }
+}
+
+.hoy-hero-title {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 2.4rem;
+  line-height: 0.95;
+  margin: 12px 0 8px;
+  letter-spacing: 0.01em;
+  color: var(--btal-t-1);
+}
+
+.hoy-hero-sub {
+  font-size: 0.88rem;
+  color: var(--btal-t-2);
+  line-height: 1.55;
+  margin: 0 0 14px;
+  max-width: 520px;
+}
+
+/* Tag "Próximamente · IA Gemini" abajo del hero vacío */
+.hoy-hero-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-lime);
+  background: rgba(181, 240, 55, 0.08);
+  border: 1px solid rgba(181, 240, 55, 0.25);
+  border-radius: 999px;
+  padding: 5px 12px;
+}
+
+.hoy-hero-tag ion-icon {
+  font-size: 0.85rem;
+}
+
+/* CTA "Generar mi plan con IA" · solo aparece si modo='ai'.
+   Más prominente que el tag — botón sólido lima con glow sutil. */
+.hoy-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border: 1px solid var(--btal-lime);
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: all 0.18s;
+  box-shadow: 0 6px 20px rgba(181, 240, 55, 0.25);
+}
+
+.hoy-hero-cta:hover {
+  background: var(--btal-lime-d);
+  border-color: var(--btal-lime-d);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(181, 240, 55, 0.35);
+}
+
+.hoy-hero-cta:active {
+  transform: translateY(0);
+}
+
+.hoy-hero-cta ion-icon {
+  font-size: 1rem;
+}
+
+/* ─────────── EMPTY CARDS por sección ─────────── */
+.hoy-empty-card {
+  margin: 0 16px;
+  background: var(--btal-surface);
+  border: 1px dashed var(--btal-border-2);
+  border-radius: 20px;
+  padding: 18px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.hoy-empty-card + .hoy-empty-card {
+  margin-top: 10px;
+}
+
+.hoy-empty-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--btal-t-2);
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.hoy-empty-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hoy-empty-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--btal-t-1);
+  letter-spacing: -0.01em;
+}
+
+.hoy-empty-sub {
+  font-size: 0.8rem;
+  color: var(--btal-t-3);
+  line-height: 1.5;
+}

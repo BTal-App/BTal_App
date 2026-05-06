@@ -1,0 +1,83 @@
+/* EditFitnessProfileModal · reaprovecha mucho de Onboarding.css y
+   SettingsModal.css. Aquí solo lo específico de este modal: layout
+   con scroll nativo, secciones y pareja de inputs ft/in. */
+
+.edit-fp-bg {
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(181, 240, 55, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(55, 224, 168, 0.05), transparent 60%),
+    var(--btal-bg);
+  display: flex;
+  justify-content: center;
+  padding: max(env(safe-area-inset-top), 64px) 24px max(env(safe-area-inset-bottom), 32px);
+}
+
+.edit-fp-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 20px;
+  padding: 28px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  height: max-content;
+  animation: settings-modal-entrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Cerrar fijo en la esquina, fuera del IonContent — así no scrollea
+   con el contenido (mismo patrón que AccountManageModal). */
+.edit-fp-close-fixed {
+  z-index: 10;
+}
+
+/* Título de sección dentro del modal — separa Personales / Estilo /
+   Objetivo con un pequeño label tipo categoría. */
+.edit-fp-section-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 800;
+  margin: 14px 0 -2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--btal-border);
+}
+
+.edit-fp-section-title:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 4px;
+}
+
+/* Pareja de inputs ft / in compartiendo una celda */
+.edit-fp-height-imperial {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-fp-height-imperial input {
+  flex: 1;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  min-width: 0;
+}
+
+.edit-fp-height-imperial input:focus {
+  border-color: var(--btal-lime);
+  background: var(--btal-surface-2);
+}
+
+.edit-fp-height-imperial input::placeholder {
+  color: var(--btal-t-3);
+}

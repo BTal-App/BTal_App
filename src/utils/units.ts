@@ -69,13 +69,12 @@ export function formatHeight(cm: number | null | undefined, system: UnitsSystem)
 // ── Días de la semana ─────────────────────────────────────────
 
 // Devuelve los 7 nombres de la semana ordenados según preferencia.
-// Útil para renderizar headers de calendario / planes.
-export function weekDays(start: WeekStart, locale: string = 'es-ES'): string[] {
+// Útil para renderizar headers de calendario / planes. Locale fijo en
+// español por ahora — cuando soportemos i18n añadiremos parámetro y un
+// mapa de etiquetas por idioma. Hoy no merece la pena.
+export function weekDays(start: WeekStart): string[] {
   const labels = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
   const offset = start === 'monday' ? 1 : 0;
-  // Usamos los labels capitalizados según el locale; aquí ya en español.
-  // El locale queda preparado para i18n futuro.
-  void locale;
   const ordered: string[] = [];
   for (let i = 0; i < 7; i++) {
     ordered.push(labels[(i + offset) % 7]);

@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { signOut } from '../services/auth';
+import { StepMode, type StepModeValue } from '../components/StepMode';
 import {
   EQUIPAMIENTOS,
   NIVELES_ACTIVIDAD,
@@ -41,10 +42,22 @@ const Onboarding: React.FC = () => {
 
   // Form state · arrancamos con los defaults (todos null hasta que el user elige).
   const [data, setData] = useState<UserProfile>(defaultProfile);
-  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  // Aviso médico/legal · obligatorio para avanzar del paso 1. No vive en
+  // UserProfile — se persiste como timestamp en UserDocument.medicalDisclaimerAcceptedAt
+  // dentro de saveOnboardingProfile.
+  const [medicalAccepted, setMedicalAccepted] = useState(false);
+  // Modo (IA / manual) + scope de IA · ambos null = aún no elegido,
+  // fuerza al user a tocar alguna opción del paso 4. Si elige IA tiene
+  // que elegir también qué genera (todo / menú+compra / solo menú /
+  // solo entrenos) para poder Finalizar.
+  const [modeChoice, setModeChoice] = useState<StepModeValue>({
+    modo: null,
+    aiScope: null,
+  });
 
   // Prellenamos el nombre con displayName del Auth (si existe) usando el
   // patrón state-from-prop: se aplica en el primer render donde el user
@@ -83,7 +96,8 @@ const Onboarding: React.FC = () => {
         data.edad !== null && data.edad >= 14 && data.edad <= 90 &&
         data.peso !== null && data.peso >= 30 && data.peso <= 300 &&
         data.altura !== null && data.altura >= 120 && data.altura <= 230 &&
-        data.sexo !== null
+        data.sexo !== null &&
+        medicalAccepted
       );
     }
     if (step === 1) {
@@ -96,8 +110,15 @@ const Onboarding: React.FC = () => {
     if (step === 2) {
       return data.objetivo !== null;
     }
+    if (step === 3) {
+      // Manual válido por sí solo. IA requiere scope elegido para que
+      // la primera generación sepa qué generar.
+      if (modeChoice.modo === 'manual') return true;
+      if (modeChoice.modo === 'ai') return modeChoice.aiScope !== null;
+      return false;
+    }
     return false;
-  }, [step, data]);
+  }, [step, data, medicalAccepted, modeChoice]);
 
   const setField = <K extends keyof UserProfile>(key: K, value: UserProfile[K]) => {
     setData((d) => ({ ...d, [key]: value }));
@@ -117,19 +138,25 @@ const Onboarding: React.FC = () => {
 
   const handleNext = () => {
     if (!stepValid) return;
-    if (step < 2) setStep((step + 1) as 0 | 1 | 2);
+    if (step < 3) setStep((step + 1) as 0 | 1 | 2 | 3);
   };
 
   const handleBack = () => {
-    if (step > 0) setStep((step - 1) as 0 | 1 | 2);
+    if (step > 0) setStep((step - 1) as 0 | 1 | 2 | 3);
   };
 
   const handleSubmit = async () => {
-    if (!stepValid) return;
+    if (!stepValid || modeChoice.modo === null) return;
     setError('');
     setSubmitting(true);
     try {
-      await saveOnboarding(data);
+      // Inyectamos modo + aiScope del paso 4 en el perfil que se persiste.
+      // Si modo='manual', aiScope es null por construcción del StepMode.
+      await saveOnboarding({
+        ...data,
+        modo: modeChoice.modo,
+        aiScope: modeChoice.aiScope,
+      });
       history.replace('/app');
     } catch (err) {
       console.error('[BTal] saveOnboarding error:', err);
@@ -165,9 +192,9 @@ const Onboarding: React.FC = () => {
       <IonContent fullscreen>
         <div className="onboarding-bg">
           <div className="onboarding-card">
-            {/* Progreso · 3 puntos */}
+            {/* Progreso · 4 puntos (personal · estilo · objetivo · modo) */}
             <div className="onboarding-progress">
-              {[0, 1, 2].map((i) => (
+              {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
                   className={
@@ -177,7 +204,7 @@ const Onboarding: React.FC = () => {
                   }
                 />
               ))}
-              <span className="onboarding-progress-label">Paso {step + 1} de 3</span>
+              <span className="onboarding-progress-label">Paso {step + 1} de 4</span>
             </div>
 
             {/* ─────────────────── PASO 0 — PERSONAL ─────────────────── */}
@@ -261,6 +288,24 @@ const Onboarding: React.FC = () => {
                     />
                   </label>
                 </div>
+
+                {/* Aviso médico/legal · obligatorio (roadmap 14-2). No
+                    podemos publicar la app en stores sin esto. */}
+                <label className="onboarding-disclaimer">
+                  <input
+                    type="checkbox"
+                    checked={medicalAccepted}
+                    onChange={(e) => setMedicalAccepted(e.target.checked)}
+                  />
+                  <span>
+                    He leído y entiendo que <strong>BTal no es un servicio
+                    médico</strong> y los planes que genera no sustituyen el
+                    consejo de un profesional sanitario. Si tengo alguna
+                    condición médica, lesión, embarazo, alergia o trastorno
+                    alimentario, consultaré a un profesional antes de seguir
+                    el plan.
+                  </span>
+                </label>
               </>
             )}
 
@@ -365,6 +410,28 @@ const Onboarding: React.FC = () => {
               </>
             )}
 
+            {/* ───────────────── PASO 3 — MODO IA / MANUAL ──────────── */}
+            {step === 3 && (
+              <>
+                <h1 className="onboarding-title">¿Cómo quieres empezar?</h1>
+                <p className="onboarding-text">
+                  Puedes dejar que la IA genere tu plan a partir de tus datos
+                  o partir de plantillas vacías y rellenarlas tú. Podrás cambiar
+                  esta decisión en cualquier momento desde Ajustes.
+                </p>
+
+                <StepMode value={modeChoice} onChange={setModeChoice} />
+
+                {/* Recordatorio en sentence case · cuando el user elige
+                    "todo" entiende mejor lo que va a pasar al Finalizar. */}
+                {modeChoice.modo === 'ai' && modeChoice.aiScope === null && (
+                  <p className="onboarding-text" style={{ color: 'var(--btal-gold)' }}>
+                    Falta elegir qué quieres que genere la IA antes de continuar.
+                  </p>
+                )}
+              </>
+            )}
+
             {error && <div className="landing-msg error">{error}</div>}
 
             {/* ────── Navegación ────── */}
@@ -376,6 +443,7 @@ const Onboarding: React.FC = () => {
                   className="onboarding-back"
                   onClick={handleBack}
                   disabled={submitting}
+                  aria-label={`Volver al paso ${step} de 4 — corregir lo que ya rellenaste`}
                 >
                   <IonIcon icon={arrowBackOutline} slot="start" />
                   Atrás
@@ -384,7 +452,7 @@ const Onboarding: React.FC = () => {
                 <span />
               )}
 
-              {step < 2 ? (
+              {step < 3 ? (
                 <IonButton
                   type="button"
                   className="onboarding-next"

@@ -23,6 +23,7 @@ import {
   signInGuest,
   signUpEmail,
 } from '../services/auth';
+import { seedGuestDocument } from '../services/db';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 import { TotpSignInModal } from '../components/TotpSignInModal';
 import './Landing.css';
@@ -146,7 +147,14 @@ const Landing: React.FC = () => {
     clearMessages();
     setBusy(true);
     try {
-      await signInGuest();
+      const cred = await signInGuest();
+      // Sembramos el documento del invitado con `demoUser` para que la
+      // app cargue con un plan de ejemplo navegable. Es idempotente: si
+      // el invitado ya tenía doc de una sesión anterior, no lo pisa.
+      // useAuth detecta el sign-in y redirige a /app vía useEffect, así
+      // que tenemos que asegurar que el doc existe ANTES de que la
+      // navegación dispare la carga del shell.
+      await seedGuestDocument(cred.user.uid);
     } catch (err) {
       setError(translateAuthError(errorCode(err)));
     } finally {

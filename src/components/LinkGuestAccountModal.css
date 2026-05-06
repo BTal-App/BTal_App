@@ -1,0 +1,126 @@
+/* LinkGuestAccountModal · estilos del form (email + password + Google).
+   Reaprovecha SettingsModal.css para el contenedor; aquí solo lo del form. */
+
+.link-guest-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 0 14px;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.link-guest-input-wrap:focus-within {
+  border-color: var(--btal-lime);
+  background: var(--btal-surface-2);
+}
+
+.link-guest-input-icon {
+  font-size: 1.05rem;
+  color: var(--btal-t-3);
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.link-guest-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 13px 0;
+  min-width: 0;
+}
+
+.link-guest-input::placeholder {
+  color: var(--btal-t-3);
+}
+
+.link-guest-input--password {
+  padding-right: 32px;
+}
+
+.link-guest-input-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--btal-t-3);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: color 0.15s;
+}
+
+.link-guest-input-toggle:hover {
+  color: var(--btal-t-1);
+}
+
+.link-guest-hint {
+  font-size: 0.74rem;
+  color: var(--btal-t-3);
+  margin: -4px 0 4px;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.4;
+}
+
+.link-guest-divider {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--btal-t-3);
+  position: relative;
+  margin: 6px 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.link-guest-divider::before,
+.link-guest-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: calc(50% - 18px);
+  height: 1px;
+  background: var(--btal-border);
+}
+.link-guest-divider::before {
+  left: 0;
+}
+.link-guest-divider::after {
+  right: 0;
+}
+
+.link-guest-google {
+  --background: var(--btal-surface);
+  --background-hover: var(--btal-surface-2);
+  --background-activated: var(--btal-surface-2);
+  --color: var(--btal-t-1);
+  --border-color: var(--btal-border);
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: none;
+}
+
+.link-guest-warn {
+  font-size: 0.78rem;
+  color: var(--btal-gold);
+  margin: 4px 0 0;
+  line-height: 1.5;
+  background: rgba(240, 168, 56, 0.08);
+  border: 1px solid rgba(240, 168, 56, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}

@@ -3,7 +3,7 @@ import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 
 import Landing from './pages/Landing';
-import Dashboard from './pages/Dashboard';
+import AppShell from './pages/app/AppShell';
 import AuthAction from './pages/AuthAction';
 import Settings from './pages/Settings';
 import Onboarding from './pages/Onboarding';
@@ -48,8 +48,11 @@ const App: React.FC = () => (
                 <Route exact path="/onboarding">
                   <Onboarding />
                 </Route>
-                <Route exact path="/app">
-                  <Dashboard />
+                {/* /app es un shell con tabs · las sub-rutas (/app/hoy,
+                    /app/menu, /app/compra, /app/entreno, /app/registro) se
+                    resuelven dentro de <AppShell> con su IonRouterOutlet. */}
+                <Route path="/app">
+                  <AppShell />
                 </Route>
                 <Route exact path="/settings">
                   <Settings />

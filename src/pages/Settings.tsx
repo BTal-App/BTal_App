@@ -22,6 +22,7 @@ import { AccountManageModal } from '../components/AccountManageModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { PreferencesModal } from '../components/PreferencesModal';
+import { blurAndRun } from '../utils/focus';
 import { initialsOf } from '../utils/userDisplay';
 import './Settings.css';
 
@@ -113,7 +114,7 @@ const Settings: React.FC = () => {
             <button
               type="button"
               className="settings-profile-card"
-              onClick={() => setEditProfileOpen(true)}
+              onClick={blurAndRun(() => setEditProfileOpen(true))}
               aria-label="Editar perfil"
             >
               <div className="settings-avatar">
@@ -141,7 +142,7 @@ const Settings: React.FC = () => {
               <button
                 type="button"
                 className="settings-row settings-row--link"
-                onClick={() => setAccountManageOpen(true)}
+                onClick={blurAndRun(() => setAccountManageOpen(true))}
               >
                 <div className="settings-row-info">
                   <span className="settings-row-label">Administrar cuenta</span>
@@ -159,7 +160,7 @@ const Settings: React.FC = () => {
             <button
               type="button"
               className="settings-row settings-row--link"
-              onClick={() => setPreferencesOpen(true)}
+              onClick={blurAndRun(() => setPreferencesOpen(true))}
             >
               <div className="settings-row-info">
                 <span className="settings-row-label">Preferencias</span>
@@ -207,7 +208,7 @@ const Settings: React.FC = () => {
             <button
               type="button"
               className="settings-row settings-row--link"
-              onClick={() => setAboutOpen(true)}
+              onClick={blurAndRun(() => setAboutOpen(true))}
             >
               <div className="settings-row-info">
                 <span className="settings-row-label">Acerca de BTal</span>
@@ -235,7 +236,7 @@ const Settings: React.FC = () => {
                   color="danger"
                   size="small"
                   className="settings-row-action"
-                  onClick={() => setDeleteAccountOpen(true)}
+                  onClick={blurAndRun(() => setDeleteAccountOpen(true))}
                 >
                   Eliminar cuenta
                 </IonButton>

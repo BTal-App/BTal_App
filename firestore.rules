@@ -1,26 +1,73 @@
 rules_version = '2';
 
-// Reglas Firestore — versión inicial. Estricto por defecto:
-// cada usuario solo puede leer y escribir su propio documento /users/{uid}.
+// Reglas Firestore — Fase 2A endurecimiento.
 //
-// TODO (paso 11-1 del roadmap): añadir validación de tipos y rangos
-// (peso 30-300, edad 14-90, dias_entreno 0-7, objetivo en lista cerrada),
-// bloquear escritura directa a campos críticos (plan_pro, fecha_expiracion)
-// que solo deberían tocarse desde Cloud Functions con Admin SDK, y limitar
-// el tamaño de documento (request.resource.size < 100 * 1024).
+// Filosofía:
+//  - Cada usuario solo accede a su propio documento /users/{uid}.
+//  - Crear el documento inicial es libre (lo hace el cliente desde
+//    saveOnboardingProfile o seedGuestDocument con defaults seguros).
+//  - Actualizar campos de uso del usuario (profile, preferences, menu,
+//    entrenos, compra, suplementos, lastActive) está permitido.
+//  - Actualizar campos de monetización / IA (plan, generaciones,
+//    plan_pro, fecha_expiracion, fecha_ultima_generacion) está
+//    BLOQUEADO desde el cliente. Solo Cloud Functions con Admin SDK los
+//    puede tocar (Stripe webhook, generatePlan). Esto evita que un
+//    usuario se haga Pro vía REST API o resetee su contador del mes.
+//
+// TODO Fase 11-1: añadir validación de tipos y rangos para los campos
+// del profile (peso 30-300, edad 14-90, dias_entreno 0-7, objetivo en
+// lista cerrada) y limitar el tamaño del documento (request.resource
+// .size < 100 * 1024).
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Documento por usuario
     match /users/{userId} {
-      allow read:  if request.auth != null && request.auth.uid == userId;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      // Lectura: solo el dueño.
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Creación: solo el dueño puede crear su propio documento.
+      // No exigimos que `plan` y `generaciones` tengan valores concretos
+      // aquí — la primera escritura desde el cliente usa los defaults
+      // seguros de defaultUserDocument()/demoUserDocument(). Si en el
+      // futuro queremos endurecerlo, validar que plan.tipo == 'free' y
+      // que generaciones.consumidas_ciclo == 0 en el create.
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Actualización: solo el dueño y solo si NO modifica los campos
+      // protegidos (gestionados desde Cloud Functions).
+      allow update: if request.auth != null
+                    && request.auth.uid == userId
+                    && fieldUnchanged('plan')
+                    && fieldUnchanged('generaciones')
+                    && fieldUnchanged('plan_pro')
+                    && fieldUnchanged('fecha_expiracion')
+                    && fieldUnchanged('fecha_ultima_generacion');
+
+      // Borrado: solo el dueño (caso eliminar cuenta).
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Bloqueo total para cualquier otra colección
+    // Cualquier otra colección queda bloqueada por defecto.
     match /{document=**} {
       allow read, write: if false;
     }
   }
+}
+
+// Helper: el campo está "intacto" si:
+//   - no existía antes (la migración del cliente lo está sembrando con
+//     defaults seguros — caso ensureUserDocumentSchema), o
+//   - existía antes y el nuevo valor es exactamente el mismo.
+//
+// Bloquea explícitamente:
+//   - cambiar un valor existente (cliente quiere ascenderse a Pro, etc.)
+//   - borrar el campo (cliente quiere eliminar el contador del mes)
+//
+// Las Cloud Functions con Admin SDK saltan estas reglas siempre, así que
+// `stripeWebhook` y `generatePlan` pueden actualizar libremente.
+function fieldUnchanged(field) {
+  return !(field in resource.data)
+      || (field in request.resource.data
+          && resource.data[field] == request.resource.data[field]);
 }

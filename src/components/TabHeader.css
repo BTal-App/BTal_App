@@ -1,0 +1,94 @@
+/* TabHeader · header personalizado de cada tab del shell v2.
+   Coincide con .app-header del mockup v2. */
+
+.tab-header {
+  padding: max(env(safe-area-inset-top), 16px) 20px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tab-header-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.tab-header-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  /* Mayúsculas en todos los títulos de tab — petición del producto.
+     Letter-spacing pasa de -0.02em (típico de minúsculas) a 0.01em
+     porque las mayúsculas piden algo más de aire entre letras para
+     que no parezcan apelmazadas.
+     Excepción: la tab Hoy pasa `uppercase={false}` y aplica
+     .tab-header-title--natural para mantener el saludo en sentence
+     case ("Hola, Pablo") por cercanía. */
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  margin: 0;
+  line-height: 1.1;
+  color: var(--btal-t-1);
+}
+
+.tab-header-title--natural {
+  text-transform: none;
+  letter-spacing: -0.02em;
+}
+
+.tab-header-accent {
+  color: var(--btal-lime);
+}
+
+.tab-header-subtitle {
+  font-size: 0.82rem;
+  color: var(--btal-t-3);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.tab-header-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Botón "Generar con IA" en el slot derecho del header de Menú/Entreno.
+   Lima sólido por defecto · texto se oculta en pantallas pequeñas para
+   dejar solo el icono + sparkles. */
+.tab-header-ia-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border: 1px solid var(--btal-lime);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: all 0.18s;
+  box-shadow: 0 4px 14px rgba(181, 240, 55, 0.22);
+}
+
+.tab-header-ia-btn:hover {
+  background: var(--btal-lime-d);
+  border-color: var(--btal-lime-d);
+}
+
+.tab-header-ia-btn ion-icon {
+  font-size: 1rem;
+}
+
+@media (max-width: 480px) {
+  .tab-header-ia-btn {
+    padding: 8px 10px;
+  }
+  .tab-header-ia-btn span {
+    display: none;
+  }
+}

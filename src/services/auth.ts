@@ -4,6 +4,7 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   getRedirectResult,
+  linkWithCredential,
   linkWithPopup,
   linkWithRedirect,
   multiFactor,
@@ -151,6 +152,57 @@ export const linkGoogle = async (user: User) => {
 // quien llama debe verificar que queda al menos uno antes.
 export const unlinkProvider = (user: User, providerId: string) =>
   unlink(user, providerId);
+
+// ────────────────────────────────────────────────────────────────────────────
+// Conversión invitado → cuenta real
+//
+// Firebase Auth permite "linkear" la sesión anónima a una credencial real
+// (email+password o Google). El uid se preserva → el doc /users/{uid} en
+// Firestore queda intacto, el user mantiene todos los cambios que hizo
+// como invitado. Esto es exactamente el flujo del roadmap "Conversión a
+// cuenta real (opcional) · cero fricción".
+//
+// Errores típicos a manejar en el caller:
+//   auth/email-already-in-use → ese email ya tiene otra cuenta. La sesión
+//     anónima sigue activa; el user puede usar otro email o iniciar sesión
+//     en la cuenta existente (pero perdería los cambios del invitado).
+//   auth/credential-already-in-use → mismo concepto, otro código.
+//   auth/weak-password → no cumple política de fortaleza.
+
+export async function linkAnonymousAccount(
+  email: string,
+  password: string,
+): Promise<User> {
+  const current = auth.currentUser;
+  if (!current || !current.isAnonymous) {
+    throw new Error(
+      'No hay sesión anónima activa — no se puede vincular cuenta.',
+    );
+  }
+  const credential = EmailAuthProvider.credential(email, password);
+  const result = await linkWithCredential(current, credential);
+  return result.user;
+}
+
+// Vincular invitado con Google. Mismo patrón que `linkGoogle` pero con
+// la guarda de que la sesión sea anónima. Tras éxito el uid se preserva
+// y user.isAnonymous pasa a false.
+export async function linkAnonymousGoogle(): Promise<User | null> {
+  const current = auth.currentUser;
+  if (!current || !current.isAnonymous) {
+    throw new Error(
+      'No hay sesión anónima activa — no se puede vincular cuenta.',
+    );
+  }
+  const provider = new GoogleAuthProvider();
+  if (isStandalone()) {
+    await linkWithRedirect(current, provider);
+    // En redirect el resultado se recoge tras volver, vía getRedirectResult.
+    return null;
+  }
+  const result = await linkWithPopup(current, provider);
+  return result.user;
+}
 
 // Actualizar displayName y/o photoURL en Firebase Auth.
 export const updateUserProfile = (

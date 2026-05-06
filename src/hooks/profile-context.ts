@@ -13,6 +13,10 @@ export interface ProfileState {
 
   // Guarda el perfil de onboarding (crea o actualiza el doc completo).
   saveOnboarding: (profile: UserProfile) => Promise<void>;
+
+  // Actualiza solo algunos campos del perfil ya existente (Settings →
+  // "Editar datos del perfil"). No toca `completed` ni el resto del doc.
+  updateProfile: (partial: Partial<UserProfile>) => Promise<void>;
 }
 
 export const ProfileContext = createContext<ProfileState | null>(null);

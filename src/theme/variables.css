@@ -90,6 +90,9 @@ ion-tab-button {
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
+  /* Elimina el delay de ~300ms en mobile Safari sin afectar al zoom
+     accesible (a diferencia de user-scalable=no en el viewport). */
+  touch-action: manipulation;
 }
 
 ion-tab-button ion-icon {

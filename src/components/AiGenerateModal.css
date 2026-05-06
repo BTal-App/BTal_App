@@ -1,0 +1,134 @@
+/* AiGenerateModal · pregunta scope antes de generar con IA. */
+
+.ai-gen-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.ai-gen-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(181, 240, 55, 0.18), rgba(55, 224, 168, 0.08));
+  border: 1px solid rgba(181, 240, 55, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--btal-lime);
+  font-size: 1.4rem;
+}
+
+/* Hint del estado · plan free/one-off/pro o bloqueo por límite */
+.ai-gen-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.ai-gen-hint ion-icon {
+  font-size: 1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.ai-gen-hint--ok {
+  background: rgba(55, 224, 168, 0.08);
+  border: 1px solid rgba(55, 224, 168, 0.25);
+  color: var(--btal-cyan);
+}
+
+.ai-gen-hint--blocked {
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.28);
+  color: var(--btal-coral);
+}
+
+.ai-gen-scope-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+  margin-top: 2px;
+}
+
+.ai-gen-scope-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-gen-scope-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--btal-bg-2);
+  border: 1.5px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  transition: all 0.18s;
+  min-width: 0;
+}
+
+.ai-gen-scope-card:hover:not(.active) {
+  border-color: var(--btal-border-2);
+  background: var(--btal-surface);
+}
+
+.ai-gen-scope-card.active {
+  border-color: var(--btal-lime);
+  background: rgba(181, 240, 55, 0.06);
+}
+
+.ai-gen-scope-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ai-gen-scope-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ai-gen-scope-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--btal-t-1);
+  letter-spacing: -0.01em;
+}
+
+.ai-gen-scope-card.active .ai-gen-scope-title {
+  color: var(--btal-lime);
+}
+
+.ai-gen-scope-sub {
+  font-size: 0.78rem;
+  color: var(--btal-t-2);
+  line-height: 1.45;
+}
+
+/* Variante "single" · cuando solo hay 1 scope (Entreno: solo entrenos_only) */
+.ai-gen-single {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}

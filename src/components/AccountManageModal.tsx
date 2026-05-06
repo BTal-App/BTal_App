@@ -8,6 +8,7 @@ import {
 } from '@ionic/react';
 import {
   closeOutline,
+  createOutline,
   informationCircleOutline,
   keyOutline,
   lockClosedOutline,
@@ -15,15 +16,19 @@ import {
   logoGoogle,
   mailOutline,
   shieldCheckmarkOutline,
+  sparklesOutline,
 } from 'ionicons/icons';
 import type { User } from 'firebase/auth';
 import { AccountInfoModal } from './AccountInfoModal';
 import { ChangeEmailModal } from './ChangeEmailModal';
+import { ChangeModeModal } from './ChangeModeModal';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { DeleteAccountModal } from './DeleteAccountModal';
 import { EnableTotpModal } from './EnableTotpModal';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { VerifyEmailRow } from './VerifyEmailRow';
+import { useProfile } from '../hooks/useProfile';
+import { blurAndRun } from '../utils/focus';
 import {
   getEnrolledTotpFactor,
   hasGoogleProvider,
@@ -45,6 +50,7 @@ interface Props {
 
 export function AccountManageModal({ isOpen, user, onClose }: Props) {
   const [accountInfoOpen, setAccountInfoOpen] = useState(false);
+  const [changeModeOpen, setChangeModeOpen] = useState(false);
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
@@ -58,6 +64,8 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
   // refreshUser viene del AuthContext: hace user.reload() y propaga el cambio
   // a todos los consumidores (Dashboard, AccountInfoModal, VerifyEmailRow, etc.).
   const { refreshUser } = useAuth();
+  const { profile: userDoc } = useProfile();
+  const profileCompleted = !!userDoc?.profile?.completed;
 
   const hasPassword = hasPasswordProvider(user);
   const hasGoogle = hasGoogleProvider(user);
@@ -123,13 +131,49 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
             <div className="account-manage-card">
               <h2 className="settings-modal-title">Administrar cuenta</h2>
 
+              {/* ════════ SECCIÓN PERFIL ════════ */}
+              {/* Editar datos del perfil ya vive en el ProfileSheet (avatar
+                  arriba a la derecha de cualquier tab). Aquí solo dejamos
+                  los ajustes que NO encajan en ese sheet — el modo de
+                  generación es ajuste de cuenta más profundo (afecta a IA,
+                  límites, facturación) y vive aquí.
+                  Solo visible si el usuario ya completó el onboarding. */}
+              {profileCompleted && (
+                <>
+                  <h3 className="account-manage-section-title">Perfil</h3>
+
+                  <button
+                    type="button"
+                    className="settings-row settings-row--link"
+                    onClick={blurAndRun(() => setChangeModeOpen(true))}
+                  >
+                    <div className="settings-row-info">
+                      <span className="settings-row-label">Modo de generación</span>
+                      <span className="settings-row-value settings-row-sub">
+                        {userDoc?.profile?.modo === 'ai'
+                          ? 'La IA genera mi plan · pulsa para cambiar a manual'
+                          : 'Lo relleno yo mismo · pulsa para activar la IA'}
+                      </span>
+                    </div>
+                    <IonIcon
+                      icon={
+                        userDoc?.profile?.modo === 'ai'
+                          ? sparklesOutline
+                          : createOutline
+                      }
+                      className="settings-row-chevron"
+                    />
+                  </button>
+                </>
+              )}
+
               {/* ════════ SECCIÓN CUENTA ════════ */}
               <h3 className="account-manage-section-title">Cuenta</h3>
 
               <button
                 type="button"
                 className="settings-row settings-row--link"
-                onClick={() => setAccountInfoOpen(true)}
+                onClick={blurAndRun(() => setAccountInfoOpen(true))}
               >
                 <div className="settings-row-info">
                   <span className="settings-row-label">Información de la cuenta</span>
@@ -145,7 +189,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
               <button
                 type="button"
                 className="settings-row settings-row--link"
-                onClick={() => setChangeEmailOpen(true)}
+                onClick={blurAndRun(() => setChangeEmailOpen(true))}
               >
                 <div className="settings-row-info">
                   <span className="settings-row-label">Cambiar email</span>
@@ -180,7 +224,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                     color="danger"
                     size="small"
                     className="settings-row-action"
-                    onClick={() => setConfirmUnlinkGoogleOpen(true)}
+                    onClick={blurAndRun(() => setConfirmUnlinkGoogleOpen(true))}
                   >
                     Desvincular
                   </IonButton>
@@ -189,7 +233,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                     fill="outline"
                     size="small"
                     className="settings-row-action"
-                    onClick={handleLinkGoogle}
+                    onClick={blurAndRun(handleLinkGoogle)}
                   >
                     <IonIcon icon={logoGoogle} slot="start" />
                     Vincular
@@ -215,7 +259,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                     color="danger"
                     size="small"
                     className="settings-row-action"
-                    onClick={() => setConfirmDisableTotpOpen(true)}
+                    onClick={blurAndRun(() => setConfirmDisableTotpOpen(true))}
                   >
                     Desactivar
                   </IonButton>
@@ -224,7 +268,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                     fill="outline"
                     size="small"
                     className="settings-row-action"
-                    onClick={() => setEnableTotpOpen(true)}
+                    onClick={blurAndRun(() => setEnableTotpOpen(true))}
                   >
                     <IonIcon icon={shieldCheckmarkOutline} slot="start" />
                     Activar
@@ -236,7 +280,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                 <button
                   type="button"
                   className="settings-row settings-row--link"
-                  onClick={() => setChangePasswordOpen(true)}
+                  onClick={blurAndRun(() => setChangePasswordOpen(true))}
                 >
                   <div className="settings-row-info">
                     <span className="settings-row-label">Cambiar contraseña</span>
@@ -252,7 +296,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                 <button
                   type="button"
                   className="settings-row settings-row--link"
-                  onClick={() => setForgotOpen(true)}
+                  onClick={blurAndRun(() => setForgotOpen(true))}
                 >
                   <div className="settings-row-info">
                     <span className="settings-row-label">Restablecer contraseña</span>
@@ -267,7 +311,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
               <button
                 type="button"
                 className="settings-row settings-row--link"
-                onClick={() => setSignOutAlertOpen(true)}
+                onClick={blurAndRun(() => setSignOutAlertOpen(true))}
               >
                 <div className="settings-row-info">
                   <span className="settings-row-label">
@@ -293,7 +337,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                   color="danger"
                   size="small"
                   className="settings-row-action"
-                  onClick={() => setDeleteAccountOpen(true)}
+                  onClick={blurAndRun(() => setDeleteAccountOpen(true))}
                 >
                   Eliminar cuenta
                 </IonButton>
@@ -308,6 +352,10 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
         isOpen={accountInfoOpen}
         user={user}
         onClose={() => setAccountInfoOpen(false)}
+      />
+      <ChangeModeModal
+        isOpen={changeModeOpen}
+        onClose={() => setChangeModeOpen(false)}
       />
       <ChangeEmailModal
         isOpen={changeEmailOpen}

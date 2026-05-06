@@ -361,6 +361,74 @@
   }
 }
 
+/* ── Aviso médico/legal (paso 0) ─────────────────────────────── */
+/* Checkbox obligatorio. Visualmente discreto pero claro. La caja activa
+   se tiñe de cyan (no lima) para que no se confunda con un campo de
+   formulario más. */
+.onboarding-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 4px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.onboarding-disclaimer:hover {
+  border-color: var(--btal-border-2);
+}
+
+.onboarding-disclaimer input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--btal-border-2);
+  border-radius: 5px;
+  background: var(--btal-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  position: relative;
+  transition: all 0.18s;
+}
+
+.onboarding-disclaimer input[type='checkbox']:hover {
+  border-color: var(--btal-cyan);
+}
+
+.onboarding-disclaimer input[type='checkbox']:checked {
+  background: var(--btal-cyan);
+  border-color: var(--btal-cyan);
+}
+
+.onboarding-disclaimer input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  width: 5px;
+  height: 10px;
+  border: solid #0a0e0c;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.onboarding-disclaimer span {
+  font-size: 0.82rem;
+  color: var(--btal-t-2);
+  line-height: 1.5;
+}
+
+.onboarding-disclaimer span strong {
+  color: var(--btal-t-1);
+  font-weight: 700;
+}
+
 /* Escape hatch · cerrar sesión sin completar el onboarding */
 .onboarding-skip {
   background: transparent;

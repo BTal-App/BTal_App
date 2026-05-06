@@ -1,0 +1,113 @@
+import { useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+import { Redirect, Route } from 'react-router-dom';
+import {
+  IonContent,
+  IonIcon,
+  IonLabel,
+  IonPage,
+  IonRouterOutlet,
+  IonSpinner,
+  IonTabBar,
+  IonTabButton,
+  IonTabs,
+} from '@ionic/react';
+import {
+  barbellOutline,
+  calendarOutline,
+  cartOutline,
+  flashOutline,
+  restaurantOutline,
+} from 'ionicons/icons';
+import { useAuth } from '../../hooks/useAuth';
+import { useProfile } from '../../hooks/useProfile';
+import HoyPage from './HoyPage';
+import MenuPage from './MenuPage';
+import CompraPage from './CompraPage';
+import EntrenoPage from './EntrenoPage';
+import RegistroPage from './RegistroPage';
+import './AppShell.css';
+
+// Shell de la app autenticada — replica el layout del mockup v2:
+// 5 tabs con bottom bar nativo Ionic. Cada tab vive en su propia
+// sub-ruta para que IonTabs gestione bien el routing y la navegación
+// con back gesture iOS funcione fuera de la caja.
+//
+// Guards:
+//  - Sin sesión → /
+//  - Sesión real sin onboarding completo → /onboarding
+//  - Invitado → se queda dentro del shell (verá empty states)
+const AppShell: React.FC = () => {
+  const history = useHistory();
+  const { user, loading, isAuthed } = useAuth();
+  const { profile: userDoc, loading: profileLoading } = useProfile();
+
+  useEffect(() => {
+    if (!loading && !isAuthed) history.replace('/');
+  }, [loading, isAuthed, history]);
+
+  useEffect(() => {
+    if (loading || profileLoading || !user) return;
+    // Invitado nunca pasa por onboarding — el flujo es solo para cuentas reales.
+    if (user.isAnonymous) return;
+    if (!userDoc?.profile?.completed) {
+      history.replace('/onboarding');
+    }
+  }, [loading, profileLoading, user, userDoc, history]);
+
+  if (loading || !user) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          <div className="app-shell-loading">
+            <IonSpinner name="dots" />
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
+  return (
+    <IonTabs>
+      <IonRouterOutlet>
+        {/* Default: /app → /app/hoy */}
+        <Route exact path="/app">
+          <Redirect to="/app/hoy" />
+        </Route>
+        <Route exact path="/app/hoy" component={HoyPage} />
+        <Route exact path="/app/menu" component={MenuPage} />
+        <Route exact path="/app/compra" component={CompraPage} />
+        <Route exact path="/app/entreno" component={EntrenoPage} />
+        <Route exact path="/app/registro" component={RegistroPage} />
+      </IonRouterOutlet>
+
+      {/* Labels en mayúsculas literales (no via text-transform CSS) porque
+          ion-label vive en shadow DOM en Ionic 8 y el text-transform
+          desde fuera no la atraviesa de forma fiable. */}
+      <IonTabBar slot="bottom">
+        <IonTabButton tab="hoy" href="/app/hoy">
+          <IonIcon icon={flashOutline} />
+          <IonLabel>HOY</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="menu" href="/app/menu">
+          <IonIcon icon={restaurantOutline} />
+          <IonLabel>MENÚ</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="compra" href="/app/compra">
+          <IonIcon icon={cartOutline} />
+          <IonLabel>COMPRA</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="entreno" href="/app/entreno">
+          <IonIcon icon={barbellOutline} />
+          <IonLabel>ENTRENO</IonLabel>
+        </IonTabButton>
+        <IonTabButton tab="registro" href="/app/registro">
+          <IonIcon icon={calendarOutline} />
+          <IonLabel>REGISTRO</IonLabel>
+        </IonTabButton>
+      </IonTabBar>
+    </IonTabs>
+  );
+};
+
+export default AppShell;

@@ -1,0 +1,251 @@
+/* ProfileSheet · bottom sheet con la información del perfil
+   Se abre al pulsar el avatar del header en cualquier tab del shell v2 */
+
+ion-modal.profile-sheet {
+  --backdrop-opacity: 0.65;
+  --background: var(--btal-surface);
+  --border-radius: 24px 24px 0 0;
+  --max-height: 92vh;
+  align-items: flex-end;
+}
+
+ion-modal.profile-sheet::part(content) {
+  border-top: 1px solid var(--btal-border-2);
+}
+
+.profile-sheet-content {
+  padding: 8px 20px max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Cabecera · avatar grande + nombre + email + cerrar */
+.profile-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 0 4px;
+}
+
+.profile-sheet-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--btal-lime), var(--btal-cyan));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 2px solid var(--btal-surface);
+}
+
+.profile-sheet-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-sheet-avatar span {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+  color: #0a0e0c;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.profile-sheet-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-sheet-id h2 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--btal-t-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-sheet-id p {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  margin: 4px 0 0;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-sheet-close {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--btal-t-2);
+  cursor: pointer;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  transition: background 0.18s, color 0.18s;
+}
+
+.profile-sheet-close:hover {
+  background: var(--btal-surface-2);
+  color: var(--btal-t-1);
+}
+
+/* Empty state cuando el perfil aún no está completo o invitado */
+.profile-sheet-empty {
+  background: var(--btal-bg-2);
+  border: 1px dashed var(--btal-border-2);
+  border-radius: 14px;
+  padding: 18px 16px;
+  color: var(--btal-t-2);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Stats principales · peso · altura · IMC */
+.profile-sheet-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.profile-sheet-stat {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 14px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.profile-sheet-stat-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.profile-sheet-stat-value {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  color: var(--btal-t-1);
+  line-height: 1.05;
+}
+
+.profile-sheet-stat-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--btal-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* Bloque meta · objetivo · equipamiento · actividad · días */
+.profile-sheet-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.profile-sheet-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 24px;
+}
+
+.profile-sheet-meta-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.profile-sheet-meta-value {
+  color: var(--btal-t-1);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.profile-sheet-objetivo {
+  color: var(--btal-lime);
+}
+
+/* Restricciones · pills cyan */
+.profile-sheet-restricciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-sheet-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.profile-sheet-pill {
+  background: rgba(55, 224, 168, 0.08);
+  border: 1px solid rgba(55, 224, 168, 0.3);
+  color: var(--btal-cyan);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Acciones */
+.profile-sheet-action {
+  --border-color: var(--btal-border-2);
+  --color: var(--btal-t-1);
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.profile-sheet-action--edit {
+  --color: var(--btal-lime);
+  --border-color: rgba(181, 240, 55, 0.4);
+}
+
+.profile-sheet-logout {
+  --color: var(--btal-coral);
+  --border-radius: 12px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.92rem;
+  margin: 0;
+}
