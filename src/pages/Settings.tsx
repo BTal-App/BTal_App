@@ -24,6 +24,7 @@ import {
   getEnrolledTotpFactor,
   hasGoogleProvider,
   hasPasswordProvider,
+  isStandalone,
   linkGoogle,
   unenrollTotp,
   unlinkProvider,
@@ -273,6 +274,12 @@ const Settings: React.FC = () => {
                       ? 'Vinculada · puedes iniciar sesión con Google'
                       : 'Vincúlala para iniciar sesión también con Google'}
                   </span>
+                  {!hasGoogle && isStandalone() && (
+                    <span className="settings-row-warn">
+                      En la app instalada el flujo de Google puede fallar (limitación de iOS PWA).
+                      Si no funciona, vincúlala desde el navegador.
+                    </span>
+                  )}
                   {linkGoogleError && (
                     <span className="settings-row-error">{linkGoogleError}</span>
                   )}

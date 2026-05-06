@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
   getRedirectResult,
   linkWithPopup,
+  linkWithRedirect,
   multiFactor,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
@@ -25,7 +26,7 @@ import {
 } from 'firebase/auth';
 import { auth } from './firebase';
 
-const isStandalone = (): boolean => {
+export const isStandalone = (): boolean => {
   if (typeof window === 'undefined') return false;
   // iOS Safari < 16.4 expone navigator.standalone; el resto display-mode.
   const iosLegacy = (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -132,10 +133,19 @@ export const changePassword = (user: User, newPassword: string) =>
 
 // Vincular Google a una cuenta que se registró con email/password.
 // Después podrá entrar con cualquiera de los dos métodos.
-// IMPORTANTE: en PWA standalone iOS los popups no funcionan; este helper
-// lanza el error que el modal traduce a un mensaje claro.
-export const linkGoogle = (user: User) =>
-  linkWithPopup(user, new GoogleAuthProvider());
+//
+// En PWA standalone los popups están bloqueados → caemos a redirect.
+// Funciona en Android pero en iOS PWA el storage está aislado y
+// `getRedirectResult` puede no resolver — ver Settings.tsx para la
+// nota que mostramos al usuario.
+export const linkGoogle = async (user: User) => {
+  const provider = new GoogleAuthProvider();
+  if (isStandalone()) {
+    await linkWithRedirect(user, provider);
+    return null;
+  }
+  return linkWithPopup(user, provider);
+};
 
 // Desvincular un provider. No deja al user sin métodos de login —
 // quien llama debe verificar que queda al menos uno antes.

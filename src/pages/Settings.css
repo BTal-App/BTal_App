@@ -123,6 +123,14 @@
   line-height: 1.4;
 }
 
+.settings-row-warn {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--btal-gold);
+  line-height: 1.4;
+}
+
 /* Filas tipo "link" (Soporte, Reportar bug, Acerca) — el row entero clica */
 .settings-row.settings-row--link {
   cursor: pointer;
