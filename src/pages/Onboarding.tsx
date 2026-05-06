@@ -67,7 +67,7 @@ const Onboarding: React.FC = () => {
       return;
     }
     // Ya completado → directo al dashboard
-    if (userDoc?.profile.completed) {
+    if (userDoc?.profile?.completed) {
       history.replace('/app');
     }
   }, [authLoading, profileLoading, isAuthed, user, userDoc, history]);

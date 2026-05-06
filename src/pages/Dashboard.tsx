@@ -33,7 +33,9 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (loading || profileLoading || !user) return;
     if (user.isAnonymous) return;
-    if (!userDoc || !userDoc.profile.completed) {
+    // Optional chaining: si por algún edge case el doc existiera con
+    // preferences pero sin profile, tratamos como onboarding pendiente.
+    if (!userDoc?.profile?.completed) {
       history.replace('/onboarding');
     }
   }, [loading, profileLoading, user, userDoc, history]);

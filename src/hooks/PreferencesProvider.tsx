@@ -81,6 +81,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       setPrefs(remote);
     } else if (profile) {
       // Profile existe pero sin preferences → migramos las locales.
+      // Aquí el doc seguro que existe (lo acabamos de leer), updateDoc OK.
       setUserPreferences(uid, prefs).catch((err) => {
         console.warn('[BTal] migrate preferences error:', err);
       });
@@ -95,6 +96,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       saveToLocal(next);
       if (uid && !isAnonymous) {
         setUserPreferences(uid, next).catch((err) => {
+          // 'not-found' = el doc del usuario aún no existe (todavía no ha
+          // pasado por onboarding). No es crítico — las prefs quedan en
+          // local y se sincronizan cuando se cree el doc tras onboarding.
+          const code = (err as { code?: string })?.code;
+          if (code === 'not-found') return;
           console.warn('[BTal] save preferences error:', err);
         });
       }

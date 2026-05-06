@@ -38,7 +38,8 @@ export async function getUserDocument(uid: string): Promise<UserDocument | null>
 
 // Guarda el perfil completo al terminar el onboarding. Si el documento no
 // existía, lo crea con los defaults (plan_pro=false, createdAt, etc.); si ya
-// existía (re-onboarding), solo actualiza el bloque `profile` y `lastActive`.
+// existía (re-onboarding o doc parcial), actualiza profile + lastActive y
+// rellena cualquier campo que falte con sus defaults (heals partial docs).
 export async function saveOnboardingProfile(
   uid: string,
   profile: UserProfile,
@@ -47,19 +48,26 @@ export async function saveOnboardingProfile(
   const ref = mod.doc(db, 'users', uid);
   const existing = await mod.getDoc(ref);
   const now = Date.now();
+  const completedProfile: UserProfile = { ...profile, completed: true };
 
   if (existing.exists()) {
-    // Re-ejecutar onboarding: actualizamos solo profile + lastActive,
-    // preservamos plan_pro / fechas / createdAt.
-    await mod.updateDoc(ref, {
-      profile: { ...profile, completed: true },
+    const data = existing.data() as Partial<UserDocument>;
+    // Solo añadimos los campos que falten (no sobrescribimos los que ya
+    // tenga el doc — preserva preferences, plan_pro real, createdAt).
+    const updates: Record<string, unknown> = {
+      profile: completedProfile,
       lastActive: now,
-    });
+    };
+    if (data.plan_pro === undefined) updates.plan_pro = false;
+    if (data.fecha_expiracion === undefined) updates.fecha_expiracion = null;
+    if (data.fecha_ultima_generacion === undefined) updates.fecha_ultima_generacion = null;
+    if (data.createdAt === undefined) updates.createdAt = now;
+    await mod.updateDoc(ref, updates);
   } else {
     // Primera vez: doc completo con defaults + el profile rellenado.
     const initial: UserDocument = {
       ...defaultUserDocument(),
-      profile: { ...profile, completed: true },
+      profile: completedProfile,
     };
     await mod.setDoc(ref, initial);
   }
@@ -75,11 +83,14 @@ export async function touchLastActive(uid: string): Promise<void> {
   await mod.setDoc(ref, { lastActive: Date.now() }, { merge: true });
 }
 
-// Guarda solo el bloque `preferences` (sin tocar profile, plan_pro, etc.).
-// Crea el doc si no existe (merge:true) — útil para usuarios reales que
-// aún no han pasado por onboarding.
+// Guarda solo el bloque `preferences`. Usa updateDoc → si el doc no
+// existe (usuario aún sin onboarding) lanza 'not-found'; el caller debe
+// tragarse ese error (las prefs se quedan en local hasta que onboarding
+// cree el doc). Esto evita crear documentos parciales tipo
+// `{ preferences: ... }` sin `profile`, que rompían la app después al
+// leer userDoc.profile.completed.
 export async function setUserPreferences(uid: string, prefs: Preferences): Promise<void> {
   const { mod, db } = await getDb();
   const ref = mod.doc(db, 'users', uid);
-  await mod.setDoc(ref, { preferences: prefs }, { merge: true });
+  await mod.updateDoc(ref, { preferences: prefs });
 }
