@@ -8,6 +8,7 @@ import {
 } from 'ionicons/icons';
 import type { User } from 'firebase/auth';
 import { updateUserProfile } from '../services/auth';
+import { useAuth } from '../hooks/useAuth';
 import { resizeImageToDataUrl } from '../utils/resizeImage';
 import { initialsOf } from '../utils/userDisplay';
 import './SettingsModal.css';
@@ -34,6 +35,7 @@ function translateError(code: string): string {
 }
 
 export function EditProfileModal({ isOpen, user, onClose, onUpdated }: Props) {
+  const { refreshUser } = useAuth();
   const [name, setName] = useState(user.displayName ?? '');
   const [photoUrl, setPhotoUrl] = useState<string | null>(user.photoURL ?? null);
   const [busy, setBusy] = useState(false);
@@ -94,6 +96,9 @@ export function EditProfileModal({ isOpen, user, onClose, onUpdated }: Props) {
         displayName: name.trim() || null,
         photoURL: photoUrl,
       });
+      // refreshUser propaga el cambio (avatar/nombre) al Dashboard, Settings,
+      // AccountInfoModal — todos los consumidores de AuthContext.
+      await refreshUser();
       onUpdated?.();
       onClose();
     } catch (err) {

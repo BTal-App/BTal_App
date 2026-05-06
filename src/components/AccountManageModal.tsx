@@ -33,6 +33,7 @@ import {
   unenrollTotp,
   unlinkProvider,
 } from '../services/auth';
+import { useAuth } from '../hooks/useAuth';
 import './SettingsModal.css';
 import './AccountManageModal.css';
 
@@ -54,10 +55,9 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [linkGoogleError, setLinkGoogleError] = useState('');
 
-  // Tick para forzar re-render tras cambios mutables en el user.
-  const [tick, setTick] = useState(0);
-  const refresh = () => setTick((t) => t + 1);
-  void tick;
+  // refreshUser viene del AuthContext: hace user.reload() y propaga el cambio
+  // a todos los consumidores (Dashboard, AccountInfoModal, VerifyEmailRow, etc.).
+  const { refreshUser } = useAuth();
 
   const hasPassword = hasPasswordProvider(user);
   const hasGoogle = hasGoogleProvider(user);
@@ -67,8 +67,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
     setLinkGoogleError('');
     try {
       await linkGoogle(user);
-      await user.reload();
-      refresh();
+      await refreshUser();
     } catch (err) {
       const code = (err as { code?: string })?.code ?? '';
       if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
@@ -87,8 +86,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
   const handleUnlinkGoogle = async () => {
     try {
       await unlinkProvider(user, 'google.com');
-      await user.reload();
-      refresh();
+      await refreshUser();
     } catch (err) {
       console.error('[BTal] unlink google error:', err);
     }
@@ -97,8 +95,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
   const handleDisableTotp = async () => {
     try {
       await unenrollTotp(user);
-      await user.reload();
-      refresh();
+      await refreshUser();
     } catch (err) {
       console.error('[BTal] unenroll error:', err);
     }
@@ -144,7 +141,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
               </button>
 
               {user.email && (
-                <VerifyEmailRow user={user} onRefreshed={refresh} />
+                <VerifyEmailRow user={user} onRefreshed={refreshUser} />
               )}
 
               <button
@@ -339,7 +336,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
         isOpen={enableTotpOpen}
         user={user}
         onClose={() => setEnableTotpOpen(false)}
-        onEnrolled={refresh}
+        onEnrolled={refreshUser}
       />
       <DeleteAccountModal
         isOpen={deleteAccountOpen}

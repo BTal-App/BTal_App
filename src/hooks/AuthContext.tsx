@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { consumePendingRedirect } from '../services/auth';
@@ -10,6 +10,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initialUser = auth.currentUser;
   const [user, setUser] = useState(initialUser);
   const [loading, setLoading] = useState(initialUser === null);
+  // `version` solo existe para forzar re-renders cuando los consumidores
+  // llaman a refreshUser tras una mutación que Firebase no nos notifica
+  // (ej. applyActionCode cambia user.email pero no dispara onAuthStateChanged).
+  const [, setVersion] = useState(0);
 
   useEffect(() => {
     // Recoge resultado pendiente de signInWithRedirect (Google en PWA standalone).
@@ -26,6 +30,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsub;
   }, []);
 
-  const value: AuthState = { user, loading, isAuthed: !!user };
+  const refreshUser = useCallback(async () => {
+    if (!auth.currentUser) return;
+    try {
+      await auth.currentUser.reload();
+    } catch (err) {
+      console.warn('[BTal] refreshUser reload error:', err);
+    }
+    // Bumpeamos version para que value sea un objeto nuevo y los consumidores
+    // re-rendericen; user es la misma referencia mutada.
+    setVersion((v) => v + 1);
+  }, []);
+
+  const value: AuthState = { user, loading, isAuthed: !!user, refreshUser };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

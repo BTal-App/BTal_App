@@ -9,6 +9,7 @@ import {
   type ActionCodeInfo,
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
+import { useAuth } from '../hooks/useAuth';
 import './AuthAction.css';
 
 const errorCode = (err: unknown): string =>
@@ -36,6 +37,7 @@ function validatePasswordStrength(pwd: string): string | null {
 const AuthAction: React.FC = () => {
   const history = useHistory();
   const location = useLocation();
+  const { refreshUser } = useAuth();
   const params = new URLSearchParams(location.search);
   const oobCode = params.get('oobCode') ?? '';
 
@@ -74,14 +76,14 @@ const AuthAction: React.FC = () => {
         const op = actionInfo.operation;
         if (op === 'VERIFY_EMAIL') {
           await applyActionCode(auth, oobCode);
-          // Si el usuario está logueado en esta misma sesión, refrescamos
-          // para que emailVerified pase a true sin tener que cerrar sesión.
-          if (auth.currentUser) {
-            await auth.currentUser.reload().catch(() => {});
-          }
+          // refreshUser: re-lee user del servidor y propaga el cambio a todos
+          // los componentes que leen del AuthContext (Dashboard, Settings,
+          // AccountInfoModal, ...) para que emailVerified/email actualicen.
+          await refreshUser();
           if (!cancelled) setSuccessMsg('Email verificado correctamente.');
         } else if (op === 'RECOVER_EMAIL') {
           await applyActionCode(auth, oobCode);
+          await refreshUser();
           if (!cancelled) {
             const restored = actionInfo.data.email;
             setSuccessMsg(
@@ -92,6 +94,7 @@ const AuthAction: React.FC = () => {
           }
         } else if (op === 'VERIFY_AND_CHANGE_EMAIL') {
           await applyActionCode(auth, oobCode);
+          await refreshUser();
           if (!cancelled) {
             const newEmail = actionInfo.data.email;
             setSuccessMsg(
@@ -102,6 +105,7 @@ const AuthAction: React.FC = () => {
           }
         } else if (op === 'REVERT_SECOND_FACTOR_ADDITION') {
           await applyActionCode(auth, oobCode);
+          await refreshUser();
           if (!cancelled) {
             setSuccessMsg(
               'Hemos eliminado el segundo factor de autenticación que se añadió. Cambia tu contraseña por seguridad.',
@@ -119,7 +123,7 @@ const AuthAction: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [oobCode]);
+  }, [oobCode, refreshUser]);
 
   const handleResetSubmit = async (e: FormEvent) => {
     e.preventDefault();

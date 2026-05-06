@@ -35,7 +35,7 @@ export function AccountInfoModal({ isOpen, user, onClose }: Props) {
         <div className="settings-modal-card">
           <h2 className="settings-modal-title">Información de la cuenta</h2>
           <p className="settings-modal-text">
-            Datos básicos de tu cuenta de BTal.
+            Datos de tu cuenta de BTal.
           </p>
 
           <div className="account-info-card">
@@ -75,7 +75,7 @@ export function AccountInfoModal({ isOpen, user, onClose }: Props) {
               </span>
             </div>
             <div className="account-info-item">
-              <span className="account-info-label">Métodos</span>
+              <span className="account-info-label">Inicio sesión</span>
               <span className="account-info-value account-info-providers">
                 {providers.length > 0 ? (
                   providers.map((p) => (
