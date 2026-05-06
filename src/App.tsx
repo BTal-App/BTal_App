@@ -6,6 +6,7 @@ import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import AuthAction from './pages/AuthAction';
 import Settings from './pages/Settings';
+import LegalPlaceholder from './pages/LegalPlaceholder';
 import { AuthProvider } from './hooks/AuthContext';
 import { VerifyBannerProvider } from './hooks/VerifyBannerProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -47,6 +48,15 @@ const App: React.FC = () => (
             </Route>
             <Route exact path="/auth/action">
               <AuthAction />
+            </Route>
+            <Route exact path="/legal/privacidad">
+              <LegalPlaceholder />
+            </Route>
+            <Route exact path="/legal/terminos">
+              <LegalPlaceholder />
+            </Route>
+            <Route exact path="/legal/aviso-medico">
+              <LegalPlaceholder />
             </Route>
             <Route>
               <Redirect to="/" />

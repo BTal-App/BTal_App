@@ -115,6 +115,118 @@
   flex-shrink: 0;
 }
 
+.settings-row-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--btal-coral);
+  line-height: 1.4;
+}
+
+/* Filas tipo "link" (Soporte, Reportar bug, Acerca) — el row entero clica */
+.settings-row.settings-row--link {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.settings-row.settings-row--link:hover {
+  background: var(--btal-surface-2);
+  border-color: var(--btal-border-2);
+}
+
+button.settings-row {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.settings-row-chevron {
+  color: var(--btal-t-3);
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+/* Tarjeta de perfil con avatar al inicio de Settings */
+.settings-profile-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  margin-bottom: 28px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.settings-profile-card:hover {
+  background: var(--btal-surface-2);
+  border-color: var(--btal-border-2);
+}
+
+.settings-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.settings-avatar span {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+  color: var(--btal-lime);
+  line-height: 1;
+}
+
+.settings-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.settings-profile-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--btal-t-1);
+  letter-spacing: -0.01em;
+}
+
+.settings-profile-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+}
+
+.settings-profile-edit ion-icon {
+  font-size: 0.9rem;
+}
+
 .settings-loading {
   min-height: 100%;
   display: flex;

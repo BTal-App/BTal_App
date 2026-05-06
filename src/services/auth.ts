@@ -4,6 +4,7 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   getRedirectResult,
+  linkWithPopup,
   multiFactor,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
@@ -15,6 +16,9 @@ import {
   signInWithRedirect,
   signOut as fbSignOut,
   TotpMultiFactorGenerator,
+  unlink,
+  updatePassword,
+  updateProfile,
   type MultiFactorInfo,
   type TotpSecret,
   type User,
@@ -112,6 +116,37 @@ export const unenrollTotp = async (user: User) => {
   const factor = getEnrolledTotpFactor(user);
   if (factor) await multiFactor(user).unenroll(factor);
 };
+
+// ────────────────────────────────────────────────────────────────────────────
+// Helpers de gestión de cuenta (settings)
+
+// Helpers para saber qué providers tiene el usuario.
+export const hasPasswordProvider = (user: User) =>
+  user.providerData.some((p) => p.providerId === 'password');
+
+export const hasGoogleProvider = (user: User) =>
+  user.providerData.some((p) => p.providerId === 'google.com');
+
+export const changePassword = (user: User, newPassword: string) =>
+  updatePassword(user, newPassword);
+
+// Vincular Google a una cuenta que se registró con email/password.
+// Después podrá entrar con cualquiera de los dos métodos.
+// IMPORTANTE: en PWA standalone iOS los popups no funcionan; este helper
+// lanza el error que el modal traduce a un mensaje claro.
+export const linkGoogle = (user: User) =>
+  linkWithPopup(user, new GoogleAuthProvider());
+
+// Desvincular un provider. No deja al user sin métodos de login —
+// quien llama debe verificar que queda al menos uno antes.
+export const unlinkProvider = (user: User, providerId: string) =>
+  unlink(user, providerId);
+
+// Actualizar displayName y/o photoURL en Firebase Auth.
+export const updateUserProfile = (
+  user: User,
+  data: { displayName?: string | null; photoURL?: string | null },
+) => updateProfile(user, data);
 
 // ────────────────────────────────────────────────────────────────────────────
 // Eliminación de cuenta

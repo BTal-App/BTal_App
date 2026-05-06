@@ -1,0 +1,76 @@
+.about-card {
+  align-items: center;
+  text-align: center;
+  padding-top: 32px;
+}
+
+.about-logo {
+  width: 120px;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.about-tagline {
+  font-size: 0.92rem;
+  color: var(--btal-t-2);
+  line-height: 1.5;
+  max-width: 280px;
+}
+
+.about-version {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--btal-border);
+}
+
+.about-links {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.about-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  color: var(--btal-t-1);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: var(--btal-surface);
+  transition: background 0.15s;
+}
+
+.about-link:hover {
+  background: var(--btal-surface-2);
+}
+
+.about-link ion-icon {
+  font-size: 1.2rem;
+  color: var(--btal-t-3);
+  flex-shrink: 0;
+}
+
+.about-credits {
+  font-size: 0.82rem;
+  color: var(--btal-t-3);
+  line-height: 1.7;
+  margin: 4px 0 0;
+}
+
+.about-credits-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+}

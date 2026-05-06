@@ -11,27 +11,80 @@ import {
 import {
   arrowBackOutline,
   checkmarkCircle,
+  helpCircleOutline,
+  informationCircleOutline,
+  keyOutline,
+  logoGoogle,
   mailOutline,
+  pencilOutline,
   shieldCheckmarkOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
-import { getEnrolledTotpFactor, unenrollTotp } from '../services/auth';
+import {
+  getEnrolledTotpFactor,
+  hasGoogleProvider,
+  hasPasswordProvider,
+  linkGoogle,
+  unenrollTotp,
+  unlinkProvider,
+} from '../services/auth';
+import { AboutModal } from '../components/AboutModal';
 import { ChangeEmailModal } from '../components/ChangeEmailModal';
+import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
+import { EditProfileModal } from '../components/EditProfileModal';
 import { EnableTotpModal } from '../components/EnableTotpModal';
 import { VerifyEmailRow } from '../components/VerifyEmailRow';
 import './Settings.css';
+
+declare const __APP_VERSION__: string;
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
+
+// Construye el body del email de soporte con datos útiles para diagnóstico.
+function buildSupportMailto(
+  email: string | null | undefined,
+  uid: string,
+  subjectPrefix: string,
+): string {
+  const subject = `${subjectPrefix} BTal`;
+  const body = [
+    'Hola, equipo de BTal.',
+    '',
+    '— [Escribe aquí tu mensaje] —',
+    '',
+    '— Datos para soporte (no edites) —',
+    `Email: ${email ?? '(invitado)'}`,
+    `UID: ${uid}`,
+    `Versión: v${APP_VERSION}`,
+    `Plataforma: ${navigator.userAgent}`,
+    `Fecha: ${new Date().toISOString()}`,
+  ].join('\n');
+  return `mailto:soporte@btal.app?subject=${encodeURIComponent(
+    subject,
+  )}&body=${encodeURIComponent(body)}`;
+}
+
+function initialsOf(name: string | null | undefined, email: string | null | undefined) {
+  const source = (name?.trim() || email || '?').trim();
+  const parts = source.split(/[\s@._-]+/).filter(Boolean);
+  return (parts[0]?.[0] ?? '?').toUpperCase() + (parts[1]?.[0]?.toUpperCase() ?? '');
+}
 
 const Settings: React.FC = () => {
   const history = useHistory();
   const { user, loading, isAuthed } = useAuth();
 
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [enableTotpOpen, setEnableTotpOpen] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [confirmUnlinkGoogleOpen, setConfirmUnlinkGoogleOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
-  // Tick para forzar re-render tras enroll/unenroll (multiFactor data está
-  // en el objeto user pero los enrolledFactors no lanzan onAuthStateChanged).
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [linkGoogleError, setLinkGoogleError] = useState('');
+  // Tick para forzar re-render tras enroll/unenroll/link (los datos están
+  // mutados en el objeto user pero no disparan onAuthStateChanged).
   const [tick, setTick] = useState(0);
   const refresh = () => setTick((t) => t + 1);
 
@@ -54,19 +107,54 @@ const Settings: React.FC = () => {
 
   const isAnonymous = user.isAnonymous;
   const enrolledTotp = getEnrolledTotpFactor(user);
-  // Forzamos lectura de tick para que el render se actualice tras enroll/unenroll
+  const hasPassword = hasPasswordProvider(user);
+  const hasGoogle = hasGoogleProvider(user);
+  // Forzamos lectura de tick para que el render se actualice tras cambios
   void tick;
 
   const handleDisableTotp = async () => {
     try {
       await unenrollTotp(user);
-      // Recargamos el user para que enrolledFactors se vacíe
       await user.reload();
       refresh();
     } catch (err) {
       console.error('[BTal] unenroll error:', err);
     }
   };
+
+  const handleLinkGoogle = async () => {
+    setLinkGoogleError('');
+    try {
+      await linkGoogle(user);
+      await user.reload();
+      refresh();
+    } catch (err) {
+      const code = (err as { code?: string })?.code ?? '';
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        return; // El usuario cerró el popup, no es un error real
+      }
+      if (code === 'auth/credential-already-in-use') {
+        setLinkGoogleError('Esa cuenta de Google ya está vinculada a otra cuenta de BTal.');
+      } else if (code === 'auth/provider-already-linked') {
+        setLinkGoogleError('Google ya está vinculado a esta cuenta.');
+      } else {
+        setLinkGoogleError('No hemos podido vincular Google. Inténtalo de nuevo.');
+      }
+    }
+  };
+
+  const handleUnlinkGoogle = async () => {
+    try {
+      await unlinkProvider(user, 'google.com');
+      await user.reload();
+      refresh();
+    } catch (err) {
+      console.error('[BTal] unlink google error:', err);
+    }
+  };
+
+  const supportMailto = buildSupportMailto(user.email, user.uid, '[Soporte]');
+  const bugMailto = buildSupportMailto(user.email, user.uid, '[BUG]');
 
   return (
     <IonPage>
@@ -77,9 +165,6 @@ const Settings: React.FC = () => {
               type="button"
               className="settings-back"
               onClick={(e) => {
-                // Quitamos el foco antes de navegar — Ionic marca la página
-                // saliente con aria-hidden, y un foco activo dentro de un
-                // ancestro aria-hidden lanza warning de accesibilidad.
                 e.currentTarget.blur();
                 history.goBack();
               }}
@@ -94,6 +179,33 @@ const Settings: React.FC = () => {
             <div className="settings-banner">
               Estás como invitado. Para gestionar tu cuenta, regístrate o inicia sesión con email.
             </div>
+          )}
+
+          {/* Avatar grande clicable para editar perfil — solo no-invitados */}
+          {!isAnonymous && (
+            <button
+              type="button"
+              className="settings-profile-card"
+              onClick={() => setEditProfileOpen(true)}
+              aria-label="Editar perfil"
+            >
+              <div className="settings-avatar">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="" />
+                ) : (
+                  <span>{initialsOf(user.displayName, user.email)}</span>
+                )}
+              </div>
+              <div className="settings-profile-info">
+                <span className="settings-profile-name">
+                  {user.displayName?.trim() || 'Sin nombre'}
+                </span>
+                <span className="settings-profile-edit">
+                  <IonIcon icon={pencilOutline} />
+                  Editar perfil
+                </span>
+              </div>
+            </button>
           )}
 
           <section className="settings-section">
@@ -128,6 +240,67 @@ const Settings: React.FC = () => {
 
             {!isAnonymous && user.email && (
               <VerifyEmailRow user={user} onRefreshed={refresh} />
+            )}
+
+            {/* Cambiar contraseña — solo si la cuenta tiene provider password */}
+            {!isAnonymous && hasPassword && (
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Contraseña</span>
+                  <span className="settings-row-value settings-row-sub">
+                    Cámbiala sin tener que pasar por el email.
+                  </span>
+                </div>
+                <IonButton
+                  fill="outline"
+                  size="small"
+                  className="settings-row-action"
+                  onClick={() => setChangePasswordOpen(true)}
+                >
+                  <IonIcon icon={keyOutline} slot="start" />
+                  Cambiar
+                </IonButton>
+              </div>
+            )}
+
+            {/* Vincular / desvincular Google */}
+            {!isAnonymous && (
+              <div className="settings-row">
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Cuenta de Google</span>
+                  <span className="settings-row-value settings-row-sub">
+                    {hasGoogle
+                      ? 'Vinculada · puedes iniciar sesión con Google'
+                      : 'Vincúlala para iniciar sesión también con Google'}
+                  </span>
+                  {linkGoogleError && (
+                    <span className="settings-row-error">{linkGoogleError}</span>
+                  )}
+                </div>
+                {hasGoogle ? (
+                  <IonButton
+                    fill="outline"
+                    color="danger"
+                    size="small"
+                    className="settings-row-action"
+                    // Solo dejamos desvincular si queda otro método de login
+                    disabled={!hasPassword}
+                    onClick={() => setConfirmUnlinkGoogleOpen(true)}
+                  >
+                    Desvincular
+                  </IonButton>
+                ) : (
+                  <IonButton
+                    fill="outline"
+                    size="small"
+                    className="settings-row-action"
+                    onClick={handleLinkGoogle}
+                  >
+                    <IonIcon icon={logoGoogle} slot="start" />
+                    Vincular
+                  </IonButton>
+                )}
+              </div>
             )}
           </section>
 
@@ -169,6 +342,54 @@ const Settings: React.FC = () => {
             </div>
           </section>
 
+          <section className="settings-section">
+            <h2 className="settings-section-title">Soporte</h2>
+
+            <a
+              href={supportMailto}
+              className="settings-row settings-row--link"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <div className="settings-row-info">
+                <span className="settings-row-label">Contactar soporte</span>
+                <span className="settings-row-value settings-row-sub">
+                  Te abrimos tu email con asunto y datos pre-rellenados.
+                </span>
+              </div>
+              <IonIcon icon={helpCircleOutline} className="settings-row-chevron" />
+            </a>
+
+            <a
+              href={bugMailto}
+              className="settings-row settings-row--link"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <div className="settings-row-info">
+                <span className="settings-row-label">Reportar un bug</span>
+                <span className="settings-row-value settings-row-sub">
+                  Envíanos lo que has visto y cómo reproducirlo.
+                </span>
+              </div>
+              <IonIcon icon={mailOutline} className="settings-row-chevron" />
+            </a>
+
+            <button
+              type="button"
+              className="settings-row settings-row--link"
+              onClick={() => setAboutOpen(true)}
+            >
+              <div className="settings-row-info">
+                <span className="settings-row-label">Acerca de BTal</span>
+                <span className="settings-row-value settings-row-sub">
+                  v{APP_VERSION} · privacidad, términos, aviso médico
+                </span>
+              </div>
+              <IonIcon icon={informationCircleOutline} className="settings-row-chevron" />
+            </button>
+          </section>
+
           <section className="settings-section settings-danger">
             <div className="settings-row settings-row--danger">
               <div className="settings-row-info">
@@ -192,6 +413,8 @@ const Settings: React.FC = () => {
           </section>
         </div>
 
+        <AboutModal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
+
         <DeleteAccountModal
           isOpen={deleteAccountOpen}
           user={user}
@@ -200,10 +423,21 @@ const Settings: React.FC = () => {
 
         {!isAnonymous && (
           <>
+            <EditProfileModal
+              isOpen={editProfileOpen}
+              user={user}
+              onClose={() => setEditProfileOpen(false)}
+              onUpdated={refresh}
+            />
             <ChangeEmailModal
               isOpen={changeEmailOpen}
               user={user}
               onClose={() => setChangeEmailOpen(false)}
+            />
+            <ChangePasswordModal
+              isOpen={changePasswordOpen}
+              user={user}
+              onClose={() => setChangePasswordOpen(false)}
             />
             <EnableTotpModal
               isOpen={enableTotpOpen}
@@ -223,6 +457,22 @@ const Settings: React.FC = () => {
                   role: 'destructive',
                   handler: () => {
                     handleDisableTotp();
+                  },
+                },
+              ]}
+            />
+            <IonAlert
+              isOpen={confirmUnlinkGoogleOpen}
+              onDidDismiss={() => setConfirmUnlinkGoogleOpen(false)}
+              header="¿Desvincular Google?"
+              message="Tu cuenta seguirá funcionando con email y contraseña. Podrás volver a vincular Google cuando quieras."
+              buttons={[
+                { text: 'Cancelar', role: 'cancel' },
+                {
+                  text: 'Desvincular',
+                  role: 'destructive',
+                  handler: () => {
+                    handleUnlinkGoogle();
                   },
                 },
               ]}
