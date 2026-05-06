@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonIcon,
@@ -14,6 +15,7 @@ import {
 } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
+import { signOut } from '../services/auth';
 import {
   EQUIPAMIENTOS,
   NIVELES_ACTIVIDAD,
@@ -42,6 +44,7 @@ const Onboarding: React.FC = () => {
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
   // Prellenamos el nombre con displayName del Auth (si existe) usando el
   // patrón state-from-prop: se aplica en el primer render donde el user
@@ -136,6 +139,15 @@ const Onboarding: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      // useAuth detectará el cambio y el efecto de arriba redirige a /
+    } catch (err) {
+      console.error('[BTal] signOut error:', err);
+    }
+  };
+
   if (authLoading || profileLoading || !user) {
     return (
       <IonPage>
@@ -202,7 +214,7 @@ const Onboarding: React.FC = () => {
                     />
                   </label>
                   <label className="onboarding-field">
-                    <span>Sexo biológico</span>
+                    <span>Sexo</span>
                     <div className="onboarding-segment">
                       <button
                         type="button"
@@ -393,8 +405,36 @@ const Onboarding: React.FC = () => {
                 </IonButton>
               )}
             </div>
+
+            {/* Escape hatch para usuarios que no quieran completar el
+                onboarding ahora. Cerramos sesión y vuelven a la landing. */}
+            <button
+              type="button"
+              className="onboarding-skip"
+              onClick={() => setConfirmLogoutOpen(true)}
+              disabled={submitting}
+            >
+              Cerrar sesión
+            </button>
           </div>
         </div>
+
+        <IonAlert
+          isOpen={confirmLogoutOpen}
+          onDidDismiss={() => setConfirmLogoutOpen(false)}
+          header="¿Cerrar sesión sin completar?"
+          message="Si cierras sesión ahora, los datos que has rellenado se perderán. La próxima vez que entres tendrás que empezar de nuevo."
+          buttons={[
+            { text: 'Cancelar', role: 'cancel' },
+            {
+              text: 'Cerrar sesión',
+              role: 'destructive',
+              handler: () => {
+                handleLogout();
+              },
+            },
+          ]}
+        />
       </IonContent>
     </IonPage>
   );

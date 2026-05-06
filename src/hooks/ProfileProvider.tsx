@@ -22,6 +22,23 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Reset síncrono cuando cambia el usuario ────────────────────────────
+  // Si esperamos al useEffect, hay un render intermedio donde:
+  //   loading=false (del user anterior), profile=null, user=nuevoUser
+  // Dashboard ve eso y redirige a /onboarding aunque el user sí tenga su
+  // perfil completo en Firestore — solo que aún no lo hemos cargado.
+  // Resetando durante render con state-from-prop garantizamos que el
+  // primer render ya muestra loading=true y nadie redirige por error.
+  const [trackedUid, setTrackedUid] = useState<string | null>(uid);
+  if (trackedUid !== uid) {
+    setTrackedUid(uid);
+    setProfile(null);
+    setError(null);
+    // loading=true si vamos a cargar (real user con uid). false si no hay
+    // nada que cargar (logout, o invitado).
+    setLoading(!!uid && !isAnonymous);
+  }
+
   // Cuando cambia el uid, recargamos. Para invitados no leemos Firestore
   // (las reglas lo permitirían, pero para qué llamar si no hay nada).
   const load = useCallback(async () => {
@@ -37,8 +54,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setError(null);
       return;
     }
-    setLoading(true);
     setError(null);
+    setLoading(true);
     try {
       const doc = await getUserDocument(uid);
       setProfile(doc);
