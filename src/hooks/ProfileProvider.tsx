@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import {
   getUserDocument,
   saveOnboardingProfile,
+  touchLastActive,
 } from '../services/db';
 import type { UserDocument, UserProfile } from '../templates/defaultUser';
 import { ProfileContext, type ProfileState } from './profile-context';
@@ -59,6 +60,16 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     try {
       const doc = await getUserDocument(uid);
       setProfile(doc);
+      // touchLastActive DESPUÉS del read. Si lo hacemos antes (como hacía
+      // Dashboard antes), Firestore SDK aplica la escritura como mutación
+      // local y getDoc devuelve esa vista pendiente con solo {lastActive},
+      // sin el resto del doc. Solo escribimos si el user ya tiene perfil
+      // completo — pre-onboarding no creamos doc parcial.
+      if (doc?.profile?.completed) {
+        touchLastActive(uid).catch((err) => {
+          console.warn('[BTal] touchLastActive error:', err);
+        });
+      }
     } catch (err) {
       console.error('[BTal] getUserDocument error:', err);
       setError('No hemos podido cargar tu perfil.');

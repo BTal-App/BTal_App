@@ -12,7 +12,6 @@ import { logOutOutline, settingsOutline } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { signOut } from '../services/auth';
-import { touchLastActive } from '../services/db';
 import { VerifyEmailBanner } from '../components/VerifyEmailBanner';
 import { greetingName, initialsOf } from '../utils/userDisplay';
 import './Dashboard.css';
@@ -30,24 +29,16 @@ const Dashboard: React.FC = () => {
 
   // Si el usuario es real (no invitado) y no tiene perfil completo, mándalo al onboarding.
   // Los invitados no pasan por onboarding — ProfileProvider deja profile en null para ellos.
+  // Nota: touchLastActive vive en ProfileProvider.load() (después del read del
+  // doc) — hacerlo aquí provocaba race condition con la lectura en Firestore,
+  // que devolvía solo {lastActive} en vez del doc completo.
   useEffect(() => {
     if (loading || profileLoading || !user) return;
     if (user.isAnonymous) return;
-    // Optional chaining: si por algún edge case el doc existiera con
-    // preferences pero sin profile, tratamos como onboarding pendiente.
     if (!userDoc?.profile?.completed) {
       history.replace('/onboarding');
     }
   }, [loading, profileLoading, user, userDoc, history]);
-
-  // Marcar lastActive cada vez que el dashboard monta con un usuario real.
-  // Best-effort: si Firestore no está activo o las reglas fallan, ignoramos.
-  useEffect(() => {
-    if (loading || !user || user.isAnonymous) return;
-    touchLastActive(user.uid).catch((err) => {
-      console.warn('[BTal] touchLastActive error:', err);
-    });
-  }, [loading, user]);
 
   const handleLogout = async () => {
     await signOut();
