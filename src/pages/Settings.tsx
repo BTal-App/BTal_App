@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { getEnrolledTotpFactor, unenrollTotp } from '../services/auth';
 import { ChangeEmailModal } from '../components/ChangeEmailModal';
+import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EnableTotpModal } from '../components/EnableTotpModal';
 import { VerifyEmailRow } from '../components/VerifyEmailRow';
 import './Settings.css';
@@ -28,6 +29,7 @@ const Settings: React.FC = () => {
   const [changeEmailOpen, setChangeEmailOpen] = useState(false);
   const [enableTotpOpen, setEnableTotpOpen] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   // Tick para forzar re-render tras enroll/unenroll (multiFactor data está
   // en el objeto user pero los enrolledFactors no lanzan onAuthStateChanged).
   const [tick, setTick] = useState(0);
@@ -166,7 +168,37 @@ const Settings: React.FC = () => {
               )}
             </div>
           </section>
+
+          <section className="settings-section settings-danger">
+            <h2 className="settings-section-title">Zona de peligro</h2>
+
+            <div className="settings-row settings-row--danger">
+              <div className="settings-row-info">
+                <span className="settings-row-label">Eliminar cuenta</span>
+                <span className="settings-row-value settings-row-sub">
+                  {isAnonymous
+                    ? 'Borra esta sesión de invitado. Perderás los datos al instante.'
+                    : 'Borra tu cuenta de forma permanente. Esta acción no se puede deshacer.'}
+                </span>
+              </div>
+              <IonButton
+                fill="outline"
+                color="danger"
+                size="small"
+                className="settings-row-action"
+                onClick={() => setDeleteAccountOpen(true)}
+              >
+                Eliminar cuenta
+              </IonButton>
+            </div>
+          </section>
         </div>
+
+        <DeleteAccountModal
+          isOpen={deleteAccountOpen}
+          user={user}
+          onClose={() => setDeleteAccountOpen(false)}
+        />
 
         {!isAnonymous && (
           <>

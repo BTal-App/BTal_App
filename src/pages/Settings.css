@@ -132,3 +132,19 @@
     width: 100%;
   }
 }
+
+/* Zona de peligro · espaciado extra arriba para separarla visualmente */
+.settings-danger {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--btal-border);
+}
+
+.settings-danger .settings-section-title {
+  color: var(--btal-coral);
+}
+
+.settings-row--danger {
+  border-color: rgba(255, 107, 107, 0.22);
+  background: rgba(255, 107, 107, 0.04);
+}
