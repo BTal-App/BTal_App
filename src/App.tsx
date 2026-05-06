@@ -11,6 +11,7 @@ import LegalPlaceholder from './pages/LegalPlaceholder';
 import { AuthProvider } from './hooks/AuthContext';
 import { VerifyBannerProvider } from './hooks/VerifyBannerProvider';
 import { ProfileProvider } from './hooks/ProfileProvider';
+import { PreferencesProvider } from './hooks/PreferencesProvider';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 /* Ionic core CSS — obligatorio */
@@ -36,6 +37,7 @@ const App: React.FC = () => (
   <ErrorBoundary>
     <AuthProvider>
       <ProfileProvider>
+        <PreferencesProvider>
         <VerifyBannerProvider>
           <IonApp>
             <IonReactRouter>
@@ -67,6 +69,7 @@ const App: React.FC = () => (
             </IonReactRouter>
           </IonApp>
         </VerifyBannerProvider>
+        </PreferencesProvider>
       </ProfileProvider>
     </AuthProvider>
   </ErrorBoundary>

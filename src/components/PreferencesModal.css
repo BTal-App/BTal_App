@@ -1,0 +1,64 @@
+/* PreferencesModal · selectores tipo segmento */
+
+.prefs-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.prefs-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.prefs-row-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-t-3);
+}
+
+.prefs-row-sub {
+  font-size: 0.85rem;
+  color: var(--btal-t-2);
+  line-height: 1.45;
+}
+
+/* Segmento (tipo iOS) */
+.prefs-segment {
+  display: flex;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.prefs-segment button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--btal-t-2);
+  padding: 9px 12px;
+  border-radius: 7px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.prefs-segment button:hover:not(.active) {
+  color: var(--btal-t-1);
+}
+
+.prefs-segment button.active {
+  background: var(--btal-lime);
+  color: #0a0e0c;
+}

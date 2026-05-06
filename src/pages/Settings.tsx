@@ -13,6 +13,7 @@ import {
   helpCircleOutline,
   informationCircleOutline,
   mailOutline,
+  optionsOutline,
   pencilOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../hooks/useAuth';
@@ -20,6 +21,7 @@ import { AboutModal } from '../components/AboutModal';
 import { AccountManageModal } from '../components/AccountManageModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EditProfileModal } from '../components/EditProfileModal';
+import { PreferencesModal } from '../components/PreferencesModal';
 import { initialsOf } from '../utils/userDisplay';
 import './Settings.css';
 
@@ -56,6 +58,7 @@ const Settings: React.FC = () => {
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [accountManageOpen, setAccountManageOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
 
@@ -151,6 +154,23 @@ const Settings: React.FC = () => {
             </section>
           )}
 
+          {/* Preferencias · disponible también para invitados (es local) */}
+          <section className="settings-section">
+            <button
+              type="button"
+              className="settings-row settings-row--link"
+              onClick={() => setPreferencesOpen(true)}
+            >
+              <div className="settings-row-info">
+                <span className="settings-row-label">Preferencias</span>
+                <span className="settings-row-value settings-row-sub">
+                  Sistema de unidades · inicio de la semana
+                </span>
+              </div>
+              <IonIcon icon={optionsOutline} className="settings-row-chevron" />
+            </button>
+          </section>
+
           <section className="settings-section">
             <h2 className="settings-section-title">Soporte</h2>
 
@@ -225,6 +245,10 @@ const Settings: React.FC = () => {
         </div>
 
         <AboutModal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
+        <PreferencesModal
+          isOpen={preferencesOpen}
+          onClose={() => setPreferencesOpen(false)}
+        />
 
         {/* DeleteAccountModal aquí solo se usa para invitados (los registrados
             lo abren desde dentro de AccountManageModal). */}
