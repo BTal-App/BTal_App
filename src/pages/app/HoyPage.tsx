@@ -20,6 +20,7 @@ import { VerifyEmailBanner } from '../../components/VerifyEmailBanner';
 import { ProfileSheet } from '../../components/ProfileSheet';
 import { LinkGuestAccountModal } from '../../components/LinkGuestAccountModal';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
+import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
 import { greetingName, initialsOf } from '../../utils/userDisplay';
 import './HoyPage.css';
@@ -151,6 +152,7 @@ const HoyPage: React.FC = () => {
               <div className="hoy-hero-label">
                 <span className="hoy-hero-dot" />
                 Tu plan diario
+                <AiGeneratedBadge userDoc={userDoc} scope="any" />
               </div>
               <h2 className="hoy-hero-title">Aún sin plan generado</h2>
               <p className="hoy-hero-sub">

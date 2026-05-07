@@ -45,6 +45,17 @@ export type Modo = 'manual' | 'ai';
 // Si modo === 'manual' este campo es null (no aplica).
 export type AiScopeChoice = 'all' | 'menu_compra' | 'menu_only' | 'entrenos_only';
 
+// Origen de un item dentro de menu/entrenos/compra. Usado por la lógica de
+// "la IA no toca lo del usuario":
+//   - 'default' → item de plantilla vacía (defaultUser) o sembrado por demoUser.
+//                 La IA puede sobrescribirlo libremente.
+//   - 'ai'      → item creado por la última generación de Gemini.
+//                 La IA puede sobrescribirlo (es lo que generó la vez anterior).
+//   - 'user'    → item creado o editado por el usuario en la app (Fase 2B+).
+//                 La IA NO lo toca a menos que el user active el toggle
+//                 "permitir tocar lo mío" en el AiGenerateModal.
+export type SourceTag = 'default' | 'ai' | 'user';
+
 // Valor que emite el componente <StepMode> · vive aquí (junto al resto
 // de tipos de dominio) para evitar que el modal de cambio en Settings
 // y el onboarding tengan que importar de un archivo de UI.
@@ -69,6 +80,39 @@ export interface UserProfile {
   // Objetivo
   objetivo: Objetivo | null;
   restricciones: Restriccion[];
+
+  // ── Personalización para la IA (paso 4 del onboarding) ──
+  // Todos los campos son opcionales. Si el user no los rellena, la IA
+  // genera con las restricciones genéricas (vegano, sin gluten, etc.).
+  // Cuando estén poblados, el prompt los inyecta como reglas obligatorias
+  // al generar tanto menú como plan de entreno.
+
+  // Texto libre · "Cuéntanos cualquier otro detalle (objetivos, lesiones,
+  // preferencias…)". Se inyecta tal cual en el prompt — el sanitizado de
+  // Cloud Function escapa caracteres peligrosos antes de pasarlo a Gemini.
+  notas: string;
+
+  // Intolerancias específicas. Strings — los predefinidos vienen de
+  // INTOLERANCIAS_COMUNES (lactosa, fructosa, etc.). Items con texto libre
+  // se almacenan tal cual ("histamina", "salicilatos", lo que sea).
+  intolerancias: string[];
+
+  // Alergias específicas. Strings — los predefinidos vienen de
+  // ALERGIAS_COMUNES (los 14 alérgenos del Reglamento UE 1169/2011).
+  // Texto libre permitido para alergias menos comunes.
+  alergias: string[];
+
+  // Alimentos / platos que el user NO quiere ver en sus comidas.
+  // Texto libre con chips (ej. "atún", "hígado", "coliflor").
+  alimentosProhibidos: string[];
+
+  // Alimentos / platos que el user QUIERE que aparezcan obligatoriamente.
+  // Texto libre con chips (ej. "salmón al menos 2 veces a la semana").
+  alimentosObligatorios: string[];
+
+  // Ingredientes favoritos del user. La IA los priorizará en el plan.
+  // Texto libre con chips (ej. "aguacate", "huevos", "espinacas").
+  ingredientesFavoritos: string[];
 
   // Modo de generación
   modo: Modo;
@@ -103,6 +147,9 @@ export interface Comida {
   prot: number; // g
   carb: number; // g
   fat: number; // g
+  // Origen del item — la IA respeta items con source='user' a menos que
+  // el user active "permitir tocar lo mío" en el AiGenerateModal.
+  source: SourceTag;
 }
 
 export type Menu = Record<DayKey, Record<MealKey, Comida>>;
@@ -127,6 +174,7 @@ export interface Ejercicio {
   // colección (registros/{fecha}) — esto es solo el "peso objetivo".
   pesoKg: number | null;
   tipo: TipoEjercicio;
+  source: SourceTag;
 }
 
 export interface DiaEntreno {
@@ -140,6 +188,9 @@ export interface DiaEntreno {
   ejercicios: Ejercicio[];
   // Minutos estimados · null si no se ha calculado.
   duracionMin: number | null;
+  // Origen del DÍA entero (no de cada ejercicio). Si el user creó este
+  // día desde cero, source='user' y la IA no lo borra al regenerar.
+  source: SourceTag;
 }
 
 export interface PlanEntreno {
@@ -182,6 +233,7 @@ export interface ItemCompra {
   comprado: boolean;
   // Precio estimado en € · null si aún no se conoce.
   precio: number | null;
+  source: SourceTag;
 }
 
 export type Compra = Record<CategoriaCompraKey, ItemCompra[]>;
@@ -331,6 +383,12 @@ export function defaultProfile(): UserProfile {
     equipamiento: null,
     objetivo: null,
     restricciones: [],
+    notas: '',
+    intolerancias: [],
+    alergias: [],
+    alimentosProhibidos: [],
+    alimentosObligatorios: [],
+    ingredientesFavoritos: [],
     modo: 'manual',
     aiScope: null,
     completed: false,
@@ -370,6 +428,7 @@ function emptyComida(meal: MealKey): Comida {
     prot: 0,
     carb: 0,
     fat: 0,
+    source: 'default',
   };
 }
 
@@ -400,6 +459,7 @@ export function defaultEntrenos(): Entrenos {
       diaSemana: null,
       ejercicios: [],
       duracionMin: null,
+      source: 'default' as SourceTag,
     }));
   };
 
@@ -525,4 +585,52 @@ export const AI_SCOPE_OPTIONS: {
 // contexto concreto (Hoy = todas, Menú = 2, Entreno = 1).
 export function aiScopeOptions(values: AiScopeChoice[]) {
   return AI_SCOPE_OPTIONS.filter((o) => values.includes(o.value));
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Catálogos para los selectores de alergias / intolerancias del paso 4 del
+// onboarding y de EditFitnessProfileModal. Se almacenan en perfil como
+// strings — los predefinidos como su `value`, los que el user añade a mano
+// como texto libre.
+
+// Los 14 alérgenos del Reglamento UE 1169/2011 (declaración obligatoria
+// en alimentación). Cubren el ~90% de casos en España.
+export const ALERGIAS_COMUNES: { value: string; label: string }[] = [
+  { value: 'gluten', label: 'Gluten' },
+  { value: 'lacteos', label: 'Lácteos' },
+  { value: 'huevo', label: 'Huevo' },
+  { value: 'pescado', label: 'Pescado' },
+  { value: 'crustaceos', label: 'Crustáceos' },
+  { value: 'moluscos', label: 'Moluscos' },
+  { value: 'frutos_secos', label: 'Frutos secos' },
+  { value: 'cacahuetes', label: 'Cacahuetes' },
+  { value: 'soja', label: 'Soja' },
+  { value: 'apio', label: 'Apio' },
+  { value: 'mostaza', label: 'Mostaza' },
+  { value: 'sesamo', label: 'Sésamo' },
+  { value: 'sulfitos', label: 'Sulfitos' },
+  { value: 'altramuces', label: 'Altramuces (lupino)' },
+];
+
+// Intolerancias frecuentes que NO son alergias técnicamente (no implican
+// reacción inmunológica). El user puede añadir las que no estén aquí
+// como texto libre.
+export const INTOLERANCIAS_COMUNES: { value: string; label: string }[] = [
+  { value: 'lactosa', label: 'Lactosa' },
+  { value: 'fructosa', label: 'Fructosa' },
+  { value: 'sorbitol', label: 'Sorbitol' },
+  { value: 'histamina', label: 'Histamina' },
+  { value: 'sacarosa', label: 'Sacarosa' },
+  { value: 'gluten_no_celiaca', label: 'Gluten (no celíaca)' },
+  { value: 'fodmap', label: 'FODMAP' },
+];
+
+// Helper: dado un value (predefinido o texto libre), devuelve el label
+// legible. Si no está en la lista predefinida, devuelve el value tal cual.
+export function alergiaLabel(value: string): string {
+  return ALERGIAS_COMUNES.find((a) => a.value === value)?.label ?? value;
+}
+
+export function intoleranciaLabel(value: string): string {
+  return INTOLERANCIAS_COMUNES.find((a) => a.value === value)?.label ?? value;
 }

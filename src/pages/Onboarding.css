@@ -277,6 +277,40 @@
   line-height: 1.4;
 }
 
+/* ── Textarea (notas largas, paso 4) ─────────────────────────── */
+.onboarding-textarea {
+  width: 100%;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.92rem;
+  padding: 12px 14px;
+  outline: none;
+  resize: vertical;
+  min-height: 96px;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.onboarding-textarea:focus {
+  border-color: var(--btal-lime);
+}
+
+.onboarding-textarea::placeholder {
+  color: var(--btal-t-3);
+  line-height: 1.5;
+}
+
+.onboarding-counter {
+  display: block;
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  margin-top: -4px;
+}
+
 /* ── Pills (restricciones) ──────────────────────────────────── */
 .onboarding-pills {
   display: flex;
@@ -309,6 +343,14 @@
   background: rgba(181, 240, 55, 0.12);
   border-color: var(--btal-lime);
   color: var(--btal-lime);
+}
+
+/* Variante coral · usada para "alergias activas" en el paso 4
+   (para distinguirlas visualmente de las restricciones genéricas lima). */
+.onboarding-pill.coral {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: var(--btal-coral);
+  color: var(--btal-coral);
 }
 
 .onboarding-pill ion-icon {

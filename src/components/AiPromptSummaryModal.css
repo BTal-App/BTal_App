@@ -1,0 +1,246 @@
+/* AiPromptSummaryModal · resumen de lo que se enviará a la IA */
+
+.ai-summary-card {
+  max-width: 520px;
+}
+
+.ai-summary-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.ai-summary-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(181, 240, 55, 0.18), rgba(55, 224, 168, 0.08));
+  border: 1px solid rgba(181, 240, 55, 0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--btal-lime);
+  font-size: 1.4rem;
+}
+
+/* Banner del scope · destaca qué se va a generar */
+.ai-summary-scope-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: linear-gradient(140deg, rgba(181, 240, 55, 0.08), rgba(55, 224, 168, 0.03));
+  border: 1px solid rgba(181, 240, 55, 0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.ai-summary-scope-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ai-summary-scope-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--btal-lime);
+  letter-spacing: -0.01em;
+}
+
+.ai-summary-scope-sub {
+  font-size: 0.8rem;
+  color: var(--btal-t-2);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* Hint del estado de elegibilidad (Free agotado, Pro activo, etc.) */
+.ai-summary-hint {
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.ai-summary-hint--ok {
+  background: rgba(55, 224, 168, 0.08);
+  border: 1px solid rgba(55, 224, 168, 0.25);
+  color: var(--btal-cyan);
+}
+
+.ai-summary-hint--blocked {
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.28);
+  color: var(--btal-coral);
+}
+
+/* Bloque de sección · header pequeño + body */
+.ai-summary-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-summary-block-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  margin: 4px 0 0;
+}
+
+.ai-summary-block-body {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Fila label/valor */
+.ai-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 22px;
+}
+
+.ai-summary-row-label {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  font-weight: 600;
+}
+
+.ai-summary-row-value {
+  font-size: 0.88rem;
+  color: var(--btal-t-1);
+  font-weight: 600;
+  text-align: right;
+}
+
+.ai-summary-row-value--lime {
+  color: var(--btal-lime);
+}
+
+/* Chips agrupados (alergias, intolerancias, alimentos, etc.) */
+.ai-summary-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-summary-chips-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+}
+
+.ai-summary-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ai-summary-chips-empty {
+  font-size: 0.82rem;
+  color: var(--btal-t-3);
+  font-style: italic;
+}
+
+.ai-summary-chip {
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 9px;
+  border: 1px solid;
+}
+
+.ai-summary-chip--lime {
+  background: rgba(181, 240, 55, 0.08);
+  border-color: rgba(181, 240, 55, 0.3);
+  color: var(--btal-lime);
+}
+.ai-summary-chip--cyan {
+  background: rgba(55, 224, 168, 0.08);
+  border-color: rgba(55, 224, 168, 0.3);
+  color: var(--btal-cyan);
+}
+.ai-summary-chip--coral {
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.3);
+  color: var(--btal-coral);
+}
+.ai-summary-chip--gold {
+  background: rgba(240, 168, 56, 0.1);
+  border-color: rgba(240, 168, 56, 0.3);
+  color: var(--btal-gold);
+}
+.ai-summary-chip--violet {
+  background: rgba(176, 122, 240, 0.1);
+  border-color: rgba(176, 122, 240, 0.3);
+  color: var(--btal-violet);
+}
+
+/* Notas largas (texto libre) */
+.ai-summary-note {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-summary-note-text {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--btal-t-1);
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Botones · modificar (outline) + confirmar (primary lima) */
+.ai-summary-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.ai-summary-modify {
+  --border-color: var(--btal-border-2);
+  --color: var(--btal-t-1);
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.92rem;
+  flex: 1;
+  margin: 0;
+}
+
+.ai-summary-confirm {
+  flex: 2;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .ai-summary-actions {
+    flex-direction: column;
+  }
+  .ai-summary-modify,
+  .ai-summary-confirm {
+    flex: 1;
+  }
+}

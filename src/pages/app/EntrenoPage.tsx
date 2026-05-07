@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { TabHeader } from '../../components/TabHeader';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
+import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
 
 // Tab Entreno · placeholder con botón "Generar con IA" prep Fase 6.
@@ -32,15 +33,18 @@ const EntrenoPage: React.FC = () => {
             subtitle="Push/Pull/Legs adaptado a tus días"
             right={
               showAiButton ? (
-                <button
-                  type="button"
-                  className="tab-header-ia-btn"
-                  onClick={blurAndRun(() => setAiGenOpen(true))}
-                  aria-label="Generar con IA"
-                >
-                  <IonIcon icon={sparklesOutline} />
-                  <span>Generar con IA</span>
-                </button>
+                <>
+                  <AiGeneratedBadge userDoc={userDoc} scope="entrenos" />
+                  <button
+                    type="button"
+                    className="tab-header-ia-btn"
+                    onClick={blurAndRun(() => setAiGenOpen(true))}
+                    aria-label="Generar con IA"
+                  >
+                    <IonIcon icon={sparklesOutline} />
+                    <span>Generar con IA</span>
+                  </button>
+                </>
               ) : undefined
             }
           />

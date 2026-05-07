@@ -16,9 +16,14 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { signOut } from '../services/auth';
+import { AiPromptSummaryModal } from '../components/AiPromptSummaryModal';
+import { ChipsInput } from '../components/ChipsInput';
+import { CollapsibleSection } from '../components/CollapsibleSection';
 import { StepMode, type StepModeValue } from '../components/StepMode';
 import {
+  ALERGIAS_COMUNES,
   EQUIPAMIENTOS,
+  INTOLERANCIAS_COMUNES,
   NIVELES_ACTIVIDAD,
   OBJETIVOS,
   RESTRICCIONES,
@@ -32,6 +37,11 @@ import {
 } from '../templates/defaultUser';
 import './Onboarding.css';
 
+// Helper: alterna un valor en un array de strings (selección múltiple).
+function toggleInArray(arr: string[], value: string): string[] {
+  return arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value];
+}
+
 // Si el usuario ya completó onboarding nos largamos directo a /app.
 // Esta página solo tiene sentido para users autenticados sin perfil.
 
@@ -42,10 +52,16 @@ const Onboarding: React.FC = () => {
 
   // Form state · arrancamos con los defaults (todos null hasta que el user elige).
   const [data, setData] = useState<UserProfile>(defaultProfile);
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  // 5 pasos: 0 personal · 1 estilo · 2 objetivo · 3 personalización IA · 4 modo IA/manual
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  // Si elige modo='ai' al pulsar Finalizar mostramos el resumen del
+  // perfil que se va a enviar a la IA antes de guardar. Si pulsa
+  // "Modificar" cerramos el modal (puede usar Atrás para retroceder).
+  // Si pulsa "Confirmar y generar" → saveOnboarding + redirect /app.
+  const [aiSummaryOpen, setAiSummaryOpen] = useState(false);
   // Aviso médico/legal · obligatorio para avanzar del paso 1. No vive en
   // UserProfile — se persiste como timestamp en UserDocument.medicalDisclaimerAcceptedAt
   // dentro de saveOnboardingProfile.
@@ -111,6 +127,12 @@ const Onboarding: React.FC = () => {
       return data.objetivo !== null;
     }
     if (step === 3) {
+      // Personalización para la IA · todos los campos son OPCIONALES.
+      // Avanzar siempre permitido. La IA usará lo que el user haya
+      // rellenado (o nada, si lo deja en blanco).
+      return true;
+    }
+    if (step === 4) {
       // Manual válido por sí solo. IA requiere scope elegido para que
       // la primera generación sepa qué generar.
       if (modeChoice.modo === 'manual') return true;
@@ -138,14 +160,28 @@ const Onboarding: React.FC = () => {
 
   const handleNext = () => {
     if (!stepValid) return;
-    if (step < 3) setStep((step + 1) as 0 | 1 | 2 | 3);
+    if (step < 4) setStep((step + 1) as 0 | 1 | 2 | 3 | 4);
   };
 
   const handleBack = () => {
-    if (step > 0) setStep((step - 1) as 0 | 1 | 2 | 3);
+    if (step > 0) setStep((step - 1) as 0 | 1 | 2 | 3 | 4);
   };
 
-  const handleSubmit = async () => {
+  // Pulsa Finalizar:
+  //  - manual → guardar y entrar a /app directamente
+  //  - ai     → abrir resumen del perfil para confirmar antes de guardar
+  const handleSubmit = () => {
+    if (!stepValid || modeChoice.modo === null) return;
+    if (modeChoice.modo === 'ai') {
+      setAiSummaryOpen(true);
+      return;
+    }
+    void persistAndExit();
+  };
+
+  // Persiste el perfil completo en Firestore + redirige al shell. Llamado
+  // desde handleSubmit (manual) o desde "Confirmar y generar" en el resumen.
+  const persistAndExit = async () => {
     if (!stepValid || modeChoice.modo === null) return;
     setError('');
     setSubmitting(true);
@@ -157,10 +193,15 @@ const Onboarding: React.FC = () => {
         modo: modeChoice.modo,
         aiScope: modeChoice.aiScope,
       });
+      // FASE 6 PENDIENTE · si modo='ai' aquí dispararíamos la primera
+      // generación llamando a la Cloud Function `generatePlan(scope=aiScope)`.
+      // Por ahora el shell muestra empty states + botón "Generar con IA"
+      // que el user tendrá que pulsar (toast informativo).
       history.replace('/app');
     } catch (err) {
       console.error('[BTal] saveOnboarding error:', err);
       setError('No hemos podido guardar tu perfil. Inténtalo de nuevo.');
+      setAiSummaryOpen(false);
     } finally {
       setSubmitting(false);
     }
@@ -192,9 +233,9 @@ const Onboarding: React.FC = () => {
       <IonContent fullscreen>
         <div className="onboarding-bg">
           <div className="onboarding-card">
-            {/* Progreso · 4 puntos (personal · estilo · objetivo · modo) */}
+            {/* Progreso · 5 puntos (personal · estilo · objetivo · personalización IA · modo) */}
             <div className="onboarding-progress">
-              {[0, 1, 2, 3].map((i) => (
+              {[0, 1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
                   className={
@@ -204,7 +245,7 @@ const Onboarding: React.FC = () => {
                   }
                 />
               ))}
-              <span className="onboarding-progress-label">Paso {step + 1} de 4</span>
+              <span className="onboarding-progress-label">Paso {step + 1} de 5</span>
             </div>
 
             {/* ─────────────────── PASO 0 — PERSONAL ─────────────────── */}
@@ -410,8 +451,173 @@ const Onboarding: React.FC = () => {
               </>
             )}
 
-            {/* ───────────────── PASO 3 — MODO IA / MANUAL ──────────── */}
+            {/* ───────── PASO 3 — PERSONALIZACIÓN PARA LA IA (opcional) ───────── */}
             {step === 3 && (
+              <>
+                <h1 className="onboarding-title">Personaliza tu plan</h1>
+                <p className="onboarding-text">
+                  Todo este paso es <strong>opcional</strong>. Cuanta más
+                  información nos des, mejor podrá la IA personalizar tu menú
+                  y tu plan de entreno. Puedes dejar lo que no quieras rellenar
+                  y editarlo después en Ajustes.
+                </p>
+
+                <CollapsibleSection
+                  title="Cuéntanos más"
+                  subtitle="Objetivos específicos, lesiones, preferencias…"
+                  badge={data.notas.trim() ? '✓' : undefined}
+                >
+                  <textarea
+                    className="onboarding-textarea"
+                    placeholder="Ej: quiero ganar masa muscular sin perder definición · tengo dolor en el hombro derecho · prefiero recetas rápidas entre semana · …"
+                    value={data.notas}
+                    maxLength={1000}
+                    rows={4}
+                    onChange={(e) => setField('notas', e.target.value)}
+                  />
+                  <span className="onboarding-counter">
+                    {data.notas.length} / 1000
+                  </span>
+                </CollapsibleSection>
+
+                <CollapsibleSection
+                  title="Alergias"
+                  subtitle="Las 14 declarables del Reglamento UE + lo que añadas"
+                  badge={data.alergias.length > 0 ? data.alergias.length : undefined}
+                >
+                  <span className="onboarding-field-label">Más comunes</span>
+                  <div className="onboarding-pills">
+                    {ALERGIAS_COMUNES.map((a) => {
+                      const active = data.alergias.includes(a.value);
+                      return (
+                        <button
+                          key={a.value}
+                          type="button"
+                          className={'onboarding-pill' + (active ? ' coral' : '')}
+                          onClick={() =>
+                            setField('alergias', toggleInArray(data.alergias, a.value))
+                          }
+                        >
+                          {active && <IonIcon icon={checkmarkCircle} />}
+                          {a.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <span className="onboarding-field-label">Otras alergias</span>
+                  <ChipsInput
+                    color="coral"
+                    placeholder="Escribe y pulsa Enter (ej: melocotón)"
+                    value={data.alergias.filter(
+                      (v) => !ALERGIAS_COMUNES.some((a) => a.value === v),
+                    )}
+                    onChange={(custom) => {
+                      // Mantenemos las predefinidas + reemplazamos las custom.
+                      const predefinidas = data.alergias.filter((v) =>
+                        ALERGIAS_COMUNES.some((a) => a.value === v),
+                      );
+                      setField('alergias', [...predefinidas, ...custom]);
+                    }}
+                    ariaLabel="Añadir otra alergia"
+                  />
+                </CollapsibleSection>
+
+                <CollapsibleSection
+                  title="Intolerancias"
+                  subtitle="Lactosa, fructosa, FODMAP… o lo que necesites"
+                  badge={data.intolerancias.length > 0 ? data.intolerancias.length : undefined}
+                >
+                  <span className="onboarding-field-label">Más comunes</span>
+                  <div className="onboarding-pills">
+                    {INTOLERANCIAS_COMUNES.map((i) => {
+                      const active = data.intolerancias.includes(i.value);
+                      return (
+                        <button
+                          key={i.value}
+                          type="button"
+                          className={'onboarding-pill' + (active ? '' : '')}
+                          onClick={() =>
+                            setField('intolerancias', toggleInArray(data.intolerancias, i.value))
+                          }
+                          style={
+                            active
+                              ? {
+                                  background: 'rgba(240, 168, 56, 0.12)',
+                                  borderColor: 'var(--btal-gold)',
+                                  color: 'var(--btal-gold)',
+                                }
+                              : undefined
+                          }
+                        >
+                          {active && <IonIcon icon={checkmarkCircle} />}
+                          {i.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <span className="onboarding-field-label">Otras intolerancias</span>
+                  <ChipsInput
+                    color="violet"
+                    placeholder="Escribe y pulsa Enter"
+                    value={data.intolerancias.filter(
+                      (v) => !INTOLERANCIAS_COMUNES.some((a) => a.value === v),
+                    )}
+                    onChange={(custom) => {
+                      const predefinidas = data.intolerancias.filter((v) =>
+                        INTOLERANCIAS_COMUNES.some((a) => a.value === v),
+                      );
+                      setField('intolerancias', [...predefinidas, ...custom]);
+                    }}
+                    ariaLabel="Añadir otra intolerancia"
+                  />
+                </CollapsibleSection>
+
+                <CollapsibleSection
+                  title="Alimentos prohibidos"
+                  subtitle="No quiero ver esto en mis comidas"
+                  badge={data.alimentosProhibidos.length > 0 ? data.alimentosProhibidos.length : undefined}
+                >
+                  <ChipsInput
+                    color="coral"
+                    placeholder="Ej: hígado, coliflor, atún…"
+                    value={data.alimentosProhibidos}
+                    onChange={(v) => setField('alimentosProhibidos', v)}
+                    ariaLabel="Añadir alimento prohibido"
+                  />
+                </CollapsibleSection>
+
+                <CollapsibleSection
+                  title="Alimentos obligatorios"
+                  subtitle="Quiero que aparezcan sí o sí"
+                  badge={data.alimentosObligatorios.length > 0 ? data.alimentosObligatorios.length : undefined}
+                >
+                  <ChipsInput
+                    color="cyan"
+                    placeholder="Ej: salmón al menos 2 veces, arroz a diario…"
+                    value={data.alimentosObligatorios}
+                    onChange={(v) => setField('alimentosObligatorios', v)}
+                    ariaLabel="Añadir alimento obligatorio"
+                  />
+                </CollapsibleSection>
+
+                <CollapsibleSection
+                  title="Ingredientes favoritos"
+                  subtitle="La IA los priorizará en el plan"
+                  badge={data.ingredientesFavoritos.length > 0 ? data.ingredientesFavoritos.length : undefined}
+                >
+                  <ChipsInput
+                    color="lime"
+                    placeholder="Ej: aguacate, huevos, espinacas…"
+                    value={data.ingredientesFavoritos}
+                    onChange={(v) => setField('ingredientesFavoritos', v)}
+                    ariaLabel="Añadir ingrediente favorito"
+                  />
+                </CollapsibleSection>
+              </>
+            )}
+
+            {/* ───────────────── PASO 4 — MODO IA / MANUAL ──────────── */}
+            {step === 4 && (
               <>
                 <h1 className="onboarding-title">¿Cómo quieres empezar?</h1>
                 <p className="onboarding-text">
@@ -443,7 +649,7 @@ const Onboarding: React.FC = () => {
                   className="onboarding-back"
                   onClick={handleBack}
                   disabled={submitting}
-                  aria-label={`Volver al paso ${step} de 4 — corregir lo que ya rellenaste`}
+                  aria-label={`Volver al paso ${step} de 5 — corregir lo que ya rellenaste`}
                 >
                   <IonIcon icon={arrowBackOutline} slot="start" />
                   Atrás
@@ -452,7 +658,7 @@ const Onboarding: React.FC = () => {
                 <span />
               )}
 
-              {step < 3 ? (
+              {step < 4 ? (
                 <IonButton
                   type="button"
                   className="onboarding-next"
@@ -503,6 +709,27 @@ const Onboarding: React.FC = () => {
             },
           ]}
         />
+
+        {/* Resumen del perfil que se enviará a la IA · solo aparece si el
+            usuario eligió modo='ai' en el paso 4 al pulsar Finalizar.
+            En "Modificar" cierra el modal · el user puede usar Atrás para
+            cambiar lo que necesite. */}
+        {aiSummaryOpen && modeChoice.modo === 'ai' && modeChoice.aiScope !== null && (
+          <AiPromptSummaryModal
+            isOpen={aiSummaryOpen}
+            onClose={() => setAiSummaryOpen(false)}
+            scope={modeChoice.aiScope}
+            profileOverride={{
+              ...data,
+              modo: modeChoice.modo,
+              aiScope: modeChoice.aiScope,
+            }}
+            onConfirm={() => void persistAndExit()}
+            onModify={() => setAiSummaryOpen(false)}
+            confirmLabel="Confirmar y generar"
+            submitting={submitting}
+          />
+        )}
       </IonContent>
     </IonPage>
   );

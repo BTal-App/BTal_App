@@ -132,3 +132,60 @@
   border-radius: 12px;
   padding: 14px 16px;
 }
+
+/* Card del modal en wizard · más alto que el modal estándar para que
+   quepan los items afectados sin scroll excesivo. */
+.ai-gen-card {
+  max-width: 540px;
+}
+
+/* Pill "Paso X de 3" en la esquina superior derecha del header */
+.ai-gen-step-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-t-3);
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  padding: 4px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Navegación entre pasos · botón Atrás + Continuar */
+.ai-gen-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.ai-gen-nav-back {
+  --border-color: var(--btal-border-2);
+  --color: var(--btal-t-1);
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.92rem;
+  flex: 1;
+  margin: 0;
+}
+
+.ai-gen-nav-next {
+  flex: 2;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .ai-gen-nav {
+    flex-direction: column-reverse;
+  }
+  .ai-gen-nav-back,
+  .ai-gen-nav-next {
+    flex: 1;
+  }
+}

@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { TabHeader } from '../../components/TabHeader';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
+import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
 
 // Tab Menú · placeholder de Fase 1 con botón "Generar con IA" prep Fase 6.
@@ -32,15 +33,18 @@ const MenuPage: React.FC = () => {
             subtitle="Tu menú semanal generado por IA"
             right={
               showAiButton ? (
-                <button
-                  type="button"
-                  className="tab-header-ia-btn"
-                  onClick={blurAndRun(() => setAiGenOpen(true))}
-                  aria-label="Generar con IA"
-                >
-                  <IonIcon icon={sparklesOutline} />
-                  <span>Generar con IA</span>
-                </button>
+                <>
+                  <AiGeneratedBadge userDoc={userDoc} scope="menu" />
+                  <button
+                    type="button"
+                    className="tab-header-ia-btn"
+                    onClick={blurAndRun(() => setAiGenOpen(true))}
+                    aria-label="Generar con IA"
+                  >
+                    <IonIcon icon={sparklesOutline} />
+                    <span>Generar con IA</span>
+                  </button>
+                </>
               ) : undefined
             }
           />

@@ -142,17 +142,16 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
+        <button
+          type="button"
+          className="settings-modal-close settings-modal-close--fixed"
+          onClick={blurAndRun(onClose)}
+          aria-label="Cerrar"
+        >
+          <IonIcon icon={closeOutline} />
+        </button>
         <IonContent>
           <div className="settings-modal-bg">
-            <button
-              type="button"
-              className="settings-modal-close"
-              onClick={blurAndRun(onClose)}
-              aria-label="Cerrar"
-            >
-              <IonIcon icon={closeOutline} />
-            </button>
-
             <form className="settings-modal-card" onSubmit={handleSubmit}>
               <h2 className="settings-modal-title">Crea tu cuenta</h2>
               <p className="settings-modal-text">

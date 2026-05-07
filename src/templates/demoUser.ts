@@ -47,6 +47,9 @@ function comida(
     prot,
     carb,
     fat,
+    // El plan de demo se considera "default" — la IA puede sobrescribirlo
+    // si el invitado se registra como user real y pulsa Generar con IA.
+    source: 'default',
   };
 }
 
@@ -157,6 +160,24 @@ const DEMO_MENU: Menu = {
 
 // ── Plan de entreno · 4 días Push/Pull/Legs/Brazos ────────────────────────
 
+// Helper para ejercicios · todos del demo son source='default' (la IA
+// puede sobrescribirlos al regenerar para el invitado convertido a user real).
+type Tipo = 'fuerza' | 'hipertrofia' | 'cardio' | 'movilidad';
+const ej = (
+  nombre: string,
+  setsReps: string,
+  pesoKg: number | null,
+  tipo: Tipo,
+  nota?: string,
+) => ({
+  nombre,
+  setsReps,
+  ...(nota !== undefined ? { nota } : {}),
+  pesoKg,
+  tipo,
+  source: 'default' as const,
+});
+
 const DEMO_DIAS_4: DiaEntreno[] = [
   {
     letra: 'A',
@@ -164,13 +185,14 @@ const DEMO_DIAS_4: DiaEntreno[] = [
     tags: ['Pecho', 'Tríceps', 'Hombros'],
     diaSemana: 'lun',
     duracionMin: 65,
+    source: 'default',
     ejercicios: [
-      { nombre: 'Press banca con barra', setsReps: '4×6-8', nota: 'Calentamiento progresivo', pesoKg: 80, tipo: 'fuerza' },
-      { nombre: 'Press inclinado mancuernas', setsReps: '3×8-10', nota: 'Inclinación 30°', pesoKg: 24, tipo: 'hipertrofia' },
-      { nombre: 'Aperturas en polea', setsReps: '3×12', nota: 'Contracción controlada', pesoKg: 12, tipo: 'hipertrofia' },
-      { nombre: 'Fondos en paralelas', setsReps: '3×8-10', nota: 'Lastrado si puedes', pesoKg: 10, tipo: 'fuerza' },
-      { nombre: 'Press francés barra Z', setsReps: '3×10', pesoKg: 25, tipo: 'hipertrofia' },
-      { nombre: 'Extensiones tríceps polea', setsReps: '3×12', nota: 'Cuerda', pesoKg: 18, tipo: 'hipertrofia' },
+      ej('Press banca con barra', '4×6-8', 80, 'fuerza', 'Calentamiento progresivo'),
+      ej('Press inclinado mancuernas', '3×8-10', 24, 'hipertrofia', 'Inclinación 30°'),
+      ej('Aperturas en polea', '3×12', 12, 'hipertrofia', 'Contracción controlada'),
+      ej('Fondos en paralelas', '3×8-10', 10, 'fuerza', 'Lastrado si puedes'),
+      ej('Press francés barra Z', '3×10', 25, 'hipertrofia'),
+      ej('Extensiones tríceps polea', '3×12', 18, 'hipertrofia', 'Cuerda'),
     ],
   },
   {
@@ -179,12 +201,13 @@ const DEMO_DIAS_4: DiaEntreno[] = [
     tags: ['Espalda', 'Bíceps'],
     diaSemana: 'mar',
     duracionMin: 60,
+    source: 'default',
     ejercicios: [
-      { nombre: 'Dominadas', setsReps: '4×6-8', nota: 'Lastradas si puedes', pesoKg: 5, tipo: 'fuerza' },
-      { nombre: 'Remo con barra', setsReps: '4×8', pesoKg: 70, tipo: 'fuerza' },
-      { nombre: 'Jalón al pecho', setsReps: '3×10', pesoKg: 55, tipo: 'hipertrofia' },
-      { nombre: 'Curl con barra Z', setsReps: '3×8-10', pesoKg: 25, tipo: 'hipertrofia' },
-      { nombre: 'Curl martillo', setsReps: '3×12', nota: 'Alternando', pesoKg: 14, tipo: 'hipertrofia' },
+      ej('Dominadas', '4×6-8', 5, 'fuerza', 'Lastradas si puedes'),
+      ej('Remo con barra', '4×8', 70, 'fuerza'),
+      ej('Jalón al pecho', '3×10', 55, 'hipertrofia'),
+      ej('Curl con barra Z', '3×8-10', 25, 'hipertrofia'),
+      ej('Curl martillo', '3×12', 14, 'hipertrofia', 'Alternando'),
     ],
   },
   {
@@ -193,11 +216,12 @@ const DEMO_DIAS_4: DiaEntreno[] = [
     tags: ['Piernas', 'Fuerza'],
     diaSemana: 'jue',
     duracionMin: 70,
+    source: 'default',
     ejercicios: [
-      { nombre: 'Sentadilla con barra', setsReps: '4×6-8', nota: 'Bajo paralelo', pesoKg: 100, tipo: 'fuerza' },
-      { nombre: 'Peso muerto rumano', setsReps: '4×8', pesoKg: 80, tipo: 'fuerza' },
-      { nombre: 'Prensa 45°', setsReps: '3×10', pesoKg: 150, tipo: 'hipertrofia' },
-      { nombre: 'Zancadas con mancuernas', setsReps: '3×10', pesoKg: 16, tipo: 'hipertrofia' },
+      ej('Sentadilla con barra', '4×6-8', 100, 'fuerza', 'Bajo paralelo'),
+      ej('Peso muerto rumano', '4×8', 80, 'fuerza'),
+      ej('Prensa 45°', '3×10', 150, 'hipertrofia'),
+      ej('Zancadas con mancuernas', '3×10', 16, 'hipertrofia'),
     ],
   },
   {
@@ -206,12 +230,13 @@ const DEMO_DIAS_4: DiaEntreno[] = [
     tags: ['Hombros', 'Bíceps', 'Tríceps'],
     diaSemana: 'vie',
     duracionMin: 55,
+    source: 'default',
     ejercicios: [
-      { nombre: 'Press militar mancuernas', setsReps: '4×8', pesoKg: 18, tipo: 'fuerza' },
-      { nombre: 'Elevaciones laterales', setsReps: '3×12', pesoKg: 10, tipo: 'hipertrofia' },
-      { nombre: 'Pájaros con mancuernas', setsReps: '3×12', pesoKg: 8, tipo: 'hipertrofia' },
-      { nombre: 'Curl alterno', setsReps: '3×10', pesoKg: 14, tipo: 'hipertrofia' },
-      { nombre: 'Patada de tríceps polea', setsReps: '3×12', pesoKg: 10, tipo: 'hipertrofia' },
+      ej('Press militar mancuernas', '4×8', 18, 'fuerza'),
+      ej('Elevaciones laterales', '3×12', 10, 'hipertrofia'),
+      ej('Pájaros con mancuernas', '3×12', 8, 'hipertrofia'),
+      ej('Curl alterno', '3×10', 14, 'hipertrofia'),
+      ej('Patada de tríceps polea', '3×12', 10, 'hipertrofia'),
     ],
   },
 ];
@@ -238,6 +263,7 @@ const itemBought = (nombre: string, cantidad: string, precio: number): ItemCompr
   cantidad,
   comprado: true,
   precio,
+  source: 'default',
 });
 
 const itemPending = (nombre: string, cantidad: string, precio: number): ItemCompra => ({
@@ -245,6 +271,7 @@ const itemPending = (nombre: string, cantidad: string, precio: number): ItemComp
   cantidad,
   comprado: false,
   precio,
+  source: 'default',
 });
 
 const DEMO_COMPRA: Compra = {
@@ -293,6 +320,12 @@ const DEMO_PROFILE: UserProfile = {
   equipamiento: 'gimnasio',
   objetivo: 'volumen',
   restricciones: [],
+  notas: '',
+  intolerancias: [],
+  alergias: [],
+  alimentosProhibidos: [],
+  alimentosObligatorios: [],
+  ingredientesFavoritos: [],
   modo: 'manual', // el invitado no puede usar IA por diseño
   aiScope: null,
   completed: true,

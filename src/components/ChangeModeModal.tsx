@@ -112,17 +112,16 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
+        <button
+          type="button"
+          className="settings-modal-close settings-modal-close--fixed"
+          onClick={blurAndRun(onClose)}
+          aria-label="Cerrar"
+        >
+          <IonIcon icon={closeOutline} />
+        </button>
         <IonContent>
           <div className="settings-modal-bg">
-            <button
-              type="button"
-              className="settings-modal-close"
-              onClick={blurAndRun(onClose)}
-              aria-label="Cerrar"
-            >
-              <IonIcon icon={closeOutline} />
-            </button>
-
             <div className="settings-modal-card">
               <h2 className="settings-modal-title">Modo de generación</h2>
               <p className="settings-modal-text">

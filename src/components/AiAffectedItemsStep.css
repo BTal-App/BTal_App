@@ -1,0 +1,304 @@
+/* AiAffectedItemsStep · paso 2 del wizard de Generar IA.
+   Lista los items que se sobrescribirán + checkbox por item + toggle
+   "permitir tocar lo mío" + stats finales. */
+
+.ai-items-step {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Empty state · scope sin items afectables (entrenos_only con diasEntreno=0) */
+.ai-items-empty {
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  background: var(--btal-bg-2);
+  border: 1px dashed var(--btal-border-2);
+  border-radius: 14px;
+  gap: 10px;
+}
+
+.ai-items-empty ion-icon {
+  font-size: 2rem;
+  color: var(--btal-gold);
+}
+
+.ai-items-empty p {
+  font-size: 0.86rem;
+  color: var(--btal-t-2);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 340px;
+}
+
+/* Toggle "permitir tocar lo mío" */
+.ai-items-allow-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: rgba(176, 122, 240, 0.08);
+  border: 1px solid rgba(176, 122, 240, 0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.ai-items-allow-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ai-items-allow-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--btal-violet);
+  letter-spacing: -0.01em;
+}
+
+.ai-items-allow-title ion-icon {
+  font-size: 1rem;
+}
+
+.ai-items-allow-sub {
+  font-size: 0.78rem;
+  color: var(--btal-t-2);
+  line-height: 1.5;
+}
+
+.ai-items-allow-sub strong {
+  color: var(--btal-t-1);
+}
+
+/* Sección agrupada · header con icono + count */
+.ai-items-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-items-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.ai-items-section-head ion-icon {
+  font-size: 1rem;
+  color: var(--btal-t-3);
+}
+
+.ai-items-section-title {
+  flex: 1;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.ai-items-section-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-2);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.ai-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 6px;
+}
+
+/* Item individual · checkbox + label + sublabel + badge de source */
+.ai-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  min-width: 0;
+}
+
+.ai-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.ai-item.protected {
+  background: rgba(181, 240, 55, 0.05);
+}
+
+.ai-item.auto-protected {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.ai-item-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--btal-border-2);
+  border-radius: 5px;
+  background: var(--btal-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  position: relative;
+  transition: all 0.18s;
+}
+
+.ai-item-checkbox:hover:not(:disabled):not(:checked) {
+  border-color: var(--btal-lime);
+}
+
+.ai-item-checkbox:checked {
+  background: var(--btal-lime);
+  border-color: var(--btal-lime);
+}
+
+.ai-item-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  width: 5px;
+  height: 9px;
+  border: solid #0a0e0c;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.ai-item-checkbox:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ai-item-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-item-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--btal-t-1);
+  min-width: 0;
+}
+
+.ai-item-sublabel {
+  font-size: 0.74rem;
+  color: var(--btal-t-3);
+  line-height: 1.4;
+}
+
+/* Badge del origen del item */
+.ai-item-source {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 999px;
+  padding: 2px 7px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.ai-item-source--default {
+  background: rgba(106, 117, 106, 0.12);
+  border-color: rgba(106, 117, 106, 0.3);
+  color: var(--btal-t-3);
+}
+
+.ai-item-source--ai {
+  background: rgba(176, 122, 240, 0.1);
+  border-color: rgba(176, 122, 240, 0.3);
+  color: var(--btal-violet);
+}
+
+.ai-item-source--user {
+  background: rgba(181, 240, 55, 0.08);
+  border-color: rgba(181, 240, 55, 0.3);
+  color: var(--btal-lime);
+}
+
+/* Stats finales · "X reemplazarán · Y mantendrán" */
+.ai-items-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ai-items-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.ai-items-stat ion-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.ai-items-stat div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ai-items-stat-num {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.ai-items-stat-label {
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ai-items-stat--overwrite ion-icon,
+.ai-items-stat--overwrite .ai-items-stat-num {
+  color: var(--btal-coral);
+}
+
+.ai-items-stat--keep ion-icon,
+.ai-items-stat--keep .ai-items-stat-num {
+  color: var(--btal-cyan);
+}

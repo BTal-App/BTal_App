@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 import {
   IonButton,
   IonContent,
   IonIcon,
   IonModal,
-  IonSpinner,
   IonToast,
 } from '@ionic/react';
 import {
+  arrowBackOutline,
+  arrowForwardOutline,
   closeOutline,
   lockClosedOutline,
   sparklesOutline,
@@ -16,6 +18,13 @@ import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { canGenerateAi } from '../utils/ia';
 import { blurAndRun } from '../utils/focus';
+import {
+  affectedStats,
+  getAffectedItems,
+  initialExcludedIds,
+} from '../utils/aiAffectedItems';
+import { AiAffectedItemsStep } from './AiAffectedItemsStep';
+import { AiPromptSummaryModal } from './AiPromptSummaryModal';
 import {
   AI_SCOPE_OPTIONS,
   type AiScopeChoice,
@@ -42,11 +51,19 @@ interface Props {
   defaultScope?: AiScopeChoice;
 }
 
-// Modal genérico para los botones "Generar con IA" de cada tab. Pregunta
-// el scope (cuando hay >1), comprueba el límite del plan con
-// `canGenerateAi` y dispara la generación. Mientras no exista la Cloud
-// Function `generatePlan` (Fase 6), esto solo muestra un toast informativo
-// — la UX completa ya está · solo falta cablear el backend.
+// Paso interno del wizard.
+type WizardStep = 'scope' | 'items';
+
+// Modal del botón "Generar con IA". Wizard de 3 pasos:
+//   1. Elegir scope (qué generar)
+//   2. Items afectados (lista con checkboxes para excluir + toggle
+//      "permitir tocar lo mío") + stats X reemplazará / Y mantendrá
+//   3. Resumen del perfil que se enviará a la IA + Confirmar / Modificar
+//      (este paso vive en AiPromptSummaryModal en cascada)
+//
+// Si no hay items previos relevantes (todo está vacío default), el step 2
+// muestra todos los items vacíos como 'default' — no hay nada que proteger,
+// pero el user ve qué áreas se van a poblar.
 export function AiGenerateModal({
   isOpen,
   onClose,
@@ -58,6 +75,7 @@ export function AiGenerateModal({
   const { user } = useAuth();
   const { profile: userDoc } = useProfile();
   const isAnonymous = user?.isAnonymous ?? false;
+  const history = useHistory();
 
   // Calcula el scope inicial defensivamente:
   //   - si defaultScope viene y está disponible → úsalo
@@ -70,45 +88,104 @@ export function AiGenerateModal({
     return availableScopes[0] ?? 'all';
   };
 
+  const [step, setStep] = useState<WizardStep>('scope');
   const [selected, setSelected] = useState<AiScopeChoice>(pickInitialScope);
-  const [submitting, setSubmitting] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const [pendingToast, setPendingToast] = useState(false);
 
+  // Items afectados por el scope seleccionado · se recalcula cuando cambia.
+  const items = useMemo(
+    () => getAffectedItems(userDoc, selected),
+    [userDoc, selected],
+  );
+
+  // Exclusiones manuales · arrancan auto-incluyendo los items 'user' para
+  // que estén marcados como protegidos en la UI desde el primer render.
+  const [excludedIds, setExcludedIds] = useState<Set<string>>(
+    () => initialExcludedIds(items),
+  );
+  // Toggle "permitir que la IA toque mis items" · default OFF (estricto).
+  const [allowUserItems, setAllowUserItems] = useState(false);
+
+  // ── Resets state-from-prop (React 19 evita setState en effects) ──
+  // Track del scope · cuando cambia, recalculamos exclusiones por defecto
+  // y reseteamos el toggle (no asumimos que el user quiere el mismo
+  // permiso de "tocar lo mío" en distintos scopes).
+  const [trackedScope, setTrackedScope] = useState<AiScopeChoice>(selected);
+  if (trackedScope !== selected) {
+    setTrackedScope(selected);
+    setExcludedIds(initialExcludedIds(items));
+    setAllowUserItems(false);
+  }
+  // Track del toggle · cuando cambia, ajustamos las exclusiones automáticas
+  // de items 'user' (ON limpia, OFF las vuelve a marcar).
+  const [trackedAllow, setTrackedAllow] = useState(allowUserItems);
+  if (trackedAllow !== allowUserItems) {
+    setTrackedAllow(allowUserItems);
+    setExcludedIds(allowUserItems ? new Set() : initialExcludedIds(items));
+  }
+
   // Reset al abrir · evita arrastrar selección de la sesión anterior si
-  // el user cierra y reabre el mismo modal. Re-validamos porque
-  // availableScopes/defaultScope pueden haber cambiado entre aperturas.
+  // el user cierra y reabre el mismo modal.
   const resetState = () => {
+    setStep('scope');
     setSelected(pickInitialScope());
+    setShowSummary(false);
+    setAllowUserItems(false);
+    // excludedIds lo recalculará el useEffect de selected.
   };
 
-  // El límite Free aplica al plan completo del mes — el scope concreto
-  // no afecta la elegibilidad. `selected` queda en estado para resaltar
-  // la card activa y pasárselo a la Cloud Function en handleConfirm.
   const eligibility = canGenerateAi(userDoc, isAnonymous);
   const visibleOptions = AI_SCOPE_OPTIONS.filter((o) =>
     availableScopes.includes(o.value),
   );
+  const stats = affectedStats(items, excludedIds, allowUserItems);
 
-  const handleConfirm = async () => {
-    if (!eligibility.allowed || submitting) return;
-    setSubmitting(true);
-    try {
-      // FASE 6 PENDIENTE · aquí llamaremos a la Cloud Function `generatePlan`
-      // pasando el scope seleccionado. Por ahora mostramos un toast
-      // explicativo para que la UX completa sea visible y el usuario sepa
-      // qué pasaría al pulsar.
-      //
-      // const result = await callGenerateAi({ scope: selected });
-      // await refreshProfile();
-      // setSavedToast(true);
+  // Handlers de navegación entre pasos
+  const handleScopeContinue = () => {
+    if (!eligibility.allowed) return;
+    setStep('items');
+  };
+  const handleItemsBack = () => setStep('scope');
+  const handleItemsContinue = () => {
+    if (!eligibility.allowed) return;
+    setShowSummary(true);
+  };
 
-      setPendingToast(true);
-      onClose();
-    } catch (err) {
-      console.error('[BTal] generateAi error:', err);
-    } finally {
-      setSubmitting(false);
-    }
+  const handleToggleExclude = (id: string) => {
+    setExcludedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Confirmar generación (Fase 6 → toast + log con scope/exclusiones).
+  const handleConfirmGenerate = () => {
+    // FASE 6 PENDIENTE · aquí llamaremos a la Cloud Function `generatePlan`
+    // pasándole el scope, la lista de IDs a excluir y el flag allowUserItems.
+    // Por ahora dejamos un log para debugging · será fácil cablear cuando
+    // monten la Cloud Function.
+    console.info('[BTal] generatePlan request (Fase 6 pendiente)', {
+      scope: selected,
+      excludedIds: Array.from(excludedIds),
+      allowUserItems,
+      willOverwrite: stats.willOverwrite,
+      willKeep: stats.willKeep,
+    });
+    setPendingToast(true);
+    setShowSummary(false);
+    onClose();
+  };
+
+  // "Modificar" desde el summary · cierra todo el wizard y lleva al user
+  // a Settings → Editar datos del perfil para que pueda cambiar lo que
+  // necesite antes de relanzar el flujo.
+  const handleModify = () => {
+    setShowSummary(false);
+    onClose();
+    history.push('/settings');
   };
 
   return (
@@ -119,30 +196,40 @@ export function AiGenerateModal({
         onDidDismiss={onClose}
         className="settings-modal"
       >
+        {/* Botón cerrar FUERA del IonContent · queda fijo arriba a la
+            derecha y NO scrollea con el contenido (importante en wizard
+            de 3 pasos donde el contenido puede ser largo). */}
+        <button
+          type="button"
+          className="settings-modal-close settings-modal-close--fixed"
+          onClick={blurAndRun(onClose)}
+          aria-label="Cerrar"
+        >
+          <IonIcon icon={closeOutline} />
+        </button>
         <IonContent>
           <div className="settings-modal-bg">
-            <button
-              type="button"
-              className="settings-modal-close"
-              onClick={blurAndRun(onClose)}
-              aria-label="Cerrar"
-            >
-              <IonIcon icon={closeOutline} />
-            </button>
-
-            <div className="settings-modal-card">
+            <div className="settings-modal-card ai-gen-card">
+              {/* Header · icono + título + paso actual del wizard */}
               <div className="ai-gen-head">
                 <div className="ai-gen-icon">
                   <IonIcon icon={sparklesOutline} />
                 </div>
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 className="settings-modal-title">{title}</h2>
-                  {description && (
+                  {description && step === 'scope' && (
                     <p className="settings-modal-text" style={{ margin: '6px 0 0' }}>
                       {description}
                     </p>
                   )}
                 </div>
+                <span
+                  className="ai-gen-step-pill"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  Paso {step === 'scope' ? '1' : '2'} de 3
+                </span>
               </div>
 
               {/* Estado del plan / contador (lo lee canGenerateAi) */}
@@ -158,64 +245,106 @@ export function AiGenerateModal({
                 </div>
               )}
 
-              {/* Grid de scopes solo si hay más de uno · si solo hay 1 va directo. */}
-              {visibleOptions.length > 1 && (
+              {/* ─── PASO 1 · ELEGIR SCOPE ─── */}
+              {step === 'scope' && (
                 <>
-                  <span className="ai-gen-scope-label">¿Qué quieres generar?</span>
-                  <div className="ai-gen-scope-grid">
-                    {visibleOptions.map((opt) => {
-                      const active = selected === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          className={'ai-gen-scope-card' + (active ? ' active' : '')}
-                          onClick={() => setSelected(opt.value)}
-                          aria-pressed={active}
-                        >
-                          <span className="ai-gen-scope-emoji">{opt.emoji}</span>
-                          <span className="ai-gen-scope-info">
-                            <span className="ai-gen-scope-title">{opt.label}</span>
-                            <span className="ai-gen-scope-sub">{opt.sub}</span>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {visibleOptions.length > 1 && (
+                    <>
+                      <span className="ai-gen-scope-label">¿Qué quieres generar?</span>
+                      <div className="ai-gen-scope-grid">
+                        {visibleOptions.map((opt) => {
+                          const active = selected === opt.value;
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              className={'ai-gen-scope-card' + (active ? ' active' : '')}
+                              onClick={() => setSelected(opt.value)}
+                              aria-pressed={active}
+                            >
+                              <span className="ai-gen-scope-emoji">{opt.emoji}</span>
+                              <span className="ai-gen-scope-info">
+                                <span className="ai-gen-scope-title">{opt.label}</span>
+                                <span className="ai-gen-scope-sub">{opt.sub}</span>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+
+                  {visibleOptions.length === 1 && (
+                    <div className="ai-gen-single">
+                      <span className="ai-gen-scope-emoji">{visibleOptions[0].emoji}</span>
+                      <div>
+                        <div className="ai-gen-scope-title">{visibleOptions[0].label}</div>
+                        <div className="ai-gen-scope-sub">{visibleOptions[0].sub}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  <IonButton
+                    type="button"
+                    expand="block"
+                    className="settings-modal-primary"
+                    onClick={blurAndRun(handleScopeContinue)}
+                    disabled={!eligibility.allowed}
+                  >
+                    Continuar
+                    <IonIcon icon={arrowForwardOutline} slot="end" />
+                  </IonButton>
                 </>
               )}
 
-              {/* Si solo hay un scope, mostramos un resumen plano de qué va a pasar. */}
-              {visibleOptions.length === 1 && (
-                <div className="ai-gen-single">
-                  <span className="ai-gen-scope-emoji">{visibleOptions[0].emoji}</span>
-                  <div>
-                    <div className="ai-gen-scope-title">{visibleOptions[0].label}</div>
-                    <div className="ai-gen-scope-sub">{visibleOptions[0].sub}</div>
+              {/* ─── PASO 2 · ITEMS AFECTADOS + PROTECCIÓN ─── */}
+              {step === 'items' && (
+                <>
+                  <AiAffectedItemsStep
+                    items={items}
+                    excludedIds={excludedIds}
+                    onToggleExclude={handleToggleExclude}
+                    allowUserItems={allowUserItems}
+                    onToggleAllowUserItems={setAllowUserItems}
+                  />
+                  <div className="ai-gen-nav">
+                    <IonButton
+                      type="button"
+                      fill="outline"
+                      className="ai-gen-nav-back"
+                      onClick={blurAndRun(handleItemsBack)}
+                    >
+                      <IonIcon icon={arrowBackOutline} slot="start" />
+                      Atrás
+                    </IonButton>
+                    <IonButton
+                      type="button"
+                      className="settings-modal-primary ai-gen-nav-next"
+                      onClick={blurAndRun(handleItemsContinue)}
+                      disabled={!eligibility.allowed || items.length === 0}
+                    >
+                      Continuar
+                      <IonIcon icon={arrowForwardOutline} slot="end" />
+                    </IonButton>
                   </div>
-                </div>
+                </>
               )}
-
-              <IonButton
-                type="button"
-                expand="block"
-                className="settings-modal-primary"
-                onClick={blurAndRun(handleConfirm)}
-                disabled={!eligibility.allowed || submitting}
-              >
-                {submitting ? (
-                  <IonSpinner name="dots" />
-                ) : (
-                  <>
-                    <IonIcon icon={sparklesOutline} slot="start" />
-                    Generar con IA
-                  </>
-                )}
-              </IonButton>
             </div>
           </div>
         </IonContent>
       </IonModal>
+
+      {/* Paso 3 del wizard · resumen del perfil + confirmar/modificar */}
+      {showSummary && (
+        <AiPromptSummaryModal
+          isOpen={showSummary}
+          onClose={() => setShowSummary(false)}
+          scope={selected}
+          onConfirm={handleConfirmGenerate}
+          onModify={handleModify}
+          confirmLabel="Generar con IA"
+        />
+      )}
 
       {/* Toast informativo Fase 6 · se elimina cuando llegue la Cloud Function. */}
       <IonToast

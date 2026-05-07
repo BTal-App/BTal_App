@@ -43,6 +43,18 @@ ion-modal.settings-modal {
   color: var(--btal-t-1);
 }
 
+/* Variante "fixed" · cuando el botón vive FUERA del IonContent (hermano
+   directo dentro del IonModal). Necesario en modales con scroll largo
+   para que la X siempre esté visible y no scrollee con el contenido.
+   Patrón usado por AccountManageModal, EditFitnessProfileModal, los
+   modales del wizard IA, etc. */
+.settings-modal-close--fixed {
+  position: absolute;
+  top: max(env(safe-area-inset-top), 16px);
+  right: 16px;
+  z-index: 10;
+}
+
 .settings-modal-card {
   width: 100%;
   max-width: 420px;

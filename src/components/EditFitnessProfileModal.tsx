@@ -10,8 +10,12 @@ import {
 import { checkmarkCircle, closeOutline } from 'ionicons/icons';
 import { useProfile } from '../hooks/useProfile';
 import { usePreferences } from '../hooks/usePreferences';
+import { ChipsInput } from './ChipsInput';
+import { CollapsibleSection } from './CollapsibleSection';
 import {
+  ALERGIAS_COMUNES,
   EQUIPAMIENTOS,
+  INTOLERANCIAS_COMUNES,
   NIVELES_ACTIVIDAD,
   OBJETIVOS,
   RESTRICCIONES,
@@ -22,6 +26,19 @@ import {
   type Sexo,
   type UserProfile,
 } from '../templates/defaultUser';
+
+// Helper local · alterna un valor en una lista de strings.
+function toggleArr(arr: string[], v: string): string[] {
+  return arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
+}
+
+// Compara dos arrays de strings sin importar orden.
+function sameArray(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const sa = [...a].sort();
+  const sb = [...b].sort();
+  return sa.every((v, i) => v === sb[i]);
+}
 import {
   cmToFeetInches,
   inToCm,
@@ -58,22 +75,39 @@ function profileToEditable(p: UserProfile): EditableProfile {
     equipamiento: p.equipamiento,
     objetivo: p.objetivo,
     restricciones: [...p.restricciones],
+    notas: p.notas ?? '',
+    intolerancias: [...(p.intolerancias ?? [])],
+    alergias: [...(p.alergias ?? [])],
+    alimentosProhibidos: [...(p.alimentosProhibidos ?? [])],
+    alimentosObligatorios: [...(p.alimentosObligatorios ?? [])],
+    ingredientesFavoritos: [...(p.ingredientesFavoritos ?? [])],
   };
 }
 
-// Diff superficial: solo emite los campos que han cambiado. Para
-// `restricciones` comparamos por longitud + contenido (orden no importa).
+// Lista de campos que son arrays de strings · necesitan diff por contenido,
+// no por igualdad referencial.
+const ARRAY_KEYS: (keyof EditableProfile)[] = [
+  'restricciones',
+  'intolerancias',
+  'alergias',
+  'alimentosProhibidos',
+  'alimentosObligatorios',
+  'ingredientesFavoritos',
+];
+
+// Diff superficial: solo emite los campos que han cambiado. Para los
+// arrays comparamos por contenido (orden no importa).
 function diffEditable(
   before: EditableProfile,
   after: EditableProfile,
 ): Partial<EditableProfile> {
   const out: Record<string, unknown> = {};
   (Object.keys(after) as (keyof EditableProfile)[]).forEach((key) => {
-    if (key === 'restricciones') {
-      const a = [...before.restricciones].sort();
-      const b = [...after.restricciones].sort();
-      if (a.length !== b.length || a.some((v, i) => v !== b[i])) {
-        out.restricciones = after.restricciones;
+    if (ARRAY_KEYS.includes(key)) {
+      const a = before[key] as string[];
+      const b = after[key] as string[];
+      if (!sameArray(a, b)) {
+        out[key] = b;
       }
       return;
     }
@@ -102,6 +136,12 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
     equipamiento: null,
     objetivo: null,
     restricciones: [],
+    notas: '',
+    intolerancias: [],
+    alergias: [],
+    alimentosProhibidos: [],
+    alimentosObligatorios: [],
+    ingredientesFavoritos: [],
   };
   const [original, setOriginal] = useState<EditableProfile>(empty);
   const [data, setData] = useState<EditableProfile>(empty);
@@ -459,6 +499,159 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                   );
                 })}
               </div>
+
+              {/* ════════ PERSONALIZACIÓN PARA LA IA ════════ */}
+              <h3 className="edit-fp-section-title">Personalización para la IA</h3>
+              <p className="settings-modal-text" style={{ margin: '0 0 4px' }}>
+                Datos que la IA usará al generar tu plan. Todo opcional.
+              </p>
+
+              <CollapsibleSection
+                title="Cuéntanos más"
+                subtitle="Objetivos específicos, lesiones, preferencias…"
+                badge={data.notas.trim() ? '✓' : undefined}
+              >
+                <textarea
+                  className="onboarding-textarea"
+                  placeholder="Ej: quiero ganar masa muscular sin perder definición · tengo dolor en el hombro derecho · prefiero recetas rápidas entre semana · …"
+                  value={data.notas}
+                  maxLength={1000}
+                  rows={4}
+                  onChange={(e) => setField('notas', e.target.value)}
+                />
+                <span className="onboarding-counter">{data.notas.length} / 1000</span>
+              </CollapsibleSection>
+
+              <CollapsibleSection
+                title="Alergias"
+                subtitle="Las 14 declarables del Reglamento UE + lo que añadas"
+                badge={data.alergias.length > 0 ? data.alergias.length : undefined}
+              >
+                <span className="onboarding-field-label">Más comunes</span>
+                <div className="onboarding-pills">
+                  {ALERGIAS_COMUNES.map((a) => {
+                    const active = data.alergias.includes(a.value);
+                    return (
+                      <button
+                        key={a.value}
+                        type="button"
+                        className={'onboarding-pill' + (active ? ' coral' : '')}
+                        onClick={() => setField('alergias', toggleArr(data.alergias, a.value))}
+                      >
+                        {active && <IonIcon icon={checkmarkCircle} />}
+                        {a.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="onboarding-field-label">Otras alergias</span>
+                <ChipsInput
+                  color="coral"
+                  placeholder="Escribe y pulsa Enter (ej: melocotón)"
+                  value={data.alergias.filter(
+                    (v) => !ALERGIAS_COMUNES.some((a) => a.value === v),
+                  )}
+                  onChange={(custom) => {
+                    const predefinidas = data.alergias.filter((v) =>
+                      ALERGIAS_COMUNES.some((a) => a.value === v),
+                    );
+                    setField('alergias', [...predefinidas, ...custom]);
+                  }}
+                  ariaLabel="Añadir otra alergia"
+                />
+              </CollapsibleSection>
+
+              <CollapsibleSection
+                title="Intolerancias"
+                subtitle="Lactosa, fructosa, FODMAP… o lo que necesites"
+                badge={data.intolerancias.length > 0 ? data.intolerancias.length : undefined}
+              >
+                <span className="onboarding-field-label">Más comunes</span>
+                <div className="onboarding-pills">
+                  {INTOLERANCIAS_COMUNES.map((i) => {
+                    const active = data.intolerancias.includes(i.value);
+                    return (
+                      <button
+                        key={i.value}
+                        type="button"
+                        className="onboarding-pill"
+                        onClick={() =>
+                          setField('intolerancias', toggleArr(data.intolerancias, i.value))
+                        }
+                        style={
+                          active
+                            ? {
+                                background: 'rgba(240, 168, 56, 0.12)',
+                                borderColor: 'var(--btal-gold)',
+                                color: 'var(--btal-gold)',
+                              }
+                            : undefined
+                        }
+                      >
+                        {active && <IonIcon icon={checkmarkCircle} />}
+                        {i.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="onboarding-field-label">Otras intolerancias</span>
+                <ChipsInput
+                  color="violet"
+                  placeholder="Escribe y pulsa Enter"
+                  value={data.intolerancias.filter(
+                    (v) => !INTOLERANCIAS_COMUNES.some((a) => a.value === v),
+                  )}
+                  onChange={(custom) => {
+                    const predefinidas = data.intolerancias.filter((v) =>
+                      INTOLERANCIAS_COMUNES.some((a) => a.value === v),
+                    );
+                    setField('intolerancias', [...predefinidas, ...custom]);
+                  }}
+                  ariaLabel="Añadir otra intolerancia"
+                />
+              </CollapsibleSection>
+
+              <CollapsibleSection
+                title="Alimentos prohibidos"
+                subtitle="No quiero ver esto en mis comidas"
+                badge={data.alimentosProhibidos.length > 0 ? data.alimentosProhibidos.length : undefined}
+              >
+                <ChipsInput
+                  color="coral"
+                  placeholder="Ej: hígado, coliflor, atún…"
+                  value={data.alimentosProhibidos}
+                  onChange={(v) => setField('alimentosProhibidos', v)}
+                  ariaLabel="Añadir alimento prohibido"
+                />
+              </CollapsibleSection>
+
+              <CollapsibleSection
+                title="Alimentos obligatorios"
+                subtitle="Quiero que aparezcan sí o sí"
+                badge={data.alimentosObligatorios.length > 0 ? data.alimentosObligatorios.length : undefined}
+              >
+                <ChipsInput
+                  color="cyan"
+                  placeholder="Ej: salmón al menos 2 veces, arroz a diario…"
+                  value={data.alimentosObligatorios}
+                  onChange={(v) => setField('alimentosObligatorios', v)}
+                  ariaLabel="Añadir alimento obligatorio"
+                />
+              </CollapsibleSection>
+
+              <CollapsibleSection
+                title="Ingredientes favoritos"
+                subtitle="La IA los priorizará en el plan"
+                badge={data.ingredientesFavoritos.length > 0 ? data.ingredientesFavoritos.length : undefined}
+              >
+                <ChipsInput
+                  color="lime"
+                  placeholder="Ej: aguacate, huevos, espinacas…"
+                  value={data.ingredientesFavoritos}
+                  onChange={(v) => setField('ingredientesFavoritos', v)}
+                  ariaLabel="Añadir ingrediente favorito"
+                />
+              </CollapsibleSection>
 
               {error && <div className="landing-msg error">{error}</div>}
 

@@ -1,6 +1,9 @@
 import type { Firestore } from 'firebase/firestore';
 import { app } from './firebase';
 import {
+  DAY_KEYS,
+  HORA_DEFECTO,
+  MEAL_KEYS,
   defaultCompra,
   defaultEntrenos,
   defaultGeneraciones,
@@ -8,6 +11,15 @@ import {
   defaultPlan,
   defaultSuplementos,
   defaultUserDocument,
+  type Comida,
+  type Compra,
+  type DiaEntreno,
+  type Ejercicio,
+  type Entrenos,
+  type ItemCompra,
+  type Menu,
+  type MealKey,
+  type SourceTag,
   type UserDocument,
   type UserProfile,
 } from '../templates/defaultUser';
@@ -131,6 +143,42 @@ export async function ensureUserDocumentSchema(
   if (raw.fecha_ultima_generacion === undefined) updates.fecha_ultima_generacion = null;
   if (raw.medicalDisclaimerAcceptedAt === undefined) updates.medicalDisclaimerAcceptedAt = null;
 
+  // ── Migración campos del profile (Fase 2A.1) ──
+  // Estos campos los introdujimos al añadir el paso 4 del onboarding
+  // (notas + intolerancias + alergias + alimentos prohibidos / obligatorios
+  // / favoritos). Para docs creados antes de Fase 2A.1, los rellenamos con
+  // valores vacíos · el user puede editarlos después en Settings.
+  const profile = raw.profile as Partial<UserProfile> | undefined;
+  if (profile) {
+    const profileUpdates: Record<string, unknown> = {};
+    if (profile.notas === undefined) profileUpdates['profile.notas'] = '';
+    if (profile.intolerancias === undefined) profileUpdates['profile.intolerancias'] = [];
+    if (profile.alergias === undefined) profileUpdates['profile.alergias'] = [];
+    if (profile.alimentosProhibidos === undefined) profileUpdates['profile.alimentosProhibidos'] = [];
+    if (profile.alimentosObligatorios === undefined) profileUpdates['profile.alimentosObligatorios'] = [];
+    if (profile.ingredientesFavoritos === undefined) profileUpdates['profile.ingredientesFavoritos'] = [];
+    Object.assign(updates, profileUpdates);
+  }
+
+  // ── Migración del flag `source` en items (Fase 2A.1) ──
+  // Los items legacy (Comida/Ejercicio/ItemCompra/DiaEntreno) no tenían
+  // `source`. Ahora la lógica "la IA no toca lo del user" lo necesita.
+  // Sample-based: comprobamos un item; si le falta source, regeneramos
+  // ese bloque entero marcando todos los items como 'default'. Esto NO
+  // pisa los items que ya tengan source ni los datos del user.
+  const menu = (raw.menu ?? updates.menu) as Menu | undefined;
+  if (menu && menuNeedsSourceMigration(menu)) {
+    updates.menu = withDefaultSourceInMenu(menu);
+  }
+  const entrenos = (raw.entrenos ?? updates.entrenos) as Entrenos | undefined;
+  if (entrenos && entrenosNeedsSourceMigration(entrenos)) {
+    updates.entrenos = withDefaultSourceInEntrenos(entrenos);
+  }
+  const compra = (raw.compra ?? updates.compra) as Compra | undefined;
+  if (compra && compraNeedsSourceMigration(compra)) {
+    updates.compra = withDefaultSourceInCompra(compra);
+  }
+
   if (Object.keys(updates).length === 0) return doc;
 
   const { mod, db } = await getDb();
@@ -138,6 +186,113 @@ export async function ensureUserDocumentSchema(
   await mod.updateDoc(ref, updates);
   // Devolvemos el doc combinado · sin re-leer Firestore (innecesario y caro).
   return { ...doc, ...updates } as UserDocument;
+}
+
+// ── Helpers de migración del flag `source` ──
+// Sample-based: solo regeneramos un bloque (menu/entrenos/compra) si
+// detectamos que algún item le falta source. Si todos lo tienen, no
+// tocamos. La función es idempotente — llamada repetida no hace nada.
+
+const ensureSource = <T extends Partial<{ source: SourceTag }>>(
+  item: T,
+): T & { source: SourceTag } => ({ ...item, source: item.source ?? 'default' });
+
+function menuNeedsSourceMigration(menu: Menu): boolean {
+  for (const day of DAY_KEYS) {
+    for (const meal of MEAL_KEYS) {
+      const c = menu[day]?.[meal] as Partial<Comida> | undefined;
+      if (c && c.source === undefined) return true;
+    }
+  }
+  return false;
+}
+
+function withDefaultSourceInMenu(menu: Menu): Menu {
+  const out = {} as Menu;
+  for (const day of DAY_KEYS) {
+    const dayMenu = menu[day] as Partial<Menu[typeof day]> | undefined;
+    out[day] = {
+      desayuno: dayMenu?.desayuno ? ensureSource(dayMenu.desayuno) : emptyMigrationComida('desayuno'),
+      comida: dayMenu?.comida ? ensureSource(dayMenu.comida) : emptyMigrationComida('comida'),
+      merienda: dayMenu?.merienda ? ensureSource(dayMenu.merienda) : emptyMigrationComida('merienda'),
+      cena: dayMenu?.cena ? ensureSource(dayMenu.cena) : emptyMigrationComida('cena'),
+    };
+  }
+  return out;
+}
+
+// Comida vacía generada durante la migración cuando un día/comida no existe
+// en el doc viejo. No exportamos `emptyComida` desde defaultUser porque es
+// implementación interna de su factory · aquí lo replicamos a propósito.
+function emptyMigrationComida(meal: MealKey): Comida {
+  return {
+    alimentos: [],
+    hora: HORA_DEFECTO[meal],
+    kcal: 0,
+    prot: 0,
+    carb: 0,
+    fat: 0,
+    source: 'default',
+  };
+}
+
+function entrenosNeedsSourceMigration(entrenos: Entrenos): boolean {
+  for (const planNum of [1, 2, 3, 4, 5, 6, 7] as const) {
+    const plan = entrenos.planes?.[planNum];
+    if (!plan || !Array.isArray(plan.dias)) continue;
+    for (const dia of plan.dias) {
+      const d = dia as Partial<DiaEntreno>;
+      if (d.source === undefined) return true;
+      if (!Array.isArray(dia.ejercicios)) continue;
+      for (const ej of dia.ejercicios) {
+        if ((ej as Partial<Ejercicio>).source === undefined) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function withDefaultSourceInEntrenos(entrenos: Entrenos): Entrenos {
+  const out: Entrenos = {
+    ...entrenos,
+    planes: { ...entrenos.planes },
+  };
+  for (const planNum of [1, 2, 3, 4, 5, 6, 7] as const) {
+    const plan = out.planes[planNum];
+    if (!plan) continue;
+    const dias = Array.isArray(plan.dias) ? plan.dias : [];
+    out.planes[planNum] = {
+      ...plan,
+      dias: dias.map((d) => ({
+        ...ensureSource(d),
+        ejercicios: Array.isArray(d.ejercicios)
+          ? d.ejercicios.map((ej) => ensureSource(ej))
+          : [],
+      })),
+    };
+  }
+  return out;
+}
+
+function compraNeedsSourceMigration(compra: Compra): boolean {
+  for (const cat of Object.keys(compra) as (keyof Compra)[]) {
+    const items = compra[cat];
+    // Defensivo: docs corruptos podrían tener un valor que no sea array.
+    if (!Array.isArray(items)) continue;
+    for (const item of items) {
+      if ((item as Partial<ItemCompra>).source === undefined) return true;
+    }
+  }
+  return false;
+}
+
+function withDefaultSourceInCompra(compra: Compra): Compra {
+  const out = {} as Compra;
+  for (const cat of Object.keys(compra) as (keyof Compra)[]) {
+    const items = compra[cat];
+    out[cat] = Array.isArray(items) ? items.map((item) => ensureSource(item)) : [];
+  }
+  return out;
 }
 
 // Siembra el documento de un usuario invitado (sesión anónima) con el

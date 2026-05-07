@@ -1,0 +1,33 @@
+/* AiGeneratedBadge · chip "Generado por IA · [scope] · [fecha]"
+   Aparece junto al botón Generar IA en cada tab cuando hay un timestamp
+   de generación previa. Discreto pero informativo. */
+
+.ai-generated-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(176, 122, 240, 0.1);
+  border: 1px solid rgba(176, 122, 240, 0.28);
+  color: var(--btal-violet);
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ai-generated-badge ion-icon {
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.ai-generated-badge-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
