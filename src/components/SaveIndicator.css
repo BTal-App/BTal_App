@@ -1,0 +1,77 @@
+/* SaveIndicator · chip de estado de guardado · reusable en todos los
+   modales con botón Guardar. */
+
+/* Wrapper centrado · cualquier modal con SaveIndicator lo envuelve aquí
+   para que el chip se centre y el layout no salte cuando aparece. */
+.save-indicator-wrap {
+  display: flex;
+  justify-content: center;
+  min-height: 28px;
+}
+
+.save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 999px;
+  padding: 5px 10px;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+  animation: save-indicator-fade 0.18s ease-out both;
+}
+
+@keyframes save-indicator-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .save-indicator {
+    animation: none;
+  }
+}
+
+.save-indicator ion-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+/* Saving · oro con spinner */
+.save-indicator--saving {
+  background: rgba(240, 168, 56, 0.1);
+  border-color: rgba(240, 168, 56, 0.32);
+  color: var(--btal-gold);
+}
+
+.save-indicator--saving ion-spinner {
+  width: 14px;
+  height: 14px;
+  --color: var(--btal-gold);
+  flex-shrink: 0;
+}
+
+/* Saved · cyan con check */
+.save-indicator--saved {
+  background: rgba(55, 224, 168, 0.1);
+  border-color: rgba(55, 224, 168, 0.32);
+  color: var(--btal-cyan);
+}
+
+/* Error · coral con triángulo */
+.save-indicator--error {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.32);
+  color: var(--btal-coral);
+}

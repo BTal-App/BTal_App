@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IonButton, IonIcon, IonModal, IonToast } from '@ionic/react';
 import { checkmarkCircle, closeOutline } from 'ionicons/icons';
 import { usePreferences } from '../hooks/usePreferences';
+import {
+  SAVED_INDICATOR_MS,
+  SAVE_FAILED,
+  useSaveStatus,
+} from '../hooks/useSaveStatus';
+import { SaveIndicator } from './SaveIndicator';
 import {
   formatHeight,
   formatWeight,
@@ -27,21 +33,35 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
   const [units, setUnits] = useState<UnitsSystem>(savedUnits);
   const [weekStart, setWeekStart] = useState<WeekStart>(savedWeekStart);
   const [savedToast, setSavedToast] = useState(false);
+  // Status del guardado · sincronizado con el await a Firestore.
+  const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
+  const submitting = saveStatus === 'saving';
+  // Cleanup del setTimeout del toast post-éxito (evita disparar tras unmount).
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    };
+  }, []);
 
   // Reset al abrir el modal: copia los valores actuales al form.
   const resetForm = () => {
     setUnits(savedUnits);
     setWeekStart(savedWeekStart);
     setSavedToast(false);
+    resetSave();
   };
 
   // ¿Hay cambios pendientes respecto a lo guardado?
   const dirty = units !== savedUnits || weekStart !== savedWeekStart;
 
-  const handleSave = () => {
-    if (!dirty) return;
-    setPreferences({ units, weekStart });
-    setSavedToast(true);
+  const handleSave = async () => {
+    if (!dirty || submitting) return;
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    const result = await runSave(() => setPreferences({ units, weekStart }));
+    if (result === SAVE_FAILED) return; // falló · SaveIndicator muestra Error 3s
+    // Tras éxito esperamos a que el chip "Guardado" se vea antes del toast.
+    toastTimer.current = setTimeout(() => setSavedToast(true), SAVED_INDICATOR_MS);
   };
 
   // Pequeñas previews para que el cambio se vea en vivo (con form state).
@@ -137,12 +157,16 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
               Firestore y se sincronizan entre dispositivos.
             </p>
 
+            <div className="save-indicator-wrap">
+              <SaveIndicator status={saveStatus} />
+            </div>
+
             <IonButton
               type="button"
               expand="block"
               className="settings-modal-primary"
               onClick={handleSave}
-              disabled={!dirty}
+              disabled={!dirty || submitting}
             >
               <IonIcon icon={checkmarkCircle} slot="start" />
               Guardar

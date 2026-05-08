@@ -31,6 +31,8 @@ import '@ionic/react/css/display.css';
 /* Tema BTal */
 import './theme/variables.css';
 
+// Animaciones nativas de Ionic · adaptan automáticamente al modo
+// (md / iOS) y al runtime (web / PWA / Capacitor). Sin customizar.
 setupIonicReact();
 
 const App: React.FC = () => (

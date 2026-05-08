@@ -1,6 +1,7 @@
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
 import { calendarOutline } from 'ionicons/icons';
 import { TabHeader } from '../../components/TabHeader';
+import { AppAvatarButton } from '../../components/AppAvatarButton';
 
 // Tab Registro · placeholder de Fase 1.
 // En la Fase 5 montaremos: stats grid (racha, este mes, PRs, total
@@ -17,7 +18,7 @@ const RegistroPage: React.FC = () => {
           <TabHeader
             title="Registro de "
             accent="pesos"
-            subtitle="Tu progreso, sesión a sesión"
+            right={<AppAvatarButton />}
           />
 
           <div className="app-soon-card">

@@ -4,7 +4,12 @@
 .tab-header {
   padding: max(env(safe-area-inset-top), 16px) 20px 8px;
   display: flex;
-  align-items: center;
+  /* `flex-start` para que el avatar (y resto del slot derecho)
+     queden alineados con el TÍTULO, no con el centro del bloque
+     completo título+subtítulo. Sin esto, en tabs con subtítulo
+     (Hoy "Hola, Pablo · 8 may") el avatar caía a media altura
+     entre título y subtítulo. */
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
@@ -43,8 +48,19 @@
 .tab-header-subtitle {
   font-size: 0.82rem;
   color: var(--btal-t-3);
-  margin-top: 4px;
+  /* Para subtitles visibles (con texto) usamos un margin un pelín más
+     generoso para que respiren respecto al título · da sensación de
+     calma, sobre todo en HoyPage con el "Hola, …" + fecha. */
+  margin-top: 8px;
   font-weight: 500;
+}
+
+/* Placeholder invisible (tab sin subtitle real) · mantiene la altura
+   total para que el resto del layout no salte, pero usa el margin
+   original más pequeño · así las tabs sin subtitle quedan visualmente
+   con el mismo espaciado total que antes de la separación. */
+.tab-header-subtitle--placeholder {
+  margin-top: 4px;
 }
 
 .tab-header-right {
@@ -52,6 +68,11 @@
   gap: 8px;
   align-items: center;
   flex-shrink: 0;
+  /* Centra verticalmente el contenido del slot derecho (avatar 40 px,
+     botón Generar IA 32 px, badge IA…) respecto al primer renglón
+     del título. Como el título mide ~30 px y el avatar 40 px,
+     subimos el slot 5 px para que ambos centros coincidan. */
+  margin-top: -5px;
 }
 
 /* Botón "Generar con IA" en el slot derecho del header de Menú/Entreno.

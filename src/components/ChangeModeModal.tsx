@@ -1,15 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   IonAlert,
   IonButton,
   IonContent,
   IonIcon,
   IonModal,
-  IonSpinner,
   IonToast,
 } from '@ionic/react';
 import { checkmarkCircle, closeOutline } from 'ionicons/icons';
 import { useProfile } from '../hooks/useProfile';
+import {
+  SAVED_INDICATOR_MS,
+  SAVE_FAILED,
+  useSaveStatus,
+} from '../hooks/useSaveStatus';
+import { SaveIndicator } from './SaveIndicator';
 import { StepMode, type StepModeValue } from './StepMode';
 import { blurAndRun } from '../utils/focus';
 import './SettingsModal.css';
@@ -38,11 +43,20 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
     modo: currentModo,
     aiScope: currentScope,
   });
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [savedToast, setSavedToast] = useState(false);
+  // Status del guardado · sincronizado con el await a updateProfile.
+  const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
+  const submitting = saveStatus === 'saving';
   // Aviso de confirmación al activar IA · solo si el cambio es manual→ai.
   const [confirmEnableAiOpen, setConfirmEnableAiOpen] = useState(false);
+  // Cleanup del setTimeout post-éxito (evita disparar tras unmount).
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
 
   // Reset del estado al abrir · cogemos los valores guardados como punto
   // de partida. Si el user reabre el modal tras cancelar arranca limpio.
@@ -52,6 +66,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
       aiScope: userDoc?.profile?.aiScope ?? null,
     });
     setError('');
+    resetSave();
   };
 
   // ¿Hay cambios respecto a lo guardado?
@@ -86,22 +101,26 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
   const persistChange = async () => {
     if (!dirty || !valid || submitting || selected.modo === null) return;
     setError('');
-    setSubmitting(true);
-    try {
-      // Guardamos modo + aiScope a la vez. Si pasa a manual, aiScope=null
-      // (StepMode lo asegura por construcción).
-      await updateProfile({
-        modo: selected.modo,
-        aiScope: selected.aiScope,
-      });
+    // Capturamos los valores fuera del closure · el narrowing de
+    // `selected.modo !== null` no se propaga dentro de la lambda async.
+    const modoToSave = selected.modo;
+    const aiScopeToSave = selected.aiScope;
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    const result = await runSave(() =>
+      updateProfile({
+        modo: modoToSave,
+        aiScope: aiScopeToSave,
+      }),
+    );
+    if (result === SAVE_FAILED) {
+      setError('No hemos podido cambiar el modo. Inténtalo de nuevo.');
+      return;
+    }
+    // Tras éxito esperamos a que el chip "Guardado" se vea antes de cerrar.
+    closeTimer.current = setTimeout(() => {
       setSavedToast(true);
       onClose();
-    } catch (err) {
-      console.error('[BTal] updateMode error:', err);
-      setError('No hemos podido cambiar el modo. Inténtalo de nuevo.');
-    } finally {
-      setSubmitting(false);
-    }
+    }, SAVED_INDICATOR_MS);
   };
 
   return (
@@ -137,21 +156,22 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
 
               {error && <div className="landing-msg error">{error}</div>}
 
+              <div className="save-indicator-wrap">
+                <SaveIndicator status={saveStatus} />
+              </div>
+
               <IonButton
                 type="button"
                 expand="block"
                 className="settings-modal-primary"
-                onClick={blurAndRun(handleSavePress)}
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  handleSavePress();
+                }}
                 disabled={!dirty || !valid || submitting}
               >
-                {submitting ? (
-                  <IonSpinner name="dots" />
-                ) : (
-                  <>
-                    <IonIcon icon={checkmarkCircle} slot="start" />
-                    Guardar cambio
-                  </>
-                )}
+                <IonIcon icon={checkmarkCircle} slot="start" />
+                Guardar cambio
               </IonButton>
             </div>
           </div>

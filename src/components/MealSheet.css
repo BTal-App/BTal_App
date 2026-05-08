@@ -1,0 +1,334 @@
+/* MealSheet · bottom sheet con detalle de una comida del menú.
+   Patrón consistente con ProfileSheet (que ya usaba el mismo formato). */
+
+ion-modal.meal-sheet {
+  --backdrop-opacity: 0.65;
+  --background: var(--btal-surface);
+  --border-radius: 24px 24px 0 0;
+  --max-height: 92vh;
+  align-items: flex-end;
+}
+
+ion-modal.meal-sheet::part(content) {
+  border-top: 1px solid var(--btal-border-2);
+}
+
+.meal-sheet-content {
+  padding: 8px 20px max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Min-height: 100% del IonContent del modal. Volvemos al estado
+     anterior tras probar 85vh — el user prefiere reverificar en PWA
+     real con esta versión. Si Ionic auto-ajusta al contenido cuando
+     este es más corto que el breakpoint, valoramos otra estrategia. */
+  min-height: 100%;
+}
+
+/* Header · emoji grande + meal name + meta + cerrar */
+.meal-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 0 4px;
+}
+
+.meal-sheet-emoji {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--btal-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  border: 1px solid var(--btal-border);
+}
+
+.meal-sheet-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.meal-sheet-id h2 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--btal-t-1);
+}
+
+.meal-sheet-id p {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  margin: 4px 0 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.meal-sheet-close {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--btal-t-2);
+  cursor: pointer;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  transition: background 0.18s, color 0.18s;
+}
+
+.meal-sheet-close:hover {
+  background: var(--btal-surface-2);
+  color: var(--btal-t-1);
+}
+
+/* Empty state · comida vacía */
+.meal-sheet-empty {
+  background: var(--btal-bg-2);
+  border: 1px dashed var(--btal-border-2);
+  border-radius: 14px;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: center;
+}
+
+.meal-sheet-empty p {
+  color: var(--btal-t-2);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Nombre del plato · entre header e ingredientes. Más grande y destacado
+   que el sub-título del header · el plato es el "qué se va a comer", el
+   contenido principal de esta vista. word-break para que un nombre largo
+   no rompa el sheet. */
+.meal-sheet-plato {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--btal-t-1);
+  line-height: 1.35;
+  margin: 0;
+  padding: 10px 14px;
+  background: rgba(181, 240, 55, 0.06);
+  border: 1px solid rgba(181, 240, 55, 0.18);
+  border-radius: 12px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Bloque · cabecera + body */
+.meal-sheet-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meal-sheet-block h3 {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Lista de ingredientes · uno por línea */
+.meal-sheet-ingredients {
+  list-style: none;
+  margin: 0;
+  padding: 12px 14px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meal-sheet-ingredients li {
+  font-size: 0.9rem;
+  color: var(--btal-t-1);
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.5;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.meal-sheet-ingredients li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.65em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--btal-lime);
+  opacity: 0.6;
+}
+
+.meal-sheet-ingrediente-nombre {
+  flex: 1;
+  min-width: 0;
+}
+
+.meal-sheet-ingrediente-cantidad {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Bento 2×2 con macros · grandes y coloreados */
+.meal-sheet-bento {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.meal-sheet-bento-cell {
+  /* Layout vertical centrado · icono+número en una línea arriba,
+     label "kcal/proteína/carbos/grasas" debajo, ambos centrados
+     horizontalmente. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.meal-sheet-bento-top {
+  /* Grid 3 columnas (icon | num | spacer) para que el NÚMERO quede
+     centrado horizontalmente en el cell — directamente encima del
+     label de abajo — y el icono "cuelgue" a su izquierda sin
+     desplazar el centro. La 3ª columna (vacía) balancea visualmente
+     el ancho del icono. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  column-gap: 8px;
+}
+
+.meal-sheet-bento-cell ion-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  /* Pegado a la derecha de su columna · justo a la izquierda del nº. */
+  justify-self: end;
+}
+
+.meal-sheet-bento-num {
+  /* Columna central · directamente alineada con el label de abajo. */
+  grid-column: 2;
+}
+
+.meal-sheet-bento-num {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.meal-sheet-bento-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.meal-sheet-bento-cell--kcal ion-icon,
+.meal-sheet-bento-cell--kcal .meal-sheet-bento-num {
+  color: var(--btal-gold);
+}
+
+.meal-sheet-bento-cell--prot ion-icon,
+.meal-sheet-bento-cell--prot .meal-sheet-bento-num {
+  color: var(--btal-lime);
+}
+
+.meal-sheet-bento-cell--carb ion-icon,
+.meal-sheet-bento-cell--carb .meal-sheet-bento-num {
+  color: var(--btal-blue);
+}
+
+.meal-sheet-bento-cell--fat ion-icon,
+.meal-sheet-bento-cell--fat .meal-sheet-bento-num {
+  color: var(--btal-coral);
+}
+
+/* Acciones · Duplicar (outline) + Editar (primary lima) */
+.meal-sheet-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.meal-sheet-action-secondary {
+  --border-color: var(--btal-border-2);
+  --color: var(--btal-t-1);
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.92rem;
+  flex: 1;
+  margin: 0;
+}
+
+/* Botón Eliminar · icono trash en rojo · ancho fijo (compacto) para que
+   Duplicar + Editar tengan el espacio principal. */
+.meal-sheet-action-danger {
+  --border-color: rgba(255, 107, 107, 0.45);
+  --color: var(--btal-coral);
+  --background-hover: rgba(255, 107, 107, 0.08);
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.meal-sheet-action-primary {
+  --background: var(--btal-lime);
+  --background-hover: var(--btal-lime-d);
+  --background-activated: var(--btal-lime-d);
+  --color: #0a0e0c;
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  font-weight: 700;
+  text-transform: none;
+  font-size: 0.95rem;
+  flex: 2;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .meal-sheet-actions {
+    flex-direction: column-reverse;
+  }
+  .meal-sheet-action-primary,
+  .meal-sheet-action-secondary {
+    flex: 1;
+  }
+}

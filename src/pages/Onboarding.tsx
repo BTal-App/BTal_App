@@ -19,6 +19,7 @@ import { signOut } from '../services/auth';
 import { AiPromptSummaryModal } from '../components/AiPromptSummaryModal';
 import { ChipsInput } from '../components/ChipsInput';
 import { CollapsibleSection } from '../components/CollapsibleSection';
+import { GeneratingScreen } from '../components/GeneratingScreen';
 import { StepMode, type StepModeValue } from '../components/StepMode';
 import {
   ALERGIAS_COMUNES,
@@ -730,6 +731,15 @@ const Onboarding: React.FC = () => {
             submitting={submitting}
           />
         )}
+
+        {/* GeneratingScreen mientras se persiste el perfil + (Fase 6) se
+            llama a la Cloud Function `generatePlan`. Submitting=true
+            cubre el momento entre Confirmar y la redirección a /app. */}
+        <GeneratingScreen
+          isOpen={submitting && modeChoice.modo === 'ai'}
+          title="Generando tu plan inicial"
+          subtitle="Estamos guardando tu perfil y preparando tu plan personalizado. No cierres la app."
+        />
       </IonContent>
     </IonPage>
   );

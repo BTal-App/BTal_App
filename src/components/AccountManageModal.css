@@ -33,7 +33,8 @@
   flex-direction: column;
   gap: 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
-  animation: settings-modal-entrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* Sin animación propia · la apertura/cierre las gestiona el IonModal
+     padre con sus animaciones nativas, sin solapamientos. */
 }
 
 .account-manage-section-title {

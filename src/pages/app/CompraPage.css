@@ -1,0 +1,320 @@
+/* CompraPage · Sub-fase 2B.5.b · solo el bloque de suplementación.
+   Replica el v1 (.compra-card[data-cat-id="suplementos"]) con productos
+   Proteína y Creatina, tracker en gramos y badge de batidos posibles. */
+
+.compra-sup-card {
+  margin: 0 16px 12px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 16px;
+  /* Borde superior lima · igual que el v1 marcaba con --cat-color */
+  border-top: 3px solid var(--btal-lime);
+  /* Entrada con pop-in · cada compra-card aparece al cargar la tab. */
+  animation: btal-pop-in 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .compra-sup-card:hover {
+    border-color: var(--btal-border-2);
+    box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compra-sup-card {
+    animation: none;
+    transition: none;
+  }
+}
+
+.compra-sup-cat-header {
+  margin-bottom: 14px;
+}
+
+.compra-sup-cat-header h2 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-lime);
+}
+
+/* ── Fila de producto · Proteína / Creatina ─────────────────────────── */
+.compra-sup-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--btal-border);
+}
+.compra-sup-row:last-of-type {
+  border-bottom: none;
+}
+
+/* Header con emoji + nombre + precio + botón ✏ */
+.compra-sup-row-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.compra-sup-row-emoji {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.compra-sup-row-id {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.compra-sup-row-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--btal-t-1);
+  word-break: break-word;
+}
+
+.compra-sup-row-price {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
+}
+
+.compra-sup-row-edit {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(90, 168, 255, 0.1);
+  border: 1px solid rgba(90, 168, 255, 0.3);
+  color: var(--btal-blue);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, transform 0.13s;
+}
+
+.compra-sup-row-edit:hover {
+  background: rgba(90, 168, 255, 0.2);
+  border-color: var(--btal-blue);
+}
+
+.compra-sup-row-edit:active {
+  transform: scale(0.92);
+}
+
+/* CTA cuando aún no hay gramos definidos · botón dashed grande */
+.compra-sup-row-empty-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  background: rgba(181, 240, 55, 0.08);
+  border: 1px dashed rgba(181, 240, 55, 0.45);
+  border-radius: 10px;
+  color: var(--btal-lime);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: background 0.15s, border-style 0.15s;
+}
+
+.compra-sup-row-empty-cta:hover {
+  background: rgba(181, 240, 55, 0.18);
+  border-style: solid;
+}
+
+.compra-sup-row-empty-cta ion-icon {
+  font-size: 1.05rem;
+}
+
+/* Tracker · "Consumido: 105 g · 645 g restantes" · igual que v1 */
+.compra-sup-row-tracker {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.84rem;
+  flex-wrap: wrap;
+}
+
+.compra-sup-tracker-label {
+  color: var(--btal-t-3);
+  font-weight: 600;
+}
+
+.compra-sup-tracker-num {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  color: var(--btal-t-1);
+  line-height: 1;
+}
+
+.compra-sup-tracker-unit {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  font-weight: 600;
+}
+
+.compra-sup-tracker-rem {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(55, 240, 168, 0.08);
+  border: 1px solid rgba(55, 240, 168, 0.25);
+  color: rgb(55, 240, 168);
+  white-space: nowrap;
+}
+
+.compra-sup-tracker-rem--warn {
+  background: rgba(240, 168, 56, 0.1);
+  border-color: rgba(240, 168, 56, 0.45);
+  color: var(--btal-gold);
+}
+
+/* Alerta cuando quedan ≤7 dosis (orange) o 0 (red) · igual que v1 */
+.compra-sup-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.compra-sup-alert ion-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.compra-sup-alert--orange {
+  background: rgba(240, 168, 56, 0.1);
+  border: 1px solid rgba(240, 168, 56, 0.4);
+  color: var(--btal-gold);
+}
+
+.compra-sup-alert--red {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  color: var(--btal-coral);
+}
+
+/* Badge unificado "🥤 N batidos" · igual que v1 */
+.compra-sup-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--btal-border);
+  flex-wrap: wrap;
+}
+
+.compra-sup-badge-label {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+}
+
+.compra-sup-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(55, 240, 168, 0.08);
+  border: 1px solid rgba(55, 240, 168, 0.3);
+  color: rgb(55, 240, 168);
+}
+
+.compra-sup-badge--warn {
+  background: rgba(240, 168, 56, 0.1);
+  border-color: rgba(240, 168, 56, 0.45);
+  color: var(--btal-gold);
+}
+
+.compra-sup-note {
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+
+/* ── Coste mensual / anual · igual que v1 ──────────────────────────── */
+.compra-sup-cost {
+  margin: 0 16px 16px;
+  background: var(--btal-surface);
+  border: 1px solid rgba(55, 240, 168, 0.35);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.compra-sup-cost-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.compra-sup-cost-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.compra-sup-cost-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.compra-sup-cost-period {
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.compra-sup-cost-amount {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.7rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.compra-sup-cost-cell--mes .compra-sup-cost-amount {
+  color: rgb(55, 240, 168);
+}
+
+.compra-sup-cost-cell--anio .compra-sup-cost-amount {
+  color: var(--btal-gold);
+}

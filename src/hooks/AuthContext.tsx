@@ -19,7 +19,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Recoge resultado pendiente de signInWithRedirect (Google en PWA standalone).
     // No pasa nada si no hay nada que consumir; los errores reales los muestra
     // Landing tras el redirect.
-    consumePendingRedirect().catch((err) => {
+    //
+    // Filtro de ruido: Firebase puede lanzar `auth/argument-error` cuando se
+    // llama a `getRedirectResult` y no hay un redirect pendiente real
+    // (sesión limpia, primera carga, incognito, sessionStorage vacío).
+    // Es inocuo · la sesión no se ve afectada. Lo silenciamos para no
+    // ensuciar la consola con un error que no requiere acción del user.
+    consumePendingRedirect().catch((err: unknown) => {
+      const code = (err as { code?: string } | null)?.code;
+      if (code === 'auth/argument-error' || code === 'auth/no-auth-event') {
+        return;
+      }
       console.warn('[BTal] redirect result error:', err);
     });
 

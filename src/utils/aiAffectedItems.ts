@@ -16,7 +16,12 @@ import type {
   SourceTag,
   UserDocument,
 } from '../templates/defaultUser';
-import { CATEGORIAS_COMPRA, DAY_KEYS, MEAL_KEYS } from '../templates/defaultUser';
+import {
+  CATEGORIAS_COMPRA,
+  DAY_KEYS,
+  MEAL_KEYS,
+  formatAlimento,
+} from '../templates/defaultUser';
 
 // Identificador único y estable de un item dentro del documento del user.
 // Forma: "section:path:partes". Ejemplos:
@@ -73,7 +78,10 @@ function menuItems(userDoc: UserDocument): AffectedItem[] {
         id: `menu:${day}:${meal}`,
         section: 'menu',
         label: `${DAY_LABEL[day]} · ${MEAL_LABEL[meal]}`,
-        sublabel: c.alimentos.length > 0 ? shortJoin(c.alimentos) : 'Vacío',
+        sublabel:
+          c.alimentos.length > 0
+            ? shortJoin(c.alimentos.map(formatAlimento))
+            : 'Vacío',
         source: c.source,
       });
     }

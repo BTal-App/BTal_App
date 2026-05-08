@@ -38,7 +38,22 @@ export function TabHeader({
           {title}
           {accent && <span className="tab-header-accent">{accent}</span>}
         </h1>
-        {subtitle && <div className="tab-header-subtitle">{subtitle}</div>}
+        {/* Si NO hay subtitle, renderizamos un placeholder invisible con
+            la misma altura · así todas las tabs mantienen el mismo
+            espaciado entre el título y el primer bloque de contenido,
+            independientemente de si tienen subtítulo o no. La clase
+            --placeholder mantiene el margin-top original; los subtitles
+            visibles tienen un margin-top mayor para airear el saludo. */}
+        {subtitle ? (
+          <div className="tab-header-subtitle">{subtitle}</div>
+        ) : (
+          <div
+            className="tab-header-subtitle tab-header-subtitle--placeholder"
+            aria-hidden="true"
+          >
+            &nbsp;
+          </div>
+        )}
       </div>
       {right && <div className="tab-header-right">{right}</div>}
     </header>

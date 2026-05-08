@@ -1,0 +1,218 @@
+/* MealEditorModal · editor inline de comida con autosave debounced */
+
+.meal-editor-card {
+  max-width: 520px;
+}
+
+.meal-editor-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.meal-editor-emoji {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+/* Variante clickable · el emoji actúa como botón que abre el picker.
+   Hint visual sutil con cursor + hover lima para que el user descubra
+   que es interactivo. Reset de estilos de button nativo. */
+button.meal-editor-emoji--clickable {
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+button.meal-editor-emoji--clickable:hover {
+  border-color: var(--btal-lime);
+  background: var(--btal-surface);
+}
+button.meal-editor-emoji--clickable:active {
+  transform: scale(0.95);
+}
+button.meal-editor-emoji--clickable[aria-expanded='true'] {
+  border-color: var(--btal-lime);
+  background: rgba(181, 240, 55, 0.08);
+}
+/* Pequeño ✎ de hint en la esquina inferior derecha · solo si no está
+   expandido · indica al user que puede tocar para cambiar. */
+button.meal-editor-emoji--clickable::after {
+  content: '✎';
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  font-size: 0.55rem;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--btal-bg-2);
+  line-height: 1;
+}
+
+/* Panel del picker · margin-top para separar del head, animación de
+   entrada suave. */
+.meal-editor-emoji-panel {
+  margin-top: 4px;
+  animation: emojiPanelEnter 0.18s ease-out both;
+}
+@keyframes emojiPanelEnter {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .meal-editor-emoji-panel { animation: none; }
+}
+
+.meal-editor-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.meal-editor-id h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.meal-editor-id p {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  margin: 4px 0 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Botón Guardar · primary lima al fondo del editor.
+   Disabled cuando no hay cambios pendientes para no confundir al user. */
+.meal-editor-save {
+  margin: 4px 0 0;
+}
+
+/* Input time · usa el input nativo pero con estilo coherente */
+.meal-editor input[type='time'] {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  color-scheme: dark; /* picker en dark mode en navegadores que lo respetan */
+}
+
+.meal-editor input[type='time']:focus {
+  border-color: var(--btal-lime);
+  background: var(--btal-surface-2);
+}
+
+/* Macros · grid 2×2 con cada input coloreado por su tipo */
+.meal-editor-macros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.meal-editor-macro {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  transition: border-color 0.18s;
+}
+
+.meal-editor-macro:focus-within {
+  border-color: var(--btal-lime);
+}
+
+.meal-editor-macro-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.meal-editor-macro input {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+  color: var(--btal-t-1);
+  width: 100%;
+  padding: 0;
+}
+
+.meal-editor-macro input::placeholder {
+  color: var(--btal-t-3);
+}
+
+/* Spinner del input numérico (flechas) · sale en algunos navegadores; lo
+   ocultamos para que el look sea consistente. */
+.meal-editor-macro input::-webkit-outer-spin-button,
+.meal-editor-macro input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.meal-editor-macro input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* Color del valor según el tipo de macro */
+.meal-editor-macro--kcal input {
+  color: var(--btal-gold);
+}
+.meal-editor-macro--prot input {
+  color: var(--btal-lime);
+}
+.meal-editor-macro--carb input {
+  color: var(--btal-blue);
+}
+.meal-editor-macro--fat input {
+  color: var(--btal-coral);
+}
+
+/* Hint pequeña al final */
+.meal-editor-hint {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+/* Botón eliminar dentro del editor de comidas extras (Sub-fase 2B.5.b).
+   Reutilizamos los CSS vars de IonButton outline + acento rojo. Margin
+   top para separarlo del botón de Guardar. */
+.meal-editor-delete {
+  --border-color: rgba(255, 107, 107, 0.45);
+  --color: var(--btal-coral);
+  --background-hover: rgba(255, 107, 107, 0.08);
+  --border-radius: 12px;
+  --padding-top: 13px;
+  --padding-bottom: 13px;
+  margin: 12px 0 0;
+  font-weight: 600;
+  text-transform: none;
+  font-size: 0.92rem;
+}

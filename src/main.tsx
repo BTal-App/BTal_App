@@ -1,7 +1,38 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './styles/animations.css'
 import App from './App.tsx'
+
+// ── Auto-blur global cuando cualquier overlay de Ionic va a abrirse ─
+// Cualquier IonModal / IonAlert / IonPopover / IonActionSheet aplica
+// aria-hidden="true" al ion-router-outlet de fondo. Si el botón que
+// disparó la apertura conserva foco (típico en IonButton, cuyo focus
+// vive en `<a.button-native>` del shadow DOM), saltan warnings de
+// accesibilidad: "Blocked aria-hidden because its descendant retained
+// focus".
+//
+// En lugar de añadir blur() en cada onClick (frágil), registramos UNA
+// vez los eventos *WillPresent de Ionic y hacemos blur del
+// activeElement antes de que el aria-hidden caiga. Cubre TODOS los
+// overlays presentes y futuros sin tener que tocar cada componente.
+const overlayWillPresentEvents = [
+  'ionModalWillPresent',
+  'ionAlertWillPresent',
+  'ionPopoverWillPresent',
+  'ionActionSheetWillPresent',
+  'ionPickerWillPresent',
+] as const
+overlayWillPresentEvents.forEach((evt) => {
+  document.addEventListener(evt, () => {
+    const active = document.activeElement as HTMLElement | null
+    if (active && active !== document.body && typeof active.blur === 'function') {
+      active.blur()
+    }
+  })
+})
+
+
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

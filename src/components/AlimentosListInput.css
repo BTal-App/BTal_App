@@ -1,0 +1,104 @@
+/* AlimentosListInput · lista editable con dos campos por fila */
+
+.alimentos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alimentos-list-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 6px;
+}
+
+/* Cada fila · 2 inputs (nombre 60% / cantidad 40%) + botón X */
+.alimentos-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.alimentos-row--draft {
+  /* La fila de añadir vive fuera del contenedor de filas existentes */
+  background: transparent;
+}
+
+.alimentos-input {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 8px;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  min-width: 0;
+}
+
+.alimentos-input:focus {
+  border-color: var(--btal-lime);
+  background: var(--btal-surface-2);
+}
+
+.alimentos-input::placeholder {
+  color: var(--btal-t-3);
+}
+
+.alimentos-input--nombre {
+  flex: 3 1 0;
+}
+
+.alimentos-input--cantidad {
+  flex: 2 1 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.84rem;
+}
+
+.alimentos-row-remove,
+.alimentos-row-add {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: all 0.18s;
+}
+
+.alimentos-row-remove:hover {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: var(--btal-coral);
+  color: var(--btal-coral);
+}
+
+.alimentos-row-add:hover:not(:disabled) {
+  background: var(--btal-lime);
+  border-color: var(--btal-lime);
+  color: #0a0e0c;
+}
+
+.alimentos-row-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .alimentos-input--nombre {
+    flex: 2 1 0;
+  }
+  .alimentos-input--cantidad {
+    flex: 1 1 0;
+  }
+}

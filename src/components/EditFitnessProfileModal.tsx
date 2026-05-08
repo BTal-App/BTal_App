@@ -1,17 +1,22 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IonButton,
   IonContent,
   IonIcon,
   IonModal,
-  IonSpinner,
   IonToast,
 } from '@ionic/react';
 import { checkmarkCircle, closeOutline } from 'ionicons/icons';
 import { useProfile } from '../hooks/useProfile';
 import { usePreferences } from '../hooks/usePreferences';
+import {
+  SAVED_INDICATOR_MS,
+  SAVE_FAILED,
+  useSaveStatus,
+} from '../hooks/useSaveStatus';
 import { ChipsInput } from './ChipsInput';
 import { CollapsibleSection } from './CollapsibleSection';
+import { SaveIndicator } from './SaveIndicator';
 import {
   ALERGIAS_COMUNES,
   EQUIPAMIENTOS,
@@ -19,6 +24,7 @@ import {
   NIVELES_ACTIVIDAD,
   OBJETIVOS,
   RESTRICCIONES,
+  defaultProfile,
   type Equipamiento,
   type NivelActividad,
   type Objetivo,
@@ -26,6 +32,11 @@ import {
   type Sexo,
   type UserProfile,
 } from '../templates/defaultUser';
+
+// Shape estable para inyectar en `calcularObjetivoKcal` con los valores
+// del form (que solo tiene parte del UserProfile). El cálculo solo lee
+// edad/peso/altura/sexo/actividad/objetivo, los demás son irrelevantes.
+const defaultProfileShape = defaultProfile();
 
 // Helper local · alterna un valor en una lista de strings.
 function toggleArr(arr: string[], v: string): string[] {
@@ -45,6 +56,7 @@ import {
   kgToLb,
   lbToKg,
 } from '../utils/units';
+import { calcularObjetivoKcal } from '../utils/calorias';
 import '../pages/Onboarding.css';
 import './SettingsModal.css';
 import './EditFitnessProfileModal.css';
@@ -81,6 +93,7 @@ function profileToEditable(p: UserProfile): EditableProfile {
     alimentosProhibidos: [...(p.alimentosProhibidos ?? [])],
     alimentosObligatorios: [...(p.alimentosObligatorios ?? [])],
     ingredientesFavoritos: [...(p.ingredientesFavoritos ?? [])],
+    objetivoKcal: p.objetivoKcal ?? null,
   };
 }
 
@@ -142,12 +155,24 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
     alimentosProhibidos: [],
     alimentosObligatorios: [],
     ingredientesFavoritos: [],
+    objetivoKcal: null,
   };
   const [original, setOriginal] = useState<EditableProfile>(empty);
   const [data, setData] = useState<EditableProfile>(empty);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [savedToast, setSavedToast] = useState(false);
+  // Status del guardado · sincronizado con el await a Firestore vía
+  // updateProfile. Se muestra como SaveIndicator al lado del botón.
+  const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
+  const submitting = saveStatus === 'saving';
+  // Timer del cierre tras "Guardado" · cleanup al desmontar y al
+  // iniciar otro guardado para evitar cierres dobles.
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
 
   // Inputs imperiales locales (string) — separados del estado canónico
   // (peso/altura siempre en kg/cm) para evitar truncamientos por redondeo
@@ -162,6 +187,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
     setOriginal(seed);
     setData(seed);
     setError('');
+    resetSave();
     // Pre-rellenamos los inputs imperiales con los valores convertidos.
     setPesoLbInput(seed.peso !== null ? String(Math.round(kgToLb(seed.peso))) : '');
     if (seed.altura !== null) {
@@ -246,19 +272,22 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
   const handleSave = async () => {
     if (!valid || !dirty || submitting) return;
     setError('');
-    setSubmitting(true);
-    try {
-      const partial = diffEditable(original, data);
-      await updateProfile(partial as Partial<UserProfile>);
-      setOriginal(data);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    const partial = diffEditable(original, data);
+    const result = await runSave(() =>
+      updateProfile(partial as Partial<UserProfile>),
+    );
+    if (result === SAVE_FAILED) {
+      // Falló · el SaveIndicator ya muestra "Error" 3s.
+      setError('No hemos podido guardar los cambios. Inténtalo de nuevo.');
+      return;
+    }
+    setOriginal(data);
+    // Esperamos a que el chip "Guardado" se vea antes de cerrar.
+    closeTimer.current = setTimeout(() => {
       setSavedToast(true);
       onClose();
-    } catch (err) {
-      console.error('[BTal] updateProfile error:', err);
-      setError('No hemos podido guardar los cambios. Inténtalo de nuevo.');
-    } finally {
-      setSubmitting(false);
-    }
+    }, SAVED_INDICATOR_MS);
   };
 
   return (
@@ -500,6 +529,51 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                 })}
               </div>
 
+              {/* Objetivo de kcal · calculado automáticamente desde edad/
+                  peso/altura/sexo/actividad/objetivo, o sobreescrito a mano
+                  por el user. Si lo dejas vacío, la app usa el calculado. */}
+              {(() => {
+                // Para mostrar el sugerido en el placeholder usamos un perfil
+                // "completo" con los valores actuales del form (no del doc).
+                const sugerido = calcularObjetivoKcal({
+                  ...defaultProfileShape,
+                  edad: data.edad,
+                  peso: data.peso,
+                  altura: data.altura,
+                  sexo: data.sexo,
+                  actividad: data.actividad,
+                  objetivo: data.objetivo,
+                });
+                return (
+                  <label className="onboarding-field">
+                    <span>Objetivo de kcal/día</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1000}
+                      max={6000}
+                      step={10}
+                      placeholder={sugerido ? `Sugerido: ${sugerido} kcal` : 'Necesitas rellenar tu perfil'}
+                      value={data.objetivoKcal ?? ''}
+                      onChange={(e) =>
+                        setField(
+                          'objetivoKcal',
+                          e.target.value === '' ? null : Number(e.target.value),
+                        )
+                      }
+                    />
+                    <span
+                      className="onboarding-counter"
+                      style={{ textAlign: 'left', marginTop: 4 }}
+                    >
+                      {sugerido
+                        ? `Calculado: ${sugerido} kcal · puedes ajustarlo o dejarlo vacío para usar el sugerido.`
+                        : 'Rellena edad, peso, altura, sexo, actividad y objetivo para ver el sugerido.'}
+                    </span>
+                  </label>
+                );
+              })()}
+
               {/* ════════ PERSONALIZACIÓN PARA LA IA ════════ */}
               <h3 className="edit-fp-section-title">Personalización para la IA</h3>
               <p className="settings-modal-text" style={{ margin: '0 0 4px' }}>
@@ -655,6 +729,11 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
 
               {error && <div className="landing-msg error">{error}</div>}
 
+              {/* SaveIndicator centrado · sincronizado con runSave */}
+              <div className="save-indicator-wrap">
+                <SaveIndicator status={saveStatus} />
+              </div>
+
               <IonButton
                 type="button"
                 expand="block"
@@ -662,14 +741,8 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                 onClick={handleSave}
                 disabled={!valid || !dirty || submitting}
               >
-                {submitting ? (
-                  <IonSpinner name="dots" />
-                ) : (
-                  <>
-                    <IonIcon icon={checkmarkCircle} slot="start" />
-                    Guardar cambios
-                  </>
-                )}
+                <IonIcon icon={checkmarkCircle} slot="start" />
+                Guardar cambios
               </IonButton>
             </div>
           </div>

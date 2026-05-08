@@ -1,0 +1,266 @@
+/* ────────────────────────────────────────────────────────────────────
+   BTal · Animaciones globales reutilizables
+   ────────────────────────────────────────────────────────────────────
+   Catálogo de keyframes + clases helper inspirado en las micro-
+   animaciones del v1 (HTML monolítico): pop, bump, spin, pulse-ok,
+   fade-up. Centralizado aquí para evitar duplicar @keyframes en cada
+   CSS y para poder activarlas con una sola clase.
+
+   Convenciones:
+   - Todos los nombres de keyframe llevan prefijo `btal-` para no
+     colisionar con animaciones de Ionic ni de librerías externas.
+   - Toda animación cumple `prefers-reduced-motion: reduce` (al final
+     del archivo se anulan globalmente).
+   - Duraciones cortas (140-350ms) y easing `cubic-bezier(.4,0,.2,1)`
+     para que sea snappy, no perezoso · igual filosofía que el shell.
+   ──────────────────────────────────────────────────────────────── */
+
+/* ── Keyframes ─────────────────────────────────────────────────────── */
+
+/* Entrada estándar de cards / stats: aparece desde abajo con un
+   pelín de scale. Réplica suavizada del v1 dayContentEnter. */
+@keyframes btal-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Bump rápido de un número al cambiar de valor (contador, stat).
+   Usado dando key={value} al span para retriggear el mount. */
+@keyframes btal-bump {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Rotación 360° una sola vez · feedback al pulsar el icono ⟳. */
+@keyframes btal-spin-once {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+/* Halo lima expandiéndose · feedback de "acción OK" tipo v1
+   menuBtnAddedPulse / btn-pulse-ok. */
+@keyframes btal-pulse-ok {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(181, 240, 55, 0.6),
+      0 0 0 0 rgba(181, 240, 55, 0.35);
+  }
+  60% {
+    box-shadow:
+      0 0 0 12px rgba(181, 240, 55, 0),
+      0 0 0 22px rgba(181, 240, 55, 0);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(181, 240, 55, 0),
+      0 0 0 0 rgba(181, 240, 55, 0);
+  }
+}
+
+/* Halo dorado · variante para batido / acciones secundarias. */
+@keyframes btal-pulse-gold {
+  0% { box-shadow: 0 0 0 0 rgba(240, 168, 56, 0.55); }
+  60% { box-shadow: 0 0 0 14px rgba(240, 168, 56, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(240, 168, 56, 0); }
+}
+
+/* Halo coral · variante destructiva (resets, deletes). */
+@keyframes btal-pulse-danger {
+  0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.55); }
+  60% { box-shadow: 0 0 0 12px rgba(255, 107, 107, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+}
+
+/* Fade-up genérico · para secciones que aparecen al expandir
+   (settings, modales internos, tooltips). */
+@keyframes btal-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Fade-in puro · para overlays donde el slide molestaría. */
+@keyframes btal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Wiggle horizontal sutil · usado al hover del icono ⓘ. */
+@keyframes btal-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+/* Pulso de oscilación de opacidad · loading / "actualizando". */
+@keyframes btal-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* ── Clases helper · aplicar con className ────────────────────────── */
+
+.btal-anim-pop-in {
+  animation: btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.btal-anim-bump {
+  /* `display:inline-block` para que el transform escale bien sobre
+     spans inline (no afecta a divs). */
+  display: inline-block;
+  animation: btal-bump 0.32s cubic-bezier(0.2, 1.6, 0.5, 1) both;
+}
+
+.btal-anim-fade-up {
+  animation: btal-fade-up 0.26s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.btal-anim-fade-in {
+  animation: btal-fade-in 0.22s ease-out both;
+}
+
+.btal-anim-pulse-ok {
+  animation: btal-pulse-ok 0.7s ease-out;
+}
+
+.btal-anim-pulse-gold {
+  animation: btal-pulse-gold 0.7s ease-out;
+}
+
+.btal-anim-pulse-danger {
+  animation: btal-pulse-danger 0.7s ease-out;
+}
+
+.btal-anim-pulse-soft {
+  animation: btal-pulse-soft 1.8s ease-in-out infinite;
+}
+
+/* Stagger · combinar con .btal-anim-pop-in / .btal-anim-fade-up para
+   que los hijos entren escalonados. Hasta 8 elementos (suficiente
+   para grids 2x2/4x1 + extras). 40ms entre cada uno: rápido pero
+   perceptible. */
+.btal-stagger-1 { animation-delay: 0.04s; }
+.btal-stagger-2 { animation-delay: 0.08s; }
+.btal-stagger-3 { animation-delay: 0.12s; }
+.btal-stagger-4 { animation-delay: 0.16s; }
+.btal-stagger-5 { animation-delay: 0.20s; }
+.btal-stagger-6 { animation-delay: 0.24s; }
+.btal-stagger-7 { animation-delay: 0.28s; }
+.btal-stagger-8 { animation-delay: 0.32s; }
+
+/* ── Mejoras globales de feedback (sin clase, aplican a botones
+   nativos y a la mayoría de cards) · todo con coste cero si el
+   usuario tiene reduced-motion activado. ─────────────────────── */
+
+button {
+  /* Todos los <button> ganan transición suave para hover/active sin
+     necesidad de declarar transition en cada CSS. Solo afecta a las
+     props que cambien explícitamente, así no rompe nada. */
+  transition:
+    transform 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    filter 0.16s ease,
+    box-shadow 0.18s ease;
+}
+
+/* ── Feedback uniforme global en TODOS los botones ──────────────────
+   Específico bajo (selectors de elemento) → cualquier .clase:active
+   propia gana sobre estos defaults sin tener que tocar cada CSS.
+   Resultado: cada botón del app reacciona al tap/click aunque su
+   estilo individual no lo declare. */
+
+button:not(:disabled):hover {
+  /* Sutil brillo en hover desktop · no dispara nada en mobile (no
+     hay :hover real). Botones con su propio bg en hover quedan
+     intactos: brightness solo aclara lo visible. */
+  filter: brightness(1.06);
+}
+
+/* ── Press-in con :active puro · estilo v1 ─────────────────────────
+   El estado "presionado" se mantiene mientras el dedo/ratón aprieta.
+   La transición global (130 ms) suaviza la entrada y la salida. En
+   móvil real un tap dura 80-200 ms, suficiente para que la
+   transición se vea completa.
+
+   `!important` en transform/filter para que el press-in unificado se
+   aplique a TODOS los botones de la app aunque tengan reglas :active
+   propias (.menu-meal, .menu-add-meal-btn, .sup-day-btn, .emoji-
+   picker-cell, etc). El resto de props que esos selectores cambian
+   en :active (border-color, background, box-shadow…) siguen
+   funcionando intactas. */
+button:not(:disabled):active,
+a:not([disabled]):active {
+  transform: translateY(1px) scale(0.97) !important;
+  filter: brightness(0.92) !important;
+}
+
+ion-button:not(.button-disabled):active {
+  transform: translateY(1px) scale(0.97) !important;
+  filter: brightness(0.92) !important;
+}
+
+/* IonButton · web-component · usa CSS variables propias. Lo
+   tratamos como ciudadano de primera para que botones primarios
+   "Guardar", "Continuar", etc. tengan el mismo comportamiento. */
+ion-button {
+  --transition:
+    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  ion-button:not(.button-disabled):hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+}
+
+/* (El estado :active/data-pressed unificado para ion-button y <a>
+   está definido en el bloque "Press-in robusto" más abajo, junto con
+   <button>. Mantenemos aquí solo el hover y la transición.) */
+
+/* ── Reduced motion · respeto absoluto ───────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .btal-anim-pop-in,
+  .btal-anim-bump,
+  .btal-anim-fade-up,
+  .btal-anim-fade-in,
+  .btal-anim-pulse-ok,
+  .btal-anim-pulse-gold,
+  .btal-anim-pulse-danger,
+  .btal-anim-pulse-soft {
+    animation: none !important;
+  }
+  button {
+    transition: none !important;
+  }
+  button:not(:disabled):hover,
+  button:not(:disabled):active,
+  ion-button:not(.button-disabled):hover,
+  ion-button:not(.button-disabled):active,
+  a:not([disabled]):active {
+    transform: none !important;
+    filter: none !important;
+    box-shadow: none !important;
+    animation: none !important;
+  }
+}

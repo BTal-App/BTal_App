@@ -1,0 +1,118 @@
+/* DuplicateMealModal · lista de checkboxes de días destino. */
+
+.dup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 16px;
+}
+
+.dup-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+  position: relative;
+  user-select: none;
+}
+
+.dup-row:hover {
+  background: var(--btal-surface);
+}
+
+.dup-row.active {
+  border-color: var(--btal-lime);
+  background:
+    linear-gradient(0deg, rgba(181, 240, 55, 0.08), rgba(181, 240, 55, 0.08)),
+    var(--btal-bg-2);
+}
+
+.dup-row.occupied {
+  /* Sutil tinte cálido cuando hay datos · no bloquea, solo avisa */
+  border-color: rgba(255, 168, 0, 0.45);
+}
+
+.dup-row input[type='checkbox'] {
+  /* Custom checkbox simple sobre native input para no perder accesibilidad */
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--btal-border);
+  border-radius: 6px;
+  background: var(--btal-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dup-row input[type='checkbox']:checked {
+  background: var(--btal-lime);
+  border-color: var(--btal-lime);
+}
+
+.dup-row input[type='checkbox']:checked::after {
+  content: '';
+  width: 6px;
+  height: 11px;
+  border: solid #0a0e0c;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.dup-row input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--btal-lime);
+  outline-offset: 2px;
+}
+
+.dup-row-day {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--btal-t-1);
+  flex: 1;
+}
+
+.dup-row-occupied {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: rgb(255, 168, 0);
+  font-weight: 600;
+}
+
+.dup-row-occupied ion-icon {
+  font-size: 1rem;
+}
+
+.dup-row-check {
+  font-size: 1.4rem;
+  color: var(--btal-lime);
+}
+
+.dup-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(255, 168, 0, 0.08);
+  border: 1px solid rgba(255, 168, 0, 0.3);
+  color: rgb(255, 168, 0);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  margin: 0 0 8px;
+}
+
+.dup-warning ion-icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}

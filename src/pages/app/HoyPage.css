@@ -84,6 +84,15 @@
   padding: 22px 20px 18px;
   position: relative;
   overflow: hidden;
+  /* Aparece con un pop-in suave al cargar Hoy. Es el primer
+     elemento que ve el usuario, así que sutil pero presente. */
+  animation: btal-pop-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoy-hero {
+    animation: none;
+  }
 }
 
 .hoy-hero::before {
@@ -266,4 +275,499 @@
   font-size: 0.8rem;
   color: var(--btal-t-3);
   line-height: 1.5;
+}
+
+/* ─────────── SUPLEMENTACIÓN · Sub-fase 2B.5.b ───────────
+   Grid de 2 cards (Batido + Creatina) con contadores y stock.
+   En desktop suelen caber lado a lado; en móvil se apilan. */
+.hoy-sup-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0 16px;
+}
+
+@media (min-width: 720px) {
+  .hoy-sup-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.hoy-sup-card {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  /* Entrada con pop-in suave · cada card aparece al cargar la tab.
+     El stagger por nth-child da sensación de cascada y va igual en
+     desktop (1 col) y en móvil (1 col). */
+  animation: btal-pop-in 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.hoy-sup-grid > .hoy-sup-card:nth-child(1) { animation-delay: 0.02s; }
+.hoy-sup-grid > .hoy-sup-card:nth-child(2) { animation-delay: 0.10s; }
+
+@media (hover: hover) and (pointer: fine) {
+  .hoy-sup-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--btal-border-2);
+    box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoy-sup-card {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Acento por suplemento · borde superior teñido para diferenciarlos */
+.hoy-sup-card--batido {
+  border-top: 3px solid var(--btal-gold);
+}
+
+.hoy-sup-card--creatina {
+  border-top: 3px solid #b07af0;
+}
+
+/* Header · emoji + título + sub + botón ⚙ */
+.hoy-sup-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.hoy-sup-emoji {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.hoy-sup-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.hoy-sup-id h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--btal-t-1);
+}
+
+.hoy-sup-card--batido .hoy-sup-id h3 {
+  color: var(--btal-gold);
+}
+
+.hoy-sup-card--creatina .hoy-sup-id h3 {
+  color: #b07af0;
+}
+
+.hoy-sup-id p {
+  margin: 3px 0 0;
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.hoy-sup-config {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.hoy-sup-config:hover {
+  background: var(--btal-surface-2);
+  border-color: var(--btal-border-2);
+  color: var(--btal-t-1);
+}
+
+/* Tomados / Restantes · dos columnas grandes · igual look que v1. */
+.hoy-sup-stats-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background: var(--btal-bg-2);
+  border-radius: 12px;
+  gap: 12px;
+}
+
+.hoy-sup-stat-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hoy-sup-stat-main--restantes {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.hoy-sup-stat-main-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.hoy-sup-stat-main-num {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--btal-lime);
+}
+
+/* Color dinámico del "Restantes" según estado del stock.
+   - OK · lima (verde-amarillo) para diferenciarlo del verde-cyan del
+     badge "✓ Batido tomado hoy" (rgb 55,240,168) · evita confusión.
+   - WARN · gold cuando quedan ≤5 dosis.
+   - EMPTY · coral cuando llegamos a 0.
+   - NONE · texto neutro cuando el stock no está definido aún. */
+.hoy-sup-stat-main-num--ok {
+  color: var(--btal-lime);
+}
+.hoy-sup-stat-main-num--warn {
+  color: var(--btal-gold);
+}
+.hoy-sup-stat-main-num--empty {
+  color: var(--btal-coral);
+}
+.hoy-sup-stat-main-num--none {
+  color: var(--btal-t-3);
+}
+
+/* Badge "✓ Batido tomado hoy" · igual que v1 (pill verde/violeta). */
+.hoy-sup-taken-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: 'DM Sans', inherit;
+  text-align: center;
+}
+
+.hoy-sup-taken-badge ion-icon {
+  font-size: 1.1rem;
+}
+
+.hoy-sup-taken-badge--batido {
+  background: rgba(55, 240, 168, 0.1);
+  border: 1px solid rgba(55, 240, 168, 0.4);
+  color: rgb(55, 240, 168);
+}
+
+.hoy-sup-taken-badge--creatina {
+  background: rgba(176, 122, 240, 0.12);
+  border: 1px solid rgba(176, 122, 240, 0.4);
+  color: #b07af0;
+}
+
+/* Cuando el badge aparece (montado por React tras marcar tomado),
+   pop-in suave + glow verde · réplica del v1 menuBtnAddedPulse. El
+   ✓ rebota con un check-pop tipo v1 checkPop justo después. */
+.hoy-sup-taken-badge--enter {
+  animation:
+    btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both,
+    hoy-taken-glow 0.95s ease-out;
+}
+
+@keyframes hoy-taken-glow {
+  0% { box-shadow: 0 0 0 0 rgba(55, 240, 168, 0.55); }
+  60% { box-shadow: 0 0 0 14px rgba(55, 240, 168, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(55, 240, 168, 0); }
+}
+
+.hoy-sup-taken-badge--creatina.hoy-sup-taken-badge--enter {
+  animation:
+    btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both,
+    hoy-taken-glow-violet 0.95s ease-out;
+}
+
+@keyframes hoy-taken-glow-violet {
+  0% { box-shadow: 0 0 0 0 rgba(176, 122, 240, 0.55); }
+  60% { box-shadow: 0 0 0 14px rgba(176, 122, 240, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(176, 122, 240, 0); }
+}
+
+/* Check icon · "rebote" tipo v1 checkPop (scale 0 → 1 con overshoot). */
+.hoy-sup-taken-check {
+  animation: hoy-check-pop 0.45s cubic-bezier(0.2, 1.6, 0.5, 1) 0.08s both;
+}
+
+@keyframes hoy-check-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoy-sup-taken-badge--enter,
+  .hoy-sup-taken-check {
+    animation: none;
+  }
+}
+
+/* Botón "Marcar X tomado hoy" · color por suplemento */
+.hoy-sup-mark-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: none;
+  color: #0a0e0c;
+  font-family: 'DM Sans', inherit;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.13s, opacity 0.15s;
+}
+
+.hoy-sup-mark-btn ion-icon {
+  font-size: 1.15rem;
+}
+
+.hoy-sup-mark-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.hoy-sup-mark-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hoy-sup-mark-btn--batido {
+  background: var(--btal-gold);
+}
+.hoy-sup-mark-btn--batido:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+/* Halo dorado al pulsar Marcar batido · feedback "se acaba de
+   contabilizar" antes de que el badge ✓ aparezca con pop-in. */
+.hoy-sup-mark-btn--batido:active:not(:disabled) {
+  animation: btal-pulse-gold 0.6s ease-out;
+}
+
+.hoy-sup-mark-btn--creatina {
+  background: #b07af0;
+}
+.hoy-sup-mark-btn--creatina:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+/* Halo violeta · variante para creatina (no hay clase global, lo
+   declaramos inline aquí · misma curva ease-out 0.6s). */
+.hoy-sup-mark-btn--creatina:active:not(:disabled) {
+  animation: hoy-mark-pulse-violet 0.6s ease-out;
+}
+
+@keyframes hoy-mark-pulse-violet {
+  0% { box-shadow: 0 0 0 0 rgba(176, 122, 240, 0.55); }
+  60% { box-shadow: 0 0 0 14px rgba(176, 122, 240, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(176, 122, 240, 0); }
+}
+
+/* Botón "Cancelar (descontar X)" · dashed rojo · igual que v1 */
+.hoy-sup-cancel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px dashed rgba(240, 55, 55, 0.4);
+  border-radius: 8px;
+  color: var(--btal-coral);
+  font-family: 'DM Sans', inherit;
+  font-weight: 600;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.15s, border-style 0.15s;
+}
+
+.hoy-sup-cancel-btn:hover {
+  background: rgba(240, 55, 55, 0.08);
+  border-style: solid;
+}
+
+.hoy-sup-cancel-btn ion-icon {
+  font-size: 1rem;
+  /* Permite el spin 360° al pulsar el cancelar (icono ⟳ rotando da
+     coherencia visual con los resets del modal de Menú). */
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hoy-sup-cancel-btn:hover ion-icon {
+    transform: rotate(60deg);
+  }
+}
+
+.hoy-sup-cancel-btn:active ion-icon {
+  transform: rotate(-360deg);
+  transition-duration: 0.45s;
+}
+
+/* Halo coral al pulsar Cancelar · feedback de acción destructiva
+   suave (no agresiva como el reset total). */
+.hoy-sup-cancel-btn:active {
+  animation: btal-pulse-danger 0.6s ease-out;
+}
+
+/* El cancel-btn aparece junto al badge "tomado" tras marcar.
+   Fade-up suave y un pelín retrasado para que se vea después del
+   pop del badge. */
+.hoy-sup-cancel-btn--enter {
+  animation: btal-fade-up 0.32s cubic-bezier(0.4, 0, 0.2, 1) 0.12s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoy-sup-cancel-btn--enter,
+  .hoy-sup-cancel-btn:active,
+  .hoy-sup-mark-btn--batido:active,
+  .hoy-sup-mark-btn--creatina:active {
+    animation: none;
+  }
+}
+
+/* Stats · esta semana / este mes (solo creatina) */
+.hoy-sup-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--btal-border);
+  border-bottom: 1px solid var(--btal-border);
+}
+
+.hoy-sup-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hoy-sup-stat-num {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--btal-lime);
+}
+
+.hoy-sup-stat-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* Mini-pill de aviso · solo cuando stock bajo (warn) o sin stock (empty).
+   Sustituye al footer informativo "X dosis restantes" que era redundante
+   con el número grande "RESTANTES" de arriba. */
+.hoy-sup-stock-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.hoy-sup-stock-mini ion-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.hoy-sup-stock-mini--warn {
+  background: rgba(240, 168, 56, 0.1);
+  border: 1px solid rgba(240, 168, 56, 0.4);
+  color: var(--btal-gold);
+}
+
+.hoy-sup-stock-mini--empty {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  color: var(--btal-coral);
+}
+
+.hoy-sup-stock-empty-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--btal-t-3);
+  cursor: pointer;
+  transition: color 0.15s;
+  border-radius: 9px;
+}
+
+.hoy-sup-stock-empty-btn:hover {
+  color: var(--btal-lime);
+  background: rgba(181, 240, 55, 0.06);
+}
+
+/* Mensaje informativo (no clickable) cuando no hay stock definido ·
+   apunta al user a la pestaña Menú donde se configura. HoyPage solo
+   permite marcar/cancelar tomado · los ajustes viven en Menú. */
+.hoy-sup-stock-empty-info {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  font-weight: 500;
+  padding: 10px 12px;
+  background: var(--btal-bg-2);
+  border: 1px dashed var(--btal-border);
+  border-radius: 9px;
+  line-height: 1.5;
+}
+
+.hoy-sup-stock-empty-info strong {
+  color: var(--btal-lime);
+  font-weight: 700;
 }

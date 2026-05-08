@@ -25,6 +25,7 @@ import {
 } from '../utils/aiAffectedItems';
 import { AiAffectedItemsStep } from './AiAffectedItemsStep';
 import { AiPromptSummaryModal } from './AiPromptSummaryModal';
+import { GeneratingScreen } from './GeneratingScreen';
 import {
   AI_SCOPE_OPTIONS,
   type AiScopeChoice,
@@ -92,6 +93,11 @@ export function AiGenerateModal({
   const [selected, setSelected] = useState<AiScopeChoice>(pickInitialScope);
   const [showSummary, setShowSummary] = useState(false);
   const [pendingToast, setPendingToast] = useState(false);
+  // GeneratingScreen overlay · activo mientras la IA está "trabajando".
+  // Por ahora simulamos 2s con setTimeout (Fase 6 reemplazará con el
+  // await de la Cloud Function `generatePlan`). Bloquea interacción para
+  // que el user no dispare doble generación.
+  const [generating, setGenerating] = useState(false);
 
   // Items afectados por el scope seleccionado · se recalcula cuando cambia.
   const items = useMemo(
@@ -161,12 +167,12 @@ export function AiGenerateModal({
     });
   };
 
-  // Confirmar generación (Fase 6 → toast + log con scope/exclusiones).
-  const handleConfirmGenerate = () => {
-    // FASE 6 PENDIENTE · aquí llamaremos a la Cloud Function `generatePlan`
-    // pasándole el scope, la lista de IDs a excluir y el flag allowUserItems.
-    // Por ahora dejamos un log para debugging · será fácil cablear cuando
-    // monten la Cloud Function.
+  // Confirmar generación: cierra el wizard, abre la GeneratingScreen, y
+  // espera a que termine la generación REAL. Sin simulaciones · el
+  // spinner solo se ve el tiempo que la Cloud Function tarde de verdad
+  // (en Fase 6 serán 5-30s con Gemini · ahora la fake-function resuelve
+  // de inmediato y el spinner casi no se aprecia, lo cual es correcto).
+  const handleConfirmGenerate = async () => {
     console.info('[BTal] generatePlan request (Fase 6 pendiente)', {
       scope: selected,
       excludedIds: Array.from(excludedIds),
@@ -174,9 +180,23 @@ export function AiGenerateModal({
       willOverwrite: stats.willOverwrite,
       willKeep: stats.willKeep,
     });
-    setPendingToast(true);
     setShowSummary(false);
-    onClose();
+    setGenerating(true);
+    try {
+      await callGenerateAiPlaceholder({
+        scope: selected,
+        excludedIds: Array.from(excludedIds),
+        allowUserItems,
+      });
+    } catch (err) {
+      console.error('[BTal] generatePlan error:', err);
+      // En Fase 6 mostraremos un toast de error · por ahora no hay
+      // forma de fallar (placeholder resuelve siempre OK).
+    } finally {
+      setGenerating(false);
+      setPendingToast(true);
+      onClose();
+    }
   };
 
   // "Modificar" desde el summary · cierra todo el wizard y lleva al user
@@ -346,6 +366,15 @@ export function AiGenerateModal({
         />
       )}
 
+      {/* GeneratingScreen full-screen · se muestra mientras "trabaja" la IA.
+          En Fase 6 lo controlará el await de la Cloud Function. Por ahora
+          es un setTimeout de 2s que simula el feedback visual. */}
+      <GeneratingScreen
+        isOpen={generating}
+        title="Generando con IA"
+        subtitle={summaryToSubtitle(selected)}
+      />
+
       {/* Toast informativo Fase 6 · se elimina cuando llegue la Cloud Function. */}
       <IonToast
         isOpen={pendingToast}
@@ -357,4 +386,49 @@ export function AiGenerateModal({
       />
     </>
   );
+}
+
+// Placeholder para la Cloud Function `generatePlan` que vendrá en Fase 6.
+// Por ahora resuelve inmediatamente (operación de duración 0) · cuando
+// llegue Fase 6, este `Promise.resolve()` se reemplazará por:
+//
+//   import { httpsCallable } from 'firebase/functions';
+//   const generate = httpsCallable(functions, 'generatePlan');
+//   const result = await generate({ scope, excludedIds, allowUserItems });
+//   await refreshProfile();
+//   return result.data;
+//
+// ⚠ CONTRATO de la respuesta de `generatePlan` (Fase 6):
+//   Cada Comida generada (4 fijas + extras) DEBE incluir `nombrePlato`
+//   con un texto descriptivo (3-7 palabras, ej. "Pollo con arroz y
+//   brócoli"). Detalles en `defaultUser.ts:Comida.nombrePlato`. Sin
+//   esto, la card del menú quedará con placeholder "Pulsa para añadir
+//   nombre" tras la generación y rompe el flujo "IA me hace todo".
+//
+// El spinner del GeneratingScreen se mostrará automáticamente durante
+// el tiempo REAL que tarde Gemini (5-30s típicos). Sin simulaciones.
+async function callGenerateAiPlaceholder(payload: {
+  scope: AiScopeChoice;
+  excludedIds: string[];
+  allowUserItems: boolean;
+}): Promise<void> {
+  // No-op intencional · la generación real vive en Fase 6.
+  // El payload se loguea por si quieres ver desde DevTools qué se mandaría.
+  console.debug('[BTal] generatePlan payload (Fase 6 will use this):', payload);
+  return Promise.resolve();
+}
+
+// Texto del subtitulo de la GeneratingScreen según el scope · "Estamos
+// creando tu menú semanal y la lista de la compra…" etc.
+function summaryToSubtitle(scope: AiScopeChoice): string {
+  switch (scope) {
+    case 'all':
+      return 'Estamos creando tu menú semanal, tu plan de entreno y tu lista de la compra. No cierres la app — esto puede tardar unos segundos.';
+    case 'menu_compra':
+      return 'Estamos creando tu menú semanal y la lista de la compra. No cierres la app — esto puede tardar unos segundos.';
+    case 'menu_only':
+      return 'Estamos creando tu menú semanal. No cierres la app — esto puede tardar unos segundos.';
+    case 'entrenos_only':
+      return 'Estamos creando tu plan de entreno. No cierres la app — esto puede tardar unos segundos.';
+  }
 }

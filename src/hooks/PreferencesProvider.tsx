@@ -122,18 +122,20 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     setSyncedFor(uid);
   }, [uid, isAnonymous, profile, profileLoading, syncedFor]);
 
+  // Devuelve la Promise del write a Firestore para que setPreferences
+  // pueda awaitarla y exponer la duración real al caller (SaveIndicator).
+  // 'not-found' (doc del user aún no existe) NO se considera error · las
+  // prefs viven en local hasta que el onboarding cree el doc.
   const persist = useCallback(
-    (next: Preferences) => {
+    async (next: Preferences): Promise<void> => {
       saveToLocal(next);
-      if (uid && !isAnonymous) {
-        setUserPreferences(uid, next).catch((err) => {
-          // 'not-found' = el doc del usuario aún no existe (todavía no ha
-          // pasado por onboarding). No es crítico — las prefs quedan en
-          // local y se sincronizan cuando se cree el doc tras onboarding.
-          const code = (err as { code?: string })?.code;
-          if (code === 'not-found') return;
-          console.warn('[BTal] save preferences error:', err);
-        });
+      if (!uid || isAnonymous) return;
+      try {
+        await setUserPreferences(uid, next);
+      } catch (err) {
+        const code = (err as { code?: string })?.code;
+        if (code === 'not-found') return;
+        throw err;
       }
     },
     [uid, isAnonymous],
@@ -144,7 +146,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       userTouchedRef.current = true;
       setPrefs((p) => {
         const next = { ...p, units };
-        persist(next);
+        // Fire-and-forget · el caller no espera feedback visual aquí.
+        persist(next).catch((err) => {
+          console.warn('[BTal] save preferences error:', err);
+        });
         return next;
       });
     },
@@ -156,19 +161,23 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       userTouchedRef.current = true;
       setPrefs((p) => {
         const next = { ...p, weekStart };
-        persist(next);
+        persist(next).catch((err) => {
+          console.warn('[BTal] save preferences error:', err);
+        });
         return next;
       });
     },
     [persist],
   );
 
-  // Guarda varias prefs de golpe (un único write a Firestore).
+  // Guarda varias prefs de golpe (un único write a Firestore). Devuelve
+  // la Promise para que PreferencesModal pueda mostrar SaveIndicator
+  // sincronizado con la duración real de Firestore.
   const setPreferences = useCallback(
-    (next: Preferences) => {
+    async (next: Preferences): Promise<void> => {
       userTouchedRef.current = true;
       setPrefs(next);
-      persist(next);
+      await persist(next);
     },
     [persist],
   );

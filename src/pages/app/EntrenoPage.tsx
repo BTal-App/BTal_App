@@ -4,6 +4,7 @@ import { barbellOutline, sparklesOutline } from 'ionicons/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { TabHeader } from '../../components/TabHeader';
+import { AppAvatarButton } from '../../components/AppAvatarButton';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
@@ -30,22 +31,24 @@ const EntrenoPage: React.FC = () => {
           <TabHeader
             title="Plan de "
             accent="entreno"
-            subtitle="Push/Pull/Legs adaptado a tus días"
             right={
-              showAiButton ? (
-                <>
-                  <AiGeneratedBadge userDoc={userDoc} scope="entrenos" />
-                  <button
-                    type="button"
-                    className="tab-header-ia-btn"
-                    onClick={blurAndRun(() => setAiGenOpen(true))}
-                    aria-label="Generar con IA"
-                  >
-                    <IonIcon icon={sparklesOutline} />
-                    <span>Generar con IA</span>
-                  </button>
-                </>
-              ) : undefined
+              <>
+                {showAiButton && (
+                  <>
+                    <AiGeneratedBadge userDoc={userDoc} scope="entrenos" />
+                    <button
+                      type="button"
+                      className="tab-header-ia-btn"
+                      onClick={blurAndRun(() => setAiGenOpen(true))}
+                      aria-label="Generar con IA"
+                    >
+                      <IonIcon icon={sparklesOutline} />
+                      <span>Generar con IA</span>
+                    </button>
+                  </>
+                )}
+                <AppAvatarButton />
+              </>
             }
           />
 

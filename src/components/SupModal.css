@@ -1,0 +1,863 @@
+/* SupModal · estilos compartidos para BatidoInfoModal y CreatinaInfoModal.
+   Cada uno tiene su acento (gold/violeta) y comparten la receta visual:
+   título, botón "Añadir al día", cabecera de sección con ⚙ Configurar,
+   form inputs, etc. */
+
+/* ── Títulos con acento por suplemento ─────────────────────────────── */
+.sup-title-batido {
+  color: var(--btal-gold) !important;
+}
+
+.sup-title-creatina {
+  color: #b07af0 !important;
+}
+
+/* ── Botón "Añadir / Quitar al día" ────────────────────────────────── */
+.sup-day-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.15s;
+  /* Margin-bottom reducido (era 18 → 8) para que el bloque
+     "Receta diaria" / "Dosis" quede más cerca del botón Añadir.
+     Espaciado equitativo con el resto de la card (8 px). */
+  margin: 6px 0 8px;
+}
+
+.sup-day-btn:active {
+  transform: scale(0.98);
+}
+
+.sup-day-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sup-day-btn ion-icon {
+  font-size: 1.25rem;
+}
+
+/* Variante batido · gold */
+.sup-day-btn--batido {
+  background: rgba(240, 192, 64, 0.14);
+  border-color: rgba(240, 192, 64, 0.55);
+  color: var(--btal-gold);
+}
+.sup-day-btn--batido:hover {
+  background: rgba(240, 192, 64, 0.26);
+  border-color: var(--btal-gold);
+}
+
+/* Variante creatina · violeta */
+.sup-day-btn--creatina {
+  background: rgba(176, 122, 240, 0.14);
+  border-color: rgba(176, 122, 240, 0.55);
+  color: #b07af0;
+}
+.sup-day-btn--creatina:hover {
+  background: rgba(176, 122, 240, 0.26);
+  border-color: #b07af0;
+}
+
+/* Variante "Quitar del día" · rojo suave */
+.sup-day-btn--remove {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: rgba(255, 107, 107, 0.45);
+  color: var(--btal-coral);
+}
+.sup-day-btn--remove:hover {
+  background: rgba(255, 107, 107, 0.2);
+  border-color: var(--btal-coral);
+  color: var(--btal-coral);
+}
+
+/* ── Sección "Receta diaria" / "Dosis" ──────────────────────────────── */
+.sup-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  /* Reducido de 10 a 6 · el .sup-recipe que va justo debajo ya
+     aporta su propio aire mínimo. */
+  margin-bottom: 6px;
+}
+
+.sup-section-label {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sup-config-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(90, 168, 255, 0.1);
+  border: 1px solid rgba(90, 168, 255, 0.35);
+  color: var(--btal-blue);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.18s, border-color 0.18s, transform 0.14s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sup-config-btn:active {
+  transform: scale(0.97);
+}
+.sup-config-btn:hover {
+  background: rgba(90, 168, 255, 0.2);
+  border-color: var(--btal-blue);
+}
+.sup-config-btn ion-icon {
+  font-size: 1rem;
+}
+
+/* En móvil estrechamos vertical y damos full-width al botón Configurar
+   para que no se peleen el label y el botón por el mismo espacio. */
+@media (max-width: 480px) {
+  .sup-section-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .sup-config-btn {
+    width: 100%;
+    padding: 9px 14px;
+    font-size: 0.85rem;
+  }
+}
+
+.sup-recipe {
+  font-size: 0.95rem;
+  color: var(--btal-t-1);
+  line-height: 1.6;
+  /* Margen mínimo · el divider que viene a continuación es quien
+     pone el aire (8 px arriba+abajo). Evita acumulación. */
+  margin: 0 0 4px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.sup-recipe strong {
+  color: var(--btal-lime);
+  font-weight: 700;
+}
+
+.sup-recipe-extras {
+  color: var(--btal-t-2);
+  font-weight: 500;
+}
+
+/* Macros del batido como pills (reutilizamos los pill colors de MenuPage) */
+.sup-macros {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 0 0 8px;
+}
+
+/* Footnote informativa */
+.sup-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(90, 168, 255, 0.06);
+  border: 1px solid rgba(90, 168, 255, 0.25);
+  color: var(--btal-t-2);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  /* Sin margin · el .sup-divider que viene a continuación pone el
+     espacio (8px arriba+abajo). Evita acumular separación doble. */
+  margin: 0;
+}
+.sup-footnote ion-icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  margin-top: 1px;
+  color: var(--btal-blue);
+}
+
+.sup-warning-soft {
+  background: rgba(176, 122, 240, 0.08);
+  border: 1px solid rgba(176, 122, 240, 0.3);
+  color: #b07af0;
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+
+/* ── Form fields (sub-vista edit) ───────────────────────────────────── */
+.sup-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+  /* Cuando el form-group vive en un grid (sup-macro-grid), permitir que
+     el input se encoja al ancho de la columna · sin esto el input
+     conserva el min-content del browser y empuja el grid fuera del
+     modal (típico bug de "input dentro de grid 1fr"). */
+  min-width: 0;
+}
+
+.sup-label {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.sup-label--batido {
+  color: var(--btal-gold);
+}
+.sup-label--creatina {
+  color: #b07af0;
+}
+.sup-label--kcal {
+  color: var(--btal-gold);
+}
+.sup-label--prot {
+  color: var(--btal-lime);
+}
+.sup-label--carb {
+  color: var(--btal-blue);
+}
+.sup-label--fat {
+  color: var(--btal-coral);
+}
+
+.sup-input {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.92rem;
+  /* Width 100% + box-sizing border-box · el input nunca desborda el
+     ancho del contenedor (form-group/grid item). Crítico para que el
+     grid de macros 2x2 quepa entero dentro del modal. */
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.sup-input:focus {
+  border-color: var(--btal-lime);
+  background: var(--btal-surface);
+}
+
+.sup-textarea {
+  resize: vertical;
+  min-height: 64px;
+  font-family: inherit;
+  line-height: 1.45;
+}
+
+.sup-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  padding: 11px 13px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.sup-checkbox-row:hover {
+  background: var(--btal-surface);
+}
+.sup-checkbox-row input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--btal-border);
+  border-radius: 5px;
+  background: var(--btal-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sup-checkbox-row input[type='checkbox']:checked {
+  background: var(--btal-gold);
+  border-color: var(--btal-gold);
+}
+.sup-checkbox-row input[type='checkbox']:checked::after {
+  content: '';
+  width: 5px;
+  height: 10px;
+  border: solid #0a0e0c;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.sup-checkbox-sub {
+  color: var(--btal-t-3);
+  font-size: 0.78rem;
+}
+
+.sup-form-label-section {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  margin: 6px 0 8px;
+}
+
+.sup-macro-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+@media (min-width: 480px) {
+  .sup-macro-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Acciones del form (Cancelar + Guardar) */
+.sup-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.sup-actions ion-button {
+  flex: 1;
+}
+
+.sup-action-cancel {
+  --color: var(--btal-t-2);
+  --border-color: var(--btal-border);
+}
+
+/* Separador entre Guardar y Quitar del día (en SupCardEditor). */
+.sup-divider {
+  height: 1px;
+  background: var(--btal-border);
+  /* Margen uniforme 8px arriba y abajo · mismo gap que el resto
+     de elementos (.sup-recipe, .sup-footnote, .sup-macros) para
+     que la card respire de manera equitativa de arriba a abajo. */
+  margin: 8px 0;
+  /* Al aparecer, se "dibuja" del centro hacia los lados · sutil pero
+     reuneuna sensación de transición fluida entre secciones. */
+  animation: btal-divider-grow 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transform-origin: center;
+}
+
+@keyframes btal-divider-grow {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sup-divider {
+    animation: none;
+  }
+}
+
+/* Mensaje de error inline debajo del input · usado para validar la hora. */
+.sup-input-error {
+  font-size: 0.75rem;
+  color: var(--btal-coral);
+  margin-top: 2px;
+}
+
+/* ── Avisos de stock · réplica del v1 .supl-alert ─────────────────────
+   Dos niveles: warn (naranja) cuando ≤7 dosis · danger (rojo) cuando 0.
+   Texto: "⚠ Queda poca proteína (Xg — para Y batidos)" o "🚫 No queda…".
+   Se usan en SupCountersInline (Menú), SupCardHoy (Hoy) y CompraPage. */
+.sup-alert {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  padding: 9px 12px;
+  border-radius: 9px;
+  margin-top: 8px;
+  word-break: break-word;
+}
+
+.sup-alert strong {
+  font-weight: 700;
+}
+
+.sup-alert--warn {
+  background: rgba(240, 168, 56, 0.1);
+  border: 1px solid rgba(240, 168, 56, 0.4);
+  color: var(--btal-gold);
+}
+
+.sup-alert--danger {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.45);
+  color: var(--btal-coral);
+}
+
+/* Link secundario · "📊 Stock y contadores" en BatidoInfoModal /
+   CreatinaInfoModal · da acceso al modal de stock desde la vista info. */
+.sup-secondary-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  background: rgba(90, 168, 255, 0.08);
+  border: 1px dashed rgba(90, 168, 255, 0.4);
+  border-radius: 9px;
+  color: var(--btal-blue);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-style 0.15s, transform 0.13s;
+}
+
+.sup-secondary-link:hover {
+  background: rgba(90, 168, 255, 0.16);
+  border-style: solid;
+}
+
+.sup-secondary-link:active {
+  transform: scale(0.98);
+}
+
+/* ── Counter ±1 · igual layout que el v1 modal-batido-info ──────────── */
+.sup-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 10px;
+  background: var(--btal-bg-2);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.sup-counter-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border-2);
+  color: var(--btal-t-1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, transform 0.13s;
+}
+
+.sup-counter-btn:hover:not(:disabled) {
+  background: var(--btal-surface-2);
+  border-color: var(--btal-t-3);
+}
+
+.sup-counter-btn:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.sup-counter-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sup-counter-btn--add {
+  background: var(--btal-lime);
+  border-color: var(--btal-lime);
+  color: #0a0e0c;
+}
+
+.sup-counter-btn--add:hover:not(:disabled) {
+  background: var(--btal-lime-d, #a3d92e);
+  border-color: var(--btal-lime-d, #a3d92e);
+  transform: scale(1.06);
+}
+
+/* Pulso lima al pulsar el "+" · feedback de acción confirmada
+   tipo v1 menuBtnAddedPulse. Solo cuando NO está disabled. */
+.sup-counter-btn--add:active:not(:disabled) {
+  animation: btal-pulse-ok 0.7s ease-out;
+}
+
+.sup-counter-num {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 86px;
+}
+
+.sup-counter-value {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 2.1rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--btal-t-1);
+}
+
+.sup-counter-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* Grid de stats · 4 métricas (posibles, restantes, semana, mes) en
+   2x2 (móvil) o 4 cols (desktop). */
+.sup-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.sup-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 10px;
+  /* Padding lateral generoso para reservar espacio a los mini-iconos
+     ⓘ (izquierda) y ⟳ (derecha) sin que pisen el número/label.
+     vertical sigue compacto (espaciado pedido del user). */
+  padding: 9px 28px;
+  gap: 6px;
+  /* Necesario para posicionar absolute los mini-iconos info/reset. */
+  position: relative;
+  /* Entrada animada al abrir el modal · cada stat aparece con un
+     leve pop-in escalonado. La duración corta + cubic-bezier
+     snappy evita que se sienta lento. El stagger se aplica con
+     :nth-child más abajo para no necesitar clases extra en TSX. */
+  animation: btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+
+/* Stagger automático · 60ms entre stats (5 stats máx). Sin necesidad
+   de añadir clases en el TSX. */
+.sup-stats-grid > .sup-stat:nth-child(1) { animation-delay: 0.00s; }
+.sup-stats-grid > .sup-stat:nth-child(2) { animation-delay: 0.06s; }
+.sup-stats-grid > .sup-stat:nth-child(3) { animation-delay: 0.12s; }
+.sup-stats-grid > .sup-stat:nth-child(4) { animation-delay: 0.18s; }
+.sup-stats-grid > .sup-stat:nth-child(5) { animation-delay: 0.24s; }
+
+/* Hover lift sutil (solo desktop con puntero fino) · da feedback
+   sin afectar al tap móvil. */
+@media (hover: hover) and (pointer: fine) {
+  .sup-stat:hover {
+    transform: translateY(-2px);
+    border-color: var(--btal-border-2);
+    background: var(--btal-surface);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sup-stat {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Variante full-width · la 1ª stat (totales según gramos) ocupa toda
+   la fila tanto en móvil 2x2 como en desktop 4x1. Texto cabe en una
+   sola línea con holgura. */
+.sup-stat--full {
+  grid-column: 1 / -1;
+}
+
+/* Mini-botón ⓘ en la esquina superior-izquierda · accesible (button
+   con aria-label) y tappable en móvil para abrir el pop-up info. */
+.sup-stat-info,
+.sup-stat-reset {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  border: 0;
+  color: var(--btal-t-3);
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s, transform 0.13s;
+  font-family: inherit;
+}
+/* ⓘ arriba-izquierda · ⟳ abajo-derecha · el info se mantiene en la
+   cabecera junto al label "Total este año" y el reset baja a la
+   esquina inferior para no competir visualmente con él. */
+.sup-stat-info {
+  top: 6px;
+  left: 4px;
+}
+.sup-stat-reset {
+  bottom: 4px;
+  right: 4px;
+}
+.sup-stat-info:hover,
+.sup-stat-reset:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--btal-t-1);
+}
+.sup-stat-info:active,
+.sup-stat-reset:active {
+  transform: scale(0.92);
+}
+.sup-stat-info ion-icon,
+.sup-stat-reset ion-icon {
+  font-size: 1rem;
+  pointer-events: none;
+  /* Necesario para que la rotación del :active del ⟳ funcione. */
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sup-stat-reset {
+  color: var(--btal-gold);
+}
+.sup-stat-reset:hover {
+  color: var(--btal-gold);
+  background: rgba(240, 168, 56, 0.18);
+}
+/* Spin 360° una vez al pulsar el botón ⟳ · feedback inmediato de
+   "se acaba de resetear el contador". Como :active dura solo
+   mientras el dedo está pulsado, fijamos también el icono giro
+   leve en :hover para insinuar el comportamiento. */
+@media (hover: hover) and (pointer: fine) {
+  .sup-stat-reset:hover ion-icon {
+    transform: rotate(60deg);
+  }
+}
+.sup-stat-reset:active ion-icon {
+  transform: rotate(360deg);
+  transition-duration: 0.45s;
+}
+/* Wiggle suave del ⓘ al hover · invita al click. */
+@media (hover: hover) and (pointer: fine) {
+  .sup-stat-info:hover ion-icon {
+    animation: btal-wiggle 0.45s ease-in-out;
+  }
+}
+
+.sup-stat-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  /* Permitir que el label se rompa en varias líneas si es largo · sin
+     forzar overflow ni romper el layout horizontal. */
+  text-align: center;
+  line-height: 1.25;
+}
+
+.sup-stat-num {
+  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-size: 1.55rem;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--btal-t-1);
+}
+
+.sup-stat-num--posibles {
+  color: var(--btal-t-2);
+}
+
+.sup-stat-num--restantes {
+  color: var(--btal-lime);
+}
+
+.sup-stat-num--warn {
+  color: var(--btal-gold);
+}
+
+.sup-stat-num--danger {
+  color: var(--btal-coral);
+}
+
+@media (min-width: 480px) {
+  .sup-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Wrapper del input con sufijo "g" · stock en gramos en EditSupStockModal. */
+.sup-input-suffix {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sup-input-suffix .sup-input {
+  padding-right: 36px;
+}
+
+.sup-input-suffix > span {
+  position: absolute;
+  right: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--btal-t-3);
+  pointer-events: none;
+  letter-spacing: 0.04em;
+}
+
+/* Preview de dosis posibles bajo el input · "= 21 batidos posibles · 35g por batido" */
+.sup-input-preview {
+  font-size: 0.78rem;
+  color: var(--btal-lime);
+  margin-top: 6px;
+  font-weight: 500;
+  line-height: 1.4;
+  display: block;
+}
+
+/* ── Grid de resets · EditSupStockModal · Sub-fase 2B.5.b ────────────── */
+.sup-reset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 8px 0 0;
+}
+
+.sup-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: rgba(240, 168, 56, 0.1);
+  border: 1px solid rgba(240, 168, 56, 0.35);
+  color: var(--btal-gold);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.13s;
+  white-space: nowrap;
+}
+
+.sup-reset-btn:hover {
+  background: rgba(240, 168, 56, 0.2);
+  border-color: var(--btal-gold);
+}
+
+.sup-reset-btn:active {
+  transform: scale(0.96);
+}
+
+.sup-reset-btn ion-icon {
+  font-size: 0.95rem;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sup-reset-btn:hover ion-icon {
+    transform: rotate(60deg);
+  }
+}
+.sup-reset-btn:active ion-icon {
+  transform: rotate(360deg);
+  transition-duration: 0.45s;
+}
+
+.sup-reset-btn--danger {
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.4);
+  color: var(--btal-coral);
+}
+
+.sup-reset-btn--danger:hover {
+  background: rgba(255, 107, 107, 0.18);
+  border-color: var(--btal-coral);
+}
+
+/* Variante full-width · el botón "Reiniciar todos los contadores" va
+   solo (sin grid de hermanos) · ocupa el ancho completo y va pegado
+   debajo de las stats sin sección encabezado. Aire arriba para
+   separarlo visualmente del último alert/stat. */
+.sup-reset-btn--block {
+  display: flex;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  /* El texto puede ocupar varias líneas en pantallas muy estrechas
+     pero no debe desbordar el botón. */
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.sup-reset-msg {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--btal-lime);
+  margin: 10px 0 0;
+  font-weight: 600;
+}
+
+/* Ajustes globales mobile · padding del card y tamaños de texto. */
+@media (max-width: 480px) {
+  .sup-day-btn {
+    font-size: 0.86rem;
+    padding: 12px 14px;
+  }
+  .sup-recipe {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .sup-macros {
+    gap: 5px;
+  }
+  .sup-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .sup-actions ion-button {
+    margin: 0;
+  }
+}
