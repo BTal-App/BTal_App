@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import {
+  IonAlert,
   IonContent,
   IonIcon,
   IonPage,
@@ -691,6 +692,13 @@ function SupCardHoy({
   // ahora abajo en el bloque de stats (no duplicamos info).
   const ctaLabel = kind === 'batido' ? 'Tomado' : 'Tomada';
 
+  // Confirmación al pulsar el ⟳ "cancelar tomado hoy" · evita decrementar
+  // el contador por error (un click sin querer descuenta una dosis del
+  // stock total). El alert solo se muestra antes de la acción
+  // destructiva; el "Tomar" inicial sigue siendo directo (no tiene
+  // sentido pedir confirmación para añadir).
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+
   return (
     <div className={`hoy-sup-card hoy-sup-card--${kind}`}>
       {/* Head compacto · estilo preview NewVersion: emoji + info +
@@ -723,7 +731,7 @@ function SupCardHoy({
             <button
               type="button"
               className="hoy-sup-cancel-mini hoy-sup-cancel-mini--enter"
-              onClick={blurAndRun(onCancelar)}
+              onClick={blurAndRun(() => setConfirmCancelOpen(true))}
               aria-label={`Cancelar ${palabraSing} tomado hoy`}
               title={`Cancelar (descontar ${palabraSing})`}
             >
@@ -815,6 +823,31 @@ function SupCardHoy({
         }
         return alerts.creatina && <SupAlertBox alert={alerts.creatina} />;
       })()}
+
+      {/* Confirmación destructiva · pedimos OK antes de descontar la
+          dosis del stock para evitar clicks accidentales en el ⟳. El
+          handler ejecuta el `onCancelar` real (que llama al provider).
+          El botón "Cancelar" del alert solo cierra sin tocar nada. */}
+      <IonAlert
+        isOpen={confirmCancelOpen}
+        onDidDismiss={() => setConfirmCancelOpen(false)}
+        header={`¿Cancelar ${palabraSing} tomado hoy?`}
+        message={
+          kind === 'batido'
+            ? 'Se descontará 1 batido del contador y volverá a aparecer el botón "Tomar".'
+            : 'Se descontará 1 dosis del contador y volverá a aparecer el botón "Tomar".'
+        }
+        buttons={[
+          { text: 'Atrás', role: 'cancel' },
+          {
+            text: 'Sí, cancelar',
+            role: 'destructive',
+            handler: () => {
+              onCancelar();
+            },
+          },
+        ]}
+      />
     </div>
   );
 }
