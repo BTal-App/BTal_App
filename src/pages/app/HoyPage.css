@@ -51,7 +51,7 @@
 }
 
 .hoy-guest-banner-tag {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -154,11 +154,12 @@
 }
 
 .hoy-hero-title {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
-  font-size: 2.4rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 900;
   line-height: 0.95;
   margin: 12px 0 8px;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.02em;
   color: var(--btal-t-1);
 }
 
@@ -175,7 +176,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -236,10 +237,249 @@
   display: flex;
   gap: 14px;
   align-items: center;
+  /* Resets para que la card pueda ser un <button> sin perder el look. */
+  width: calc(100% - 32px);
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
 }
 
 .hoy-empty-card + .hoy-empty-card {
   margin-top: 10px;
+}
+
+/* Variante clicable · usada en "Comidas de hoy" para llevar al tab
+   Menú. Puntero, hover lift y flecha visible · invita al tap. */
+.hoy-empty-card--clickable {
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+}
+
+.hoy-empty-card--clickable:hover {
+  background: var(--btal-surface-2);
+  border-color: var(--btal-lime);
+  border-style: solid;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hoy-empty-card--clickable:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Variante "tiene datos reales" · borde sólido lima como acento
+   positivo · diferencia el caso "empty" del "lleno listo para ver". */
+.hoy-empty-card--filled {
+  border-style: solid;
+  border-color: rgba(181, 240, 55, 0.28);
+  background: linear-gradient(
+    140deg,
+    rgba(181, 240, 55, 0.04),
+    transparent 70%
+  ),
+  var(--btal-surface);
+}
+
+.hoy-empty-card--filled .hoy-empty-icon {
+  background: rgba(181, 240, 55, 0.1);
+  border-color: rgba(181, 240, 55, 0.3);
+  color: var(--btal-lime);
+}
+
+.hoy-empty-arrow {
+  font-size: 1.2rem;
+  color: var(--btal-t-3);
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: transform 0.18s, color 0.18s;
+}
+
+.hoy-empty-card--clickable:hover .hoy-empty-arrow {
+  color: var(--btal-lime);
+  transform: translateX(2px);
+}
+
+/* ── Lista compacta de comidas del día · HoyPage Sub-fase 2C ───────
+   4 cards (Desayuno/Comida/Merienda/Cena) renderizadas inline. Cada
+   card abre `MealSheet` al pulsar (lectura). Las acciones de edit/
+   duplicar/eliminar viven en el tab Menú · este listado es para
+   ver de un vistazo qué hay hoy. */
+
+.hoy-meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 16px;
+}
+
+.hoy-meal-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 14px;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+  /* Entrada con stagger sutil · cada card aparece de a poco. */
+  animation: btal-pop-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.hoy-meal-list > .hoy-meal-card:nth-child(1) { animation-delay: 0.02s; }
+.hoy-meal-list > .hoy-meal-card:nth-child(2) { animation-delay: 0.06s; }
+.hoy-meal-list > .hoy-meal-card:nth-child(3) { animation-delay: 0.10s; }
+.hoy-meal-list > .hoy-meal-card:nth-child(4) { animation-delay: 0.14s; }
+
+@media (hover: hover) and (pointer: fine) {
+  .hoy-meal-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--btal-border-2);
+    box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoy-meal-card {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Variante "vacía" · borde discontinuo + atenuada. Indica al user
+   que no hay datos pero la card sigue siendo pulsable para añadir. */
+.hoy-meal-card--empty {
+  border-style: dashed;
+  background: var(--btal-bg);
+}
+
+.hoy-meal-emoji {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.hoy-meal-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hoy-meal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.hoy-meal-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--btal-t-1);
+  text-transform: uppercase;
+}
+
+.hoy-meal-time {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.02em;
+  color: var(--btal-t-1);
+  flex-shrink: 0;
+  padding: 3px 8px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 6px;
+  line-height: 1;
+  display: inline-grid;
+  place-items: center;
+}
+
+.hoy-meal-plato {
+  font-size: 0.82rem;
+  color: var(--btal-t-2);
+  margin: 0;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  /* Clamp a 2 líneas · evita que un nombre largo dispare la altura. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hoy-meal-empty-text {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  margin: 0;
+  font-style: italic;
+}
+
+.hoy-meal-macros {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.hoy-meal-macro {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--btal-t-2);
+}
+
+.hoy-meal-macro--kcal {
+  color: var(--btal-gold);
+  background: rgba(240, 168, 56, 0.1);
+}
+.hoy-meal-macro--prot {
+  color: var(--btal-lime);
+  background: rgba(181, 240, 55, 0.1);
+}
+.hoy-meal-macro--carb {
+  color: var(--btal-blue);
+  background: rgba(90, 168, 255, 0.1);
+}
+.hoy-meal-macro--fat {
+  color: var(--btal-coral);
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.hoy-meal-arrow {
+  font-size: 1rem;
+  color: var(--btal-t-3);
+  flex-shrink: 0;
+  align-self: center;
+  transition: transform 0.18s, color 0.18s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hoy-meal-card:hover .hoy-meal-arrow {
+    color: var(--btal-lime);
+    transform: translateX(2px);
+  }
 }
 
 .hoy-empty-icon {
@@ -277,23 +517,13 @@
   line-height: 1.5;
 }
 
-/* ─────────── SUPLEMENTACIÓN · Sub-fase 2B.5.b ───────────
-   Grid de 2 cards (Batido + Creatina) con contadores y stock.
-   En desktop suelen caber lado a lado; en móvil se apilan. */
-.hoy-sup-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin: 0 16px;
-}
-
-@media (min-width: 720px) {
-  .hoy-sup-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
+/* ─────────── SUPLEMENTACIÓN · Sub-fase 2C ───────────
+   Cards de Batido + Creatina · cada una va precedida de su propio
+   `.hoy-sup-section-title` independiente. El margen lateral 16 px
+   las iguala en ancho con las cards de comidas (`.hoy-meal-card`)
+   para visual consistencia entre las dos secciones. */
 .hoy-sup-card {
+  margin: 0 16px;
   background: var(--btal-surface);
   border: 1px solid var(--btal-border);
   border-radius: 16px;
@@ -301,9 +531,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  /* Entrada con pop-in suave · cada card aparece al cargar la tab.
-     El stagger por nth-child da sensación de cascada y va igual en
-     desktop (1 col) y en móvil (1 col). */
+  /* Entrada con pop-in suave al cargar la tab. */
   animation: btal-pop-in 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
   transition:
     transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
@@ -311,8 +539,8 @@
     box-shadow 0.18s ease;
 }
 
-.hoy-sup-grid > .hoy-sup-card:nth-child(1) { animation-delay: 0.02s; }
-.hoy-sup-grid > .hoy-sup-card:nth-child(2) { animation-delay: 0.10s; }
+.hoy-sup-card.hoy-sup-card--batido { animation-delay: 0.02s; }
+.hoy-sup-card.hoy-sup-card--creatina { animation-delay: 0.06s; }
 
 @media (hover: hover) and (pointer: fine) {
   .hoy-sup-card:hover {
@@ -369,6 +597,25 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--btal-t-1);
+  /* El título del batido/creatina puede llegar a 50 chars · si el
+     user usa un nombre largo, parte palabra antes que desbordar. */
+  overflow-wrap: anywhere;
+}
+
+/* Section-title individual de cada card de SuplementacionBlock ·
+   "Batido protéico · Ver batido →" / "Creatina · Ver creatina →".
+   Reusa `.app-section-title` (uppercase + Ver lima) pero con un
+   margin más pequeño que el general porque va por-card (ya hay
+   varios apilados). */
+.hoy-sup-section-title {
+  margin: 22px 16px 10px;
+}
+
+/* La primera section-title de un sup arriba del primer batido NO
+   necesita margen extra porque ya hay el `app-section-title` previo
+   ("Comidas de hoy") con su separación natural. */
+.hoy-sup-section-title:first-of-type {
+  margin-top: 28px;
 }
 
 .hoy-sup-card--batido .hoy-sup-id h3 {
@@ -384,7 +631,7 @@
   font-size: 0.78rem;
   color: var(--btal-t-3);
   line-height: 1.4;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .hoy-sup-config {
@@ -440,10 +687,12 @@
 }
 
 .hoy-sup-stat-main-num {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
-  font-size: 2rem;
-  letter-spacing: 0.02em;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1;
+  font-feature-settings: 'tnum';
   color: var(--btal-lime);
 }
 
@@ -476,7 +725,7 @@
   border-radius: 10px;
   font-size: 0.88rem;
   font-weight: 700;
-  font-family: 'DM Sans', inherit;
+  font-family: 'Inter', inherit;
   text-align: center;
 }
 
@@ -552,7 +801,7 @@
   border-radius: 10px;
   border: none;
   color: #0a0e0c;
-  font-family: 'DM Sans', inherit;
+  font-family: 'Inter', inherit;
   font-weight: 700;
   font-size: 0.88rem;
   cursor: pointer;
@@ -616,7 +865,7 @@
   border: 1px dashed rgba(240, 55, 55, 0.4);
   border-radius: 8px;
   color: var(--btal-coral);
-  font-family: 'DM Sans', inherit;
+  font-family: 'Inter', inherit;
   font-weight: 600;
   font-size: 0.78rem;
   cursor: pointer;
@@ -685,10 +934,12 @@
 }
 
 .hoy-sup-stat-num {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
-  font-size: 1.45rem;
-  letter-spacing: 0.02em;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1;
+  font-feature-settings: 'tnum';
   color: var(--btal-lime);
 }
 
@@ -770,4 +1021,428 @@
 .hoy-sup-stock-empty-info strong {
   color: var(--btal-lime);
   font-weight: 700;
+}
+
+/* ── Sub-fase 2C · Nuevo layout SupCardHoy estilo preview ─────────────
+   El head es ahora compacto con CTA inline a la derecha (botón "Tomar"
+   lima/violeta antes / badge "✓ Tomado" + mini-cancel después). Las
+   stats van a una row horizontal (TOMADOS · RESTANTES · ESTA SEMANA).
+   Mantenemos todas las animaciones del estado anterior · solo cambia
+   la disposición visual. */
+
+.hoy-sup-card .hoy-sup-head {
+  /* Espacio para el CTA a la derecha · era flex-start, ahora lo
+     mantenemos pero el CTA crece hasta el ancho que necesite. */
+  align-items: center;
+}
+
+/* CTA inline · botón "Tomar" cuando NO está tomado, badge "✓ Tomado"
+   cuando sí. Réplica del `.supp-cta` del preview NewVersion: pill
+   redondeado, color de acento por kind, tamaño compacto. */
+.hoy-sup-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: 'Inter', inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    transform 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.18s ease,
+    filter 0.16s ease,
+    box-shadow 0.18s ease;
+  white-space: nowrap;
+  /* Resets para que sea <button> sin perder el look. */
+  font-family: inherit;
+  line-height: 1;
+}
+
+.hoy-sup-cta ion-icon {
+  font-size: 1rem;
+}
+
+.hoy-sup-cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Estado "Tomar" · color sólido del acento por kind. */
+.hoy-sup-cta--batido:not(.hoy-sup-cta--taken) {
+  background: var(--btal-gold);
+  color: #0a0e0c;
+}
+.hoy-sup-cta--creatina:not(.hoy-sup-cta--taken) {
+  background: #b07af0;
+  color: #0a0e0c;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hoy-sup-cta--batido:not(.hoy-sup-cta--taken):hover:not(:disabled),
+  .hoy-sup-cta--creatina:not(.hoy-sup-cta--taken):hover:not(:disabled) {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+  }
+}
+
+/* Halo al pulsar · mantenemos el comportamiento del marcar tomado
+   (réplica v1 menuBtnAddedPulse). */
+.hoy-sup-cta--batido:not(.hoy-sup-cta--taken):active:not(:disabled) {
+  animation: btal-pulse-gold 0.6s ease-out;
+}
+.hoy-sup-cta--creatina:not(.hoy-sup-cta--taken):active:not(:disabled) {
+  animation: hoy-mark-pulse-violet 0.6s ease-out;
+}
+
+/* Estado "Tomado" · contorno verde como check confirmado. */
+.hoy-sup-cta--taken {
+  background: rgba(55, 240, 168, 0.12);
+  border-color: rgba(55, 240, 168, 0.4);
+  color: rgb(55, 240, 168);
+  cursor: default;
+}
+.hoy-sup-cta--creatina.hoy-sup-cta--taken {
+  background: rgba(176, 122, 240, 0.12);
+  border-color: rgba(176, 122, 240, 0.4);
+  color: #b07af0;
+}
+
+/* Animación de entrada al pasar a "Tomado" · pop-in + glow expansivo
+   (mismas keyframes hoy-taken-glow / -violet definidas más arriba en
+   este archivo). */
+.hoy-sup-cta--enter {
+  animation:
+    btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both,
+    hoy-taken-glow 0.95s ease-out;
+}
+.hoy-sup-cta--creatina.hoy-sup-cta--enter {
+  animation:
+    btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both,
+    hoy-taken-glow-violet 0.95s ease-out;
+}
+
+/* Wrapper para CTA tomada + mini-botón de cancelar · ambos a la
+   derecha del head, alineados verticalmente. */
+.hoy-sup-cta-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Mini-botón circular ⟳ que aparece cuando hay tomado activo ·
+   permite cancelar sin ocupar fila propia. Estilo dashed coral
+   discreto · invita al click sin gritar. */
+.hoy-sup-cancel-mini {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px dashed rgba(240, 55, 55, 0.4);
+  color: var(--btal-coral);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+  transition: background 0.15s, border-style 0.15s;
+}
+
+.hoy-sup-cancel-mini ion-icon {
+  font-size: 1.05rem;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hoy-sup-cancel-mini:hover {
+    background: rgba(240, 55, 55, 0.08);
+    border-style: solid;
+  }
+  .hoy-sup-cancel-mini:hover ion-icon {
+    transform: rotate(60deg);
+  }
+}
+
+.hoy-sup-cancel-mini:active ion-icon {
+  transform: rotate(-360deg);
+  transition-duration: 0.45s;
+}
+
+.hoy-sup-cancel-mini:active {
+  animation: btal-pulse-danger 0.6s ease-out;
+}
+
+/* Fade-up retrasado al aparecer · igual que el cancel-btn antiguo. */
+.hoy-sup-cancel-mini--enter {
+  animation: btal-fade-up 0.32s cubic-bezier(0.4, 0, 0.2, 1) 0.12s both;
+}
+
+/* ── Stats row · 3 cells horizontales (TOMADOS · RESTANTES · SEM) ─── */
+
+.hoy-sup-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--btal-bg-2);
+  border-radius: 12px;
+}
+
+.hoy-sup-stats-row--two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.hoy-sup-stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+
+.hoy-sup-stat-cell .hoy-sup-stat-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-feature-settings: 'tnum';
+  color: var(--btal-t-1);
+  /* `display: inline-block` para que `btal-anim-bump` (transform:scale)
+     funcione bien sobre spans inline. */
+  display: inline-block;
+}
+
+.hoy-sup-stat-cell .hoy-sup-stat-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+/* Variantes color del número RESTANTES según estado de stock · misma
+   regla que las main-num antiguas. */
+.hoy-sup-stat-cell .hoy-sup-stat-num--ok {
+  color: var(--btal-lime);
+}
+.hoy-sup-stat-cell .hoy-sup-stat-num--warn {
+  color: var(--btal-gold);
+}
+.hoy-sup-stat-cell .hoy-sup-stat-num--empty {
+  color: var(--btal-coral);
+}
+.hoy-sup-stat-cell .hoy-sup-stat-num--none {
+  color: var(--btal-t-3);
+}
+
+@media (max-width: 360px) {
+  .hoy-sup-stat-cell .hoy-sup-stat-num {
+    font-size: 1.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoy-sup-cta--enter,
+  .hoy-sup-cancel-mini--enter,
+  .hoy-sup-cta--batido:active,
+  .hoy-sup-cta--creatina:active,
+  .hoy-sup-cancel-mini:active {
+    animation: none;
+  }
+}
+
+/* ── Card "Entreno de hoy" · réplica del preview BTal ─────────────
+   Layout horizontal: icono lima + info (label/título/tags) + chevron.
+   Click → tab Entreno. Estilos coherentes con .hoy-meal-card y la
+   train-card del preview (icono cuadrado-redondeado, info en columna). */
+.hoy-train-card {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  margin: 0 16px 12px;
+  padding: 14px 16px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+  transition: border-color 0.18s, background 0.18s;
+  /* Animación pop-in al cargar la tab · coherente con resto de cards. */
+  animation: btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoy-train-card {
+    animation: none;
+  }
+}
+
+.hoy-train-card:hover {
+  border-color: var(--btal-border-2);
+}
+.hoy-train-card:active {
+  background: var(--btal-bg-2);
+}
+
+/* Estado "Día de descanso" · variante sin acento, más apagada. */
+.hoy-train-card--rest {
+  opacity: 0.85;
+}
+
+.hoy-train-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(181, 240, 55, 0.18),
+    rgba(55, 224, 168, 0.08)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(181, 240, 55, 0.25);
+}
+
+.hoy-train-icon ion-icon {
+  font-size: 1.6rem;
+  color: var(--btal-lime);
+}
+
+/* Variante descanso · icono más neutro, sin acento lima. */
+/* Variante "descanso" · icono cama en azul, gradiente azul/violeta
+   sutil. Diferencia visual con el día de entreno (lima/cyan). */
+.hoy-train-icon--rest {
+  background: linear-gradient(
+    135deg,
+    rgba(90, 168, 255, 0.16),
+    rgba(176, 122, 240, 0.06)
+  );
+  border-color: rgba(90, 168, 255, 0.25);
+}
+.hoy-train-icon--rest ion-icon {
+  color: var(--btal-blue);
+}
+
+/* Variante "alerta" · cuando no hay plan asignado (caso defensivo).
+   Color amarillo (#ffd54f) · mismo amarillo que usamos en los
+   optgroup labels para coherencia visual. Llama la atención sin
+   ser tan agresivo como el coral. */
+.hoy-train-icon--alert {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 213, 79, 0.2),
+    rgba(255, 213, 79, 0.06)
+  );
+  border-color: rgba(255, 213, 79, 0.4);
+}
+.hoy-train-icon--alert ion-icon {
+  color: #ffd54f;
+}
+
+/* Borde sutil amarillo en el card-alert para reforzar la urgencia. */
+.hoy-train-card--alert {
+  border-color: rgba(255, 213, 79, 0.32);
+}
+
+.hoy-train-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.hoy-train-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.hoy-train-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--btal-t-1);
+  /* Truncar a 2 líneas máx · evita que un día con 6 ejercicios
+     largos rompa el layout. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.hoy-train-title--empty {
+  color: var(--btal-t-3);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.hoy-train-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+/* La clase `.tag` y sus variantes (`.b-pecho`, `.b-espalda`, etc.) las
+   reusamos de EntrenoPage.css · ya están aplicadas globalmente. Aquí
+   solo añadimos un override de tamaño para que en la card de Hoy se
+   vean un pelín más compactas. */
+.hoy-train-card .tag {
+  font-size: 0.58rem;
+  padding: 3px 8px;
+}
+
+.hoy-train-chevron {
+  color: var(--btal-t-3);
+  font-size: 1.1rem;
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* Tag "HOY" en la card de entreno · pequeña píldora lima al inicio
+   del label superior. Solo aparece cuando el día coincide con hoy. */
+.hoy-train-label-tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Tag azul "⏱ 1h 20m" en la card de Entreno de hoy · diferenciado
+   del resto de tipos (lima/coral/etc) por su color azul · mismo
+   estilo que el badge `.train-day-time` de la tab Entreno. */
+.hoy-train-card .tag.hoy-train-time-tag {
+  background: rgba(90, 168, 255, 0.16);
+  color: var(--btal-blue);
+  border-color: rgba(90, 168, 255, 0.3);
+  font-feature-settings: 'tnum';
+  text-transform: none;
+  letter-spacing: 0;
 }

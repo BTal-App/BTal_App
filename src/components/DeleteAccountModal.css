@@ -55,7 +55,7 @@
 }
 
 .delete-account-label code {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.78rem;
   color: var(--btal-coral);
   background: rgba(255, 107, 107, 0.1);
@@ -65,7 +65,7 @@
 }
 
 .delete-account-input {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   letter-spacing: 0.1em;
   text-align: center;
   font-weight: 600;

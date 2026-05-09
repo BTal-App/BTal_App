@@ -104,7 +104,7 @@
 }
 
 .ai-items-section-count {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.7rem;
   font-weight: 700;
   background: var(--btal-bg-2);
@@ -220,7 +220,7 @@
 
 /* Badge del origen del item */
 .ai-item-source {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -279,10 +279,12 @@
 }
 
 .ai-items-stat-num {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
-  font-size: 1.6rem;
-  letter-spacing: 0.02em;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1;
+  font-feature-settings: 'tnum';
 }
 
 .ai-items-stat-label {

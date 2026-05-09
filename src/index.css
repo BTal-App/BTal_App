@@ -16,4 +16,11 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Tabular nums por defecto en TODA la app · cifras del mismo
+     ancho para que stats que cambian (contadores, precios, kcal,
+     hora) no salten visualmente al actualizarse. Reemplaza el
+     comportamiento de Bebas Neue (que tenía caps alturas iguales)
+     con Inter manteniendo coherencia en cualquier número. */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
 }

@@ -16,21 +16,28 @@ import App from './App.tsx'
 // vez los eventos *WillPresent de Ionic y hacemos blur del
 // activeElement antes de que el aria-hidden caiga. Cubre TODOS los
 // overlays presentes y futuros sin tener que tocar cada componente.
-const overlayWillPresentEvents = [
-  'ionModalWillPresent',
-  'ionAlertWillPresent',
-  'ionPopoverWillPresent',
-  'ionActionSheetWillPresent',
-  'ionPickerWillPresent',
-] as const
-overlayWillPresentEvents.forEach((evt) => {
-  document.addEventListener(evt, () => {
-    const active = document.activeElement as HTMLElement | null
-    if (active && active !== document.body && typeof active.blur === 'function') {
-      active.blur()
-    }
+//
+// Bandera anti-doble-registro · evita que Vite HMR / re-imports del
+// módulo acumulen listeners cada vez que el código cambia en dev.
+type WindowWithBtalFlag = typeof window & { __btalOverlayBlurInstalled?: true }
+if (!(window as WindowWithBtalFlag).__btalOverlayBlurInstalled) {
+  ;(window as WindowWithBtalFlag).__btalOverlayBlurInstalled = true
+  const overlayWillPresentEvents = [
+    'ionModalWillPresent',
+    'ionAlertWillPresent',
+    'ionPopoverWillPresent',
+    'ionActionSheetWillPresent',
+    'ionPickerWillPresent',
+  ] as const
+  overlayWillPresentEvents.forEach((evt) => {
+    document.addEventListener(evt, () => {
+      const active = document.activeElement as HTMLElement | null
+      if (active && active !== document.body && typeof active.blur === 'function') {
+        active.blur()
+      }
+    })
   })
-})
+}
 
 
 

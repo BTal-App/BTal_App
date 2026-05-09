@@ -1,0 +1,152 @@
+/* TrainSheet · bottom sheet con detalle de un día del plan de entreno.
+   Patrón consistente con MealSheet (que ya usaba el mismo formato). */
+
+ion-modal.train-sheet {
+  --backdrop-opacity: 0.65;
+  --background: var(--btal-surface);
+  --border-radius: 24px 24px 0 0;
+  --max-height: 92vh;
+  align-items: flex-end;
+}
+
+ion-modal.train-sheet::part(content) {
+  border-top: 1px solid var(--btal-border-2);
+}
+
+.train-sheet-content {
+  padding: 8px 20px max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+}
+
+.train-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0 0;
+}
+
+.train-sheet-week {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.train-sheet-close {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--btal-t-2);
+  cursor: pointer;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  transition: background 0.18s, color 0.18s;
+}
+
+.train-sheet-close:hover {
+  background: var(--btal-surface-2);
+  color: var(--btal-t-1);
+}
+
+.train-sheet-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--btal-t-1);
+  overflow-wrap: anywhere;
+}
+
+.train-sheet-sub {
+  font-size: 0.84rem;
+  color: var(--btal-t-2);
+  margin-top: -8px;
+  overflow-wrap: anywhere;
+}
+
+.train-sheet-tags {
+  margin-top: 4px;
+}
+
+.train-sheet-empty {
+  background: var(--btal-bg-2);
+  border: 1px dashed var(--btal-border-2);
+  border-radius: 14px;
+  padding: 18px 16px;
+  text-align: center;
+}
+
+.train-sheet-empty p {
+  color: var(--btal-t-3);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.train-sheet-exercises {
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 14px;
+  padding: 4px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.train-sheet-note {
+  background: rgba(181, 240, 55, 0.06);
+  border: 1px solid rgba(181, 240, 55, 0.18);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.78rem;
+  color: var(--btal-t-2);
+  line-height: 1.5;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.train-sheet-actions {
+  display: flex;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.train-sheet-edit-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s;
+}
+.train-sheet-edit-btn:hover {
+  background: var(--btal-lime-d, var(--btal-lime));
+}
+.train-sheet-edit-btn:active {
+  transform: scale(0.97);
+}
+
+.train-sheet-edit-btn ion-icon {
+  font-size: 1.15rem;
+}

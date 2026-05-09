@@ -153,7 +153,6 @@
   /* Margen mínimo · el divider que viene a continuación es quien
      pone el aire (8 px arriba+abajo). Evita acumulación. */
   margin: 0 0 4px;
-  word-break: break-word;
   overflow-wrap: anywhere;
 }
 
@@ -165,6 +164,9 @@
 .sup-recipe-extras {
   color: var(--btal-t-2);
   font-weight: 500;
+  /* Texto libre del user (extras del batido / notas creatina) ·
+     evita que palabras largas o URLs desborden la card. */
+  overflow-wrap: anywhere;
 }
 
 /* Macros del batido como pills (reutilizamos los pill colors de MenuPage) */
@@ -261,9 +263,26 @@
      ancho del contenedor (form-group/grid item). Crítico para que el
      grid de macros 2x2 quepa entero dentro del modal. */
   width: 100%;
+  /* `min-width: 0` rompe el min-content por defecto que algunos
+     browsers ponen en inputs (especialmente type="time" e
+     type="number") · sin esto el input puede salirse del padre
+     en pantallas estrechas. */
+  min-width: 0;
   box-sizing: border-box;
   outline: none;
   transition: border-color 0.18s, background 0.18s;
+}
+
+/* Inputs nativos type="time" / type="date" cuando son `.sup-input` ·
+   estilo coherente con el tema BTal. Reglas globales reusables
+   (`.btal-input-time` wrapper) viven en `src/styles/animations.css`. */
+.sup-input[type='time'],
+.sup-input[type='date'],
+.sup-input[type='datetime-local'] {
+  color-scheme: dark;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 38px;
 }
 
 .sup-input:focus {
@@ -408,7 +427,7 @@
   padding: 9px 12px;
   border-radius: 9px;
   margin-top: 8px;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .sup-alert strong {
@@ -525,10 +544,12 @@
 }
 
 .sup-counter-value {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
-  font-size: 2.1rem;
-  letter-spacing: 0.02em;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1;
+  font-feature-settings: 'tnum';
   color: var(--btal-t-1);
 }
 
@@ -694,10 +715,12 @@
 }
 
 .sup-stat-num {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
-  font-size: 1.55rem;
-  letter-spacing: 0.02em;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1;
+  font-feature-settings: 'tnum';
   color: var(--btal-t-1);
 }
 

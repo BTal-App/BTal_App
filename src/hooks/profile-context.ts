@@ -1,11 +1,16 @@
 import { createContext } from 'react';
 import type {
   BatidoConfig,
+  CategoriaCompra,
   Comida,
   ComidaExtra,
+  ComidasDelDia,
   CreatinaConfig,
   DayKey,
+  DiaEntreno,
+  ItemCompra,
   MealKey,
+  PlanEntreno,
   SupDayOverride,
   UserDocument,
   UserProfile,
@@ -135,6 +140,94 @@ export interface ProfileState {
   ) => Promise<void>;
   removeMealExtra: (day: DayKey, id: string) => Promise<ComidaExtra | null>;
   restoreMealExtra: (day: DayKey, extra: ComidaExtra) => Promise<void>;
+
+  // ── Flags por día del menú · Sub-fase 2B.6 ────────────────────────
+  // Réplica del v1 (`weekend_excluded` / `days_hidden` localStorage):
+  // excluir un día de la media semanal (sigue visible pero no se
+  // promedia), ocultar un día (chip atenuado, lista reemplazada por
+  // mensaje), o resetear las 4 comidas + extras del día al estado
+  // por defecto. Optimistic update + revert si Firestore falla.
+  toggleDayExcludedFromAvg: (day: DayKey) => Promise<void>;
+  toggleDayHidden: (day: DayKey) => Promise<void>;
+  // Reset al menú por defecto · invitados al demo, cuentas reales al
+  // defaultMenu() (4 comidas vacías). Devuelve el snapshot de las
+  // comidas previas por si se quiere implementar undo más adelante.
+  resetDayMenu: (day: DayKey) => Promise<ComidasDelDia | null>;
+
+  // ── Lista de la compra · Sub-fase 2C ──────────────────────────────
+  // CRUD sobre items y categorías. Todas las acciones aplican
+  // optimistic update y revierten al snapshot anterior si Firestore
+  // falla. Las categorías builtIn (proteinas/lacteos/etc.) NO se
+  // pueden eliminar pero sí renombrar/cambiar emoji/color.
+
+  // Items dentro de una categoría
+  addCompraItem: (catId: string, item: ItemCompra) => Promise<void>;
+  updateCompraItem: (
+    catId: string,
+    itemId: string,
+    partial: Partial<ItemCompra>,
+  ) => Promise<void>;
+  toggleCompraItemComprado: (
+    catId: string,
+    itemId: string,
+  ) => Promise<void>;
+  // Devuelve el item borrado (con su catId+índice) para implementar
+  // undo desde el caller.
+  removeCompraItem: (
+    catId: string,
+    itemId: string,
+  ) => Promise<{ item: ItemCompra; index: number } | null>;
+  restoreCompraItem: (
+    catId: string,
+    item: ItemCompra,
+    index: number,
+  ) => Promise<void>;
+  // Resetea todos los `comprado` a false · todas las categorías.
+  // Útil al empezar una semana nueva. Devuelve los items "marcados"
+  // antes del reset para implementar undo.
+  resetCompraChecks: () => Promise<void>;
+
+  // Categorías personalizables
+  addCompraCategoria: (cat: CategoriaCompra) => Promise<void>;
+  updateCompraCategoria: (
+    catId: string,
+    partial: Partial<CategoriaCompra>,
+  ) => Promise<void>;
+  // Solo borra categorías custom · si es builtIn, lanza error.
+  // Devuelve la categoría + sus items para implementar undo.
+  removeCompraCategoria: (
+    catId: string,
+  ) => Promise<{ categoria: CategoriaCompra; items: ItemCompra[] } | null>;
+  restoreCompraCategoria: (
+    categoria: CategoriaCompra,
+    items: ItemCompra[],
+  ) => Promise<void>;
+  // Reordena las categorías según un array de ids.
+  reorderCompraCategorias: (orderedIds: string[]) => Promise<void>;
+
+  // ── Entrenos · Sub-fase 2D ────────────────────────────────────────
+  // CRUD sobre planes y días. Optimistic update + revert.
+
+  // Plan activo
+  setActivePlan: (planId: string) => Promise<void>;
+
+  // Crea o reemplaza un plan completo · usado al guardar el editor de
+  // plan (modo nuevo o edición). Si el id no existe, se crea.
+  setPlanEntreno: (plan: PlanEntreno) => Promise<void>;
+
+  // Borra un plan custom · si es builtIn lanza error. Devuelve el plan
+  // borrado para implementar undo desde el caller (toast "Deshacer").
+  removePlanEntreno: (planId: string) => Promise<PlanEntreno | null>;
+  restorePlanEntreno: (plan: PlanEntreno) => Promise<void>;
+
+  // Setea un día concreto dentro de un plan · más granular que
+  // setPlanEntreno cuando solo cambia 1 día (ej. al editar desde el
+  // DiaEditorModal). Optimistic update + revert.
+  updateDiaEntreno: (
+    planId: string,
+    diaIdx: number,
+    dia: DiaEntreno,
+  ) => Promise<void>;
 }
 
 export const ProfileContext = createContext<ProfileState | null>(null);

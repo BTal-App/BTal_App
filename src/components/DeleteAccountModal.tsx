@@ -124,6 +124,7 @@ export function DeleteAccountModal({ isOpen, user, onClose }: Props) {
                 autoCapitalize="characters"
                 spellCheck={false}
                 required
+                maxLength={50}
               />
 
               {error && <div className="landing-msg error">{error}</div>}

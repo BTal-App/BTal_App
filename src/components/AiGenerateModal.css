@@ -141,7 +141,7 @@
 
 /* Pill "Paso X de 3" en la esquina superior derecha del header */
 .ai-gen-step-pill {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.66rem;
   font-weight: 700;
   text-transform: uppercase;

@@ -1,0 +1,11 @@
+/* CompraItemEditorModal · estilos específicos. La mayoría de inputs
+   reutilizan `.sup-input` y el modal hereda el estilo de
+   `.settings-modal-card`. Solo añadimos los detalles propios. */
+
+.compra-item-editor-hint {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--btal-t-3);
+  margin-top: 4px;
+  font-weight: 500;
+}

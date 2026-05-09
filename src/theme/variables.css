@@ -84,7 +84,10 @@ ion-tab-bar {
 }
 
 ion-tab-button {
-  --color: var(--btal-t-3);
+  /* Tabs no seleccionadas en blanco · contraste alto sobre el bottom
+     bar oscuro para que los iconos/labels se lean al instante. La tab
+     activa sigue en lima como acento principal de la app. */
+  --color: #fff;
   --color-selected: var(--btal-lime);
   font-size: .65rem;
   font-weight: 700;

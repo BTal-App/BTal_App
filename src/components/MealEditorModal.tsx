@@ -18,15 +18,12 @@ import {
   useSaveStatus,
 } from '../hooks/useSaveStatus';
 import { blockNonInteger, clampInt } from '../utils/numericInput';
+import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
+import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { AlimentosListInput } from './AlimentosListInput';
 import { EmojiPicker } from './EmojiPicker';
 import {
-  ConfirmChangesModal,
-  type Change,
-} from './ConfirmChangesModal';
-import {
-  formatAlimento,
-  type Alimento,
+  DAY_LABEL_FULL,
   type Comida,
   type DayKey,
   type MealKey,
@@ -48,16 +45,6 @@ const MEAL_LABEL: Record<MealKey, string> = {
   cena: 'Cena',
 };
 
-const DAY_LABEL_FULL: Record<DayKey, string> = {
-  lun: 'Lunes',
-  mar: 'Martes',
-  mie: 'Miércoles',
-  jue: 'Jueves',
-  vie: 'Viernes',
-  sab: 'Sábado',
-  dom: 'Domingo',
-};
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -68,7 +55,7 @@ interface Props {
 
 // Editor de comida con flujo manual:
 //   1. User edita campos libremente (alimentos, macros, hora) en local state
-//   2. Botón "Guardar" abre ConfirmChangesModal con diff antes/después
+//   2. Botón "Guardar" abre ConfirmDiffAlert con diff antes/después
 //   3. Confirmar → updateMeal a Firestore + cierra todo
 //   4. Cancelar/X del confirm → cierra solo la confirmación, vuelve al editor
 //   5. X del editor con cambios sin guardar → IonAlert "¿Salir sin guardar?"
@@ -78,16 +65,23 @@ interface Props {
 export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
   const { updateMeal } = useProfile();
   // Hook que encapsula el ciclo idle → saving → saved/error → idle.
-  // El status se pasa al ConfirmChangesModal para mostrar el SaveIndicator
+  // El status se renderiza inline · ya no usamos ConfirmChangesModal
   // sincronizado con el tiempo real de la escritura a Firestore.
-  const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
+  const { runSave, reset: resetSave } = useSaveStatus();
 
   // Snapshot original al abrir + state local editable.
   const [original, setOriginal] = useState<Comida>(comida);
   const [local, setLocal] = useState<Comida>(comida);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmChanges, setConfirmChanges] = useState<{
+    changes: ChangeEntry[];
+    cleaned: Comida;
+  } | null>(null);
   const [discardAlertOpen, setDiscardAlertOpen] = useState(false);
+  // errorMsg solo se setea (varios handlers limpian/asignan) · pendiente
+  // de UI para mostrarlo (toast/banner) · void mantiene la variable sin
+  // que TS marque "declared but never read".
   const [errorMsg, setErrorMsg] = useState('');
+  void errorMsg;
   // Emoji picker · panel inline desplegable, no modal aparte. Toggleamos
   // con el emoji actual de la card-head para que el user lo encuentre.
   const [emojiOpen, setEmojiOpen] = useState(false);
@@ -110,7 +104,7 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
   const resetState = () => {
     setOriginal(comida);
     setLocal(comida);
-    setConfirmOpen(false);
+    setConfirmChanges(null);
     setDiscardAlertOpen(false);
     setErrorMsg('');
     setEmojiOpen(false);
@@ -124,13 +118,22 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
     setLocal((prev) => ({ ...prev, [key]: value }));
   };
 
-  // Calcula los cambios entre original y local para mostrar el diff.
-  const changes = useMemo<Change[]>(
-    () => buildChanges(original, local),
-    [original, local],
-  );
-
-  const isDirty = changes.length > 0;
+  // Detección de "dirty" superficial · comparamos cada campo relevante.
+  const isDirty = useMemo(() => {
+    if ((original.nombrePlato ?? '') !== (local.nombrePlato ?? '')) return true;
+    if ((original.emoji ?? null) !== (local.emoji ?? null)) return true;
+    if (original.hora !== local.hora) return true;
+    if (original.alimentos.length !== local.alimentos.length) return true;
+    for (let i = 0; i < original.alimentos.length; i++) {
+      if (original.alimentos[i].nombre !== local.alimentos[i].nombre) return true;
+      if (original.alimentos[i].cantidad !== local.alimentos[i].cantidad) return true;
+    }
+    if (original.kcal !== local.kcal) return true;
+    if (original.prot !== local.prot) return true;
+    if (original.carb !== local.carb) return true;
+    if (original.fat !== local.fat) return true;
+    return false;
+  }, [original, local]);
 
   // Pulsar Guardar:
   //   - Si no hay cambios, cerramos sin más.
@@ -141,37 +144,38 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
       return;
     }
     setErrorMsg('');
-    setConfirmOpen(true);
+    const cleaned: Comida = local;
+    const changes: ChangeEntry[] = [];
+    pushDiff(changes, 'Plato', original.nombrePlato ?? '', cleaned.nombrePlato ?? '');
+    pushDiff(changes, 'Hora', original.hora ?? '', cleaned.hora ?? '');
+    pushDiff(
+      changes,
+      'Alimentos',
+      `${original.alimentos.length} alimentos`,
+      `${cleaned.alimentos.length} alimentos`,
+    );
+    pushDiff(changes, 'Kcal', original.kcal, cleaned.kcal);
+    pushDiff(changes, 'Proteína', original.prot, cleaned.prot);
+    pushDiff(changes, 'Carbos', original.carb, cleaned.carb);
+    pushDiff(changes, 'Grasa', original.fat, cleaned.fat);
+    setConfirmChanges({ changes, cleaned });
   };
 
-  // Confirmar desde el modal de confirmación · persiste y cierra todo.
-  // El runSave del hook gestiona el ciclo "Guardando…/Guardado/Error"
-  // sincronizado con el tiempo real de Firestore. Tras éxito esperamos
-  // SAVED_INDICATOR_MS para que el chip "Guardado" sea visible antes de
-  // cerrar el modal · si falla, el chip "Error" se queda 3s y dejamos el
-  // modal abierto para reintentar.
-  const handleConfirmSave = async () => {
-    if (!isDirty) {
-      setConfirmOpen(false);
-      onClose();
-      return;
-    }
+  const persistConfirmed = async () => {
+    if (!confirmChanges) return;
+    const cleaned = confirmChanges.cleaned;
+    setConfirmChanges(null);
     setErrorMsg('');
-    // Cancelamos cualquier cierre pendiente (caso reintentar tras fallo).
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    const result = await runSave(() => updateMeal(day, meal, buildPartial(local)));
+    const result = await runSave(() => updateMeal(day, meal, buildPartial(cleaned)));
     if (result === SAVE_FAILED) {
-      // Falló · el hook ya marcó status='error', SaveIndicator lo muestra.
       setErrorMsg(
         'No hemos podido guardar. Comprueba tu conexión y vuelve a intentarlo.',
       );
       return;
     }
-    // Éxito · marca dismiss approved (canDismiss permitirá cerrar) y
-    // espera a que el chip "Guardado" se vea antes del cierre real.
     dismissApproved.current = true;
     closeTimer.current = setTimeout(() => {
-      setConfirmOpen(false);
       onClose();
     }, SAVED_INDICATOR_MS);
   };
@@ -283,11 +287,18 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
                   />
                   Hora (opcional)
                 </span>
-                <input
-                  type="time"
-                  value={local.hora ?? ''}
-                  onChange={(e) => change('hora', e.target.value || null)}
-                />
+                <span className="sup-input-time">
+                  <input
+                    type="time"
+                    value={local.hora ?? ''}
+                    onChange={(e) => change('hora', e.target.value || null)}
+                  />
+                  <IonIcon
+                    icon={timeOutline}
+                    className="sup-input-time-icon"
+                    aria-hidden="true"
+                  />
+                </span>
               </label>
 
               <div>
@@ -351,22 +362,15 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
         </IonContent>
       </IonModal>
 
-      {/* Modal de confirmación con diff · solo se monta cuando se pulsa Guardar */}
-      {confirmOpen && (
-        <ConfirmChangesModal
-          isOpen={confirmOpen}
-          changes={changes}
-          status={saveStatus}
-          errorMsg={errorMsg}
-          title="¿Guardar los cambios?"
-          description="Vas a actualizar esta comida. Si confirmas, se guardará y la IA no la modificará en futuras regeneraciones."
-          onCancel={() => {
-            if (saveStatus === 'saving') return;
-            setConfirmOpen(false);
-          }}
-          onConfirm={() => void handleConfirmSave()}
-        />
-      )}
+      <ConfirmDiffAlert
+        pending={confirmChanges}
+        onCancel={() => setConfirmChanges(null)}
+        onConfirm={() => {
+          persistConfirmed().catch((err) =>
+            console.error('[BTal] persistConfirmed meal:', err),
+          );
+        }}
+      />
 
       {/* Aviso al cerrar con cambios pendientes · disparado por
           canDismiss del IonModal cuando el user intenta cerrar (X,
@@ -415,75 +419,6 @@ function buildPartial(data: Comida): Partial<Comida> {
     // comida.nombrePlato ?? placeholder.
     nombrePlato: data.nombrePlato ?? null,
   };
-}
-
-// Compara dos arrays de Alimento (mismo orden) por contenido exacto.
-function sameAlimentos(a: Alimento[], b: Alimento[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i].nombre !== b[i].nombre) return false;
-    if (a[i].cantidad !== b[i].cantidad) return false;
-  }
-  return true;
-}
-
-// Calcula los cambios entre la versión original y la editada para
-// mostrarlos en ConfirmChangesModal. Solo incluye campos que han
-// cambiado realmente.
-function buildChanges(before: Comida, after: Comida): Change[] {
-  const out: Change[] = [];
-  // nombrePlato · null/undefined/empty se comparan como "—" para que
-  // el diff no aparezca cuando solo cambia entre null y "" (ambos vacíos).
-  const beforeNombre = (before.nombrePlato ?? '').trim();
-  const afterNombre = (after.nombrePlato ?? '').trim();
-  if (beforeNombre !== afterNombre) {
-    out.push({
-      label: 'Nombre del plato',
-      before: beforeNombre || '—',
-      after: afterNombre || '—',
-    });
-  }
-  // emoji · null/undefined = default · normalizamos antes de comparar.
-  const beforeEmoji = before.emoji ?? null;
-  const afterEmoji = after.emoji ?? null;
-  if (beforeEmoji !== afterEmoji) {
-    out.push({
-      label: 'Emoji',
-      before: beforeEmoji ?? '— (por defecto)',
-      after: afterEmoji ?? '— (por defecto)',
-    });
-  }
-  if (before.hora !== after.hora) {
-    out.push({
-      label: 'Hora',
-      before: before.hora ?? '—',
-      after: after.hora ?? '—',
-    });
-  }
-  if (!sameAlimentos(before.alimentos, after.alimentos)) {
-    out.push({
-      label: 'Alimentos',
-      before: before.alimentos.length > 0
-        ? before.alimentos.map(formatAlimento).join(' · ')
-        : '—',
-      after: after.alimentos.length > 0
-        ? after.alimentos.map(formatAlimento).join(' · ')
-        : '—',
-    });
-  }
-  if (before.kcal !== after.kcal) {
-    out.push({ label: 'Calorías', before: `${before.kcal} kcal`, after: `${after.kcal} kcal` });
-  }
-  if (before.prot !== after.prot) {
-    out.push({ label: 'Proteína', before: `${before.prot} g`, after: `${after.prot} g` });
-  }
-  if (before.carb !== after.carb) {
-    out.push({ label: 'Carbohidratos', before: `${before.carb} g`, after: `${after.carb} g` });
-  }
-  if (before.fat !== after.fat) {
-    out.push({ label: 'Grasas', before: `${before.fat} g`, after: `${after.fat} g` });
-  }
-  return out;
 }
 
 // ─── Sub-componentes locales ───────────────────────────────────────────────

@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import { IonContent, IonIcon, IonPage } from '@ionic/react';
 import { calendarOutline } from 'ionicons/icons';
 import { TabHeader } from '../../components/TabHeader';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
+import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
 
 // Tab Registro · placeholder de Fase 1.
 // En la Fase 5 montaremos: stats grid (racha, este mes, PRs, total
@@ -11,9 +13,12 @@ import { AppAvatarButton } from '../../components/AppAvatarButton';
 // Todo se persiste en Firestore — históricos por sesión bajo
 // /users/{uid}/registros/{fecha} (esquema a definir en Fase 5).
 const RegistroPage: React.FC = () => {
+  // Reset del scroll al top al volver a la tab Registro.
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  useScrollTopOnEnter(contentRef);
   return (
     <IonPage className="app-tab-page">
-      <IonContent fullscreen>
+      <IonContent ref={contentRef} fullscreen>
         <div className="app-tab-content">
           <TabHeader
             title="Registro de "

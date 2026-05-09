@@ -48,7 +48,7 @@ ion-modal.profile-sheet::part(content) {
 }
 
 .profile-sheet-avatar span {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.4rem;
   letter-spacing: 0.04em;
   color: #0a0e0c;
@@ -76,7 +76,7 @@ ion-modal.profile-sheet::part(content) {
   font-size: 0.78rem;
   color: var(--btal-t-3);
   margin: 4px 0 0;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -143,9 +143,11 @@ ion-modal.profile-sheet::part(content) {
 }
 
 .profile-sheet-stat-value {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
-  font-size: 1.6rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.2rem;
   letter-spacing: 0.02em;
+  font-weight: 800;
+  font-feature-settings: 'tnum';
   color: var(--btal-t-1);
   line-height: 1.05;
 }

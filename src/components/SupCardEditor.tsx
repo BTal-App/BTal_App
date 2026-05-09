@@ -9,6 +9,7 @@ import {
 import {
   closeOutline,
   removeCircleOutline,
+  timeOutline,
 } from 'ionicons/icons';
 import { useProfile } from '../hooks/useProfile';
 import {
@@ -16,8 +17,11 @@ import {
   SAVE_FAILED,
   useSaveStatus,
 } from '../hooks/useSaveStatus';
+import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
+import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { SaveIndicator } from './SaveIndicator';
 import {
+  DAY_LABEL_FULL,
   SUP_HORA_DEFECTO,
   SUP_TITULO_DEFECTO,
   type DayKey,
@@ -25,16 +29,6 @@ import {
 } from '../templates/defaultUser';
 import './SettingsModal.css';
 import './SupModal.css';
-
-const DAY_LABEL_FULL: Record<DayKey, string> = {
-  lun: 'Lunes',
-  mar: 'Martes',
-  mie: 'Miércoles',
-  jue: 'Jueves',
-  vie: 'Viernes',
-  sab: 'Sábado',
-  dom: 'Domingo',
-};
 
 interface Props {
   isOpen: boolean;
@@ -74,6 +68,10 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
 
   const [savedToast, setSavedToast] = useState(false);
   const [removedToast, setRemovedToast] = useState(false);
+  const [confirmChanges, setConfirmChanges] = useState<{
+    changes: ChangeEntry[];
+    cleaned: { override: SupDayOverride | null };
+  } | null>(null);
   const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
   const submitting = saveStatus === 'saving';
   const [removing, setRemoving] = useState(false);
@@ -92,6 +90,7 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
     setHora(current?.hora ?? defaultHora);
     setSavedToast(false);
     setRemovedToast(false);
+    setConfirmChanges(null);
     resetSave();
   };
 
@@ -99,9 +98,8 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
   const horaValida =
     hora === '' || /^([01]\d|2[0-3]):([0-5]\d)$/.test(hora);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!horaValida || submitting) return;
-    if (closeTimer.current) clearTimeout(closeTimer.current);
 
     // Construimos el override · solo guardamos campos que se desvían del
     // default. Si ambos coinciden con el default, guardamos null para
@@ -120,6 +118,31 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
           }
         : null;
 
+    // Modo edit si ya había override (el usuario entra a modificarlo).
+    const isEditOverride = current !== undefined && current !== null;
+    const beforeTitulo = current?.titulo ?? defaultTitulo;
+    const beforeHora = current?.hora ?? defaultHora;
+    const afterTitulo = override?.titulo ?? defaultTitulo;
+    const afterHora = override?.hora ?? defaultHora;
+
+    const changes: ChangeEntry[] = [];
+    if (isEditOverride) {
+      pushDiff(changes, 'Título', beforeTitulo, afterTitulo);
+      pushDiff(changes, 'Hora', beforeHora, afterHora);
+    } else {
+      if (afterTitulo !== defaultTitulo)
+        changes.push({ label: 'Título', from: '—', to: afterTitulo });
+      if (afterHora !== defaultHora)
+        changes.push({ label: 'Hora', from: '—', to: afterHora });
+    }
+    setConfirmChanges({ changes, cleaned: { override } });
+  };
+
+  const persistConfirmed = async () => {
+    if (!confirmChanges) return;
+    const { override } = confirmChanges.cleaned;
+    setConfirmChanges(null);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
     const result = await runSave(() =>
       setSupOverride(kind, day, override),
     );
@@ -201,12 +224,19 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
 
               <div className="sup-form-group">
                 <label className="sup-label">Hora</label>
-                <input
-                  className="sup-input"
-                  type="time"
-                  value={hora}
-                  onChange={(e) => setHora(e.target.value)}
-                />
+                <div className="sup-input-time">
+                  <input
+                    className="sup-input"
+                    type="time"
+                    value={hora}
+                    onChange={(e) => setHora(e.target.value)}
+                  />
+                  <IonIcon
+                    icon={timeOutline}
+                    className="sup-input-time-icon"
+                    aria-hidden="true"
+                  />
+                </div>
                 {!horaValida && (
                   <span className="sup-input-error">Formato HH:mm</span>
                 )}
@@ -247,6 +277,16 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
           </div>
         </IonContent>
       </IonModal>
+
+      <ConfirmDiffAlert
+        pending={confirmChanges}
+        onCancel={() => setConfirmChanges(null)}
+        onConfirm={() => {
+          persistConfirmed().catch((err) =>
+            console.error('[BTal] persistConfirmed sup card:', err),
+          );
+        }}
+      />
 
       <IonToast
         isOpen={savedToast}

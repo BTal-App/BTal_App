@@ -13,6 +13,20 @@
     <title>BTal</title>
 
     <!-- ════════════════════════════════════════════════════════════════
+         FUENTES · Inter para TODA la app (cuerpo + display + números).
+         `font-variant-numeric: tabular-nums` en body (index.css) hace
+         que las cifras tengan ancho fijo · ideal para horas (08:00),
+         porcentajes (93%) y precios sin necesidad de monoespacio. Una
+         sola fuente = coherencia tipográfica total + bundle más ligero.
+         ════════════════════════════════════════════════════════════════ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    >
+
+    <!-- ════════════════════════════════════════════════════════════════
          SPLASH SCREEN
          Aparece INSTANTÁNEAMENTE antes de que React cargue.
          main.tsx lo elimina con fade-out cuando React monta.

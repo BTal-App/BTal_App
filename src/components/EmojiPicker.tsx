@@ -113,6 +113,7 @@ export function EmojiPicker({ selected, onSelect, onReset }: Props) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Buscar emoji"
+          maxLength={50}
         />
         {onReset && (
           <button

@@ -264,69 +264,140 @@ export function parseAlimentoString(raw: string): Alimento {
 export type Menu = Record<DayKey, ComidasDelDia>;
 
 // ────────────────────────────────────────────────────────────────────────────
-// ENTRENOS
+// ENTRENOS · Sub-fase 2D
 //
-// 7 planes preestablecidos (de 1 a 7 días). El user elige cuál es su plan
-// activo en `planActivo`. Cada plan tiene N días con sus ejercicios. En
-// modo manual los ejercicios empiezan vacíos; en modo IA los rellena
-// Gemini con peso+series+reps según el perfil.
+// Sistema de planes de entreno · réplica del v1. 7 planes builtIn
+// preestablecidos (1..7 días) que NO se pueden eliminar pero sí editar,
+// + planes custom que el user crea con `id` propio. Cada plan tiene N
+// días, cada día tiene 1-3 badges (grupos musculares / tipo movimiento),
+// título, descripción, ejercicios y comentario opcional al final.
 
-export type TipoEjercicio = 'fuerza' | 'hipertrofia' | 'cardio' | 'movilidad';
+// Badges del día · réplica del v1 BADGE_TYPES. 'custom' usa los
+// `badgeCustom*` para nombre libre con color violeta.
+export type EjercicioBadge =
+  // Grupos musculares
+  | 'pecho'
+  | 'espalda'
+  | 'piernas'
+  | 'hombros'
+  | 'biceps'
+  | 'triceps'
+  | 'core'
+  | 'fullbody'
+  // Tipo de ejercicio
+  | 'fuerza'
+  | 'hipertrofia'
+  | 'resistencia'
+  | 'cardio'
+  | 'movilidad'
+  // Tipo de movimiento
+  | 'empuje'
+  | 'tiron'
+  // Custom (nombre libre · usar `badgeCustom*` para el texto)
+  | 'custom';
 
 export interface Ejercicio {
+  // Nombre del ejercicio · ej. "Press banca con barra"
   nombre: string;
-  // Series y rango de reps · ej: "4×6-8", "3×12", "30 min".
-  setsReps: string;
-  // Notas técnicas opcionales · ej: "calentamiento progresivo".
-  nota?: string;
-  // Peso de referencia para el plan (kg). El registro real va en otra
-  // colección (registros/{fecha}) — esto es solo el "peso objetivo".
-  pesoKg: number | null;
-  tipo: TipoEjercicio;
+  // Notas técnicas opcionales · ej. "Calentamiento progresivo", "Lastrado"
+  desc: string;
+  // Series + reps · texto libre. Formatos: "4×6-8" (rango), "3×10",
+  // "30 min" (cardio), "AMRAP" (libre). El editor parsea/formatea con
+  // helpers para los formatos numéricos.
+  series: string;
   source: SourceTag;
 }
 
 export interface DiaEntreno {
-  // Letra (A/B/C/...) y nombre tipo "Empuje", "Tirón", "Pierna", "Descanso".
-  letra: string;
-  nombre: string;
-  // Etiquetas para los chips: "Pecho · Tríceps · Hombros".
-  tags: string[];
-  // Día de la semana al que está asignado · null = sin asignar.
+  // Título del día · "Día A · Empuje" o "Pecho + Tríceps"
+  titulo: string;
+  // Descripción corta · "Pecho · Tríceps · Hombros"
+  descripcion: string;
+  // Tiempo estimado de la sesión en MINUTOS · null si no se ha definido.
+  // El user lo introduce en formato libre ("45min", "1h 20min", "1h")
+  // pero internamente almacenamos minutos para poder formatear de manera
+  // consistente y sumar/comparar sesiones si hace falta.
+  tiempoEstimadoMin: number | null;
+  // Día de la semana asignado · null si sin asignar
   diaSemana: DayKey | null;
+  // Badge primario (obligatorio para días no vacíos) · '' si vacío
+  badge: EjercicioBadge | '';
+  badgeCustom: string;
+  // Badges opcionales 2 y 3 · '' si no se usan
+  badge2: EjercicioBadge | '';
+  badgeCustom2: string;
+  badge3: EjercicioBadge | '';
+  badgeCustom3: string;
   ejercicios: Ejercicio[];
-  // Minutos estimados · null si no se ha calculado.
-  duracionMin: number | null;
-  // Origen del DÍA entero (no de cada ejercicio). Si el user creó este
-  // día desde cero, source='user' y la IA no lo borra al regenerar.
+  // Notas finales del día · "Descanso: 90-120s entre series compuestas"
+  comentario: string;
+  // Source para "no tocar lo del user al regenerar con IA" (Fase 6).
   source: SourceTag;
 }
 
 export interface PlanEntreno {
-  // Días de la semana que entrena (1..7). El array tiene length === diasPorSemana.
-  diasPorSemana: number;
-  // Nombre legible · "Plan 4 días — Push/Pull/Legs".
+  // ID estable · '1dias' .. '7dias' (builtIn) o 'plan_xxx_yyy' (custom).
+  id: string;
+  // Nombre legible · "Plan 4 Días" (default) o lo que el user ponga.
   nombre: string;
+  // Texto descriptivo del plan · "4 días/semana"
+  estructura: string;
+  // 2ª línea opcional del descriptor · "Upper/Lower Split"
+  estructura2: string;
   dias: DiaEntreno[];
+  // True para los 7 builtIn (1dias..7dias) · no se pueden eliminar.
+  // False para los custom · sí se pueden borrar.
+  builtIn: boolean;
 }
 
-// `1` | `2` | ... | `7` como claves para evitar colisiones de tipo.
-export type PlanesEntreno = Record<1 | 2 | 3 | 4 | 5 | 6 | 7, PlanEntreno>;
-
 export interface Entrenos {
-  planes: PlanesEntreno;
-  // El plan que el user usa actualmente (1..7) · null = sin elegir aún.
-  // Recomendación inicial = profile.diasEntreno.
-  planActivo: 1 | 2 | 3 | 4 | 5 | 6 | 7 | null;
+  // ID del plan activo (clave en `planes`). Default: '4dias' o el más
+  // cercano a `profile.diasEntreno`.
+  activePlan: string;
+  // Map id → plan. Incluye los 7 builtIn + cualquier custom del user.
+  planes: Record<string, PlanEntreno>;
+}
+
+// IDs estables de los planes builtIn · usados por la migración y por
+// la heurística de plan recomendado. Réplica del v1.
+export const BUILTIN_PLAN_IDS = [
+  '1dias',
+  '2dias',
+  '3dias',
+  '4dias',
+  '5dias',
+  '6dias',
+  '7dias',
+] as const;
+
+export type BuiltInPlanId = (typeof BUILTIN_PLAN_IDS)[number];
+
+// Genera un id único para un plan custom (no choca con builtIn).
+export function newPlanEntrenoId(): string {
+  return `plan_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+// Plan recomendado según diasEntreno del perfil. v1: exact match si
+// existe builtIn con ese N de días; fallback al más cercano.
+export function getRecommendedPlanId(diasEntreno: number | null): BuiltInPlanId {
+  if (diasEntreno === null) return '4dias';
+  const clamp = Math.max(1, Math.min(7, diasEntreno));
+  return `${clamp}dias` as BuiltInPlanId;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
 // LISTA DE LA COMPRA
 //
-// 7 categorías fijas. Cada item tiene cantidad libre, precio estimado y
-// flag de comprado. La lista la genera la IA a partir del menú o la
-// rellena el user a mano.
+// Sistema de categorías personalizables (Sub-fase 2C). El usuario puede
+// añadir/eliminar/renombrar categorías custom; las "builtIn" son las 7
+// que vienen por defecto y NO se pueden eliminar (sí renombrar/cambiar
+// emoji/color · estilo v1). Items con id estable para edits concurrentes.
+//
+// LEGACY (pre-2C) · `CategoriaCompraKey` y `Compra = Record<...>` se
+// mantienen exportados para retrocompat con docs viejos durante la
+// migración (`ensureUserDocumentSchema` los traduce al nuevo schema).
 
+/** @deprecated solo para migración legacy → schema 2C. */
 export type CategoriaCompraKey =
   | 'proteinas'
   | 'lacteos'
@@ -337,6 +408,9 @@ export type CategoriaCompraKey =
   | 'suplementacion';
 
 export interface ItemCompra {
+  // ID estable · permite editar items concurrentemente sin que un index
+  // mal calculado pierda datos. Generado en cliente con timestamp+random.
+  id: string;
   nombre: string;
   cantidad: string; // "750g", "1 docena", "2 unidades"
   comprado: boolean;
@@ -345,7 +419,56 @@ export interface ItemCompra {
   source: SourceTag;
 }
 
-export type Compra = Record<CategoriaCompraKey, ItemCompra[]>;
+// Categoría de la lista de la compra. Las builtIn vienen por defecto y
+// solo se pueden renombrar/recolorar; las custom (creadas por el user)
+// se pueden borrar también.
+export interface CategoriaCompra {
+  id: string; // 'proteinas' (builtIn) o 'cat_<timestamp>_<random>' (custom)
+  nombre: string;
+  emoji: string;
+  // Color de acento · token CSS o hex. Default: token de la paleta BTal.
+  color: string;
+  // Orden visual de la categoría (0 = primera). Cuando el user reordena,
+  // se renumeran los `order` para mantener consistencia.
+  order: number;
+  // True si la categoría es de las 7 default · no se puede eliminar
+  // pero sí renombrar/cambiar emoji/color.
+  builtIn: boolean;
+}
+
+// Estructura raíz de la lista de la compra.
+//   `categorias` define el conjunto de categorías existentes (orden + meta).
+//   `items` mapea categoria.id → array de items.
+// Las dos viven juntas en el doc para escritura atómica · al añadir
+// una categoría nueva se crea su entry en `items` con array vacío.
+export interface Compra {
+  categorias: CategoriaCompra[];
+  items: Record<string, ItemCompra[]>;
+}
+
+// IDs estables de las categorías builtIn · usados por la migración y
+// por la heurística de derivación del menú (Fase futura).
+export const COMPRA_BUILTIN_IDS = [
+  'proteinas',
+  'lacteos',
+  'hidratos',
+  'frutas_verduras',
+  'despensa',
+  'grasas',
+  'suplementacion',
+] as const;
+
+export type CompraBuiltInId = (typeof COMPRA_BUILTIN_IDS)[number];
+
+// Genera un id único para una categoría custom (no choca con builtIn).
+export function newCompraCategoriaId(): string {
+  return `cat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+// Genera un id único para un ItemCompra · estable entre renders.
+export function newCompraItemId(): string {
+  return `it_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // SUPLEMENTACIÓN
@@ -713,6 +836,29 @@ export interface UserDocument {
   // mostrar el banner "Modo prueba — datos no permanentes" sin tener
   // que mirar `user.isAnonymous` desde Auth en cada tab.
   isDemo?: boolean;
+
+  // ── Flags por día del menú (Fase 2B.6) ──
+  // Réplica del v1 (`weekend_excluded` + `days_hidden` localStorage):
+  // permite excluir un día de la media semanal o esconder un día
+  // entero del menú sin perder sus datos. Ambos arrays guardan los
+  // DayKey afectados (no `Record` para que la persistencia y la
+  // serialización a Firestore sean limpias). Vacíos por defecto.
+  menuFlags?: MenuFlags;
+}
+
+export interface MenuFlags {
+  // Días que NO cuentan en `calcMediaSemanal` · sus comidas siguen
+  // visibles y editables en el menú, simplemente no se promedian.
+  // Caso de uso v1: el user excluye sábado/domingo porque come fuera.
+  excludedFromAvg: DayKey[];
+  // Días "ocultos" — se siguen guardando los datos pero el chip
+  // aparece atenuado y la lista de comidas se reemplaza por un
+  // mensaje "Día oculto · Mostrar". Tampoco cuentan al promedio.
+  hidden: DayKey[];
+}
+
+export function defaultMenuFlags(): MenuFlags {
+  return { excludedFromAvg: [], hidden: [] };
 }
 
 export function defaultProfile(): UserProfile {
@@ -747,6 +893,31 @@ export function defaultProfile(): UserProfile {
 
 export const DAY_KEYS: DayKey[] = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
 export const MEAL_KEYS: MealKey[] = ['desayuno', 'comida', 'merienda', 'cena'];
+
+// Labels humanos de los días · centralizados aquí (única fuente de
+// verdad) para que MenuPage, MealEditorModal, BatidoInfoModal,
+// CreatinaInfoModal, DuplicateMealModal, MealSheet, SupCardEditor y
+// MealExtraEditorModal no dupliquen el mismo Record. Si añades un
+// idioma nuevo o cambias un nombre, solo se toca aquí.
+export const DAY_LABEL_SHORT: Record<DayKey, string> = {
+  lun: 'Lun',
+  mar: 'Mar',
+  mie: 'Mié',
+  jue: 'Jue',
+  vie: 'Vie',
+  sab: 'Sáb',
+  dom: 'Dom',
+};
+
+export const DAY_LABEL_FULL: Record<DayKey, string> = {
+  lun: 'Lunes',
+  mar: 'Martes',
+  mie: 'Miércoles',
+  jue: 'Jueves',
+  vie: 'Viernes',
+  sab: 'Sábado',
+  dom: 'Domingo',
+};
 
 export const HORA_DEFECTO: Record<MealKey, string> = {
   desayuno: '08:00',
@@ -794,42 +965,177 @@ export function defaultMenu(): Menu {
 // Devuelve los 7 planes (1..7 días) con sus días vacíos y nombres genéricos.
 // La distribución mínima viable es Empuje/Tirón/Pierna y descansos. La IA
 // cuando llegue refinará nombres/tags/ejercicios según objetivo.
-export function defaultEntrenos(): Entrenos {
-  // Genera N días vacíos con letra (A, B, C, ...). Sin diaSemana asignado.
-  const emptyDias = (n: number): DiaEntreno[] => {
-    const letras = 'ABCDEFG';
-    return Array.from({ length: n }, (_, i) => ({
-      letra: letras[i],
-      nombre: `Día ${letras[i]}`,
-      tags: [],
-      diaSemana: null,
-      ejercicios: [],
-      duracionMin: null,
-      source: 'default' as SourceTag,
-    }));
+// Genera un día vacío con campos por defecto · usado por defaultEntrenos
+// y al añadir un día nuevo desde el editor de plan.
+export function emptyDiaEntreno(): DiaEntreno {
+  return {
+    titulo: '',
+    descripcion: '',
+    tiempoEstimadoMin: null,
+    diaSemana: null,
+    badge: '',
+    badgeCustom: '',
+    badge2: '',
+    badgeCustom2: '',
+    badge3: '',
+    badgeCustom3: '',
+    ejercicios: [],
+    comentario: '',
+    source: 'default',
   };
-
-  const planes: PlanesEntreno = {
-    1: { diasPorSemana: 1, nombre: 'Plan 1 día', dias: emptyDias(1) },
-    2: { diasPorSemana: 2, nombre: 'Plan 2 días', dias: emptyDias(2) },
-    3: { diasPorSemana: 3, nombre: 'Plan 3 días', dias: emptyDias(3) },
-    4: { diasPorSemana: 4, nombre: 'Plan 4 días', dias: emptyDias(4) },
-    5: { diasPorSemana: 5, nombre: 'Plan 5 días', dias: emptyDias(5) },
-    6: { diasPorSemana: 6, nombre: 'Plan 6 días', dias: emptyDias(6) },
-    7: { diasPorSemana: 7, nombre: 'Plan 7 días', dias: emptyDias(7) },
-  };
-  return { planes, planActivo: null };
 }
+
+// Genera un plan builtIn vacío con N días · cada día con título "Día N".
+function emptyPlan(n: number): PlanEntreno {
+  return {
+    id: `${n}dias`,
+    nombre: `Plan ${n} ${n === 1 ? 'Día' : 'Días'}`,
+    estructura: `${n} ${n === 1 ? 'día' : 'días'}/semana`,
+    estructura2: '',
+    dias: Array.from({ length: n }, (_, i) => ({
+      ...emptyDiaEntreno(),
+      titulo: `Día ${i + 1}`,
+    })),
+    builtIn: true,
+  };
+}
+
+// Plan 4 días con ejemplo Push/Pull/Legs · réplica del v1. Sembrado
+// por defecto para que el user vea cómo se estructura un plan típico.
+// Si modo IA, la Cloud Function lo regenera; si manual, el user edita.
+function sample4DiasPlan(): PlanEntreno {
+  return {
+    id: '4dias',
+    nombre: 'Plan 4 Días',
+    estructura: '4 días/semana',
+    estructura2: 'Upper/Lower Split',
+    dias: [
+      {
+        titulo: 'Día A · Empuje',
+        descripcion: 'Pecho · Tríceps · Hombros',
+        tiempoEstimadoMin: 65,
+        diaSemana: 'lun',
+        badge: 'pecho',
+        badgeCustom: '',
+        badge2: 'triceps',
+        badgeCustom2: '',
+        badge3: 'empuje',
+        badgeCustom3: '',
+        ejercicios: [
+          { nombre: 'Press banca con barra', desc: 'Calentamiento progresivo', series: '4×6-8', source: 'default' },
+          { nombre: 'Press inclinado mancuernas', desc: 'Inclinación 30°', series: '3×8-10', source: 'default' },
+          { nombre: 'Aperturas en polea', desc: 'Contracción controlada', series: '3×12', source: 'default' },
+          { nombre: 'Fondos en paralelas', desc: 'Lastrado si puedes', series: '3×8-10', source: 'default' },
+          { nombre: 'Press francés barra Z', desc: '', series: '3×10', source: 'default' },
+          { nombre: 'Extensiones tríceps polea', desc: 'Cuerda', series: '3×12', source: 'default' },
+        ],
+        comentario: 'Descanso: 90-120s en compuestos · 60s en aislamiento',
+        source: 'default',
+      },
+      {
+        titulo: 'Día B · Tirón',
+        descripcion: 'Espalda · Bíceps',
+        tiempoEstimadoMin: 60,
+        diaSemana: 'mar',
+        badge: 'espalda',
+        badgeCustom: '',
+        badge2: 'biceps',
+        badgeCustom2: '',
+        badge3: 'tiron',
+        badgeCustom3: '',
+        ejercicios: [
+          { nombre: 'Dominadas', desc: 'Lastradas si puedes', series: '4×6-8', source: 'default' },
+          { nombre: 'Remo con barra', desc: '', series: '4×8', source: 'default' },
+          { nombre: 'Jalón al pecho', desc: '', series: '3×10', source: 'default' },
+          { nombre: 'Curl con barra Z', desc: '', series: '3×8-10', source: 'default' },
+          { nombre: 'Curl martillo', desc: 'Alternando', series: '3×12', source: 'default' },
+        ],
+        comentario: '',
+        source: 'default',
+      },
+      {
+        titulo: 'Día C · Pierna',
+        descripcion: 'Tren inferior',
+        tiempoEstimadoMin: 75,
+        diaSemana: 'jue',
+        badge: 'piernas',
+        badgeCustom: '',
+        badge2: 'fuerza',
+        badgeCustom2: '',
+        badge3: '',
+        badgeCustom3: '',
+        ejercicios: [
+          { nombre: 'Sentadilla con barra', desc: 'Bajo paralelo', series: '4×6-8', source: 'default' },
+          { nombre: 'Peso muerto rumano', desc: '', series: '4×8', source: 'default' },
+          { nombre: 'Prensa 45°', desc: '', series: '3×10', source: 'default' },
+          { nombre: 'Zancadas mancuernas', desc: '', series: '3×10', source: 'default' },
+          { nombre: 'Curl femoral', desc: '', series: '3×12', source: 'default' },
+          { nombre: 'Gemelos de pie', desc: 'Pausa arriba', series: '4×15', source: 'default' },
+        ],
+        comentario: '',
+        source: 'default',
+      },
+      {
+        titulo: 'Día D · Hombro + Core',
+        descripcion: 'Hombros · Core',
+        tiempoEstimadoMin: 55,
+        diaSemana: 'vie',
+        badge: 'hombros',
+        badgeCustom: '',
+        badge2: 'core',
+        badgeCustom2: '',
+        badge3: '',
+        badgeCustom3: '',
+        ejercicios: [
+          { nombre: 'Press militar con barra', desc: 'De pie', series: '4×6-8', source: 'default' },
+          { nombre: 'Elevaciones laterales', desc: 'Mancuernas', series: '4×12', source: 'default' },
+          { nombre: 'Pájaro / Reverse fly', desc: '', series: '3×12', source: 'default' },
+          { nombre: 'Encogimientos', desc: 'Trapecios', series: '3×15', source: 'default' },
+          { nombre: 'Plancha frontal', desc: '60s', series: '3×60s', source: 'default' },
+          { nombre: 'Crunch en polea', desc: 'Cuerda', series: '3×15', source: 'default' },
+        ],
+        comentario: '',
+        source: 'default',
+      },
+    ],
+    builtIn: true,
+  };
+}
+
+export function defaultEntrenos(): Entrenos {
+  const planes: Record<string, PlanEntreno> = {};
+  for (const id of BUILTIN_PLAN_IDS) {
+    const n = parseInt(id, 10); // '4dias' → 4
+    planes[id] = emptyPlan(n);
+  }
+  // Sobrescribimos el 4dias con el ejemplo Push/Pull/Legs · sirve de
+  // demo para que el user vea cómo se estructura un plan completo.
+  planes['4dias'] = sample4DiasPlan();
+  return {
+    activePlan: '4dias',
+    planes,
+  };
+}
+
+// Catálogo de las 7 categorías builtIn · default que se siembra al
+// crear el doc. El user puede renombrarlas / cambiar emoji / color
+// pero NO eliminarlas (builtIn=true). Ordenadas como en v1.
+export const DEFAULT_COMPRA_CATEGORIAS: CategoriaCompra[] = [
+  { id: 'frutas_verduras', nombre: 'Frutas y verduras', emoji: '🥦', color: 'var(--btal-lime)',  order: 0, builtIn: true },
+  { id: 'lacteos',         nombre: 'Lácteos',           emoji: '🥛', color: 'var(--btal-violet)', order: 1, builtIn: true },
+  { id: 'proteinas',       nombre: 'Proteínas',         emoji: '🍗', color: 'var(--btal-coral)',  order: 2, builtIn: true },
+  { id: 'hidratos',        nombre: 'Hidratos',          emoji: '🌾', color: 'var(--btal-gold)',   order: 3, builtIn: true },
+  { id: 'grasas',          nombre: 'Grasas',            emoji: '🥑', color: 'var(--btal-cyan)',   order: 4, builtIn: true },
+  { id: 'despensa',        nombre: 'Despensa',          emoji: '🛒', color: 'var(--btal-blue)',   order: 5, builtIn: true },
+  { id: 'suplementacion',  nombre: 'Suplementación',    emoji: '🧪', color: 'var(--btal-lime)',  order: 6, builtIn: true },
+];
 
 export function defaultCompra(): Compra {
   return {
-    proteinas: [],
-    lacteos: [],
-    hidratos: [],
-    frutas_verduras: [],
-    despensa: [],
-    grasas: [],
-    suplementacion: [],
+    categorias: DEFAULT_COMPRA_CATEGORIAS.map((c) => ({ ...c })),
+    items: Object.fromEntries(
+      DEFAULT_COMPRA_CATEGORIAS.map((c) => [c.id, [] as ItemCompra[]]),
+    ),
   };
 }
 
@@ -904,6 +1210,7 @@ export function defaultUserDocument(): UserDocument {
     createdAt: now,
     lastActive: now,
     medicalDisclaimerAcceptedAt: null,
+    menuFlags: defaultMenuFlags(),
   };
 }
 

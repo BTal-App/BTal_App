@@ -152,6 +152,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                     onChange={(e) => setCurrentPwd(e.target.value)}
                     required
                     autoFocus
+                    maxLength={128}
                   />
                   <button
                     type="button"
@@ -202,6 +203,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                     onChange={(e) => setNewPwd(e.target.value)}
                     required
                     minLength={8}
+                    maxLength={128}
                     autoFocus
                   />
                   <button
@@ -225,6 +227,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                     onChange={(e) => setNewPwd2(e.target.value)}
                     required
                     minLength={8}
+                    maxLength={128}
                   />
                 </div>
 

@@ -132,7 +132,7 @@ ion-modal.settings-modal {
   border: 1px solid var(--btal-border);
   border-radius: 10px;
   padding: 10px 12px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.78rem;
   color: var(--btal-t-1);
   word-break: break-all;
@@ -151,7 +151,7 @@ ion-modal.settings-modal {
 .totp-code-input {
   text-align: center;
   font-size: 1.3rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   letter-spacing: 0.3em;
   padding: 14px 16px;
 }

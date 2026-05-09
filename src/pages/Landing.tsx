@@ -194,6 +194,7 @@ const Landing: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                maxLength={254}
               />
             </div>
 
@@ -208,6 +209,7 @@ const Landing: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={mode === 'signup' ? 8 : 6}
+                maxLength={128}
               />
               <button
                 type="button"
@@ -232,6 +234,7 @@ const Landing: React.FC = () => {
                     onChange={(e) => setPassword2(e.target.value)}
                     required
                     minLength={8}
+                    maxLength={128}
                   />
                 </div>
                 <p className="landing-hint">

@@ -237,6 +237,68 @@ ion-button {
    está definido en el bloque "Press-in robusto" más abajo, junto con
    <button>. Mantenemos aquí solo el hover y la transición.) */
 
+/* ── Wrapper global para inputs type="time" / type="date" ──────────
+   Posiciona un icono custom de IonIcon en la esquina derecha del
+   input. Se ve igual en TODAS las plataformas (web desktop, PWA,
+   móvil real, Capacitor) — sin depender del icono nativo del
+   browser que es inconsistente.
+
+   Uso:
+     <span className="sup-input-time">
+       <input type="time" ... />
+       <IonIcon icon={timeOutline} className="sup-input-time-icon" />
+     </span>
+
+   Nota: la clase se mantiene con prefijo `sup-` por compatibilidad
+   con el código existente en SupCardEditor. Funciona en cualquier
+   input dentro del wrapper, no solo `.sup-input`. */
+
+.sup-input-time {
+  position: relative;
+  display: block;
+}
+
+/* Genérico · cualquier input[type=time/date] dentro del wrapper recibe
+   los ajustes de estilo nativo y deja hueco al icono. No requiere la
+   clase `.sup-input` · funciona también con inputs custom como los
+   de MealEditorModal.
+
+   `width: 100%` + `box-sizing: border-box` fuerza que el input ocupe
+   todo el ancho del wrapper (que ya es block 100%). Sin esto, los
+   inputs nativos type="time" se quedan al ancho de su contenido
+   ("08:00" + spinner), que es muy pequeño en comparación con el
+   resto de inputs del form. */
+.sup-input-time input[type='time'],
+.sup-input-time input[type='date'],
+.sup-input-time input[type='datetime-local'] {
+  color-scheme: dark;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 38px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Oculta el indicator nativo de Chrome desktop · ya tenemos el
+   nuestro y queremos coherencia entre plataformas. */
+.sup-input-time input[type='time']::-webkit-calendar-picker-indicator,
+.sup-input-time input[type='date']::-webkit-calendar-picker-indicator,
+.sup-input-time input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
+.sup-input-time-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1rem;
+  color: var(--btal-t-2);
+  pointer-events: none;
+}
+
 /* ── Reduced motion · respeto absoluto ───────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {

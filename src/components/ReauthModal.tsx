@@ -112,6 +112,7 @@ export function ReauthModal({ isOpen, user, reason, onClose, onSuccess }: Props)
                   autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  maxLength={128}
                   required
                   autoFocus
                 />

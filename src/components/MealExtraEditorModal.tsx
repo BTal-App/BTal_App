@@ -18,31 +18,18 @@ import {
   useSaveStatus,
 } from '../hooks/useSaveStatus';
 import { blockNonInteger, clampInt } from '../utils/numericInput';
+import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
+import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { AlimentosListInput } from './AlimentosListInput';
 import { EmojiPicker } from './EmojiPicker';
 import {
-  ConfirmChangesModal,
-  type Change,
-} from './ConfirmChangesModal';
-import {
-  formatAlimento,
+  DAY_LABEL_FULL,
   newExtraId,
-  type Alimento,
   type ComidaExtra,
   type DayKey,
 } from '../templates/defaultUser';
 import './SettingsModal.css';
 import './MealEditorModal.css';
-
-const DAY_LABEL_FULL: Record<DayKey, string> = {
-  lun: 'Lunes',
-  mar: 'Martes',
-  mie: 'Miércoles',
-  jue: 'Jueves',
-  vie: 'Viernes',
-  sab: 'Sábado',
-  dom: 'Domingo',
-};
 
 interface Props {
   isOpen: boolean;
@@ -65,7 +52,7 @@ interface Props {
 //   - extra={…} → editar existente · al guardar llama a updateMealExtra.
 //
 // El flujo manual es idéntico al de las 4 fijas: edición libre en local,
-// botón Guardar abre ConfirmChangesModal con diff, X con cambios sin
+// botón Guardar abre ConfirmDiffAlert con diff, X con cambios sin
 // guardar dispara IonAlert "¿Salir sin guardar?".
 export function MealExtraEditorModal({
   isOpen,
@@ -75,7 +62,7 @@ export function MealExtraEditorModal({
   onRequestDelete,
 }: Props) {
   const { addMealExtra, updateMealExtra } = useProfile();
-  const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
+  const { runSave, reset: resetSave } = useSaveStatus();
 
   // Estado base · si estamos creando, snapshot original = "comida vacía"
   // con id nuevo. Al primer save haremos add con ese id. Si estamos
@@ -95,7 +82,10 @@ export function MealExtraEditorModal({
 
   const [original, setOriginal] = useState<ComidaExtra>(buildInitial);
   const [local, setLocal] = useState<ComidaExtra>(buildInitial);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmChanges, setConfirmChanges] = useState<{
+    changes: ChangeEntry[];
+    cleaned: ComidaExtra;
+  } | null>(null);
   const [discardAlertOpen, setDiscardAlertOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
@@ -115,7 +105,7 @@ export function MealExtraEditorModal({
     const init = buildInitial();
     setOriginal(init);
     setLocal(init);
-    setConfirmOpen(false);
+    setConfirmChanges(null);
     setDiscardAlertOpen(false);
     setErrorMsg('');
     setEmojiOpen(false);
@@ -131,10 +121,23 @@ export function MealExtraEditorModal({
     setLocal((prev) => ({ ...prev, [key]: value }));
   };
 
-  const changes = useMemo<Change[]>(
-    () => buildExtraChanges(original, local, isCreate),
-    [original, local, isCreate],
-  );
+  // En modo editar, "isDirty" = hay diferencia con el snapshot.
+  const isDirtyEdit = useMemo(() => {
+    if (original.nombre !== local.nombre) return true;
+    if ((original.nombrePlato ?? '') !== (local.nombrePlato ?? '')) return true;
+    if ((original.emoji ?? null) !== (local.emoji ?? null)) return true;
+    if (original.hora !== local.hora) return true;
+    if (original.alimentos.length !== local.alimentos.length) return true;
+    for (let i = 0; i < original.alimentos.length; i++) {
+      if (original.alimentos[i].nombre !== local.alimentos[i].nombre) return true;
+      if (original.alimentos[i].cantidad !== local.alimentos[i].cantidad) return true;
+    }
+    if (original.kcal !== local.kcal) return true;
+    if (original.prot !== local.prot) return true;
+    if (original.carb !== local.carb) return true;
+    if (original.fat !== local.fat) return true;
+    return false;
+  }, [original, local]);
 
   // En modo crear, "isDirty" basta con que tenga nombre o algún alimento.
   // En modo editar, "isDirty" = hay diferencia con el snapshot.
@@ -142,7 +145,7 @@ export function MealExtraEditorModal({
     ? local.nombre.trim() !== ''
       || (local.nombrePlato ?? '').trim() !== ''
       || local.alimentos.length > 0
-    : changes.length > 0;
+    : isDirtyEdit;
 
   // ── Validaciones de campos obligatorios ─────────────────────────────
   // En modo CREAR exigimos: nombre · nombrePlato · ≥1 alimento (sin
@@ -182,39 +185,65 @@ export function MealExtraEditorModal({
       return;
     }
     setErrorMsg('');
-    setConfirmOpen(true);
+    const cleaned: ComidaExtra = {
+      ...local,
+      nombre: local.nombre.trim(),
+      source: 'user',
+    };
+    const changes: ChangeEntry[] = [];
+    if (isCreate) {
+      // En modo create, todo va como '— → valor'.
+      changes.push({ label: 'Nombre del bloque', from: '—', to: cleaned.nombre || '—' });
+      if ((cleaned.nombrePlato ?? '').trim())
+        changes.push({ label: 'Plato', from: '—', to: cleaned.nombrePlato ?? '—' });
+      if (cleaned.hora) changes.push({ label: 'Hora', from: '—', to: cleaned.hora });
+      changes.push({
+        label: 'Alimentos',
+        from: '—',
+        to: `${cleaned.alimentos.length} alimentos`,
+      });
+      if (cleaned.kcal) changes.push({ label: 'Kcal', from: '—', to: String(cleaned.kcal) });
+      if (cleaned.prot) changes.push({ label: 'Proteína', from: '—', to: String(cleaned.prot) });
+      if (cleaned.carb) changes.push({ label: 'Carbos', from: '—', to: String(cleaned.carb) });
+      if (cleaned.fat) changes.push({ label: 'Grasa', from: '—', to: String(cleaned.fat) });
+    } else {
+      pushDiff(changes, 'Nombre del bloque', original.nombre, cleaned.nombre);
+      pushDiff(changes, 'Plato', original.nombrePlato ?? '', cleaned.nombrePlato ?? '');
+      pushDiff(changes, 'Hora', original.hora ?? '', cleaned.hora ?? '');
+      pushDiff(
+        changes,
+        'Alimentos',
+        `${original.alimentos.length} alimentos`,
+        `${cleaned.alimentos.length} alimentos`,
+      );
+      pushDiff(changes, 'Kcal', original.kcal, cleaned.kcal);
+      pushDiff(changes, 'Proteína', original.prot, cleaned.prot);
+      pushDiff(changes, 'Carbos', original.carb, cleaned.carb);
+      pushDiff(changes, 'Grasa', original.fat, cleaned.fat);
+    }
+    setConfirmChanges({ changes, cleaned });
   };
 
-  const handleConfirmSave = async () => {
-    if (!isDirty) {
-      setConfirmOpen(false);
-      onClose();
-      return;
-    }
+  const persistConfirmed = async () => {
+    if (!confirmChanges) return;
     // Re-validamos justo antes de guardar · el user pudo haber borrado un
     // campo después de pulsar Guardar pero antes de Confirmar.
     if (!camposOk) {
       setErrorMsg(
         'Faltan campos obligatorios: ' + camposFaltantes.join(', ') + '.',
       );
-      setConfirmOpen(false);
+      setConfirmChanges(null);
       return;
     }
+    const cleaned = confirmChanges.cleaned;
+    setConfirmChanges(null);
     setErrorMsg('');
     if (closeTimer.current) clearTimeout(closeTimer.current);
-
     const result = await runSave(async () => {
-      const payload: ComidaExtra = {
-        ...local,
-        nombre: local.nombre.trim(),
-        // Toda creación / edición desde el cliente va como source='user'.
-        source: 'user',
-      };
       if (isCreate) {
-        await addMealExtra(day, payload);
+        await addMealExtra(day, cleaned);
       } else {
-        // updateMealExtra hace el merge por id.
-        await updateMealExtra(day, payload.id, payload);
+        await updateMealExtra(day, cleaned.id, cleaned);
       }
     });
     if (result === SAVE_FAILED) {
@@ -225,7 +254,6 @@ export function MealExtraEditorModal({
     }
     dismissApproved.current = true;
     closeTimer.current = setTimeout(() => {
-      setConfirmOpen(false);
       onClose();
     }, SAVED_INDICATOR_MS);
   };
@@ -348,11 +376,18 @@ export function MealExtraEditorModal({
                   />
                   Hora (opcional)
                 </span>
-                <input
-                  type="time"
-                  value={local.hora ?? ''}
-                  onChange={(e) => change('hora', e.target.value || null)}
-                />
+                <span className="sup-input-time">
+                  <input
+                    type="time"
+                    value={local.hora ?? ''}
+                    onChange={(e) => change('hora', e.target.value || null)}
+                  />
+                  <IonIcon
+                    icon={timeOutline}
+                    className="sup-input-time-icon"
+                    aria-hidden="true"
+                  />
+                </span>
               </label>
 
               <div>
@@ -458,25 +493,15 @@ export function MealExtraEditorModal({
         </IonContent>
       </IonModal>
 
-      {confirmOpen && (
-        <ConfirmChangesModal
-          isOpen={confirmOpen}
-          changes={changes}
-          status={saveStatus}
-          errorMsg={errorMsg}
-          title={isCreate ? '¿Crear esta comida?' : '¿Guardar los cambios?'}
-          description={
-            isCreate
-              ? 'Vas a crear una nueva comida en este día.'
-              : 'Vas a actualizar esta comida.'
-          }
-          onCancel={() => {
-            if (saveStatus === 'saving') return;
-            setConfirmOpen(false);
-          }}
-          onConfirm={() => void handleConfirmSave()}
-        />
-      )}
+      <ConfirmDiffAlert
+        pending={confirmChanges}
+        onCancel={() => setConfirmChanges(null)}
+        onConfirm={() => {
+          persistConfirmed().catch((err) =>
+            console.error('[BTal] persistConfirmed meal extra:', err),
+          );
+        }}
+      />
 
       <IonAlert
         isOpen={discardAlertOpen}
@@ -502,89 +527,6 @@ export function MealExtraEditorModal({
       />
     </>
   );
-}
-
-// ─── Helpers locales ───────────────────────────────────────────────────────
-
-function sameAlimentos(a: Alimento[], b: Alimento[]): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i].nombre !== b[i].nombre) return false;
-    if (a[i].cantidad !== b[i].cantidad) return false;
-  }
-  return true;
-}
-
-// Diff entre original y editado · igual estructura que el helper de
-// MealEditorModal, pero incluye el campo nombre. En modo crear NO
-// mostramos diff (sería todo "—" → algo) · el ConfirmChangesModal
-// debería mostrar solo los campos rellenos. Lo hacemos pasando false-y
-// como `before` para que se muestre como "—".
-function buildExtraChanges(
-  before: ComidaExtra,
-  after: ComidaExtra,
-  isCreate: boolean,
-): Change[] {
-  const out: Change[] = [];
-  if (isCreate || before.nombre !== after.nombre) {
-    out.push({
-      label: 'Nombre',
-      before: before.nombre || '—',
-      after: after.nombre || '—',
-    });
-  }
-  const beforePlato = (before.nombrePlato ?? '').trim();
-  const afterPlato = (after.nombrePlato ?? '').trim();
-  if (isCreate || beforePlato !== afterPlato) {
-    out.push({
-      label: 'Nombre del plato',
-      before: beforePlato || '—',
-      after: afterPlato || '—',
-    });
-  }
-  // emoji · default 🍽 si null/undefined.
-  const beforeEmoji = before.emoji ?? null;
-  const afterEmoji = after.emoji ?? null;
-  if (beforeEmoji !== afterEmoji) {
-    out.push({
-      label: 'Emoji',
-      before: beforeEmoji ?? '🍽',
-      after: afterEmoji ?? '🍽',
-    });
-  }
-  if (isCreate || before.hora !== after.hora) {
-    out.push({
-      label: 'Hora',
-      before: before.hora ?? '—',
-      after: after.hora ?? '—',
-    });
-  }
-  if (isCreate || !sameAlimentos(before.alimentos, after.alimentos)) {
-    out.push({
-      label: 'Alimentos',
-      before:
-        before.alimentos.length > 0
-          ? before.alimentos.map(formatAlimento).join(' · ')
-          : '—',
-      after:
-        after.alimentos.length > 0
-          ? after.alimentos.map(formatAlimento).join(' · ')
-          : '—',
-    });
-  }
-  if (isCreate || before.kcal !== after.kcal) {
-    out.push({ label: 'Calorías', before: `${before.kcal} kcal`, after: `${after.kcal} kcal` });
-  }
-  if (isCreate || before.prot !== after.prot) {
-    out.push({ label: 'Proteína', before: `${before.prot} g`, after: `${after.prot} g` });
-  }
-  if (isCreate || before.carb !== after.carb) {
-    out.push({ label: 'Carbohidratos', before: `${before.carb} g`, after: `${after.carb} g` });
-  }
-  if (isCreate || before.fat !== after.fat) {
-    out.push({ label: 'Grasas', before: `${before.fat} g`, after: `${after.fat} g` });
-  }
-  return out;
 }
 
 // ─── Sub-componentes locales ───────────────────────────────────────────────

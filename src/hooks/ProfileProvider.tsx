@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useAuth } from './useAuth';
 import {
   clearUserMeal,
+  deleteUserPlanEntreno,
   duplicateUserMeal,
   ensureUserDocumentSchema,
   getUserDocument,
@@ -12,7 +13,15 @@ import {
   setCreatinaConfig as setCreatinaConfigDb,
   setSupOverride as setSupOverrideDb,
   setSupStockGramos as setSupStockGramosDb,
+  setUserActivePlan,
+  setUserCompra,
+  setUserCompraCategorias,
+  setUserCompraItemsOfCategoria,
+  setUserDayComidas,
+  setUserDiaEntreno,
   setUserMealExtras,
+  setUserMenuFlags,
+  setUserPlanEntreno,
   toggleSupInDay as toggleSupInDayDb,
   touchLastActive,
   updateUserMeal,
@@ -25,20 +34,32 @@ import {
   yearKey,
 } from '../utils/dateKeys';
 import {
+  COMPRA_BUILTIN_IDS,
   HORA_DEFECTO,
   MAX_EXTRAS_POR_DIA,
   calcBatidoStats,
   calcCreatinaStats,
+  defaultCompra,
+  defaultMenu,
+  defaultMenuFlags,
   type BatidoConfig,
+  type CategoriaCompra,
   type Comida,
   type ComidaExtra,
+  type ComidasDelDia,
+  type Compra,
   type CreatinaConfig,
   type DayKey,
+  type DiaEntreno,
+  type Entrenos,
+  type ItemCompra,
   type MealKey,
+  type PlanEntreno,
   type SupDayOverride,
   type UserDocument,
   type UserProfile,
 } from '../templates/defaultUser';
+import { defaultDemoMenuForDay } from '../templates/demoUser';
 import { ProfileContext, type ProfileState } from './profile-context';
 
 // Auto-reset de los contadores semanal/mensual de creatina si las marcas
@@ -238,11 +259,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Esperamos a que auth termine de cargar antes de tocar Firestore.
     if (authLoading) return;
-    // Sincronización con sistema externo (Firestore): caso explícitamente
-    // permitido por la doc de React. La regla de eslint no distingue cuándo
-    // setState se llama por la respuesta de una API vs en el body del effect,
-    // así que la silenciamos aquí.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // Sincronización con sistema externo (Firestore): el setState
+    // ocurre tras un await (async), no síncrono en el body del effect,
+    // así que cumple la regla y no necesitamos disable.
     load();
   }, [authLoading, load]);
 
@@ -1189,44 +1208,943 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [uid],
   );
 
-  const value: ProfileState = {
-    profile,
-    loading,
-    error,
-    refresh: load,
-    saveOnboarding,
-    updateProfile,
-    updateMeal,
-    duplicateMeal,
-    setBatidoConfig,
-    setCreatinaConfig,
-    toggleSupInDay,
-    clearMeal,
-    restoreMeal,
-    setSupOverride,
-    addMealExtra,
-    updateMealExtra,
-    removeMealExtra,
-    restoreMealExtra,
-    setSupStockGramos,
-    marcarBatidoTomadoHoy,
-    cancelarBatidoTomadoHoy,
-    marcarCreatinaTomadaHoy,
-    cancelarCreatinaTomadaHoy,
-    incrementarBatidoTomado,
-    decrementarBatidoTomado,
-    incrementarCreatinaTomada,
-    decrementarCreatinaTomada,
-    resetBatidoSemanal,
-    resetBatidoMensual,
-    resetBatidoAnual,
-    resetBatidoTotal,
-    resetCreatinaSemanal,
-    resetCreatinaMensual,
-    resetCreatinaAnual,
-    resetCreatinaTotal,
-    restoreSupValues,
-  };
+  // ── Flags por día del menú · Sub-fase 2B.6 ────────────────────────
+  // Excluir/Incluir un día de la media semanal · toggle dual.
+  // Optimistic update + revert · réplica del v1 toggleExcludeDay.
+  const toggleDayExcludedFromAvg = useCallback(
+    async (day: DayKey) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: DayKey[] | null = null;
+      let nextList: DayKey[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const flags = prev.menuFlags ?? defaultMenuFlags();
+        snapshot = flags.excludedFromAvg;
+        const isExcluded = flags.excludedFromAvg.includes(day);
+        nextList = isExcluded
+          ? flags.excludedFromAvg.filter((d) => d !== day)
+          : [...flags.excludedFromAvg, day];
+        return {
+          ...prev,
+          menuFlags: { ...flags, excludedFromAvg: nextList },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextList) return;
+      try {
+        await setUserMenuFlags(uid, { excludedFromAvg: nextList });
+      } catch (err) {
+        const prevList = snapshot;
+        if (prevList !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const flags = current.menuFlags ?? defaultMenuFlags();
+            return {
+              ...current,
+              menuFlags: { ...flags, excludedFromAvg: prevList },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid],
+  );
+
+  // Ocultar/Mostrar un día · toggle dual. Réplica del v1 toggleHideDay.
+  const toggleDayHidden = useCallback(
+    async (day: DayKey) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: DayKey[] | null = null;
+      let nextList: DayKey[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const flags = prev.menuFlags ?? defaultMenuFlags();
+        snapshot = flags.hidden;
+        const isHidden = flags.hidden.includes(day);
+        nextList = isHidden
+          ? flags.hidden.filter((d) => d !== day)
+          : [...flags.hidden, day];
+        return {
+          ...prev,
+          menuFlags: { ...flags, hidden: nextList },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextList) return;
+      try {
+        await setUserMenuFlags(uid, { hidden: nextList });
+      } catch (err) {
+        const prevList = snapshot;
+        if (prevList !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const flags = current.menuFlags ?? defaultMenuFlags();
+            return {
+              ...current,
+              menuFlags: { ...flags, hidden: prevList },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid],
+  );
+
+  // Resetea las 4 comidas + extras de un día concreto al estado por
+  // defecto. Para invitados (`isDemo`) usa el menú demo del día; para
+  // cuentas reales usa `defaultMenu()[day]` (4 comidas vacías).
+  // Réplica del v1 resetDay (que recargaba la página para releer la
+  // nube · aquí escribimos el default en Firestore directamente).
+  // Devuelve el snapshot previo de las comidas (por si se quiere
+  // implementar undo más adelante).
+  const resetDayMenu = useCallback(
+    async (day: DayKey): Promise<ComidasDelDia | null> => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: ComidasDelDia | null = null;
+      let nextComidas: ComidasDelDia | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        snapshot = prev.menu[day];
+        // Origen del default: invitado → demo del día, real → defaultMenu()[day].
+        nextComidas = prev.isDemo
+          ? defaultDemoMenuForDay(day)
+          : defaultMenu()[day];
+        return {
+          ...prev,
+          menu: { ...prev.menu, [day]: nextComidas },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextComidas) return null;
+      try {
+        await setUserDayComidas(uid, day, nextComidas);
+        return snapshot;
+      } catch (err) {
+        const prevComidas = snapshot;
+        if (prevComidas !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            return {
+              ...current,
+              menu: { ...current.menu, [day]: prevComidas },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid],
+  );
+
+  // ── Lista de la compra · Sub-fase 2C ──────────────────────────────
+  // Helper que lee la compra actual aplicando defaults si falta · útil
+  // para todas las mutaciones que necesitan hacer copy-on-write.
+  const readCompra = useCallback((doc: UserDocument | null): Compra => {
+    if (!doc?.compra) return defaultCompra();
+    return doc.compra;
+  }, []);
+
+  const addCompraItem = useCallback(
+    async (catId: string, item: ItemCompra) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: ItemCompra[] | null = null;
+      let nextItems: ItemCompra[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        const current = compra.items[catId] ?? [];
+        snapshot = current;
+        nextItems = [...current, item];
+        return {
+          ...prev,
+          compra: {
+            ...compra,
+            items: { ...compra.items, [catId]: nextItems },
+          },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextItems) return;
+      try {
+        await setUserCompraItemsOfCategoria(uid, catId, nextItems);
+      } catch (err) {
+        const prevList = snapshot;
+        if (prevList !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const compra = readCompra(current);
+            return {
+              ...current,
+              compra: {
+                ...compra,
+                items: { ...compra.items, [catId]: prevList },
+              },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const updateCompraItem = useCallback(
+    async (catId: string, itemId: string, partial: Partial<ItemCompra>) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: ItemCompra[] | null = null;
+      let nextItems: ItemCompra[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        const current = compra.items[catId] ?? [];
+        snapshot = current;
+        nextItems = current.map((it) =>
+          it.id === itemId ? { ...it, ...partial, id: it.id } : it,
+        );
+        return {
+          ...prev,
+          compra: {
+            ...compra,
+            items: { ...compra.items, [catId]: nextItems },
+          },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextItems) return;
+      try {
+        await setUserCompraItemsOfCategoria(uid, catId, nextItems);
+      } catch (err) {
+        const prevList = snapshot;
+        if (prevList !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const compra = readCompra(current);
+            return {
+              ...current,
+              compra: {
+                ...compra,
+                items: { ...compra.items, [catId]: prevList },
+              },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const toggleCompraItemComprado = useCallback(
+    async (catId: string, itemId: string) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      // Optimistic update síncrono · el toggle es instantáneo en la UI.
+      let snapshot: ItemCompra[] | null = null;
+      let nextItems: ItemCompra[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        const current = compra.items[catId] ?? [];
+        snapshot = current;
+        nextItems = current.map((it) =>
+          it.id === itemId ? { ...it, comprado: !it.comprado } : it,
+        );
+        return {
+          ...prev,
+          compra: {
+            ...compra,
+            items: { ...compra.items, [catId]: nextItems },
+          },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextItems) return;
+      try {
+        await setUserCompraItemsOfCategoria(uid, catId, nextItems);
+      } catch (err) {
+        const prevList = snapshot;
+        if (prevList !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const compra = readCompra(current);
+            return {
+              ...current,
+              compra: {
+                ...compra,
+                items: { ...compra.items, [catId]: prevList },
+              },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const removeCompraItem = useCallback(
+    async (catId: string, itemId: string) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: ItemCompra[] | null = null;
+      let removed: { item: ItemCompra; index: number } | null = null;
+      let nextItems: ItemCompra[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        const current = compra.items[catId] ?? [];
+        const index = current.findIndex((it) => it.id === itemId);
+        if (index === -1) return prev;
+        snapshot = current;
+        removed = { item: current[index], index };
+        nextItems = current.filter((it) => it.id !== itemId);
+        return {
+          ...prev,
+          compra: {
+            ...compra,
+            items: { ...compra.items, [catId]: nextItems },
+          },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextItems) return null;
+      try {
+        await setUserCompraItemsOfCategoria(uid, catId, nextItems);
+        return removed;
+      } catch (err) {
+        const prevList = snapshot;
+        if (prevList !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const compra = readCompra(current);
+            return {
+              ...current,
+              compra: {
+                ...compra,
+                items: { ...compra.items, [catId]: prevList },
+              },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const restoreCompraItem = useCallback(
+    async (catId: string, item: ItemCompra, index: number) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: ItemCompra[] | null = null;
+      let nextItems: ItemCompra[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        const current = compra.items[catId] ?? [];
+        // Si por race el item ya existe, no lo duplicamos.
+        if (current.some((it) => it.id === item.id)) return prev;
+        snapshot = current;
+        const arr = [...current];
+        const safeIndex = Math.min(Math.max(0, index), arr.length);
+        arr.splice(safeIndex, 0, item);
+        nextItems = arr;
+        return {
+          ...prev,
+          compra: {
+            ...compra,
+            items: { ...compra.items, [catId]: nextItems },
+          },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextItems) return;
+      try {
+        await setUserCompraItemsOfCategoria(uid, catId, nextItems);
+      } catch (err) {
+        const prevList = snapshot;
+        if (prevList !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const compra = readCompra(current);
+            return {
+              ...current,
+              compra: {
+                ...compra,
+                items: { ...compra.items, [catId]: prevList },
+              },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const resetCompraChecks = useCallback(async () => {
+    if (!uid) throw new Error('No hay usuario autenticado.');
+    let snapshot: Compra | null = null;
+    let nextCompra: Compra | null = null;
+    setProfile((prev) => {
+      if (!prev) return prev;
+      const compra = readCompra(prev);
+      snapshot = compra;
+      const itemsOut: Record<string, ItemCompra[]> = {};
+      for (const [catId, items] of Object.entries(compra.items)) {
+        itemsOut[catId] = items.map((it) =>
+          it.comprado ? { ...it, comprado: false } : it,
+        );
+      }
+      nextCompra = { ...compra, items: itemsOut };
+      return { ...prev, compra: nextCompra, lastActive: Date.now() };
+    });
+    if (!nextCompra) return;
+    try {
+      await setUserCompra(uid, nextCompra);
+    } catch (err) {
+      const prevC = snapshot;
+      if (prevC !== null) {
+        setProfile((current) =>
+          current ? { ...current, compra: prevC } : current,
+        );
+      }
+      throw err;
+    }
+  }, [uid, readCompra]);
+
+  // Categorías personalizables · add/update/remove/reorder.
+  const addCompraCategoria = useCallback(
+    async (cat: CategoriaCompra) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: Compra | null = null;
+      let nextCompra: Compra | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        // Si ya existe una con ese id, no duplicar.
+        if (compra.categorias.some((c) => c.id === cat.id)) return prev;
+        snapshot = compra;
+        nextCompra = {
+          categorias: [...compra.categorias, cat],
+          items: { ...compra.items, [cat.id]: [] },
+        };
+        return { ...prev, compra: nextCompra, lastActive: Date.now() };
+      });
+      if (!nextCompra) return;
+      try {
+        await setUserCompra(uid, nextCompra);
+      } catch (err) {
+        const prevC = snapshot;
+        if (prevC !== null) {
+          setProfile((current) =>
+            current ? { ...current, compra: prevC } : current,
+          );
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const updateCompraCategoria = useCallback(
+    async (catId: string, partial: Partial<CategoriaCompra>) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: CategoriaCompra[] | null = null;
+      let nextCats: CategoriaCompra[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        snapshot = compra.categorias;
+        nextCats = compra.categorias.map((c) =>
+          c.id === catId ? { ...c, ...partial, id: c.id, builtIn: c.builtIn } : c,
+        );
+        return {
+          ...prev,
+          compra: { ...compra, categorias: nextCats },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextCats) return;
+      try {
+        await setUserCompraCategorias(uid, nextCats);
+      } catch (err) {
+        const prevCats = snapshot;
+        if (prevCats !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const compra = readCompra(current);
+            return {
+              ...current,
+              compra: { ...compra, categorias: prevCats },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const removeCompraCategoria = useCallback(
+    async (catId: string) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      // Solo categorías custom · builtIn no se pueden eliminar (estilo v1).
+      let snapshot: Compra | null = null;
+      let removed: { categoria: CategoriaCompra; items: ItemCompra[] } | null = null;
+      let nextCompra: Compra | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        const cat = compra.categorias.find((c) => c.id === catId);
+        if (!cat || cat.builtIn) return prev;
+        snapshot = compra;
+        removed = { categoria: cat, items: compra.items[catId] ?? [] };
+        const { [catId]: _droppedItems, ...restItems } = compra.items;
+        // Silencia warning de variable no usada · es destructuring para
+        // omitir la key.
+        void _droppedItems;
+        nextCompra = {
+          categorias: compra.categorias.filter((c) => c.id !== catId),
+          items: restItems,
+        };
+        return { ...prev, compra: nextCompra, lastActive: Date.now() };
+      });
+      if (!nextCompra) return null;
+      try {
+        await setUserCompra(uid, nextCompra);
+        return removed;
+      } catch (err) {
+        const prevC = snapshot;
+        if (prevC !== null) {
+          setProfile((current) =>
+            current ? { ...current, compra: prevC } : current,
+          );
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const restoreCompraCategoria = useCallback(
+    async (categoria: CategoriaCompra, items: ItemCompra[]) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: Compra | null = null;
+      let nextCompra: Compra | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        // Si ya existe (race), no duplicar.
+        if (compra.categorias.some((c) => c.id === categoria.id)) return prev;
+        snapshot = compra;
+        nextCompra = {
+          categorias: [...compra.categorias, categoria],
+          items: { ...compra.items, [categoria.id]: items },
+        };
+        return { ...prev, compra: nextCompra, lastActive: Date.now() };
+      });
+      if (!nextCompra) return;
+      try {
+        await setUserCompra(uid, nextCompra);
+      } catch (err) {
+        const prevC = snapshot;
+        if (prevC !== null) {
+          setProfile((current) =>
+            current ? { ...current, compra: prevC } : current,
+          );
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  const reorderCompraCategorias = useCallback(
+    async (orderedIds: string[]) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: CategoriaCompra[] | null = null;
+      let nextCats: CategoriaCompra[] | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const compra = readCompra(prev);
+        snapshot = compra.categorias;
+        // Reordena según `orderedIds` y renumera el campo `order` de
+        // 0 a N-1 para mantener consistencia. Categorías que falten
+        // del array (caso edge: race) se añaden al final preservadas.
+        const byId = new Map(compra.categorias.map((c) => [c.id, c]));
+        const ordered: CategoriaCompra[] = [];
+        orderedIds.forEach((id, idx) => {
+          const c = byId.get(id);
+          if (c) {
+            ordered.push({ ...c, order: idx });
+            byId.delete(id);
+          }
+        });
+        // Añade las que no se pasaron en orderedIds (preserva su orden actual).
+        for (const c of byId.values()) {
+          ordered.push({ ...c, order: ordered.length });
+        }
+        nextCats = ordered;
+        return {
+          ...prev,
+          compra: { ...compra, categorias: nextCats },
+          lastActive: Date.now(),
+        };
+      });
+      if (!nextCats) return;
+      try {
+        await setUserCompraCategorias(uid, nextCats);
+      } catch (err) {
+        const prevCats = snapshot;
+        if (prevCats !== null) {
+          setProfile((current) => {
+            if (!current) return current;
+            const compra = readCompra(current);
+            return {
+              ...current,
+              compra: { ...compra, categorias: prevCats },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid, readCompra],
+  );
+
+  // (Recordatorio: COMPRA_BUILTIN_IDS se exporta desde defaultUser.ts
+  // para que la UI pueda saber cuáles NO son borrables, sin necesidad
+  // de iterar sobre `categorias.builtIn`.)
+  void COMPRA_BUILTIN_IDS;
+
+  // ──────────────────────────────────────────────────────────────────
+  // Entrenos · Sub-fase 2D · CRUD planes y días.
+  // Mismo patrón que compra: optimistic update + revert si Firestore
+  // falla. Las acciones que requieren shape correcto leen `entrenos`
+  // a través de un helper local para tipar bien.
+  // ──────────────────────────────────────────────────────────────────
+
+  const readEntrenos = useCallback((doc: UserDocument): Entrenos => {
+    return doc.entrenos;
+  }, []);
+
+  const setActivePlan = useCallback(
+    async (planId: string) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: string | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        snapshot = prev.entrenos.activePlan;
+        return {
+          ...prev,
+          entrenos: { ...prev.entrenos, activePlan: planId },
+          lastActive: Date.now(),
+        };
+      });
+      try {
+        await setUserActivePlan(uid, planId);
+      } catch (err) {
+        const prevId = snapshot;
+        if (prevId !== null) {
+          setProfile((cur) =>
+            cur
+              ? { ...cur, entrenos: { ...cur.entrenos, activePlan: prevId } }
+              : cur,
+          );
+        }
+        throw err;
+      }
+    },
+    [uid],
+  );
+
+  const setPlanEntreno = useCallback(
+    async (plan: PlanEntreno) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: PlanEntreno | undefined;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        snapshot = prev.entrenos.planes[plan.id];
+        return {
+          ...prev,
+          entrenos: {
+            ...prev.entrenos,
+            planes: { ...prev.entrenos.planes, [plan.id]: plan },
+          },
+          lastActive: Date.now(),
+        };
+      });
+      try {
+        await setUserPlanEntreno(uid, plan);
+      } catch (err) {
+        const prevPlan = snapshot;
+        setProfile((cur) => {
+          if (!cur) return cur;
+          const planes = { ...cur.entrenos.planes };
+          if (prevPlan) {
+            planes[plan.id] = prevPlan;
+          } else {
+            delete planes[plan.id];
+          }
+          return { ...cur, entrenos: { ...cur.entrenos, planes } };
+        });
+        throw err;
+      }
+    },
+    [uid],
+  );
+
+  const removePlanEntreno = useCallback(
+    async (planId: string): Promise<PlanEntreno | null> => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let removed: PlanEntreno | null = null;
+      let prevActive: string | null = null;
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const target = prev.entrenos.planes[planId];
+        if (!target) return prev;
+        if (target.builtIn) {
+          throw new Error(
+            'No se puede eliminar un plan builtIn (1dias..7dias).',
+          );
+        }
+        removed = target;
+        prevActive = prev.entrenos.activePlan;
+        const planes = { ...prev.entrenos.planes };
+        delete planes[planId];
+        // Si borramos el plan activo, fallback al 4dias (siempre existe).
+        const nextActive =
+          prev.entrenos.activePlan === planId
+            ? '4dias'
+            : prev.entrenos.activePlan;
+        return {
+          ...prev,
+          entrenos: { ...prev.entrenos, planes, activePlan: nextActive },
+          lastActive: Date.now(),
+        };
+      });
+      if (!removed) return null;
+      try {
+        await deleteUserPlanEntreno(uid, planId);
+        // Si reasignamos active a 4dias, persistirlo también.
+        if (prevActive === planId) {
+          await setUserActivePlan(uid, '4dias');
+        }
+        return removed;
+      } catch (err) {
+        // TS narrowing dentro del callback de setProfile · usamos cast
+        // explícito para que el closure conserve el tipo PlanEntreno.
+        const restore = removed as PlanEntreno;
+        const wasActive = prevActive;
+        setProfile((cur) => {
+          if (!cur) return cur;
+          return {
+            ...cur,
+            entrenos: {
+              ...cur.entrenos,
+              planes: { ...cur.entrenos.planes, [restore.id]: restore },
+              activePlan: wasActive ?? cur.entrenos.activePlan,
+            },
+          };
+        });
+        throw err;
+      }
+    },
+    [uid],
+  );
+
+  const restorePlanEntreno = useCallback(
+    async (plan: PlanEntreno) => {
+      // Misma operación que setPlanEntreno · semánticamente "restore"
+      // se distingue del create solo en el caller.
+      await setPlanEntreno(plan);
+    },
+    [setPlanEntreno],
+  );
+
+  const updateDiaEntreno = useCallback(
+    async (planId: string, diaIdx: number, dia: DiaEntreno) => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      let snapshot: DiaEntreno | undefined;
+      let currentDias: DiaEntreno[] = [];
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const plan = prev.entrenos.planes[planId];
+        if (!plan) return prev;
+        // Capturamos los dias ACTUALES (antes del update) para que el
+        // setUserDiaEntreno escriba el array completo a Firestore con
+        // el día reemplazado · evita corromper el array en map de
+        // índices que Firestore hace con dot-path numérico.
+        currentDias = plan.dias;
+        snapshot = plan.dias[diaIdx];
+        const dias = [...plan.dias];
+        dias[diaIdx] = dia;
+        return {
+          ...prev,
+          entrenos: {
+            ...prev.entrenos,
+            planes: {
+              ...prev.entrenos.planes,
+              [planId]: { ...plan, dias },
+            },
+          },
+          lastActive: Date.now(),
+        };
+      });
+      try {
+        await setUserDiaEntreno(uid, planId, diaIdx, dia, currentDias);
+      } catch (err) {
+        const prevDia = snapshot;
+        if (prevDia) {
+          setProfile((cur) => {
+            if (!cur) return cur;
+            const plan = cur.entrenos.planes[planId];
+            if (!plan) return cur;
+            const dias = [...plan.dias];
+            dias[diaIdx] = prevDia;
+            return {
+              ...cur,
+              entrenos: {
+                ...cur.entrenos,
+                planes: {
+                  ...cur.entrenos.planes,
+                  [planId]: { ...plan, dias },
+                },
+              },
+            };
+          });
+        }
+        throw err;
+      }
+    },
+    [uid],
+  );
+
+  // readEntrenos export helper · evita el linter quejándose de unused
+  // ahora que solo lo usamos en los callbacks como type guard implícito.
+  void readEntrenos;
+
+  // Memoizamos el value · todas las acciones son `useCallback` con
+  // dependencias estables (uid), así que solo cambia el value cuando
+  // cambian los datos reactivos (profile/loading/error). Sin esto el
+  // objeto se recrea en cada render del Provider y arrastra a todo
+  // el árbol consumidor (5 tabs + 30+ modales) a re-renderizar.
+  const value = useMemo<ProfileState>(
+    () => ({
+      profile,
+      loading,
+      error,
+      refresh: load,
+      saveOnboarding,
+      updateProfile,
+      updateMeal,
+      duplicateMeal,
+      setBatidoConfig,
+      setCreatinaConfig,
+      toggleSupInDay,
+      clearMeal,
+      restoreMeal,
+      setSupOverride,
+      addMealExtra,
+      updateMealExtra,
+      removeMealExtra,
+      restoreMealExtra,
+      toggleDayExcludedFromAvg,
+      toggleDayHidden,
+      resetDayMenu,
+      setSupStockGramos,
+      marcarBatidoTomadoHoy,
+      cancelarBatidoTomadoHoy,
+      marcarCreatinaTomadaHoy,
+      cancelarCreatinaTomadaHoy,
+      incrementarBatidoTomado,
+      decrementarBatidoTomado,
+      incrementarCreatinaTomada,
+      decrementarCreatinaTomada,
+      resetBatidoSemanal,
+      resetBatidoMensual,
+      resetBatidoAnual,
+      resetBatidoTotal,
+      resetCreatinaSemanal,
+      resetCreatinaMensual,
+      resetCreatinaAnual,
+      resetCreatinaTotal,
+      restoreSupValues,
+      addCompraItem,
+      updateCompraItem,
+      toggleCompraItemComprado,
+      removeCompraItem,
+      restoreCompraItem,
+      resetCompraChecks,
+      addCompraCategoria,
+      updateCompraCategoria,
+      removeCompraCategoria,
+      restoreCompraCategoria,
+      reorderCompraCategorias,
+      setActivePlan,
+      setPlanEntreno,
+      removePlanEntreno,
+      restorePlanEntreno,
+      updateDiaEntreno,
+    }),
+    [
+      profile,
+      loading,
+      error,
+      load,
+      saveOnboarding,
+      updateProfile,
+      updateMeal,
+      duplicateMeal,
+      setBatidoConfig,
+      setCreatinaConfig,
+      toggleSupInDay,
+      clearMeal,
+      restoreMeal,
+      setSupOverride,
+      addMealExtra,
+      updateMealExtra,
+      removeMealExtra,
+      restoreMealExtra,
+      toggleDayExcludedFromAvg,
+      toggleDayHidden,
+      resetDayMenu,
+      setSupStockGramos,
+      marcarBatidoTomadoHoy,
+      cancelarBatidoTomadoHoy,
+      marcarCreatinaTomadaHoy,
+      cancelarCreatinaTomadaHoy,
+      incrementarBatidoTomado,
+      decrementarBatidoTomado,
+      incrementarCreatinaTomada,
+      decrementarCreatinaTomada,
+      resetBatidoSemanal,
+      resetBatidoMensual,
+      resetBatidoAnual,
+      resetBatidoTotal,
+      resetCreatinaSemanal,
+      resetCreatinaMensual,
+      resetCreatinaAnual,
+      resetCreatinaTotal,
+      restoreSupValues,
+      addCompraItem,
+      updateCompraItem,
+      toggleCompraItemComprado,
+      removeCompraItem,
+      restoreCompraItem,
+      resetCompraChecks,
+      addCompraCategoria,
+      updateCompraCategoria,
+      removeCompraCategoria,
+      restoreCompraCategoria,
+      reorderCompraCategorias,
+      setActivePlan,
+      setPlanEntreno,
+      removePlanEntreno,
+      restorePlanEntreno,
+      updateDiaEntreno,
+    ],
+  );
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }

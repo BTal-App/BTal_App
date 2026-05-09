@@ -1,11 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { IonAlert, IonContent, IonIcon, IonPage, IonToast } from '@ionic/react';
+import { useCountUp, useFirstVisible } from '../../utils/useCountUp';
+import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
+import {
+  IonAlert,
+  IonContent,
+  IonIcon,
+  IonPage,
+  IonPopover,
+  IonToast,
+  useIonRouter,
+  useIonViewDidEnter,
+  useIonViewWillEnter,
+} from '@ionic/react';
+import { useLocation } from 'react-router-dom';
 import {
   addOutline,
   barbellOutline,
   cafeOutline,
+  ellipsisHorizontal,
+  eyeOffOutline,
+  eyeOutline,
   flameOutline,
   leafOutline,
+  refreshOutline,
+  removeCircleOutline,
   sparklesOutline,
   waterOutline,
 } from 'ionicons/icons';
@@ -27,6 +45,8 @@ import { todayDateStr, todayKey } from '../../utils/dateKeys';
 import { objetivoKcalEfectivo } from '../../utils/calorias';
 import {
   DAY_KEYS,
+  DAY_LABEL_FULL,
+  DAY_LABEL_SHORT as DAY_LABEL,
   HORA_DEFECTO,
   MAX_EXTRAS_POR_DIA,
   MEAL_KEYS,
@@ -39,27 +59,9 @@ import {
 } from '../../templates/defaultUser';
 import './MenuPage.css';
 
-// Etiquetas humanas · centralizadas para no duplicar en cada componente.
-const DAY_LABEL: Record<DayKey, string> = {
-  lun: 'Lun',
-  mar: 'Mar',
-  mie: 'Mié',
-  jue: 'Jue',
-  vie: 'Vie',
-  sab: 'Sáb',
-  dom: 'Dom',
-};
-
-// Día completo (para headers grandes y ARIA).
-const DAY_LABEL_FULL: Record<DayKey, string> = {
-  lun: 'Lunes',
-  mar: 'Martes',
-  mie: 'Miércoles',
-  jue: 'Jueves',
-  vie: 'Viernes',
-  sab: 'Sábado',
-  dom: 'Domingo',
-};
+// `DAY_LABEL` (corto) y `DAY_LABEL_FULL` viven en
+// `templates/defaultUser.ts` · importados como alias arriba para
+// mantener legibilidad del código existente.
 
 // Mapping de cada comida a su emoji + nombre legible. El emoji se queda
 // hardcoded · no es preferencia del user, es identidad visual.
@@ -77,7 +79,11 @@ const MEAL_LABEL: Record<MealKey, string> = {
   cena: 'Cena',
 };
 
-// Suma kcal/prot/carb/fat de las 4 comidas del día.
+// Suma kcal/prot/carb/fat de TODO lo que hay en un día: 4 comidas fijas
+// + extras + batido (si daysWithBatido.includes(day)). La creatina suelta
+// NO suma macros (creatina monohidrato ≈ 0 kcal/100g) pero sí cuenta
+// como "comida del día" para `comidasConDatos`. Réplica del v1
+// recalcDayTotal/recalcWeeklyAvg ampliada para suplementos.
 interface TotalesDia {
   kcal: number;
   prot: number;
@@ -85,10 +91,12 @@ interface TotalesDia {
   fat: number;
   comidasConDatos: number;
 }
-function calcTotales(
-  comidas: import('../../templates/defaultUser').ComidasDelDia,
+function calcTotalesDia(
+  userDoc: import('../../templates/defaultUser').UserDocument,
+  day: DayKey,
 ): TotalesDia {
   let kcal = 0, prot = 0, carb = 0, fat = 0, comidasConDatos = 0;
+  const comidas = userDoc.menu[day];
   for (const meal of MEAL_KEYS) {
     const c = comidas[meal];
     if (!c) continue;
@@ -98,7 +106,7 @@ function calcTotales(
     fat += c.fat;
     if (c.alimentos.length > 0) comidasConDatos += 1;
   }
-  // Sumamos también los extras del día · cuentan al ring de progreso.
+  // Extras del día · cuentan al total y al ring de progreso.
   for (const extra of comidas.extras) {
     kcal += extra.kcal;
     prot += extra.prot;
@@ -106,15 +114,79 @@ function calcTotales(
     fat += extra.fat;
     if (extra.alimentos.length > 0) comidasConDatos += 1;
   }
+  // Suplementación · si el batido está añadido al día, sumamos sus
+  // macros. La creatina suelta tiene 0 kcal (monohidrato puro) — solo
+  // cuenta como comida adicional para el contador.
+  const sup = userDoc.suplementos;
+  if (sup.daysWithBatido.includes(day)) {
+    kcal += sup.batidoConfig.kcal;
+    prot += sup.batidoConfig.prot;
+    carb += sup.batidoConfig.carb;
+    fat += sup.batidoConfig.fat;
+    comidasConDatos += 1;
+  }
+  if (sup.daysWithCreatina.includes(day)) {
+    comidasConDatos += 1;
+  }
   return { kcal, prot, carb, fat, comidasConDatos };
+}
+
+// Media semanal de los 4 macros · réplica del v1 recalcWeeklyAvg.
+// Promedia los 7 días (lun..dom) sin filtrar — todos cuentan ya que en
+// BTal aún no tenemos "excluir día" como en v1. Si no hay datos en
+// ningún día, devuelve null para que la UI lo gestione (esconder o
+// mostrar guion).
+interface MediaSemanal {
+  kcal: number;
+  prot: number;
+  carb: number;
+  fat: number;
+}
+function calcMediaSemanal(
+  userDoc: import('../../templates/defaultUser').UserDocument | null,
+): MediaSemanal | null {
+  if (!userDoc) return null;
+  // Filtramos los días excluidos manualmente (`menuFlags.excludedFromAvg`)
+  // y los ocultos (`menuFlags.hidden`) — réplica del v1 recalcWeeklyAvg
+  // que saltaba `data-excluded='1'` y `data-hidden='1'`. Si todos los
+  // días están excluidos o el doc no tiene flags, fallback a los 7 días.
+  const flags = userDoc.menuFlags;
+  const excluded = new Set(flags?.excludedFromAvg ?? []);
+  const hidden = new Set(flags?.hidden ?? []);
+  const counted = DAY_KEYS.filter((d) => !excluded.has(d) && !hidden.has(d));
+  // Si el user excluyó todos los días, evitamos dividir por 0.
+  if (counted.length === 0) return null;
+  let totK = 0, totP = 0, totC = 0, totF = 0;
+  for (const day of counted) {
+    const t = calcTotalesDia(userDoc, day);
+    totK += t.kcal;
+    totP += t.prot;
+    totC += t.carb;
+    totF += t.fat;
+  }
+  // Si no hay nada en ningún día contado, evitamos mostrar "0 kcal" engañoso.
+  if (totK + totP + totC + totF === 0) return null;
+  return {
+    kcal: Math.round(totK / counted.length),
+    prot: Math.round(totP / counted.length),
+    carb: Math.round(totC / counted.length),
+    fat: Math.round(totF / counted.length),
+  };
 }
 
 // Convierte "HH:mm" en minutos del día · usado para el sort por hora.
 // Si el string es inválido devuelve un valor alto · ese item cae al final.
+// Validación defensiva: el string puede llegar malformado (sin ':',
+// con ':' suelto, "14" sin minutos, etc.); todos esos casos se
+// tratan como "hora desconocida" → fin del día.
 function horaAMinutos(hora: string | null | undefined): number {
   if (!hora) return 24 * 60;
-  const [h, m] = hora.split(':').map((n) => parseInt(n, 10));
+  const parts = hora.split(':');
+  if (parts.length !== 2) return 24 * 60;
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
   if (Number.isNaN(h) || Number.isNaN(m)) return 24 * 60;
+  if (h < 0 || h > 23 || m < 0 || m > 59) return 24 * 60;
   return h * 60 + m;
 }
 
@@ -217,6 +289,20 @@ const MenuPage: React.FC = () => {
   const { profile: userDoc } = useProfile();
   const [aiGenOpen, setAiGenOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
+  // `viewKey` se incrementa cada vez que la tab Menú se vuelve activa
+  // (`ionViewWillEnter` de Ionic). Combinado con `selectedDay`, sirve
+  // como `key` del WeeklyAverageCard para que React lo desmonte y
+  // remonte → la animación count-up de la media semanal arranca otra
+  // vez desde 0. Sin esto, el count-up solo se vería la primera vez
+  // (después interpolaría del valor actual al nuevo).
+  const [viewKey, setViewKey] = useState(0);
+  useIonViewWillEnter(() => {
+    setViewKey((k) => k + 1);
+  });
+  // Reset del scroll al top al volver a la tab Menú · evita que
+  // vuelvas a la mitad de la lista de comidas si la dejaste así.
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  useScrollTopOnEnter(contentRef);
   // MealSheet · null = cerrado · MealKey = abierta para esa comida del
   // día seleccionado. Cerrar = setear a null (ya hay onDidDismiss).
   const [openMeal, setOpenMeal] = useState<MealKey | null>(null);
@@ -236,8 +322,40 @@ const MenuPage: React.FC = () => {
   const [editingSup, setEditingSup] = useState<'batido' | 'creatina' | null>(
     null,
   );
-  const { clearMeal, restoreMeal, removeMealExtra, restoreMealExtra } =
-    useProfile();
+
+  // Deep-link desde HoyPage: si llegamos con `?openSup=batido` o
+  // `?openSup=creatina`, abrimos el modal correspondiente. Lo hacemos
+  // en `useIonViewDidEnter` (no useEffect) para que el modal se abra
+  // DESPUÉS de que la animación de transición de tabs haya terminado
+  // · de lo contrario el modal aparece encima del slide a medio camino
+  // y se siente como si la transición no existiera.
+  const location = useLocation();
+  const menuRouter = useIonRouter();
+  useIonViewDidEnter(() => {
+    const params = new URLSearchParams(location.search);
+    const openSup = params.get('openSup');
+    if (!openSup) return;
+    if (openSup === 'batido') {
+      setBatidoOpen(true);
+    } else if (openSup === 'creatina') {
+      setCreatinaOpen(true);
+    }
+    // Reemplaza la URL sin el query · evita re-abrir al recargar.
+    menuRouter.push('/app/menu', 'none', 'replace');
+  });
+  const {
+    clearMeal,
+    restoreMeal,
+    removeMealExtra,
+    restoreMealExtra,
+    toggleDayExcludedFromAvg,
+    toggleDayHidden,
+    resetDayMenu,
+  } = useProfile();
+  // IonAlert de confirmación al "Resetear día" · réplica del v1
+  // mobileConfirm("Resetear día", "...se perderán los cambios locales").
+  const [confirmResetDay, setConfirmResetDay] = useState<DayKey | null>(null);
+  const [resetToastOpen, setResetToastOpen] = useState(false);
   // Modal del editor de extras · null = cerrado · objeto con kind decide modo.
   // - { mode: 'create' } → crea nuevo extra para selectedDay.
   // - { mode: 'edit', extra } → edita un extra existente.
@@ -359,9 +477,28 @@ const MenuPage: React.FC = () => {
 
   // Datos del día seleccionado (siempre 4 comidas — el schema lo garantiza).
   const comidasDelDia = userDoc?.menu?.[selectedDay];
+
+  // Filas ordenadas (comidas + extras + suplementos) del día activo.
+  // Memoizamos · `buildOrderedRows` es O(n) (4 comidas + extras +
+  // batido/creatina) y se itera con .map() en el render. Sin memo se
+  // recomputa en cada re-render del parent (open meal, edición, etc.)
+  // creando un array nuevo cuyas claves cambian de identidad y fuerzan
+  // a React a comparar todas las MealCard hijas. Las deps son las
+  // únicas piezas que afectan al output.
+  const orderedRows = useMemo(
+    () => buildOrderedRows(selectedDay, userDoc),
+    [selectedDay, userDoc],
+  );
   const totales = useMemo<TotalesDia | null>(
-    () => (comidasDelDia ? calcTotales(comidasDelDia) : null),
-    [comidasDelDia],
+    () => (userDoc ? calcTotalesDia(userDoc, selectedDay) : null),
+    [userDoc, selectedDay],
+  );
+
+  // Media semanal de macros · v1 muestra esto al final del menú con
+  // animación de bump al cambiar (recalcWeeklyAvg + animateNumber).
+  const mediaSemanal = useMemo<MediaSemanal | null>(
+    () => calcMediaSemanal(userDoc),
+    [userDoc],
   );
 
   const objetivoKcal = useMemo(
@@ -371,7 +508,7 @@ const MenuPage: React.FC = () => {
 
   return (
     <IonPage className="app-tab-page">
-      <IonContent fullscreen>
+      <IonContent ref={contentRef} fullscreen>
         <div className="app-tab-content">
           <TabHeader
             title="Plan "
@@ -397,22 +534,32 @@ const MenuPage: React.FC = () => {
             }
           />
 
-          {/* ── Day segment scrollable ── */}
+          {/* ── Day segment scrollable · chips marcados con clases
+              `excluded` (no cuenta en media) y `hidden` (atenuado).
+              Réplica v1 .day-tab.tab-hidden / data-excluded. ── */}
           <div className="menu-day-segment" role="tablist" aria-label="Días de la semana">
             {DAY_KEYS.map((day) => {
               const active = selectedDay === day;
               const isToday = day === today;
+              const isExcluded = userDoc?.menuFlags?.excludedFromAvg.includes(day) ?? false;
+              const isHidden = userDoc?.menuFlags?.hidden.includes(day) ?? false;
               return (
                 <button
                   key={day}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  aria-label={DAY_LABEL_FULL[day]}
+                  aria-label={
+                    DAY_LABEL_FULL[day]
+                    + (isHidden ? ' · oculto' : '')
+                    + (isExcluded ? ' · excluido del promedio' : '')
+                  }
                   className={
                     'menu-day-chip'
                     + (active ? ' active' : '')
                     + (isToday ? ' today' : '')
+                    + (isExcluded ? ' menu-day-chip--excluded' : '')
+                    + (isHidden ? ' menu-day-chip--hidden' : '')
                   }
                   onClick={blurAndRun(() => setSelectedDay(day))}
                 >
@@ -491,13 +638,43 @@ const MenuPage: React.FC = () => {
             </div>
           )}
 
-          {comidasDelDia ? (
+          {comidasDelDia
+          && (userDoc?.menuFlags?.hidden.includes(selectedDay) ?? false) ? (
+            // Día oculto · placeholder con CTA para volver a mostrarlo.
+            // Réplica del v1 .day-content.day-hidden (sin la grid).
+            <div className="menu-day-hidden-card">
+              <div className="menu-day-hidden-info">
+                <IonIcon icon={eyeOffOutline} />
+                <div>
+                  <span className="menu-day-hidden-title">
+                    {DAY_LABEL_FULL[selectedDay]} está oculto
+                  </span>
+                  <span className="menu-day-hidden-sub">
+                    Sus comidas siguen guardadas y no cuentan en la media
+                    semanal. Puedes mostrarlo cuando quieras.
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="menu-day-hidden-btn"
+                onClick={() => {
+                  toggleDayHidden(selectedDay).catch((err) =>
+                    console.error('[BTal] toggleDayHidden:', err),
+                  );
+                }}
+              >
+                <IonIcon icon={eyeOutline} />
+                Mostrar día
+              </button>
+            </div>
+          ) : comidasDelDia ? (
             <div className="menu-meal-list">
               {/* Lista unificada de filas ordenadas por hora · combinamos
                   las 4 comidas del día y, si están añadidos, las mini-cards
                   de batido y creatina. La hora la lee del override → de la
                   comida → del default · garantiza orden estable. */}
-              {buildOrderedRows(selectedDay, userDoc).map((row) => {
+              {orderedRows.map((row) => {
                 if (row.kind === 'meal') {
                   return (
                     <MealCard
@@ -564,6 +741,48 @@ const MenuPage: React.FC = () => {
                 </span>
               </div>
             </div>
+          )}
+
+          {/* Total del día seleccionado · justo antes de la media
+              semanal · 4 pills con kcal/prot/carb/fat sumando comidas
+              + extras + batido (si está añadido al día). Cada número
+              rebota con btal-anim-bump al cambiar. Réplica v1
+              `.day-total` + `.day-total-macros` + menú ⋯ con 3 opciones. */}
+          {comidasDelDia && totales && (
+            <DayTotalCard
+              day={selectedDay}
+              totales={totales}
+              isExcluded={
+                userDoc?.menuFlags?.excludedFromAvg.includes(selectedDay) ?? false
+              }
+              isHidden={
+                userDoc?.menuFlags?.hidden.includes(selectedDay) ?? false
+              }
+              onToggleExcluded={() => {
+                toggleDayExcludedFromAvg(selectedDay).catch((err) =>
+                  console.error('[BTal] toggleDayExcludedFromAvg:', err),
+                );
+              }}
+              onToggleHidden={() => {
+                toggleDayHidden(selectedDay).catch((err) =>
+                  console.error('[BTal] toggleDayHidden:', err),
+                );
+              }}
+              onReset={() => setConfirmResetDay(selectedDay)}
+            />
+          )}
+
+          {/* Media semanal de macros · réplica v1 .macro-overview. Solo
+              se muestra si hay al menos 1 día con datos. La `key`
+              compuesta (selectedDay + viewKey) hace que el componente
+              se remonte cada vez que cambias de día o entras a la tab
+              MENÚ → la animación count-up de los números arranca
+              desde 0 otra vez. */}
+          {mediaSemanal && (
+            <WeeklyAverageCard
+              key={`${selectedDay}-${viewKey}`}
+              avg={mediaSemanal}
+            />
           )}
 
           <div className="app-tab-pad-bottom" />
@@ -781,6 +1000,47 @@ const MenuPage: React.FC = () => {
           color="warning"
         />
 
+        {/* IonAlert · confirmación al "Resetear día" del DayTotalCard.
+            Réplica del v1 mobileConfirm("Resetear día", "..."). El
+            user pierde los cambios del día y vuelve a las comidas
+            por defecto (demo para invitados, vacías para reales). */}
+        <IonAlert
+          isOpen={confirmResetDay !== null}
+          onDidDismiss={() => setConfirmResetDay(null)}
+          header="¿Resetear día?"
+          message={
+            confirmResetDay
+              ? `Vamos a restaurar las 4 comidas del ${DAY_LABEL_FULL[confirmResetDay].toLowerCase()} al menú original. Se perderán los cambios que hayas hecho ese día. Esta acción no se puede deshacer.`
+              : ''
+          }
+          buttons={[
+            { text: 'Cancelar', role: 'cancel' },
+            {
+              text: 'Resetear',
+              role: 'destructive',
+              handler: () => {
+                if (!confirmResetDay) return;
+                const day = confirmResetDay;
+                resetDayMenu(day)
+                  .then(() => setResetToastOpen(true))
+                  .catch((err) =>
+                    console.error('[BTal] resetDayMenu:', err),
+                  );
+              },
+            },
+          ]}
+        />
+
+        {/* Toast de confirmación post-reset · entra y sale en 2s. */}
+        <IonToast
+          isOpen={resetToastOpen}
+          onDidDismiss={() => setResetToastOpen(false)}
+          message="Día reseteado"
+          duration={2000}
+          position="bottom"
+          color="success"
+        />
+
         {/* Editor de mini-card · hora + título override + quitar del día.
             Lo abre el onClick de las mini-cards · separa el flujo "edito
             esta card de este día" (común) del "edito la receta global"
@@ -819,6 +1079,245 @@ const MenuPage: React.FC = () => {
 export default MenuPage;
 
 // ─── Sub-componentes locales ───────────────────────────────────────────────
+
+// Card "TOTAL [DÍA]" · vive al final del menú, justo antes de la
+// media semanal. 4 pills con macros del día sumando comidas + extras
+// + batido + creatina (la creatina suelta no aporta macros pero el
+// batido sí). Cada número re-monta con `key={value}` para reanimar
+// con `btal-anim-bump` al cambiar. Réplica del v1 `.day-total` con
+// `.day-total-label` ("TOTAL LUNES") + `.day-total-macros` (4 pills).
+//
+// Botón ⋯ a la derecha · abre IonPopover con 3 opciones (igual que el
+// v1 .day-menu-popup):
+//   - Excluir/Incluir en media semanal
+//   - Ocultar/Mostrar día
+//   - Resetear día (con IonAlert de confirmación)
+interface DayTotalCardProps {
+  day: DayKey;
+  totales: TotalesDia;
+  isExcluded: boolean;
+  isHidden: boolean;
+  onToggleExcluded: () => void;
+  onToggleHidden: () => void;
+  onReset: () => void;
+}
+function DayTotalCard({
+  day,
+  totales,
+  isExcluded,
+  isHidden,
+  onToggleExcluded,
+  onToggleHidden,
+  onReset,
+}: DayTotalCardProps) {
+  const [popoverEvent, setPopoverEvent] = useState<MouseEvent | undefined>(
+    undefined,
+  );
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  const closePopover = () => {
+    setPopoverOpen(false);
+    setPopoverEvent(undefined);
+  };
+
+  return (
+    <div
+      className={
+        'menu-day-total'
+        + (isExcluded ? ' menu-day-total--excluded' : '')
+        + (isHidden ? ' menu-day-total--hidden' : '')
+      }
+    >
+      <div className="menu-day-total-head">
+        <div className="menu-day-total-head-info">
+          <span className="menu-day-total-label">
+            Total · {DAY_LABEL_FULL[day]}
+          </span>
+          <span className="menu-day-total-sub">
+            {isHidden
+              ? 'día oculto'
+              : isExcluded
+              ? 'no cuenta en la media'
+              : totales.comidasConDatos === 0
+              ? 'sin comidas'
+              : totales.comidasConDatos === 1
+              ? '1 comida'
+              : `${totales.comidasConDatos} comidas`}
+          </span>
+        </div>
+        <button
+          type="button"
+          className="menu-day-total-menu-btn"
+          aria-label="Opciones del día"
+          aria-haspopup="menu"
+          onClick={(e) => {
+            (e.currentTarget as HTMLElement).blur();
+            setPopoverEvent(e.nativeEvent);
+            setPopoverOpen(true);
+          }}
+        >
+          <IonIcon icon={ellipsisHorizontal} />
+        </button>
+      </div>
+      <div className="menu-day-total-macros">
+        <span className="menu-day-total-macro menu-day-total-macro--kcal">
+          <span
+            key={`k-${totales.kcal}`}
+            className="menu-day-total-macro-num btal-anim-bump"
+          >
+            {totales.kcal.toLocaleString('es-ES')}
+          </span>
+          <span className="menu-day-total-macro-unit">kcal</span>
+        </span>
+        <span className="menu-day-total-macro menu-day-total-macro--prot">
+          <span
+            key={`p-${totales.prot}`}
+            className="menu-day-total-macro-num btal-anim-bump"
+          >
+            {totales.prot}
+          </span>
+          <span className="menu-day-total-macro-unit">g P</span>
+        </span>
+        <span className="menu-day-total-macro menu-day-total-macro--carb">
+          <span
+            key={`c-${totales.carb}`}
+            className="menu-day-total-macro-num btal-anim-bump"
+          >
+            {totales.carb}
+          </span>
+          <span className="menu-day-total-macro-unit">g C</span>
+        </span>
+        <span className="menu-day-total-macro menu-day-total-macro--fat">
+          <span
+            key={`f-${totales.fat}`}
+            className="menu-day-total-macro-num btal-anim-bump"
+          >
+            {totales.fat}
+          </span>
+          <span className="menu-day-total-macro-unit">g G</span>
+        </span>
+      </div>
+
+      {/* Popover con las 3 opciones del día · réplica v1 .day-menu-popup. */}
+      <IonPopover
+        isOpen={popoverOpen}
+        event={popoverEvent}
+        onDidDismiss={closePopover}
+        showBackdrop={false}
+        dismissOnSelect
+        className="menu-day-popover"
+      >
+        <IonContent className="menu-day-popover-content">
+          <button
+            type="button"
+            className="menu-day-popover-item"
+            onClick={() => {
+              closePopover();
+              onToggleExcluded();
+            }}
+          >
+            <IonIcon icon={removeCircleOutline} />
+            <span>
+              {isExcluded
+                ? 'Incluir en media semanal'
+                : 'Excluir de media semanal'}
+            </span>
+          </button>
+          <button
+            type="button"
+            className="menu-day-popover-item"
+            onClick={() => {
+              closePopover();
+              onToggleHidden();
+            }}
+          >
+            <IonIcon icon={isHidden ? eyeOutline : eyeOffOutline} />
+            <span>{isHidden ? 'Mostrar día' : 'Ocultar día'}</span>
+          </button>
+          <button
+            type="button"
+            className="menu-day-popover-item menu-day-popover-item--warn"
+            onClick={() => {
+              closePopover();
+              onReset();
+            }}
+          >
+            <IonIcon icon={refreshOutline} />
+            <span>Resetear día</span>
+          </button>
+        </IonContent>
+      </IonPopover>
+    </div>
+  );
+}
+
+// Card de media semanal · vive al final del menú · réplica EXACTA
+// del v1 `.macro-overview` con 4 `.macro-item`. Cada stat tiene:
+//   - número grande (Bebas Neue) en el color de su macro
+//   - sufijo "kcal" / "g" inline, más pequeño y con opacidad
+//   - label uppercase debajo ("Calorías · media semanal", etc.)
+//
+// Animación: cuando la card entra en viewport por primera vez (≥30%)
+// los números cuentan de 0 al target con easeOutCubic 600ms (réplica
+// del v1 `animateNumber` + IntersectionObserver). Si el target cambia
+// después (al editar comidas), interpolan del valor actual al nuevo.
+function WeeklyAverageCard({ avg }: { avg: MediaSemanal }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const visible = useFirstVisible(ref);
+  // `enabled` solo deja arrancar el count-up cuando la card es
+  // visible · antes muestra 0. Cuando pasa a visible, anima 0 → target.
+  const kcal = useCountUp(avg.kcal, { enabled: visible });
+  const prot = useCountUp(avg.prot, { enabled: visible });
+  const carb = useCountUp(avg.carb, { enabled: visible });
+  const fat = useCountUp(avg.fat, { enabled: visible });
+
+  return (
+    <div ref={ref} className="menu-week-avg">
+      {/* Header tipo el de DayTotalCard · todo en una línea ·
+          "MEDIA SEMANAL · Promedio de los 7 días". */}
+      <div className="menu-week-avg-head">
+        <span className="menu-week-avg-head-label">
+          Media semanal
+          <span className="menu-week-avg-head-sub">
+            {' · Promedio de los 7 días'}
+          </span>
+        </span>
+      </div>
+      <div className="menu-week-avg-grid">
+        <div className="menu-week-avg-stat">
+          <div className="menu-week-avg-num menu-week-avg-num--kcal">
+            <span className="menu-week-avg-num-value">
+              {kcal.toLocaleString('es-ES')}
+            </span>
+            <span className="menu-week-avg-unit-inline">KCAL</span>
+          </div>
+          <div className="menu-week-avg-label">Calorías</div>
+        </div>
+        <div className="menu-week-avg-stat">
+          <div className="menu-week-avg-num menu-week-avg-num--prot">
+            <span className="menu-week-avg-num-value">{prot}</span>
+            <span className="menu-week-avg-unit-inline">G</span>
+          </div>
+          <div className="menu-week-avg-label">Proteína</div>
+        </div>
+        <div className="menu-week-avg-stat">
+          <div className="menu-week-avg-num menu-week-avg-num--carb">
+            <span className="menu-week-avg-num-value">{carb}</span>
+            <span className="menu-week-avg-unit-inline">G</span>
+          </div>
+          <div className="menu-week-avg-label">Carbohidratos</div>
+        </div>
+        <div className="menu-week-avg-stat">
+          <div className="menu-week-avg-num menu-week-avg-num--fat">
+            <span className="menu-week-avg-num-value">{fat}</span>
+            <span className="menu-week-avg-unit-inline">G</span>
+          </div>
+          <div className="menu-week-avg-label">Grasas</div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface DaySummaryProps {
   day: DayKey;
@@ -866,7 +1365,7 @@ function DaySummary({ day, totales, objetivoKcal }: DaySummaryProps) {
         </div>
       </div>
       <div className="menu-day-summary-info">
-        <div className="menu-day-summary-label">Total del día</div>
+        <div className="menu-day-summary-label">Progreso del día</div>
         <div className="menu-day-summary-value">
           {totales.kcal.toLocaleString('es-ES')} kcal
           {totales.prot > 0 && ` · ${totales.prot}g prot`}

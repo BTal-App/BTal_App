@@ -22,21 +22,12 @@ import {
 import { SaveIndicator } from './SaveIndicator';
 import {
   DAY_KEYS,
+  DAY_LABEL_FULL,
   type DayKey,
   type MealKey,
 } from '../templates/defaultUser';
 import './SettingsModal.css';
 import './DuplicateMealModal.css';
-
-const DAY_LABEL_FULL: Record<DayKey, string> = {
-  lun: 'Lunes',
-  mar: 'Martes',
-  mie: 'Miércoles',
-  jue: 'Jueves',
-  vie: 'Viernes',
-  sab: 'Sábado',
-  dom: 'Domingo',
-};
 
 const MEAL_LABEL: Record<MealKey, string> = {
   desayuno: 'Desayuno',
@@ -82,6 +73,10 @@ export function DuplicateMealModal({
   // Set de días seleccionados como destino. Arranca vacío en cada apertura.
   const [selected, setSelected] = useState<Set<DayKey>>(new Set());
   const [savedToast, setSavedToast] = useState(false);
+  // Toast de error si falla el guardado · réplica del patrón de Hoy.
+  // El SaveIndicator muestra "Error" 3s pero es discreto · este toast
+  // grande asegura que el user no se pierde la notificación.
+  const [errorToast, setErrorToast] = useState<string | null>(null);
   const [overwriteAlertOpen, setOverwriteAlertOpen] = useState(false);
   const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
   const submitting = saveStatus === 'saving';
@@ -135,7 +130,13 @@ export function DuplicateMealModal({
     const result = await runSave(() =>
       duplicateMeal(srcDay, meal, targets),
     );
-    if (result === SAVE_FAILED) return; // falló · SaveIndicator muestra Error 3s
+    if (result === SAVE_FAILED) {
+      // Toast de error visible · el SaveIndicator solo dura 3s y es
+      // discreto. Sin esto, el user puede pulsar Cerrar pensando que
+      // se guardó.
+      setErrorToast('No se pudo duplicar la comida. Inténtalo de nuevo.');
+      return;
+    }
     closeTimer.current = setTimeout(() => {
       setSavedToast(true);
       onClose();
@@ -297,6 +298,15 @@ export function DuplicateMealModal({
         duration={2000}
         position="bottom"
         color="success"
+      />
+
+      <IonToast
+        isOpen={errorToast !== null}
+        onDidDismiss={() => setErrorToast(null)}
+        message={errorToast ?? ''}
+        duration={3500}
+        position="bottom"
+        color="danger"
       />
     </>
   );

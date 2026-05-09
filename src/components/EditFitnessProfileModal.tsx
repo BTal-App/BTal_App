@@ -14,6 +14,8 @@ import {
   SAVE_FAILED,
   useSaveStatus,
 } from '../hooks/useSaveStatus';
+import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
+import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { ChipsInput } from './ChipsInput';
 import { CollapsibleSection } from './CollapsibleSection';
 import { SaveIndicator } from './SaveIndicator';
@@ -161,6 +163,10 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
   const [data, setData] = useState<EditableProfile>(empty);
   const [error, setError] = useState('');
   const [savedToast, setSavedToast] = useState(false);
+  const [confirmChanges, setConfirmChanges] = useState<{
+    changes: ChangeEntry[];
+    cleaned: { partial: Partial<EditableProfile>; data: EditableProfile };
+  } | null>(null);
   // Status del guardado · sincronizado con el await a Firestore vía
   // updateProfile. Se muestra como SaveIndicator al lado del botón.
   const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
@@ -187,6 +193,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
     setOriginal(seed);
     setData(seed);
     setError('');
+    setConfirmChanges(null);
     resetSave();
     // Pre-rellenamos los inputs imperiales con los valores convertidos.
     setPesoLbInput(seed.peso !== null ? String(Math.round(kgToLb(seed.peso))) : '');
@@ -269,11 +276,41 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
     return Object.keys(diffEditable(original, data)).length > 0;
   }, [original, data]);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!valid || !dirty || submitting) return;
     setError('');
-    if (closeTimer.current) clearTimeout(closeTimer.current);
     const partial = diffEditable(original, data);
+    // Diff editable es siempre edit (el perfil ya existe).
+    const changes: ChangeEntry[] = [];
+    pushDiff(changes, 'Nombre', original.nombre, data.nombre);
+    pushDiff(changes, 'Edad', original.edad, data.edad);
+    pushDiff(changes, 'Peso (kg)', original.peso, data.peso);
+    pushDiff(changes, 'Altura (cm)', original.altura, data.altura);
+    pushDiff(
+      changes,
+      'Sexo',
+      original.sexo === 'm' ? 'Hombre' : original.sexo === 'f' ? 'Mujer' : null,
+      data.sexo === 'm' ? 'Hombre' : data.sexo === 'f' ? 'Mujer' : null,
+    );
+    pushDiff(changes, 'Actividad', original.actividad, data.actividad);
+    pushDiff(changes, 'Días entreno', original.diasEntreno, data.diasEntreno);
+    pushDiff(changes, 'Equipamiento', original.equipamiento, data.equipamiento);
+    pushDiff(changes, 'Objetivo', original.objetivo, data.objetivo);
+    pushDiff(
+      changes,
+      'Restricciones',
+      original.restricciones.join(', '),
+      data.restricciones.join(', '),
+    );
+    pushDiff(changes, 'Notas', original.notas, data.notas);
+    setConfirmChanges({ changes, cleaned: { partial, data } });
+  };
+
+  const persistConfirmed = async () => {
+    if (!confirmChanges) return;
+    const { partial, data: nextData } = confirmChanges.cleaned;
+    setConfirmChanges(null);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
     const result = await runSave(() =>
       updateProfile(partial as Partial<UserProfile>),
     );
@@ -282,7 +319,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
       setError('No hemos podido guardar los cambios. Inténtalo de nuevo.');
       return;
     }
-    setOriginal(data);
+    setOriginal(nextData);
     // Esperamos a que el chip "Guardado" se vea antes de cerrar.
     closeTimer.current = setTimeout(() => {
       setSavedToast(true);
@@ -748,6 +785,16 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
           </div>
         </IonContent>
       </IonModal>
+
+      <ConfirmDiffAlert
+        pending={confirmChanges}
+        onCancel={() => setConfirmChanges(null)}
+        onConfirm={() => {
+          persistConfirmed().catch((err) =>
+            console.error('[BTal] persistConfirmed fitness:', err),
+          );
+        }}
+      />
 
       <IonToast
         isOpen={savedToast}

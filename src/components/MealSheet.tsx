@@ -15,11 +15,16 @@ import {
   waterOutline,
 } from 'ionicons/icons';
 import { blurAndRun } from '../utils/focus';
-import type { Comida, DayKey, MealKey } from '../templates/defaultUser';
+import {
+  DAY_LABEL_FULL,
+  type Comida,
+  type DayKey,
+  type MealKey,
+} from '../templates/defaultUser';
 import './MealSheet.css';
 
-// Etiquetas humanas — duplican las de MenuPage a propósito porque este
-// componente es reusable desde otros sitios futuros (HoyPage al migrar).
+// Etiquetas locales (emoji + label corto) · DAY_LABEL_FULL importado
+// arriba para usar la única fuente de verdad.
 const MEAL_EMOJI: Record<MealKey, string> = {
   desayuno: '🌅',
   comida: '☀️',
@@ -32,16 +37,6 @@ const MEAL_LABEL: Record<MealKey, string> = {
   comida: 'Comida',
   merienda: 'Merienda',
   cena: 'Cena',
-};
-
-const DAY_LABEL_FULL: Record<DayKey, string> = {
-  lun: 'Lunes',
-  mar: 'Martes',
-  mie: 'Miércoles',
-  jue: 'Jueves',
-  vie: 'Viernes',
-  sab: 'Sábado',
-  dom: 'Domingo',
 };
 
 interface Props {
@@ -99,7 +94,9 @@ export function MealSheet({
     >
       <IonContent>
         <div className="meal-sheet-content">
-          {/* ── Header ── título uppercase, día/hora/kcal en sub */}
+          {/* ── Header ── título uppercase + día/hora en sub.
+               Las kcal viven solo en el bento de macros · evitamos
+               duplicar info. */}
           <div className="meal-sheet-head">
             <div className="meal-sheet-emoji">
               {comida.emoji ?? MEAL_EMOJI[meal]}
@@ -109,7 +106,6 @@ export function MealSheet({
               <p>
                 {DAY_LABEL_FULL[day]}
                 {comida.hora && ` · ${comida.hora}`}
-                {!isEmpty && comida.kcal > 0 && ` · ${comida.kcal} kcal`}
               </p>
             </div>
             <button

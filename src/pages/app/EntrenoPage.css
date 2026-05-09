@@ -1,0 +1,596 @@
+/* EntrenoPage · Sub-fase 2D · plan switcher + banner + días + bottom sheet.
+   Adaptación del diseño de BTal_NewVersionPreview/index.html (.plan-mini,
+   .train-day, .exercise-row, tags coloreadas) a tokens BTal.
+   La lógica viene del v1 (planes builtIn 1..7 + custom, recomendación
+   según diasEntreno del perfil, badges 1-3 por día). */
+
+/* IonAlert "¿Confirmar cambios?" · preserva los saltos de línea del
+   diff antes/después y limita el alto para que se pueda hacer scroll
+   cuando hay muchos cambios. Réplica visual del v1 confirmSave. */
+ion-alert.entreno-confirm-alert .alert-message {
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* ── Plan switcher · scroll horizontal de mini-cards ─────────────── */
+.plan-cards {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px 4px;
+  margin-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.plan-cards::-webkit-scrollbar {
+  display: none;
+}
+
+.plan-mini {
+  flex-shrink: 0;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  min-width: 110px;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    transform 0.14s;
+  /* Reseteo de estilos por defecto del <button> */
+  font-family: inherit;
+  text-align: left;
+  position: relative;
+}
+
+.plan-mini:active {
+  transform: scale(0.97);
+}
+
+.plan-mini--active {
+  background: linear-gradient(
+    135deg,
+    rgba(181, 240, 55, 0.15),
+    rgba(55, 224, 168, 0.05)
+  );
+  border-color: var(--btal-lime);
+}
+
+.plan-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--btal-lime);
+  font-feature-settings: 'tnum';
+}
+
+.plan-lbl {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--btal-t-2);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Marcador "★ Recomendado" · solo en el plan que coincide con
+   profile.diasEntreno (o el más cercano). El color es dinámico:
+   leemos `--rec-color` inyectado desde EntrenoPage según la escala
+   0 (peor, coral) → 7 (mejor, verde). Fallback `--btal-gold` para el
+   caso null (user sin días declarados). */
+.plan-mini--recommended::after {
+  content: '★ Recomendado';
+  display: block;
+  font-size: 0.56rem;
+  color: var(--rec-color, var(--btal-gold));
+  font-weight: 700;
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Tag "Custom" para planes no-builtIn · diferencia visual */
+.plan-mini-custom-tag {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--btal-blue);
+  font-weight: 700;
+}
+
+/* Slot "+ Nuevo" · borde sólido azul para diferenciarlo del resto */
+.plan-mini--new {
+  background: rgba(90, 168, 255, 0.06);
+  border-color: rgba(90, 168, 255, 0.4);
+}
+.plan-mini--new .plan-num {
+  color: var(--btal-blue);
+}
+.plan-mini--new .plan-lbl {
+  color: var(--btal-blue);
+}
+
+/* ── Banner de recomendación · color dinámico según diasEntreno ───
+   Todos los acentos (gradient, borde, icono, texto rec, link, hint)
+   leen `--rec-color` inyectado desde EntrenoPage. La escala va de
+   coral (0 días, peor) a verde puro (7 días, mejor). El fallback
+   `--btal-lime` mantiene el look anterior si la var no existe. */
+.entreno-banner {
+  margin: 14px 16px 0;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--rec-color, var(--btal-lime)) 12%, transparent),
+    transparent
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--rec-color, var(--btal-lime)) 30%, transparent);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.entreno-banner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(
+    in srgb,
+    var(--rec-color, var(--btal-lime)) 18%,
+    transparent
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--rec-color, var(--btal-lime));
+  font-size: 1.4rem;
+}
+
+.entreno-banner-text {
+  flex: 1;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--btal-t-2);
+  overflow-wrap: anywhere;
+}
+
+.entreno-banner-text b {
+  color: var(--btal-t-1);
+}
+
+.entreno-banner-rec {
+  color: var(--rec-color, var(--btal-lime));
+}
+
+.entreno-banner-link {
+  background: transparent;
+  border: 0;
+  color: var(--rec-color, var(--btal-lime));
+  font-weight: 700;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.entreno-banner-link:hover {
+  filter: brightness(0.85);
+}
+
+/* Recordatorio "Puedes cambiar los días en Editar datos del perfil"
+   · siempre al final del banner, separado por margin-top. Más
+   pequeño y atenuado para no competir con el mensaje principal. */
+.entreno-banner-hint {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed
+    color-mix(in srgb, var(--rec-color, var(--btal-lime)) 22%, transparent);
+  font-size: 0.74rem;
+  color: var(--btal-t-3);
+  line-height: 1.45;
+}
+.entreno-banner-hint b {
+  color: var(--btal-t-2);
+  font-weight: 600;
+}
+
+/* ── Header de sección · nombre del plan + botones acción ────────── */
+.entreno-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 16px 10px;
+}
+
+.entreno-section-head h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.entreno-section-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.entreno-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(90, 168, 255, 0.1);
+  border: 1px solid rgba(90, 168, 255, 0.3);
+  color: var(--btal-blue);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: background 0.15s;
+}
+.entreno-action-btn:hover {
+  background: rgba(90, 168, 255, 0.2);
+}
+
+.entreno-action-btn--danger {
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.35);
+  color: var(--btal-coral);
+}
+.entreno-action-btn--danger:hover {
+  background: rgba(255, 107, 107, 0.16);
+}
+
+/* ── Empty state cuando el plan no tiene días ────────────────────── */
+.entreno-empty {
+  margin: 0 16px 12px;
+  background: var(--btal-bg-2);
+  border: 1px dashed var(--btal-border-2);
+  border-radius: 16px;
+  padding: 28px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.entreno-empty ion-icon {
+  font-size: 2rem;
+  color: var(--btal-t-3);
+}
+.entreno-empty p {
+  margin: 0;
+  color: var(--btal-t-3);
+  font-size: 0.85rem;
+}
+
+/* ── Card de día · clickable, abre TrainSheet ────────────────────── */
+.train-day {
+  margin: 0 16px 12px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 20px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition:
+    border-color 0.18s,
+    background 0.18s;
+  /* Animación de entrada · pop-in suave (igual que cat-card de compra). */
+  animation: btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .train-day {
+    animation: none;
+  }
+}
+
+.train-day:hover {
+  border-color: var(--btal-border-2);
+}
+.train-day:active {
+  background: var(--btal-bg-2);
+}
+
+.train-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.train-day-id {
+  flex: 1;
+  min-width: 0;
+}
+
+.train-day-title {
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--btal-t-1);
+  overflow-wrap: anywhere;
+}
+
+.train-day-sub {
+  font-size: 0.74rem;
+  color: var(--btal-t-3);
+  margin-top: 2px;
+  font-weight: 500;
+  /* Permite romper líneas largas · evita desborde horizontal con
+     descripciones tipo "Pecho · Tríceps · Hombros · Bíceps · …". */
+  overflow-wrap: anywhere;
+}
+
+.train-day-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Badge del día semana · color lima destacado · réplica del v1 */
+.train-day-week {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+/* Badge "tiempo estimado" en azul · a la izquierda del día semana.
+   Mismo tamaño/forma que train-day-week pero color azul para
+   diferenciarlo claramente. Réplica visual del v1 ("~65 min"). */
+.train-day-time {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  background: rgba(90, 168, 255, 0.16);
+  color: var(--btal-blue);
+  border: 1px solid rgba(90, 168, 255, 0.3);
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-feature-settings: 'tnum';
+  white-space: nowrap;
+}
+
+.train-day-edit {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: transparent;
+  border: 0;
+  color: var(--btal-t-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: color 0.15s, background 0.15s;
+}
+.train-day-edit:hover {
+  background: var(--btal-bg-2);
+  color: var(--btal-t-1);
+}
+
+/* ── Tags de día · 1-3 chips coloreados según badge ──────────────── */
+.train-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  /* Default = lima · cada b-* sobreescribe el color y el background */
+  background: rgba(181, 240, 55, 0.12);
+  color: var(--btal-lime);
+  border: 1px solid rgba(181, 240, 55, 0.2);
+}
+
+/* Variantes color · cada badge se mapea a un color del tema ─────── */
+/* Grupo muscular */
+.tag.b-pecho {
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--btal-coral);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+.tag.b-espalda {
+  background: rgba(90, 168, 255, 0.12);
+  color: var(--btal-blue);
+  border-color: rgba(90, 168, 255, 0.2);
+}
+.tag.b-piernas {
+  background: rgba(55, 224, 168, 0.12);
+  color: var(--btal-cyan, rgb(55, 240, 168));
+  border-color: rgba(55, 224, 168, 0.2);
+}
+.tag.b-hombros {
+  background: rgba(240, 168, 56, 0.12);
+  color: var(--btal-gold);
+  border-color: rgba(240, 168, 56, 0.2);
+}
+.tag.b-biceps {
+  background: rgba(176, 122, 240, 0.14);
+  color: var(--btal-violet, #b07af0);
+  border-color: rgba(176, 122, 240, 0.25);
+}
+.tag.b-triceps {
+  background: rgba(240, 168, 56, 0.12);
+  color: var(--btal-gold);
+  border-color: rgba(240, 168, 56, 0.2);
+}
+.tag.b-core {
+  background: rgba(176, 122, 240, 0.14);
+  color: var(--btal-violet, #b07af0);
+  border-color: rgba(176, 122, 240, 0.25);
+}
+.tag.b-fullbody {
+  background: rgba(181, 240, 55, 0.12);
+  color: var(--btal-lime);
+  border-color: rgba(181, 240, 55, 0.2);
+}
+
+/* Tipo ejercicio */
+.tag.b-fuerza {
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--btal-coral);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+.tag.b-hipertrofia {
+  background: rgba(176, 122, 240, 0.14);
+  color: var(--btal-violet, #b07af0);
+  border-color: rgba(176, 122, 240, 0.25);
+}
+.tag.b-resistencia {
+  background: rgba(55, 224, 168, 0.12);
+  color: var(--btal-cyan, rgb(55, 240, 168));
+  border-color: rgba(55, 224, 168, 0.2);
+}
+.tag.b-cardio {
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--btal-coral);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+.tag.b-movilidad {
+  background: rgba(90, 168, 255, 0.12);
+  color: var(--btal-blue);
+  border-color: rgba(90, 168, 255, 0.2);
+}
+
+/* Tipo movimiento */
+.tag.b-empuje {
+  background: rgba(176, 122, 240, 0.14);
+  color: var(--btal-violet, #b07af0);
+  border-color: rgba(176, 122, 240, 0.25);
+}
+.tag.b-tiron {
+  background: rgba(90, 168, 255, 0.12);
+  color: var(--btal-blue);
+  border-color: rgba(90, 168, 255, 0.2);
+}
+
+/* Custom · siempre violeta para destacar que es texto libre del user */
+.tag.b-custom {
+  background: rgba(176, 122, 240, 0.14);
+  color: var(--btal-violet, #b07af0);
+  border-color: rgba(176, 122, 240, 0.25);
+}
+
+/* ── Lista de ejercicios dentro de la card del día ───────────────── */
+.train-day-exercises {
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(37, 43, 39, 0.6);
+}
+.exercise-row:last-child {
+  border-bottom: none;
+}
+
+.exercise-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--btal-t-1);
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.exercise-name span {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.exercise-sets {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--btal-lime);
+  flex-shrink: 0;
+  font-feature-settings: 'tnum';
+}
+
+/* "+ N ejercicios más" cuando se trunca la preview a 6 */
+.train-day-more {
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+/* Comentario final del día · texto pequeño gris al final */
+.train-day-note {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--btal-border);
+  font-size: 0.74rem;
+  color: var(--btal-t-3);
+  line-height: 1.45;
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+/* CTA "Añadir ejercicios" cuando el día está vacío de ejercicios */
+.train-day-empty-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  background: rgba(181, 240, 55, 0.08);
+  border: 1px solid rgba(181, 240, 55, 0.4);
+  color: var(--btal-lime);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.train-day-empty-cta:hover {
+  background: rgba(181, 240, 55, 0.16);
+  border-color: var(--btal-lime);
+}

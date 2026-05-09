@@ -70,7 +70,7 @@
 
 .onboarding-progress-label {
   margin-left: auto;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.7rem;
   color: var(--btal-t-3);
   letter-spacing: 0.06em;
@@ -208,7 +208,7 @@
   border: 1px solid var(--btal-border);
   border-radius: 10px;
   color: var(--btal-t-2);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   padding: 10px 0;
@@ -305,7 +305,7 @@
 .onboarding-counter {
   display: block;
   text-align: right;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.7rem;
   color: var(--btal-t-3);
   margin-top: -4px;

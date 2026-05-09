@@ -61,6 +61,9 @@ export function SupCountersInline({ kind }: Props) {
   const [yearInfoOpen, setYearInfoOpen] = useState(false);
   // Snapshot para "Deshacer" · capturado justo antes de un reset
   // periódico (semanal/mensual/anual). null = no hay nada que deshacer.
+  // Toast de error para fallos de reset/restore · sin esto el catch
+  // solo loggeaba a consola y el user no se enteraba.
+  const [errorToast, setErrorToast] = useState<string | null>(null);
   const [undoSnapshot, setUndoSnapshot] = useState<{
     kind: ResetKind;
     patch: Partial<Suplementos>;
@@ -213,6 +216,7 @@ export function SupCountersInline({ kind }: Props) {
       }
     } catch (err) {
       console.error('[BTal] reset sup error:', err);
+      setErrorToast('No se pudo reiniciar el contador. Inténtalo de nuevo.');
     }
   };
 
@@ -225,6 +229,7 @@ export function SupCountersInline({ kind }: Props) {
       await restoreSupValues(patch);
     } catch (err) {
       console.error('[BTal] undo reset error:', err);
+      setErrorToast('No se pudo deshacer el reinicio.');
     }
   };
 
@@ -542,6 +547,17 @@ export function SupCountersInline({ kind }: Props) {
             },
           },
         ]}
+      />
+
+      {/* Toast de error (rojo) · feedback visible si falla el reset
+          o el undo · evita el silencio del console.error sin más. */}
+      <IonToast
+        isOpen={errorToast !== null}
+        onDidDismiss={() => setErrorToast(null)}
+        message={errorToast ?? ''}
+        duration={3500}
+        position="bottom"
+        color="danger"
       />
     </>
   );

@@ -10,6 +10,8 @@ import type { User } from 'firebase/auth';
 import { updateUserProfile } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
 import { resizeImageToDataUrl } from '../utils/resizeImage';
+import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
+import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { initialsOf } from '../utils/userDisplay';
 import './SettingsModal.css';
 import './EditProfileModal.css';
@@ -38,6 +40,10 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
   const [busy, setBusy] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirmChanges, setConfirmChanges] = useState<{
+    changes: ChangeEntry[];
+    cleaned: { name: string | null; photoUrl: string | null };
+  } | null>(null);
 
   // Dos inputs distintos: galería y cámara. En móvil con `capture` el SO
   // abre la cámara directamente; sin `capture` deja elegir de galería.
@@ -51,6 +57,7 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
     setBusy(false);
     setImgBusy(false);
     setError('');
+    setConfirmChanges(null);
   };
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -86,13 +93,40 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
     setPhotoUrl(null);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     setError('');
+    const cleaned = {
+      name: name.trim() || null,
+      photoUrl: photoUrl ?? null,
+    };
+    // Siempre es edit · comparamos con los valores actuales del user.
+    const changes: ChangeEntry[] = [];
+    pushDiff(
+      changes,
+      'Nombre',
+      user.displayName?.trim() || null,
+      cleaned.name,
+    );
+    const beforePhoto = user.photoURL ?? null;
+    if (beforePhoto !== cleaned.photoUrl) {
+      changes.push({
+        label: 'Foto',
+        from: beforePhoto ? 'Definida' : '—',
+        to: cleaned.photoUrl ? 'Cambiada' : '—',
+      });
+    }
+    setConfirmChanges({ changes, cleaned });
+  };
+
+  const persistConfirmed = async () => {
+    if (!confirmChanges) return;
+    const cleaned = confirmChanges.cleaned;
+    setConfirmChanges(null);
     setBusy(true);
     try {
       await updateUserProfile(user, {
-        displayName: name.trim() || null,
-        photoURL: photoUrl,
+        displayName: cleaned.name,
+        photoURL: cleaned.photoUrl,
       });
       // refreshUser propaga el cambio (avatar/nombre) al Dashboard, Settings,
       // AccountInfoModal — todos los consumidores de AuthContext.
@@ -111,6 +145,7 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
     (photoUrl ?? null) !== (user.photoURL ?? null);
 
   return (
+    <>
     <IonModal
       isOpen={isOpen}
       onWillPresent={resetState}
@@ -231,5 +266,16 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
         </div>
       </div>
     </IonModal>
+
+    <ConfirmDiffAlert
+      pending={confirmChanges}
+      onCancel={() => setConfirmChanges(null)}
+      onConfirm={() => {
+        persistConfirmed().catch((err) =>
+          console.error('[BTal] persistConfirmed user profile:', err),
+        );
+      }}
+    />
+    </>
   );
 }

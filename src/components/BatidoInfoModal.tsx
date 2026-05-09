@@ -25,24 +25,17 @@ import {
   useSaveStatus,
 } from '../hooks/useSaveStatus';
 import { blockNonInteger, clampInt } from '../utils/numericInput';
+import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
+import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { SaveIndicator } from './SaveIndicator';
 import { SupCountersInline } from './SupCountersInline';
 import {
+  DAY_LABEL_FULL,
   type BatidoConfig,
   type DayKey,
 } from '../templates/defaultUser';
 import './SettingsModal.css';
 import './SupModal.css';
-
-const DAY_LABEL_FULL: Record<DayKey, string> = {
-  lun: 'Lunes',
-  mar: 'Martes',
-  mie: 'Miércoles',
-  jue: 'Jueves',
-  vie: 'Viernes',
-  sab: 'Sábado',
-  dom: 'Domingo',
-};
 
 interface Props {
   isOpen: boolean;
@@ -78,6 +71,10 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
   const [form, setForm] = useState<BatidoConfig | null>(null);
 
   const [savedToast, setSavedToast] = useState(false);
+  const [confirmChanges, setConfirmChanges] = useState<{
+    changes: ChangeEntry[];
+    cleaned: BatidoConfig;
+  } | null>(null);
   const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
   const submitting = saveStatus === 'saving';
 
@@ -100,6 +97,7 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
     setForm(null);
     setSavedToast(false);
     setToggleConfirmOpen(false);
+    setConfirmChanges(null);
     resetSave();
   };
 
@@ -122,11 +120,46 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
-  // Guarda la receta · vuelve a info al éxito · indicator + toast.
-  const handleSaveConfig = async () => {
-    if (!form || submitting) return;
+  // Formatea precio para diff · "12,90 €" o "—" si null/0.
+  const fmtPrecio = (p: number | null): string =>
+    p === null || p === undefined
+      ? '—'
+      : `${p.toFixed(2).replace('.', ',')} €`;
+
+  // Construye changes y abre el confirm · la receta siempre es edit
+  // (el config ya existe) así que comparamos campo a campo.
+  const handleSaveConfig = () => {
+    if (!form || submitting || !config) return;
+    const cleaned: BatidoConfig = { ...form };
+    const changes: ChangeEntry[] = [];
+    pushDiff(changes, 'Producto', config.producto_nombre, cleaned.producto_nombre);
+    pushDiff(
+      changes,
+      'Precio bote',
+      fmtPrecio(config.producto_precio),
+      fmtPrecio(cleaned.producto_precio),
+    );
+    pushDiff(changes, 'Gramos proteína', config.gr_prot, cleaned.gr_prot);
+    pushDiff(
+      changes,
+      'Incluye creatina',
+      config.includeCreatina ? 'Sí' : 'No',
+      cleaned.includeCreatina ? 'Sí' : 'No',
+    );
+    pushDiff(changes, 'Extras', config.extras, cleaned.extras);
+    pushDiff(changes, 'Kcal', config.kcal, cleaned.kcal);
+    pushDiff(changes, 'Proteína', config.prot, cleaned.prot);
+    pushDiff(changes, 'Carbos', config.carb, cleaned.carb);
+    pushDiff(changes, 'Grasa', config.fat, cleaned.fat);
+    setConfirmChanges({ changes, cleaned });
+  };
+
+  const persistConfirmed = async () => {
+    if (!confirmChanges) return;
+    const cleaned = confirmChanges.cleaned;
+    setConfirmChanges(null);
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    const result = await runSave(() => setBatidoConfig(form));
+    const result = await runSave(() => setBatidoConfig(cleaned));
     if (result === SAVE_FAILED) return;
     closeTimer.current = setTimeout(() => {
       setSavedToast(true);
@@ -243,7 +276,7 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                       <>
                         {' + '}
                         <strong>
-                          {userDoc?.suplementos.creatinaConfig.gr_dose ?? 3} g
+                          {userDoc?.suplementos?.creatinaConfig?.gr_dose ?? 3} g
                         </strong>
                         {' '}de creatina
                       </>
@@ -469,6 +502,16 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
           </div>
         </IonContent>
       </IonModal>
+
+      <ConfirmDiffAlert
+        pending={confirmChanges}
+        onCancel={() => setConfirmChanges(null)}
+        onConfirm={() => {
+          persistConfirmed().catch((err) =>
+            console.error('[BTal] persistConfirmed batido:', err),
+          );
+        }}
+      />
 
       <IonToast
         isOpen={savedToast}

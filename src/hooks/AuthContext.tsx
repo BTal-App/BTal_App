@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { consumePendingRedirect } from '../services/auth';
@@ -52,6 +52,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setVersion((v) => v + 1);
   }, []);
 
-  const value: AuthState = { user, loading, isAuthed: !!user, refreshUser };
+  // Memoizamos el value para que el árbol consumidor no re-renderice
+  // al recrearse el objeto en cada render del Provider · solo cuando
+  // cambien los datos reales (user, loading, refreshUser).
+  const value = useMemo<AuthState>(
+    () => ({ user, loading, isAuthed: !!user, refreshUser }),
+    [user, loading, refreshUser],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

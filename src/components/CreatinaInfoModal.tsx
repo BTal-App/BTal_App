@@ -20,24 +20,17 @@ import {
   useSaveStatus,
 } from '../hooks/useSaveStatus';
 import { blockNonInteger, clampInt } from '../utils/numericInput';
+import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
+import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { SaveIndicator } from './SaveIndicator';
 import { SupCountersInline } from './SupCountersInline';
 import {
+  DAY_LABEL_FULL,
   type CreatinaConfig,
   type DayKey,
 } from '../templates/defaultUser';
 import './SettingsModal.css';
 import './SupModal.css';
-
-const DAY_LABEL_FULL: Record<DayKey, string> = {
-  lun: 'Lunes',
-  mar: 'Martes',
-  mie: 'Miércoles',
-  jue: 'Jueves',
-  vie: 'Viernes',
-  sab: 'Sábado',
-  dom: 'Domingo',
-};
 
 interface Props {
   isOpen: boolean;
@@ -61,6 +54,10 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
   const [view, setView] = useState<'info' | 'edit'>('info');
   const [form, setForm] = useState<CreatinaConfig | null>(null);
   const [savedToast, setSavedToast] = useState(false);
+  const [confirmChanges, setConfirmChanges] = useState<{
+    changes: ChangeEntry[];
+    cleaned: CreatinaConfig;
+  } | null>(null);
   const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
   const submitting = saveStatus === 'saving';
   const [toggling, setToggling] = useState(false);
@@ -80,6 +77,7 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
     setForm(null);
     setSavedToast(false);
     setToggleConfirmOpen(false);
+    setConfirmChanges(null);
     resetSave();
   };
 
@@ -102,10 +100,33 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
-  const handleSaveConfig = async () => {
-    if (!form || submitting) return;
+  const fmtPrecio = (p: number | null): string =>
+    p === null || p === undefined
+      ? '—'
+      : `${p.toFixed(2).replace('.', ',')} €`;
+
+  const handleSaveConfig = () => {
+    if (!form || submitting || !config) return;
+    const cleaned: CreatinaConfig = { ...form };
+    const changes: ChangeEntry[] = [];
+    pushDiff(changes, 'Producto', config.producto_nombre, cleaned.producto_nombre);
+    pushDiff(
+      changes,
+      'Precio bote',
+      fmtPrecio(config.producto_precio),
+      fmtPrecio(cleaned.producto_precio),
+    );
+    pushDiff(changes, 'Gramos por dosis', config.gr_dose, cleaned.gr_dose);
+    pushDiff(changes, 'Notas', config.notas, cleaned.notas);
+    setConfirmChanges({ changes, cleaned });
+  };
+
+  const persistConfirmed = async () => {
+    if (!confirmChanges) return;
+    const cleaned = confirmChanges.cleaned;
+    setConfirmChanges(null);
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    const result = await runSave(() => setCreatinaConfig(form));
+    const result = await runSave(() => setCreatinaConfig(cleaned));
     if (result === SAVE_FAILED) return;
     closeTimer.current = setTimeout(() => {
       setSavedToast(true);
@@ -308,6 +329,16 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
           </div>
         </IonContent>
       </IonModal>
+
+      <ConfirmDiffAlert
+        pending={confirmChanges}
+        onCancel={() => setConfirmChanges(null)}
+        onConfirm={() => {
+          persistConfirmed().catch((err) =>
+            console.error('[BTal] persistConfirmed creatina:', err),
+          );
+        }}
+      />
 
       <IonToast
         isOpen={savedToast}

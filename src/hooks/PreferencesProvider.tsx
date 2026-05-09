@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Preferences, UnitsSystem, WeekStart } from '../utils/units';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
@@ -182,13 +182,19 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [persist],
   );
 
-  const value: PreferencesState = {
-    units: prefs.units,
-    weekStart: prefs.weekStart,
-    setUnits,
-    setWeekStart,
-    setPreferences,
-  };
+  // Memoizamos · evita re-renders del árbol consumidor cuando el
+  // Provider se re-renderiza por causas no-relevantes (uid cambió,
+  // ProfileProvider arriba se re-renderizó, etc.).
+  const value = useMemo<PreferencesState>(
+    () => ({
+      units: prefs.units,
+      weekStart: prefs.weekStart,
+      setUnits,
+      setWeekStart,
+      setPreferences,
+    }),
+    [prefs.units, prefs.weekStart, setUnits, setWeekStart, setPreferences],
+  );
 
   return (
     <PreferencesContext.Provider value={value}>

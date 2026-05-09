@@ -1,16 +1,20 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   IonContent,
   IonIcon,
   IonPage,
   IonSpinner,
+  useIonRouter,
 } from '@ionic/react';
 import {
   addOutline,
+  alertCircleOutline,
   arrowForwardOutline,
   barbellOutline,
+  bedOutline,
   cafeOutline,
   checkmarkCircleOutline,
+  chevronForwardOutline,
   flashOutline,
   flaskOutline,
   refreshOutline,
@@ -19,20 +23,30 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import {
+  HORA_DEFECTO,
+  MEAL_KEYS,
   calcBatidoStats,
   calcCreatinaStats,
+  type DiaEntreno,
+  type MealKey,
+  type PlanEntreno,
 } from '../../templates/defaultUser';
+import { badgeLabel, BADGE_BY_VAL } from '../../templates/exerciseCatalog';
+import { formatTiempoEstimado } from '../../utils/timeParser';
 import { computeSupAlerts } from '../../utils/supAlerts';
 import { SupAlertBox } from '../../components/SupAlertBox';
 import { todayDateStr, todayKey } from '../../utils/dateKeys';
 import { TabHeader } from '../../components/TabHeader';
 import { VerifyEmailBanner } from '../../components/VerifyEmailBanner';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
+import { MealSheet } from '../../components/MealSheet';
+import { TrainSheet } from '../../components/TrainSheet';
 import { LinkGuestAccountModal } from '../../components/LinkGuestAccountModal';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
 import { greetingName } from '../../utils/userDisplay';
+import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
 import './HoyPage.css';
 
 // Capitaliza la primera letra de cada palabra (excepto preposiciones cortas).
@@ -46,11 +60,59 @@ function formatToday(date: Date): string {
   return `${cap(dow)} · ${day} ${cap(month)} ${year}`;
 }
 
+// Etiquetas locales de las 4 comidas fijas (emoji + label). No
+// reusamos las de MenuPage porque son privadas a ese módulo · si en
+// el futuro se quiere unificar, mover a `templates/defaultUser.ts`.
+const MEAL_EMOJI: Record<MealKey, string> = {
+  desayuno: '🌅',
+  comida: '☀️',
+  merienda: '🍎',
+  cena: '🌙',
+};
+const MEAL_LABEL: Record<MealKey, string> = {
+  desayuno: 'Desayuno',
+  comida: 'Comida',
+  merienda: 'Merienda',
+  cena: 'Cena',
+};
+
+
 const HoyPage: React.FC = () => {
   const { user, loading } = useAuth();
   const { profile: userDoc, loading: profileLoading } = useProfile();
   const [linkGuestOpen, setLinkGuestOpen] = useState(false);
   const [aiGenOpen, setAiGenOpen] = useState(false);
+  // MealSheet · null = cerrado · al pulsar una comida del día se
+  // abre con el detalle (mismo modal que en MenuPage). Las acciones
+  // de Editar / Duplicar viven en MenuPage; aquí solo lectura.
+  const [openMeal, setOpenMeal] = useState<MealKey | null>(null);
+  // Reset del scroll al top al volver a la tab Hoy.
+  const contentRef = useRef<HTMLIonContentElement>(null);
+  useScrollTopOnEnter(contentRef);
+
+  // Router para navegar al tab Menú desde el botón "Ver menú →".
+  const router = useIonRouter();
+  const goToMenu = () => router.push('/app/menu', 'forward');
+
+  // Comidas del día de hoy · si el doc aún no se cargó, undefined.
+  const todayDay = todayKey();
+  const comidasHoy = userDoc?.menu?.[todayDay];
+
+  // Entreno de hoy · busca el día del plan activo cuyo `diaSemana`
+  // coincide con la clave de hoy. Si no hay match, hoy es día de
+  // descanso · la card mostrará el estado vacío. Réplica del v1.
+  const activePlanHoy: PlanEntreno | undefined = userDoc?.entrenos?.activePlan
+    ? userDoc.entrenos.planes[userDoc.entrenos.activePlan]
+    : undefined;
+  const diaEntrenoHoy: DiaEntreno | null
+    = activePlanHoy?.dias.find((d) => d.diaSemana === todayDay) ?? null;
+  const diaEntrenoHoyIdx = diaEntrenoHoy
+    ? activePlanHoy!.dias.indexOf(diaEntrenoHoy)
+    : -1;
+  // Estado del bottom sheet · cuando el user pulsa la card del día,
+  // abrimos el TrainSheet (mismo componente que usa la tab Entreno)
+  // con el detalle completo de ejercicios + series + reps.
+  const [trainSheetOpen, setTrainSheetOpen] = useState(false);
 
   if (loading || !user) {
     return (
@@ -91,7 +153,7 @@ const HoyPage: React.FC = () => {
 
   return (
     <IonPage className="app-tab-page">
-      <IonContent fullscreen>
+      <IonContent ref={contentRef} fullscreen>
         <div className="app-tab-content">
           <TabHeader
             title={displayName ? 'Hola, ' : '¡Hola!'}
@@ -175,44 +237,161 @@ const HoyPage: React.FC = () => {
             </div>
           ) : null}
 
-          {/* ─────────────── ENTRENO DE HOY ─────────────── */}
+          {/* ─────────────── ENTRENO DE HOY ───────────────
+               Conectado con la tab Entreno · busca en el plan activo
+               el día cuyo `diaSemana` coincide con HOY. Si lo encuentra,
+               renderiza la card con título + tags + preview de
+               ejercicios. Si no (descanso o sin asignar), muestra
+               estado vacío. Click en la card → navega al tab Entreno. */}
           <div className="app-section-title">
             <h2>Entreno de hoy</h2>
+            <button
+              type="button"
+              className="app-section-more"
+              onClick={blurAndRun(() => router.push('/app/entreno', 'forward'))}
+              aria-label="Abrir plan de entreno completo"
+            >
+              Ver plan
+              <IonIcon icon={chevronForwardOutline} />
+            </button>
           </div>
-          <div className="hoy-empty-card">
-            <div className="hoy-empty-icon">
-              <IonIcon icon={barbellOutline} />
-            </div>
-            <div className="hoy-empty-info">
-              <span className="hoy-empty-title">Sin entreno asignado</span>
-              <span className="hoy-empty-sub">
-                Aquí aparecerá tu sesión del día (ejercicios, series, tiempo
-                estimado) cuando definamos tu plan.
-              </span>
-            </div>
-          </div>
+          <EntrenoHoyCard
+            activePlan={activePlanHoy}
+            diaHoy={diaEntrenoHoy}
+            // Si hay día asignado a HOY · click abre el bottom sheet
+            // con el detalle de ejercicios. Si no (descanso/sin plan)
+            // · click navega a la tab Entreno para configurar.
+            onClick={() => {
+              if (diaEntrenoHoy) {
+                setTrainSheetOpen(true);
+              } else {
+                router.push('/app/entreno', 'forward');
+              }
+            }}
+          />
+          {/* Bottom sheet con el detalle del día · mismo componente
+              que usa EntrenoPage. Al pulsar "Editar día" navega al
+              tab Entreno. Sin el botón "Empezar entrenamiento" del
+              preview · solo lectura del detalle. */}
+          {activePlanHoy && diaEntrenoHoy && diaEntrenoHoyIdx >= 0 && (
+            <TrainSheet
+              isOpen={trainSheetOpen}
+              onClose={() => setTrainSheetOpen(false)}
+              plan={activePlanHoy}
+              diaIdx={diaEntrenoHoyIdx}
+              onEdit={() => {
+                setTrainSheetOpen(false);
+                router.push('/app/entreno', 'forward');
+              }}
+            />
+          )}
 
-          {/* ─────────────── COMIDAS DE HOY ─────────────── */}
+          {/* ─────────────── COMIDAS DE HOY ───────────────
+               Renderiza directamente las 4 comidas del día (con sus
+               extras si los hay). Cada card abre `MealSheet` (mismo
+               sheet que en MenuPage) para ver el detalle completo.
+               Para ediciones más profundas, el botón "Ver menú →" del
+               header lleva al tab Menú con todas las herramientas. */}
           <div className="app-section-title">
             <h2>Comidas de hoy</h2>
+            <button
+              type="button"
+              className="app-section-more"
+              onClick={blurAndRun(goToMenu)}
+              aria-label="Abrir menú completo"
+            >
+              Ver menú
+              <IonIcon icon={chevronForwardOutline} />
+            </button>
           </div>
-          <div className="hoy-empty-card">
-            <div className="hoy-empty-icon">
-              <IonIcon icon={cafeOutline} />
+          {comidasHoy ? (
+            <div className="hoy-meal-list">
+              {MEAL_KEYS.map((meal) => {
+                const comida = comidasHoy[meal];
+                const isEmpty = comida.alimentos.length === 0;
+                const plato = (comida.nombrePlato ?? '').trim();
+                const hora = comida.hora ?? HORA_DEFECTO[meal];
+                return (
+                  <button
+                    key={meal}
+                    type="button"
+                    className={
+                      'hoy-meal-card'
+                      + (isEmpty ? ' hoy-meal-card--empty' : '')
+                    }
+                    onClick={blurAndRun(() => setOpenMeal(meal))}
+                    aria-label={`Ver detalle de ${MEAL_LABEL[meal]}`}
+                  >
+                    <div className="hoy-meal-emoji" aria-hidden="true">
+                      {comida.emoji ?? MEAL_EMOJI[meal]}
+                    </div>
+                    <div className="hoy-meal-body">
+                      <div className="hoy-meal-row">
+                        <span className="hoy-meal-name">
+                          {MEAL_LABEL[meal]}
+                        </span>
+                        <span className="hoy-meal-time">{hora}</span>
+                      </div>
+                      {!isEmpty && plato && (
+                        <p className="hoy-meal-plato">{plato}</p>
+                      )}
+                      {!isEmpty ? (
+                        <div className="hoy-meal-macros">
+                          {comida.kcal > 0 && (
+                            <span className="hoy-meal-macro hoy-meal-macro--kcal">
+                              {comida.kcal} kcal
+                            </span>
+                          )}
+                          {comida.prot > 0 && (
+                            <span className="hoy-meal-macro hoy-meal-macro--prot">
+                              {comida.prot}g P
+                            </span>
+                          )}
+                          {comida.carb > 0 && (
+                            <span className="hoy-meal-macro hoy-meal-macro--carb">
+                              {comida.carb}g C
+                            </span>
+                          )}
+                          {comida.fat > 0 && (
+                            <span className="hoy-meal-macro hoy-meal-macro--fat">
+                              {comida.fat}g G
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="hoy-meal-empty-text">
+                          Aún sin definir · pulsa para añadir
+                        </p>
+                      )}
+                    </div>
+                    <IonIcon
+                      icon={chevronForwardOutline}
+                      className="hoy-meal-arrow"
+                      aria-hidden="true"
+                    />
+                  </button>
+                );
+              })}
             </div>
-            <div className="hoy-empty-info">
-              <span className="hoy-empty-title">Sin menú generado</span>
-              <span className="hoy-empty-sub">
-                Desayuno, comida, merienda y cena con sus macros aparecerán
-                aquí al generar tu plan.
-              </span>
+          ) : (
+            <div className="hoy-empty-card">
+              <div className="hoy-empty-icon">
+                <IonIcon icon={cafeOutline} />
+              </div>
+              <div className="hoy-empty-info">
+                <span className="hoy-empty-title">Cargando menú…</span>
+                <span className="hoy-empty-sub">
+                  Estamos sincronizando tus comidas con la base de datos.
+                </span>
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* ─────────────── SUPLEMENTACIÓN · Sub-fase 2B.5.b ─────────────── */}
-          <div className="app-section-title">
-            <h2>Suplementación</h2>
-          </div>
+          {/* ─────────────── SUPLEMENTACIÓN · Sub-fase 2C ─────────────────
+               El section-title general "Suplementación" se ha quitado:
+               cada card del bloque trae su propio section-title con
+               botón "Ver batido →" / "Ver creatina →" en lima. Más
+               coherente con la UI del preview NewVersion. */}
           <SuplementacionBlock />
 
           <div className="app-tab-pad-bottom" />
@@ -227,6 +406,24 @@ const HoyPage: React.FC = () => {
           <LinkGuestAccountModal
             isOpen={linkGuestOpen}
             onClose={() => setLinkGuestOpen(false)}
+          />
+        )}
+
+        {/* MealSheet · al pulsar una comida del listado de hoy se
+            abre el detalle (mismo sheet que en MenuPage). En esta
+            tab solo hay lectura · si el user pulsa "Editar" desde el
+            sheet, lo redirigimos al tab Menú con el día activo. */}
+        {openMeal && comidasHoy && (
+          <MealSheet
+            isOpen={openMeal !== null}
+            onClose={() => setOpenMeal(null)}
+            day={todayDay}
+            meal={openMeal}
+            comida={comidasHoy[openMeal]}
+            onEdit={() => {
+              setOpenMeal(null);
+              goToMenu();
+            }}
           />
         )}
 
@@ -276,6 +473,10 @@ function SuplementacionBlock() {
     marcarCreatinaTomadaHoy,
     cancelarCreatinaTomadaHoy,
   } = useProfile();
+  // Router local · los botones "Ver batido" / "Ver creatina" navegan
+  // a la tab Menú con `?openSup=...` para abrir el modal allí (con
+  // animación de transición de tabs en vez de modal inline en Hoy).
+  const router = useIonRouter();
 
   const sup = userDoc?.suplementos;
 
@@ -322,63 +523,107 @@ function SuplementacionBlock() {
   const creatinaTakenHoy = sup.last_creatina_date === today;
 
   return (
-    <div className="hoy-sup-grid">
+    <>
       {showBatido && (
-        <SupCardHoy
-          kind="batido"
-          emoji="🥤"
-          titulo="BATIDO PROTÉICO"
-          sub={
-            sup.batidoConfig.includeCreatina
-              ? `${sup.batidoConfig.gr_prot}g proteína + ${sup.creatinaConfig.gr_dose}g creatina`
-              : `${sup.batidoConfig.gr_prot}g proteína por dosis`
-          }
-          tomados={sup.batidos_tomados_total}
-          restantes={batidoStats.restantes}
-          tomadoHoy={batidoTakenHoy}
-          onMarcar={() => {
-            marcarBatidoTomadoHoy().catch((err) =>
-              console.error('[BTal] marcarBatido error:', err),
-            );
-          }}
-          onCancelar={() => {
-            cancelarBatidoTomadoHoy().catch((err) =>
-              console.error('[BTal] cancelarBatido error:', err),
-            );
-          }}
-          // Sub-fase 2B.5.b extension · solo semana en HoyPage (el mes
-          // está dentro del modal de stock al que se accede desde Menú).
-          showWeekMonth={true}
-          semana={sup.batidos_tomados_semana}
-          sup={sup}
-        />
+        <>
+          {/* Section-title individual del batido · igual estilo que
+              "Comidas de hoy · Ver menú →" pero por-card. Permite al
+              user pulsar "Ver batido →" para abrir el modal de
+              info/configuración (BatidoInfoModal · receta + macros +
+              counters · mismo modal que abre Menú → toolbar 🥤). */}
+          <div className="app-section-title hoy-sup-section-title">
+            <h2>Batido protéico</h2>
+            <button
+              type="button"
+              className="app-section-more"
+              onClick={blurAndRun(() =>
+                router.push('/app/menu?openSup=batido', 'forward'),
+              )}
+              aria-label="Ver detalles del batido"
+            >
+              Ver batido
+              <IonIcon icon={chevronForwardOutline} />
+            </button>
+          </div>
+          <SupCardHoy
+            kind="batido"
+            emoji="🥤"
+            titulo="BATIDO PROTÉICO"
+            sub={
+              sup.batidoConfig.includeCreatina
+                ? `${sup.batidoConfig.gr_prot}g proteína + ${sup.creatinaConfig.gr_dose}g creatina`
+                : `${sup.batidoConfig.gr_prot}g proteína por dosis`
+            }
+            tomados={sup.batidos_tomados_total}
+            restantes={batidoStats.restantes}
+            tomadoHoy={batidoTakenHoy}
+            onMarcar={() => {
+              marcarBatidoTomadoHoy().catch((err) =>
+                console.error('[BTal] marcarBatido error:', err),
+              );
+            }}
+            onCancelar={() => {
+              cancelarBatidoTomadoHoy().catch((err) =>
+                console.error('[BTal] cancelarBatido error:', err),
+              );
+            }}
+            // Sub-fase 2B.5.b extension · solo semana en HoyPage (el mes
+            // está dentro del modal de stock al que se accede desde Menú).
+            showWeekMonth={true}
+            semana={sup.batidos_tomados_semana}
+            sup={sup}
+          />
+        </>
       )}
 
       {showCreatina && (
-        <SupCardHoy
-          kind="creatina"
-          emoji="🥄"
-          titulo="CREATINA"
-          sub={`${sup.creatinaConfig.gr_dose}g por dosis`}
-          tomados={sup.creatinas_tomadas_total}
-          restantes={creatinaStats.restantes}
-          tomadoHoy={creatinaTakenHoy}
-          onMarcar={() => {
-            marcarCreatinaTomadaHoy().catch((err) =>
-              console.error('[BTal] marcarCreatina error:', err),
-            );
-          }}
-          onCancelar={() => {
-            cancelarCreatinaTomadaHoy().catch((err) =>
-              console.error('[BTal] cancelarCreatina error:', err),
-            );
-          }}
-          showWeekMonth={true}
-          semana={sup.creatinas_tomadas_semana}
-          sup={sup}
-        />
+        <>
+          <div className="app-section-title hoy-sup-section-title">
+            <h2>Creatina</h2>
+            <button
+              type="button"
+              className="app-section-more"
+              onClick={blurAndRun(() =>
+                router.push('/app/menu?openSup=creatina', 'forward'),
+              )}
+              aria-label="Ver detalles de la creatina"
+            >
+              Ver creatina
+              <IonIcon icon={chevronForwardOutline} />
+            </button>
+          </div>
+          <SupCardHoy
+            kind="creatina"
+            emoji="🥄"
+            titulo="CREATINA"
+            sub={`${sup.creatinaConfig.gr_dose}g por dosis`}
+            tomados={sup.creatinas_tomadas_total}
+            restantes={creatinaStats.restantes}
+            tomadoHoy={creatinaTakenHoy}
+            onMarcar={() => {
+              marcarCreatinaTomadaHoy().catch((err) =>
+                console.error('[BTal] marcarCreatina error:', err),
+              );
+            }}
+            onCancelar={() => {
+              cancelarCreatinaTomadaHoy().catch((err) =>
+                console.error('[BTal] cancelarCreatina error:', err),
+              );
+            }}
+            showWeekMonth={true}
+            semana={sup.creatinas_tomadas_semana}
+            sup={sup}
+          />
+        </>
       )}
-    </div>
+
+      {/* Los botones "Ver batido →" / "Ver creatina →" navegan ahora
+          a la tab Menú con `?openSup=batido|creatina` y MenuPage
+          abre el modal correspondiente (animación de transición de
+          tabs). Antes el modal se abría inline en Hoy · sustituido
+          para coherencia: la configuración vive en Menú, Hoy solo
+          muestra el resumen. */}
+    </>
   );
 }
 
@@ -438,8 +683,17 @@ function SupCardHoy({
   // Singular para el botón "Cancelar (descontar batido / dosis)".
   const palabraSing = kind === 'batido' ? 'batido' : 'dosis';
 
+  // Subtítulo · solo la receta corta · el contador de "restantes" vive
+  // ahora abajo en el bloque de stats (no duplicamos info).
+  const ctaLabel = kind === 'batido' ? 'Tomado' : 'Tomada';
+
   return (
     <div className={`hoy-sup-card hoy-sup-card--${kind}`}>
+      {/* Head compacto · estilo preview NewVersion: emoji + info +
+          CTA inline a la derecha. Cuando ya está tomado hoy, el CTA
+          cambia a un badge "✓ Tomado/a" + un mini-botón ⟳ cancelar
+          al lado. Mantenemos las animaciones (halo dorado/violeta al
+          pulsar, glow al pasar a estado tomado, fade-up del cancel). */}
       <div className="hoy-sup-head">
         <div className="hoy-sup-emoji" aria-hidden="true">
           {emoji}
@@ -448,46 +702,77 @@ function SupCardHoy({
           <h3>{titulo}</h3>
           <p>{sub}</p>
         </div>
-        {/* HoyPage solo permite marcar / cancelar tomado · los ajustes
-            (stock, contadores, edición de receta) viven en Menú →
-            botón 🥤 BATIDO / 🥄 CREATINA. Sin botón ⚙ aquí. */}
+        {stockState === 'none' ? null : tomadoHoy ? (
+          <div className="hoy-sup-cta-group">
+            <span
+              className={
+                `hoy-sup-cta hoy-sup-cta--taken hoy-sup-cta--${kind} `
+                + 'hoy-sup-cta--enter'
+              }
+            >
+              <IonIcon
+                icon={checkmarkCircleOutline}
+                className="hoy-sup-taken-check"
+              />
+              {ctaLabel}
+            </span>
+            <button
+              type="button"
+              className="hoy-sup-cancel-mini hoy-sup-cancel-mini--enter"
+              onClick={blurAndRun(onCancelar)}
+              aria-label={`Cancelar ${palabraSing} tomado hoy`}
+              title={`Cancelar (descontar ${palabraSing})`}
+            >
+              <IonIcon icon={refreshOutline} />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={`hoy-sup-cta hoy-sup-cta--${kind}`}
+            onClick={blurAndRun(onMarcar)}
+            disabled={marcarDisabled}
+          >
+            <IonIcon icon={addOutline} />
+            Tomar
+          </button>
+        )}
       </div>
 
-      {/* Tomados / Restantes · números grandes · igual layout que el v1.
-          `key={value}` en cada span para retriggear `btal-anim-bump` al
-          marcar/cancelar y dar feedback visual inmediato. */}
-      <div className="hoy-sup-stats-main">
-        <div className="hoy-sup-stat-main hoy-sup-stat-main--tomados">
-          <span className="hoy-sup-stat-main-label">{tomadosLabel}</span>
+      {/* Stats inferiores · 2 ó 3 cells horizontales (TOMADOS / RESTANTES
+          / ESTA SEMANA si aplica). Cada número con `btal-anim-bump` para
+          que rebote al cambiar (key={value} en cada span). */}
+      <div
+        className={
+          'hoy-sup-stats-row'
+          + (showWeekMonth ? '' : ' hoy-sup-stats-row--two')
+        }
+      >
+        <div className="hoy-sup-stat-cell">
           <span
             key={`tom-${tomados}`}
-            className="hoy-sup-stat-main-num btal-anim-bump"
+            className="hoy-sup-stat-num btal-anim-bump"
           >
             {tomados}
           </span>
+          <span className="hoy-sup-stat-label">{tomadosLabel}</span>
         </div>
-        <div className="hoy-sup-stat-main hoy-sup-stat-main--restantes">
-          <span className="hoy-sup-stat-main-label">
-            {kind === 'batido' ? 'BATIDOS RESTANTES' : 'DOSIS RESTANTES'}
-          </span>
+        <div className="hoy-sup-stat-cell">
           <span
             key={`rest-${restantesNum}`}
             className={
-              'hoy-sup-stat-main-num btal-anim-bump'
-              + ' hoy-sup-stat-main-num--' + stockState
+              'hoy-sup-stat-num btal-anim-bump'
+              + ' hoy-sup-stat-num--' + stockState
             }
           >
             {restantesNum}
           </span>
+          <span className="hoy-sup-stat-label">
+            {kind === 'batido' ? 'BATIDOS RESTANTES' : 'DOSIS RESTANTES'}
+          </span>
         </div>
-      </div>
-
-      {/* Solo mostramos "esta semana" en HoyPage · el mensual se ve en
-          el modal de stock (más detallado). El semanal se auto-resetea
-          cada lunes (`maybeResetSupCounters` en ProfileProvider). */}
-      {showWeekMonth && (
-        <div className="hoy-sup-stats hoy-sup-stats--single">
-          <div className="hoy-sup-stat">
+        {showWeekMonth && (
+          <div className="hoy-sup-stat-cell">
             <span
               key={`sem-${semana}`}
               className="hoy-sup-stat-num btal-anim-bump"
@@ -496,58 +781,16 @@ function SupCardHoy({
             </span>
             <span className="hoy-sup-stat-label">total esta semana</span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Botón principal · marcar / cancelar tomado hoy.
-          - Si no hay stock definido (none) → muestra "Define el stock".
-          - Si está marcado para hoy → badge ✓ + botón Cancelar (dashed rojo).
-          - Si no está marcado → botón "Marcar tomado hoy" (lima/violeta). */}
-      {stockState === 'none' ? (
+      {/* Empty state cuando no hay stock definido · invita a configurar
+          desde Menú (los ajustes de stock viven allí, no aquí). */}
+      {stockState === 'none' && (
         <div className="hoy-sup-stock-empty-info">
           Define el stock desde{' '}
           <strong>Menú → {kind === 'batido' ? '🥤 BATIDO' : '🥄 CREATINA'}</strong>
         </div>
-      ) : tomadoHoy ? (
-        <>
-          {/* Badge "✓ Tomado hoy": entra con pop-in (clase global)
-              y el ✓ rebota con check-pop tipo v1. El cancel-btn entra
-              con un fade-up suave al aparecer. */}
-          <div
-            className={
-              `hoy-sup-taken-badge hoy-sup-taken-badge--${kind} `
-              + 'hoy-sup-taken-badge--enter'
-            }
-          >
-            <IonIcon
-              icon={checkmarkCircleOutline}
-              className="hoy-sup-taken-check"
-            />
-            <span>
-              {kind === 'batido' ? 'Batido tomado hoy' : 'Creatina tomada hoy'}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="hoy-sup-cancel-btn hoy-sup-cancel-btn--enter"
-            onClick={blurAndRun(onCancelar)}
-          >
-            <IonIcon icon={refreshOutline} />
-            Cancelar (descontar {palabraSing})
-          </button>
-        </>
-      ) : (
-        <button
-          type="button"
-          className={`hoy-sup-mark-btn hoy-sup-mark-btn--${kind}`}
-          onClick={blurAndRun(onMarcar)}
-          disabled={marcarDisabled}
-        >
-          <IonIcon icon={addOutline} />
-          {kind === 'batido'
-            ? 'Marcar batido tomado hoy'
-            : 'Marcar creatina tomada hoy'}
-        </button>
       )}
 
       {/* Avisos de stock · réplica v1. Si el batido lleva creatina,
@@ -569,5 +812,124 @@ function SupCardHoy({
         return alerts.creatina && <SupAlertBox alert={alerts.creatina} />;
       })()}
     </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Card de "Entreno de hoy" · réplica visual del preview BTal.
+// Si hay día asignado en el plan activo, muestra título + tags + preview
+// de los 3 primeros ejercicios. Si no, muestra estado vacío "descanso".
+// Click en la card → navega al tab Entreno (mismo destino que el botón
+// "Ver plan →" del header). Mantiene la consistencia con el patrón
+// visual del v1 + preview.
+// ──────────────────────────────────────────────────────────────────────────
+
+interface EntrenoHoyCardProps {
+  activePlan: PlanEntreno | undefined;
+  diaHoy: DiaEntreno | null;
+  onClick: () => void;
+}
+
+function EntrenoHoyCard({ activePlan, diaHoy, onClick }: EntrenoHoyCardProps) {
+  // Sin plan activo o sin día asignado a HOY · estado vacío "descanso".
+  // Click → tab Entreno (para configurar o ver el plan).
+  if (!activePlan || !diaHoy) {
+    // 2 sub-casos:
+    //   · activePlan presente pero hoy no es día de entreno · cama azul.
+    //   · activePlan ausente (corrupción/edge case) · alerta naranja.
+    const isAlert = !activePlan;
+    return (
+      <button
+        type="button"
+        className={
+          'hoy-train-card hoy-train-card--rest'
+          + (isAlert ? ' hoy-train-card--alert' : '')
+        }
+        onClick={blurAndRun(onClick)}
+        aria-label={
+          isAlert ? 'Sin plan asignado · ir a Entreno' : 'Día de descanso · ver plan'
+        }
+      >
+        <div
+          className={
+            'hoy-train-icon ' +
+            (isAlert ? 'hoy-train-icon--alert' : 'hoy-train-icon--rest')
+          }
+        >
+          {/* Cama azul para descanso · alerta naranja si no hay plan
+              asignado (caso defensivo, prácticamente nunca pasa). */}
+          <IonIcon icon={isAlert ? alertCircleOutline : bedOutline} />
+        </div>
+        <div className="hoy-train-info">
+          <div className="hoy-train-label">
+            {isAlert ? 'Atención' : 'Día de descanso'}
+          </div>
+          <h3 className="hoy-train-title">
+            {isAlert ? 'Sin plan asignado' : 'No hay entrenamiento programado para hoy'}
+          </h3>
+        </div>
+        <IonIcon
+          icon={chevronForwardOutline}
+          className="hoy-train-chevron"
+        />
+      </button>
+    );
+  }
+
+  // Día asignado · render con título del día + tags de tipos
+  // (sin preview de ejercicios · esos se ven al abrir el bottom
+  // sheet TrainSheet pulsando la card).
+  const tags = [
+    { val: diaHoy.badge, custom: diaHoy.badgeCustom },
+    { val: diaHoy.badge2, custom: diaHoy.badgeCustom2 },
+    { val: diaHoy.badge3, custom: diaHoy.badgeCustom3 },
+  ]
+    .map((b) => ({
+      label: b.val ? badgeLabel(b.val, b.custom) : null,
+      cls: b.val ? BADGE_BY_VAL[b.val]?.cls ?? '' : '',
+    }))
+    .filter((b) => b.label !== null) as { label: string; cls: string }[];
+
+  return (
+    <button
+      type="button"
+      className="hoy-train-card"
+      onClick={blurAndRun(onClick)}
+      aria-label={`Entreno de hoy · ${diaHoy.titulo} · ver detalle`}
+    >
+      <div className="hoy-train-icon">
+        <IonIcon icon={barbellOutline} />
+      </div>
+      <div className="hoy-train-info">
+        <div className="hoy-train-label">
+          <span className="hoy-train-label-tag">HOY</span>
+        </div>
+        <h3 className="hoy-train-title">
+          {diaHoy.titulo || 'Entreno'}
+        </h3>
+        {(tags.length > 0 || (diaHoy.tiempoEstimadoMin && diaHoy.tiempoEstimadoMin > 0)) && (
+          <div className="hoy-train-tags">
+            {/* Badge azul de duración · si el día tiene tiempo
+                estimado configurado, se muestra como tag adicional
+                junto a los tipos. Mismo color azul que el badge en
+                la card del tab Entreno. */}
+            {diaHoy.tiempoEstimadoMin && diaHoy.tiempoEstimadoMin > 0 && (
+              <span className="tag hoy-train-time-tag">
+                ⏱ {formatTiempoEstimado(diaHoy.tiempoEstimadoMin)}
+              </span>
+            )}
+            {tags.map((t, i) => (
+              <span key={i} className={`tag ${t.cls}`}>
+                {t.label}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+      <IonIcon
+        icon={chevronForwardOutline}
+        className="hoy-train-chevron"
+      />
+    </button>
   );
 }

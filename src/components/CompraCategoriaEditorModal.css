@@ -1,0 +1,81 @@
+/* CompraCategoriaEditorModal · estilos específicos. La mayoría de
+   inputs reutilizan `.sup-input` y `.settings-modal-card`. */
+
+.cat-editor-emoji-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 9px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--btal-t-1);
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cat-editor-emoji-btn:hover {
+  background: var(--btal-surface-2);
+  border-color: var(--btal-border-2);
+}
+
+.cat-editor-emoji-preview {
+  font-size: 1.6rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.cat-editor-emoji-hint {
+  font-size: 0.84rem;
+  color: var(--btal-t-3);
+}
+
+/* Paleta de colores · 6 botones circulares, uno por color. */
+.cat-editor-colors {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+}
+
+.cat-editor-color {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--btal-border);
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.cat-editor-color:hover {
+  transform: scale(1.06);
+}
+
+.cat-editor-color--active {
+  border-color: var(--btal-t-1);
+  box-shadow: 0 0 0 2px var(--btal-bg);
+}
+
+/* Modal del emoji picker · diseño compacto. */
+.cat-editor-emoji-modal-content {
+  min-height: 100%;
+  background: var(--btal-bg);
+  display: flex;
+  flex-direction: column;
+  padding: max(env(safe-area-inset-top), 24px) 18px 24px;
+}
+
+.cat-editor-emoji-modal-title {
+  margin: 16px 0 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  font-weight: 800;
+  font-feature-settings: 'tnum';
+  color: var(--btal-t-1);
+  text-align: center;
+}

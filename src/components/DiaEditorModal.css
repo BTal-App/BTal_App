@@ -1,0 +1,557 @@
+/* DiaEditorModal · estilos específicos del editor de un día. Reutiliza
+   .sup-input, .sup-form-group, .sup-label, .sup-textarea, .sup-actions
+   de SupModal.css y .settings-modal-card de SettingsModal.css. */
+
+/* Estilo unificado para los <select> dentro del modal · evita el look
+   de plataforma (default browser) que choca con los inputs de texto.
+   Override de la transition de .sup-input · esa usa el shorthand
+   `background` que anima TAMBIÉN el background-image (chevron SVG),
+   creando un efecto raro de "flecha que se mueve" al hacer focus.
+   Aquí transition solo border-color y background-color. */
+.dia-editor-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d9491'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 32px;
+  cursor: pointer;
+  transition: border-color 0.18s, background-color 0.18s;
+}
+
+/* Optgroup amarillo · réplica del v1 (.plan-badge-select optgroup
+   color #ffd54f). Aplicado a todos los selectores con <optgroup> del
+   editor de día: badges y día de la semana (este último ya no tiene
+   optgroups pero lo dejamos coherente para uso futuro). */
+.dia-editor-select optgroup {
+  background: var(--btal-bg-2);
+  color: #ffd54f;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dia-editor-select option {
+  background: var(--btal-bg-2);
+  color: var(--btal-t-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Placeholders "— Sin asignar —" / "— Ninguno —" / "— Selecciona… —"
+   en cursiva · diferencia visualmente "no hay opción seleccionada"
+   de las opciones reales. Usamos t-2 (#aab3a8 · gris medio claro) en
+   vez de t-3 (#6a756a) para que se lea con contraste sobre el fondo
+   oscuro. Nota: Chrome/Edge/Firefox respetan font-style en <option>. */
+.dia-editor-select option[value=""],
+.dia-editor-ej-select option[value=""] {
+  font-style: italic;
+  color: var(--btal-t-2);
+}
+
+/* Slot de badge · select + (si custom) input adicional */
+.dia-editor-badge-slot .dia-editor-badge-custom {
+  margin-top: 6px;
+}
+
+/* Sección "Ejercicios" · header con contador.
+   El h3 ocupa siempre el 100% de la primera línea para que
+   "EJERCICIOS * (SELECCIONAR MÍNIMO 1)" no rompa internamente.
+   El contador cae a una segunda línea alineado a la derecha. */
+.dia-editor-section-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.dia-editor-section-head h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--btal-t-2);
+  font-weight: 700;
+  flex: 1 1 100%;
+}
+
+/* Contador "X ejercicios" · segunda línea, alineado a la derecha
+   con margin-left:auto. margin-top añade un pelín extra de aire
+   respecto al header. */
+.dia-editor-count {
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: 'tnum';
+  margin-left: auto;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.dia-editor-empty {
+  margin: 4px 0;
+  padding: 14px;
+  background: var(--btal-bg-2);
+  border: 1px dashed var(--btal-border-2);
+  border-radius: 12px;
+  color: var(--btal-t-3);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* Fila de ejercicio editable · ahora es position:relative para
+   permitir que el número se posicione absoluto en la esquina sup-
+   derecha sin quitar espacio al resto de inputs. */
+.dia-editor-ej-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 10px;
+  /* Espacio extra arriba-derecha para que el número no se solape
+     con el primer input (select de ejercicio). */
+  padding-top: 26px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+}
+
+/* Número del ejercicio · esquina superior derecha · solo informativo. */
+.dia-editor-ej-num {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--btal-t-3);
+  font-feature-settings: 'tnum';
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.dia-editor-ej-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dia-editor-ej-input {
+  /* Override del .sup-input · más compacto en este contexto. */
+  padding: 8px 10px;
+  font-size: 0.86rem;
+}
+
+.dia-editor-ej-input--small {
+  font-size: 0.78rem;
+}
+
+/* Selector principal del ejercicio · select con optgroups por badge,
+   labels en amarillo (réplica del v1: .plan-badge-select optgroup
+   con color #ffd54f). El chevron va inline como SVG. */
+.dia-editor-ej-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d9491'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding: 8px 32px 8px 10px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  /* Override del transition shorthand de .sup-input · evita que el
+     chevron SVG se anime al focus. */
+  transition: border-color 0.18s, background-color 0.18s;
+}
+
+/* Estilo de los <optgroup> · réplica del v1 (color #ffd54f, uppercase,
+   peso 700, letterspacing). Los <option> heredan del parent select.
+   Nota · Firefox/Safari respetan estos estilos en optgroup; Chrome
+   solo en algunos casos. */
+.dia-editor-ej-select optgroup {
+  background: var(--btal-bg-2);
+  color: #ffd54f;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dia-editor-ej-select option {
+  background: var(--btal-bg-2);
+  color: var(--btal-t-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Input de ejercicio custom · solo visible cuando se elige
+   "Personalizado…" o el valor actual no está en ningún catálogo. */
+.dia-editor-ej-custom {
+  /* Ya hereda padding compacto de .dia-editor-ej-input. Solo añadimos
+     un pequeño margin-top para diferenciarlo del select de arriba. */
+  margin-top: -2px;
+}
+
+/* Input de notas del ejercicio · va al final del bloque, debajo del
+   editor de series. Texto en gris para diferenciarlo visualmente del
+   nombre y de las series (que son los datos primarios). */
+.dia-editor-ej-notas {
+  color: var(--btal-t-2);
+  font-style: italic;
+}
+.dia-editor-ej-notas::placeholder {
+  font-style: normal;
+  color: var(--btal-t-3);
+}
+
+/* Marcador "*" verde lima para campos obligatorios · pequeña
+   separación del texto del header (2px) · ni pegado ni muy lejos. */
+.dia-editor-required {
+  color: var(--btal-lime);
+  font-weight: 800;
+  margin-left: 2px;
+}
+
+/* Tag "(opcional)" al lado de un label · cursiva y más pequeño
+   que el texto principal · indica al user que el campo no es
+   obligatorio sin ocupar mucho espacio. */
+.dia-editor-optional-tag {
+  font-size: 0.72em;
+  font-style: italic;
+  font-weight: 500;
+  color: var(--btal-t-3);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 2px;
+}
+
+/* Borde lima discreto cuando un input obligatorio está vacío.
+   Hint visual sin agresividad · se resuelve al teclear. */
+.dia-editor-input--missing {
+  border-color: rgba(181, 240, 55, 0.45) !important;
+}
+
+.dia-editor-ej-series {
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: 'tnum';
+  font-weight: 600;
+  /* Ancho corto para que no acapare la fila · series son tipo "4×6-8" */
+  max-width: 110px;
+  align-self: flex-start;
+}
+
+/* ── Editor estructurado de series (Series × Reps + Rango) ───────── */
+.dia-editor-series-block {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dia-editor-series-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.dia-editor-series-lbl {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: var(--btal-t-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dia-editor-series-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 8px;
+  color: var(--btal-t-1);
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: 'tnum';
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 5px 22px 5px 10px;
+  min-width: 56px;
+  text-align: center;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d9491'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 5px center;
+  background-size: 14px;
+}
+.dia-editor-series-select:focus {
+  outline: none;
+  border-color: var(--btal-lime);
+}
+
+.dia-editor-series-sep {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--btal-t-2);
+  padding-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.dia-editor-series-rango {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: var(--btal-t-2);
+  cursor: pointer;
+  user-select: none;
+  padding-bottom: 5px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.dia-editor-series-rango input[type='checkbox'] {
+  accent-color: var(--btal-lime);
+  cursor: pointer;
+}
+
+/* Toggle entre modo selectores numéricos y modo texto libre.
+   Botón pequeño cuadrado · cambia el icono según el modo activo. */
+.dia-editor-mode-toggle {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-3);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  align-self: flex-end;
+  padding-bottom: 2px;
+}
+.dia-editor-mode-toggle:hover {
+  background: var(--btal-surface);
+  color: var(--btal-t-1);
+}
+
+.dia-editor-ej-del {
+  /* Botón cuadrado fijo · ahora va a la derecha de las notas en
+     la misma fila (.dia-editor-ej-bottom-row). 36×36 sin estirarse. */
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 8px;
+  color: var(--btal-coral);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  transition: background 0.15s;
+}
+
+/* Fila final del bloque ejercicio · notas (flex 1) + papelera (36×36).
+   Mismo nivel vertical · papelera siempre a la derecha. */
+.dia-editor-ej-bottom-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.dia-editor-ej-bottom-row .dia-editor-ej-notas {
+  flex: 1;
+  min-width: 0;
+}
+.dia-editor-ej-del:hover {
+  background: rgba(255, 107, 107, 0.16);
+}
+
+.dia-editor-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  background: rgba(181, 240, 55, 0.08);
+  border: 1px solid rgba(181, 240, 55, 0.4);
+  color: var(--btal-lime);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.dia-editor-add-btn:hover {
+  background: rgba(181, 240, 55, 0.16);
+  border-color: var(--btal-lime);
+}
+
+/* Fila título (flex 1) + duración del entreno (flex 0 0 auto)
+   en la misma línea · permite ver ambos datos sin scroll vertical. */
+.dia-editor-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* sup-form-group ya tiene margin-bottom propio · no añadimos extra. */
+.dia-editor-row .sup-form-group {
+  margin-bottom: 0;
+}
+
+.dia-editor-row-titulo {
+  flex: 1;
+  min-width: 0;
+}
+
+.dia-editor-row-tiempo {
+  flex: 0 0 auto;
+  width: 130px;
+}
+
+/* Wrap a 2 líneas en pantallas estrechas · evita que la duración
+   se aplaste hasta hacer ilegible el placeholder "1h 20min". */
+@media (max-width: 380px) {
+  .dia-editor-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .dia-editor-row-tiempo {
+    width: 100%;
+  }
+}
+
+/* Editor estructurado de duración del entreno · 2 botones (modos)
+   separados a ancho completo · ocupan toda la fila y se reparten
+   al 50% · más fácil de pulsar y más claro qué modo está activo. */
+.dia-editor-tiempo-toggle {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.dia-editor-tiempo-tab {
+  flex: 1;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-2);
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 9px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.dia-editor-tiempo-tab:hover {
+  background: var(--btal-surface);
+  color: var(--btal-t-1);
+}
+
+/* Estado activo · texto + borde lima SIEMPRE, en cualquier subestado
+   (focus/hover/active). Antes el :hover sobrescribía el color al
+   blanco mientras el botón estaba activo · daba la sensación de
+   parpadeo · ahora forzamos lima en todas las combinaciones. */
+.dia-editor-tiempo-tab--active,
+.dia-editor-tiempo-tab--active:hover,
+.dia-editor-tiempo-tab--active:focus,
+.dia-editor-tiempo-tab--active:active {
+  background: rgba(181, 240, 55, 0.1);
+  border-color: var(--btal-lime);
+  color: var(--btal-lime);
+}
+
+.dia-editor-tiempo-inputs {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  /* Centrado horizontal · queda más equilibrado en pantallas anchas
+     y mejor legible que pegado a la izquierda. */
+  justify-content: center;
+}
+
+.dia-editor-tiempo-field {
+  display: flex;
+  align-items: stretch;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 9px;
+  overflow: hidden;
+  transition: border-color 0.18s;
+}
+.dia-editor-tiempo-field:focus-within {
+  border-color: var(--btal-lime);
+}
+
+.dia-editor-tiempo-num {
+  /* Override del .sup-input · sin border (el field es el contenedor) */
+  border: 0 !important;
+  background: transparent !important;
+  width: 80px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: 'tnum';
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 8px 6px;
+}
+
+/* Quita las flechitas del number en Chrome/Safari/Firefox · queda
+   limpio. El user usa el teclado o el inputMode='numeric'. */
+.dia-editor-tiempo-num::-webkit-outer-spin-button,
+.dia-editor-tiempo-num::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.dia-editor-tiempo-num[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.dia-editor-tiempo-unit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 1px solid var(--btal-border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--btal-t-3);
+  text-transform: lowercase;
+}

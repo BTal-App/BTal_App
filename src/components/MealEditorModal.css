@@ -94,7 +94,7 @@ button.meal-editor-emoji--clickable::after {
   font-size: 0.78rem;
   color: var(--btal-t-3);
   margin: 4px 0 0;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Botón Guardar · primary lima al fondo del editor.
@@ -156,9 +156,11 @@ button.meal-editor-emoji--clickable::after {
   background: transparent;
   border: none;
   outline: none;
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.4rem;
   letter-spacing: 0.02em;
+  font-weight: 800;
+  font-feature-settings: 'tnum';
   color: var(--btal-t-1);
   width: 100%;
   padding: 0;

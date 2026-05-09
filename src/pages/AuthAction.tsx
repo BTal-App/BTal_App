@@ -201,6 +201,7 @@ const AuthAction: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
+              maxLength={128}
               autoFocus
             />
             <button
@@ -224,6 +225,7 @@ const AuthAction: React.FC = () => {
               onChange={(e) => setPassword2(e.target.value)}
               required
               minLength={8}
+              maxLength={128}
             />
           </div>
 

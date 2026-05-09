@@ -1,0 +1,181 @@
+/* PlanEditorModal · estilos del editor de plan completo. Reutiliza
+   la estructura de SettingsModal y SupModal · las clases aquí cubren
+   solo el listado de días (que es la parte específica). */
+
+/* Header "DÍAS DEL PLAN *" + contador "X días seleccionados".
+   Mismo patrón que DiaEditorModal.section-head: h3 al 100% en la
+   primera línea, contador debajo alineado a la derecha con
+   margin-top/bottom simétricos para respiración consistente. */
+.plan-editor-section-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.plan-editor-section-head h3 {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--btal-t-2);
+  font-weight: 700;
+  flex: 1 1 100%;
+}
+
+.plan-editor-count {
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: 'tnum';
+  margin-left: auto;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  flex-shrink: 0;
+}
+
+.plan-editor-day-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 10px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+}
+
+.plan-editor-day-num {
+  width: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--btal-t-3);
+  font-feature-settings: 'tnum';
+}
+
+.plan-editor-day-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.plan-editor-day-input {
+  padding: 8px 10px;
+  font-size: 0.86rem;
+}
+
+.plan-editor-day-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238d9491'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding: 8px 32px 8px 10px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  /* Override del transition shorthand de .sup-input · evita que el
+     chevron SVG se anime al focus. */
+  transition: border-color 0.18s, background-color 0.18s;
+}
+
+/* Optgroup amarillo · réplica v1. Aunque los selectores de día semana
+   no usan optgroup, dejamos el rule para coherencia con DiaEditorModal
+   y para soportar futuros groupings (ej. "Días laborables" / "Fin de
+   semana"). */
+.plan-editor-day-select optgroup {
+  background: var(--btal-bg-2);
+  color: #ffd54f;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.plan-editor-day-select option {
+  background: var(--btal-bg-2);
+  color: var(--btal-t-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Placeholder "— Sin asignar —" en cursiva · gris t-2 (#aab3a8) para
+   que se lea sobre el fondo oscuro · t-3 quedaba muy apagado. */
+.plan-editor-day-select option[value=""] {
+  font-style: italic;
+  color: var(--btal-t-2);
+}
+
+.plan-editor-day-del {
+  width: 32px;
+  flex-shrink: 0;
+  background: rgba(255, 107, 107, 0.08);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  border-radius: 8px;
+  color: var(--btal-coral);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  transition: background 0.15s;
+}
+.plan-editor-day-del:hover:not(:disabled) {
+  background: rgba(255, 107, 107, 0.16);
+}
+.plan-editor-day-del:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.plan-editor-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  background: rgba(90, 168, 255, 0.08);
+  border: 1px solid rgba(90, 168, 255, 0.4);
+  color: var(--btal-blue);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.plan-editor-add-btn:hover {
+  background: rgba(90, 168, 255, 0.16);
+  border-color: var(--btal-blue);
+}
+
+/* Marcador "*" verde lima para campos obligatorios · diferencia
+   visual del coral que reservamos para errores/eliminar. */
+.plan-editor-required {
+  color: var(--btal-lime);
+  font-weight: 800;
+  margin-left: 2px;
+}
+
+/* Borde lima discreto en inputs con valor vacío que son obligatorios.
+   Solo visible mientras el user no escribe nada · se resuelve al
+   teclear cualquier carácter. Sirve de hint visual sin agresividad. */
+.plan-editor-day-input--missing {
+  border-color: rgba(181, 240, 55, 0.45) !important;
+}

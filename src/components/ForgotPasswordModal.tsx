@@ -107,6 +107,7 @@ export function ForgotPasswordModal({ isOpen, initialEmail = '', onClose }: Prop
                     autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    maxLength={254}
                     required
                     autoFocus
                   />

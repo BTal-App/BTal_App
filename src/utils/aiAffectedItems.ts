@@ -10,14 +10,12 @@
 
 import type {
   AiScopeChoice,
-  CategoriaCompraKey,
   DayKey,
   MealKey,
   SourceTag,
   UserDocument,
 } from '../templates/defaultUser';
 import {
-  CATEGORIAS_COMPRA,
   DAY_KEYS,
   MEAL_KEYS,
   formatAlimento,
@@ -89,41 +87,42 @@ function menuItems(userDoc: UserDocument): AffectedItem[] {
   return out;
 }
 
-// Items de entreno · días del plan activo (o el sugerido por diasEntreno).
-// Mostramos cada DÍA como un item (no cada ejercicio individual) para no
-// agobiar la UI con 30+ filas. Si la IA decide regenerar el día, sustituye
-// todos sus ejercicios; si el user excluye el día, queda intacto.
+// Items de entreno · días del plan activo. Réplica del v1: cada DÍA
+// es un item (no cada ejercicio) para no agobiar con 30+ filas. Si la
+// IA regenera el día sustituye todos sus ejercicios; si el user lo
+// excluye, queda intacto.
 function entrenosItems(userDoc: UserDocument): AffectedItem[] {
-  const planNum =
-    userDoc.entrenos.planActivo
-    ?? (userDoc.profile.diasEntreno && userDoc.profile.diasEntreno >= 1 && userDoc.profile.diasEntreno <= 7
-      ? (userDoc.profile.diasEntreno as 1 | 2 | 3 | 4 | 5 | 6 | 7)
-      : null);
-  if (planNum === null) return [];
-
-  const plan = userDoc.entrenos.planes[planNum];
+  const activeId = userDoc.entrenos?.activePlan;
+  if (!activeId) return [];
+  const plan = userDoc.entrenos.planes[activeId];
   if (!plan) return [];
 
   return plan.dias.map((d, idx) => ({
-    id: `entrenos:${planNum}:${idx}`,
+    id: `entrenos:${activeId}:${idx}`,
     section: 'entrenos' as const,
-    label: `Día ${d.letra} · ${d.nombre}`,
+    label: d.titulo || `Día ${idx + 1}`,
     sublabel:
-      d.tags.length > 0
-        ? d.tags.join(' · ') + ` · ${d.ejercicios.length} ejercicios`
+      d.descripcion
+        ? `${d.descripcion} · ${d.ejercicios.length} ejercicios`
         : `${d.ejercicios.length} ejercicios`,
     source: d.source,
   }));
 }
 
-// Items de compra · todas las categorías, todos los productos.
+// Items de compra · todas las categorías (incluyendo custom de Sub-fase
+// 2C), todos los productos. Usa el nuevo schema `{categorias, items}`.
 function compraItems(userDoc: UserDocument): AffectedItem[] {
   const out: AffectedItem[] = [];
-  for (const cat of CATEGORIAS_COMPRA) {
-    const items = userDoc.compra[cat.key as CategoriaCompraKey] ?? [];
-    items.forEach((it, idx) => {
+  const compra = userDoc.compra;
+  if (!compra || !compra.categorias) return out;
+  // Ordenadas por `order` para que el listado de items afectados
+  // siga el mismo orden visual que la tab Compra.
+  const ordered = [...compra.categorias].sort((a, b) => a.order - b.order);
+  for (const cat of ordered) {
+    const items = compra.items[cat.id] ?? [];
+    items.forEach((it) => {
       out.push({
-        id: `compra:${cat.key}:${idx}`,
+        id: `compra:${cat.id}:${it.id}`,
         section: 'compra',
         label: `${cat.emoji} ${it.nombre}`,
         sublabel:

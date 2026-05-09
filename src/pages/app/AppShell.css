@@ -46,10 +46,14 @@
   }
 }
 
-/* Padding inferior común a todas las tabs · evita que el bottom tab bar
-   tape el final del scroll. */
+/* Padding inferior común a todas las tabs · pequeño margen de aire
+   tras la última card. El tab bar nativo de Ionic (slot="bottom") ya
+   queda fuera del viewport del IonContent, así que NO necesitamos
+   compensar su altura: 100 px causaba un hueco vacío visible al hacer
+   scroll hasta el final. 16 px de aire es suficiente para que la
+   última card respire sin "salto" visual hacia el tab bar. */
 .app-tab-pad-bottom {
-  padding-bottom: 100px;
+  padding-bottom: 16px;
 }
 
 /* Section title reusable · "ENTRENO DE HOY", "COMIDAS DE HOY", etc. */
@@ -163,9 +167,11 @@
 }
 
 .app-soon-card h3 {
-  font-family: 'Bebas Neue', 'Inter', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.6rem;
   letter-spacing: 0.02em;
+  font-weight: 800;
+  font-feature-settings: 'tnum';
   color: var(--btal-t-1);
   margin: 0;
   line-height: 1;
@@ -180,7 +186,7 @@
 }
 
 .app-soon-tag {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.66rem;
   font-weight: 700;
   text-transform: uppercase;

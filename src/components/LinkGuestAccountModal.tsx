@@ -171,6 +171,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  maxLength={254}
                 />
               </div>
 
@@ -185,6 +186,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
+                  maxLength={128}
                 />
                 <button
                   type="button"
@@ -207,6 +209,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
                   onChange={(e) => setPassword2(e.target.value)}
                   required
                   minLength={8}
+                  maxLength={128}
                 />
               </div>
 

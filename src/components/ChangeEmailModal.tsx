@@ -127,6 +127,7 @@ export function ChangeEmailModal({ isOpen, user, onClose }: Props) {
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
                       required
+                      maxLength={254}
                       autoFocus
                     />
                   </div>

@@ -53,7 +53,7 @@
 }
 
 .collapsible-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.7rem;
   font-weight: 700;
   background: var(--btal-surface);

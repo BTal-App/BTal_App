@@ -152,7 +152,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--btal-t-1);
@@ -179,10 +179,274 @@
   color: var(--btal-t-1);
 }
 
+/* ── Card Total del día · vive al final del menú, justo antes de
+   .menu-week-avg. 4 pills con macros del día sumando comidas +
+   extras + batido. Réplica v1 `.day-total` + `.day-total-macros`.
+   Cada número rebota con btal-anim-bump al cambiar. */
+.menu-day-total {
+  margin: 24px 16px 0;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 14px 16px 16px;
+  animation: btal-pop-in 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
+  position: relative;
+}
+
+/* Variante "excluido" · borde discontinuo dorado · señaliza que NO
+   cuenta en la media semanal. */
+.menu-day-total--excluded {
+  border-style: dashed;
+  border-color: rgba(240, 168, 56, 0.45);
+}
+
+/* Variante "oculto" · atenuada al 60% para indicar visualmente el
+   estado. La card sigue visible para que el user pueda revertirlo
+   desde el menú ⋯. */
+.menu-day-total--hidden {
+  opacity: 0.55;
+}
+
+.menu-day-total-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.menu-day-total-head-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Botón ⋯ del menú de opciones del día · réplica v1 .day-menu-trigger.
+   Abre IonPopover con 3 opciones (excluir / ocultar / resetear). */
+.menu-day-total-menu-btn {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 0;
+  color: var(--btal-t-3);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  margin: -4px -4px 0 0;
+}
+
+.menu-day-total-menu-btn:hover {
+  background: var(--btal-bg-2);
+  color: var(--btal-t-1);
+}
+
+.menu-day-total-menu-btn ion-icon {
+  font-size: 1.2rem;
+}
+
+.menu-day-total-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+.menu-day-total-sub {
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.menu-day-total-macros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.menu-day-total-macro {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.1;
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.menu-day-total-macro-num {
+  /* `display: inline-block` necesario para que `transform: scale` del
+     btal-anim-bump tenga efecto sobre spans inline. */
+  display: inline-block;
+  font-weight: 800;
+}
+
+.menu-day-total-macro-unit {
+  font-size: 0.68rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* Acentos por macro · mismo color-language que en el resto de la app
+   (kcal=gold, prot=lime, carb=blue, fat=coral). */
+.menu-day-total-macro--kcal { color: var(--btal-gold); border-color: rgba(240, 168, 56, 0.35); background: rgba(240, 168, 56, 0.08); }
+.menu-day-total-macro--prot { color: var(--btal-lime); border-color: rgba(181, 240, 55, 0.35); background: rgba(181, 240, 55, 0.08); }
+.menu-day-total-macro--carb { color: var(--btal-blue); border-color: rgba(90, 168, 255, 0.35); background: rgba(90, 168, 255, 0.08); }
+.menu-day-total-macro--fat  { color: var(--btal-coral); border-color: rgba(255, 107, 107, 0.35); background: rgba(255, 107, 107, 0.08); }
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-day-total {
+    animation: none;
+  }
+}
+
 .menu-day-summary-sub {
   font-size: 0.76rem;
   color: var(--btal-t-3);
   margin-top: 2px;
+}
+
+/* ── Card de Media Semanal · vive al final del menú ───────────────────
+   Réplica EXACTA del v1 .macro-overview con 4 .macro-item: 4 columnas
+   en desktop / 2 cols en móvil, fondo surface + border + radius.
+   Cada stat: número grande Bebas Neue + sufijo "kcal" / "g" inline
+   más pequeño con opacidad, label uppercase pequeño debajo
+   ("Calorías · media semanal", etc.). Animación count-up de 0 →
+   target con easeOutCubic al entrar por primera vez en viewport
+   (gestionada en TS con useCountUp + useFirstVisible). */
+.menu-week-avg {
+  /* Sin margin-bottom · es la ÚLTIMA card del menú · el padding
+     común `.app-tab-pad-bottom` (16 px) cierra el scroll. */
+  margin: 28px 16px 0;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 14px;
+  padding: 14px 16px 16px;
+  /* Entrada suave del contenedor · NO de los números (que se animan
+     con count-up desde TS). */
+  animation: btal-pop-in 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Header de la card · todo en UNA línea: "MEDIA SEMANAL · Promedio
+   de los 7 días" (sub inline en el mismo span del label). */
+.menu-week-avg-head {
+  margin-bottom: 12px;
+}
+
+.menu-week-avg-head-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--btal-t-3);
+  font-weight: 700;
+}
+
+/* Sub-texto inline ("· Promedio de los 7 días") · pegado al label
+   principal · más fino y con opacidad para que se note la jerarquía
+   sin partir de línea. */
+.menu-week-avg-head-sub {
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+  text-transform: none;
+  margin-left: 2px;
+}
+
+.menu-week-avg-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .menu-week-avg-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+  .menu-week-avg {
+    padding: 12px 12px 14px;
+  }
+}
+
+.menu-week-avg-stat {
+  text-align: center;
+}
+
+.menu-week-avg-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-feature-settings: 'tnum';
+  /* Bloque centrado: el conjunto NÚMERO + UNIDAD se renderiza inline
+     y queda centrado horizontalmente respecto al cell · su centro
+     coincide con el centro del label de abajo. La unidad pesa hacia
+     la derecha pero como ambos elementos forman una sola caja inline
+     centrada, no descentra el conjunto. */
+  text-align: center;
+}
+
+.menu-week-avg-num-value {
+  display: inline;
+}
+
+@media (max-width: 600px) {
+  .menu-week-avg-num {
+    font-size: 1.3rem;
+  }
+}
+
+/* Sufijo "KCAL" / "G" inline · más pequeño y con opacidad · réplica
+   exacta del span del v1 (`font-size: .52em; margin-left: .18em;
+   opacity: .8`). Mayúsculas. */
+.menu-week-avg-unit-inline {
+  display: inline;
+  font-size: 0.52em;
+  margin-left: 0.18em;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.menu-week-avg-label {
+  font-size: 0.75rem;
+  color: var(--btal-t-3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 600px) {
+  .menu-week-avg-label {
+    font-size: 0.68rem;
+  }
+}
+
+/* Colores por macro · mismo color-language que en el v1 (kcal=gold,
+   prot=lime, carb=blue, fat=coral / red). */
+.menu-week-avg-num--kcal { color: var(--btal-gold); }
+.menu-week-avg-num--prot { color: var(--btal-lime); }
+.menu-week-avg-num--carb { color: var(--btal-blue); }
+.menu-week-avg-num--fat  { color: var(--btal-coral); }
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-week-avg {
+    animation: none;
+  }
 }
 
 /* Pista de a11y · día completo, oculta visualmente pero leída por SR */
@@ -313,17 +577,19 @@
   gap: 6px;
   color: var(--btal-t-1);
   min-width: 0;
+  /* Si el user pone un nombre muy largo (extras), parte palabra
+     antes que desbordar la card. */
+  overflow-wrap: anywhere;
   /* Título de la comida SIEMPRE en mayúsculas (Desayuno → DESAYUNO,
      "Pre-entreno" → "PRE-ENTRENO", "Batido protéico" → "BATIDO
      PROTÉICO"). Lo hacemos por CSS para no tocar los datos. Los chips
      internos (✎/✨ source, "extra", "✓ Añadido") NO se ven afectados
      porque tienen su propia clase. */
   text-transform: uppercase;
-  /* Garantizar que un título largo nunca rompa el layout: word-break
-     mantiene saltos limpios pero permite cortar palabras muy largas
-     si es necesario (URLs, nombres extremos). overflow-wrap: anywhere
-     refuerza el comportamiento. */
-  word-break: break-word;
+  /* Garantizar que un título largo nunca rompa el layout · permite
+     romper palabras muy largas (URLs, nombres extremos) si es
+     necesario. `anywhere` cubre todo el caso · word-break legacy
+     omitido por redundante. */
   overflow-wrap: anywhere;
 }
 
@@ -349,11 +615,28 @@
 }
 
 .menu-meal-time {
-  font-size: 0.72rem;
-  color: var(--btal-t-3);
-  font-weight: 600;
-  font-family: 'JetBrains Mono', monospace;
+  /* Pill tipográfica · igual de prominente en MealCard (comidas
+     fijas y extras) y en SupCard (batido/creatina). El nombre
+     largo de una comida puede envolver varias líneas y haría
+     que esta pill pareciese pequeña en proporción · subimos
+     un poco el tamaño para que destaque siempre. */
+  font-size: 0.85rem;
+  color: var(--btal-t-1);
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.02em;
   flex-shrink: 0;
+  padding: 5px 10px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 7px;
+  line-height: 1;
+  display: inline-grid;
+  place-items: center;
+  /* Que la pill quede alineada al inicio de la fila aunque el
+     nombre de la comida envuelva varias líneas · evita que
+     "flote" centrada verticalmente cuando el row es alto. */
+  align-self: flex-start;
 }
 
 .menu-meal-desc {
@@ -369,7 +652,6 @@
      (URLs en notas, ingredientes con guiones, etc.) · sin esto la
      palabra forzaba la card a crecer horizontalmente. */
   overflow-wrap: anywhere;
-  word-break: break-word;
 }
 
 .menu-meal-desc em {
@@ -388,7 +670,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', sans-serif;
   font-size: 0.66rem;
   font-weight: 600;
   padding: 3px 8px;
@@ -418,7 +700,9 @@
   align-items: center;
   gap: 5px;
   background: rgba(181, 240, 55, 0.1);
-  border: 1px dashed rgba(181, 240, 55, 0.5);
+  /* Borde sólido · coherente con .compra-add-item-btn /
+     .compra-add-categoria-btn que ya pasaron de dashed → solid. */
+  border: 1px solid rgba(181, 240, 55, 0.5);
   color: var(--btal-lime);
   font-family: inherit;
   font-size: 0.74rem;
@@ -440,7 +724,6 @@
 
 .menu-add-meal-btn:hover {
   background: rgba(181, 240, 55, 0.2);
-  border-style: solid;
 }
 
 .menu-add-meal-btn:active {
@@ -649,16 +932,23 @@
   background: rgba(55, 240, 168, 0.16);
   border: 1px solid rgba(55, 240, 168, 0.55);
   color: rgb(55, 240, 168);
-  padding: 1px 6px;
+  padding: 3px 7px;
+  line-height: 1;
   border-radius: 5px;
   white-space: nowrap;
   flex-shrink: 0;
+  /* `inline-grid` + `place-items: center` centra el texto exactamente
+     en el centro de la caja, ignorando el cap-height/baseline/ascender
+     de la fuente. Más robusto que `inline-flex + align-items: center`
+     para texto en mayúsculas. */
+  display: inline-grid;
+  place-items: center;
 }
 
 @media (max-width: 480px) {
   .menu-sup-tag {
     font-size: 0.55rem;
-    padding: 1px 5px;
+    padding: 3px 6px;
   }
 }
 
@@ -680,4 +970,143 @@
 .menu-macro-pill--fat {
   color: var(--btal-coral);
   background: rgba(255, 107, 107, 0.1);
+}
+
+/* ── Chips de día con flags de excluido / oculto · Sub-fase 2B.6 ─────
+   Réplica v1 .day-tab.tab-hidden / data-excluded='1'. El chip sigue
+   pulsable (puede haber comidas que el user quiere ver), pero
+   visualmente queda atenuado y/o con borde discontinuo. */
+.menu-day-chip--excluded:not(.active) {
+  border-style: dashed;
+  border-color: rgba(240, 168, 56, 0.4);
+}
+.menu-day-chip--hidden:not(.active) {
+  opacity: 0.5;
+}
+.menu-day-chip--hidden:not(.active) .menu-day-chip-name {
+  text-decoration: line-through;
+  text-decoration-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ── IonPopover de opciones del día · réplica v1 .day-menu-popup ─────
+   3 ítems clicables: Excluir / Ocultar / Resetear. El último en rojo
+   suave porque resetear es destructivo. */
+ion-popover.menu-day-popover {
+  --width: 240px;
+  --background: var(--btal-surface);
+  --backdrop-opacity: 0;
+  --box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+ion-popover.menu-day-popover::part(content) {
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+}
+.menu-day-popover-content {
+  --background: var(--btal-surface);
+  --padding-start: 6px;
+  --padding-end: 6px;
+  --padding-top: 6px;
+  --padding-bottom: 6px;
+}
+
+.menu-day-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-day-popover-item:hover {
+  background: var(--btal-bg-2);
+}
+
+.menu-day-popover-item ion-icon {
+  font-size: 1.1rem;
+  color: var(--btal-t-2);
+  flex-shrink: 0;
+}
+
+.menu-day-popover-item--warn {
+  color: var(--btal-coral);
+}
+.menu-day-popover-item--warn ion-icon {
+  color: var(--btal-coral);
+}
+.menu-day-popover-item--warn:hover {
+  background: rgba(255, 107, 107, 0.08);
+}
+
+/* ── Card "Día oculto" · placeholder cuando el día seleccionado
+   está oculto. Sustituye a la lista de comidas y ofrece CTA para
+   volver a mostrarlo. */
+.menu-day-hidden-card {
+  margin: 0 16px;
+  background: var(--btal-surface);
+  border: 1px dashed var(--btal-border-2);
+  border-radius: 16px;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  text-align: center;
+}
+
+.menu-day-hidden-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.menu-day-hidden-info ion-icon {
+  font-size: 1.8rem;
+  color: var(--btal-t-3);
+  flex-shrink: 0;
+}
+
+.menu-day-hidden-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--btal-t-1);
+  margin-bottom: 3px;
+}
+
+.menu-day-hidden-sub {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  line-height: 1.5;
+}
+
+.menu-day-hidden-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: rgba(181, 240, 55, 0.12);
+  border: 1px solid rgba(181, 240, 55, 0.4);
+  border-radius: 8px;
+  color: var(--btal-lime);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.menu-day-hidden-btn:hover {
+  background: rgba(181, 240, 55, 0.22);
+  border-color: var(--btal-lime);
 }

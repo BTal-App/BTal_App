@@ -14,6 +14,8 @@ import {
   useSaveStatus,
 } from '../hooks/useSaveStatus';
 import { SaveIndicator } from './SaveIndicator';
+import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
+import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { blockNonInteger, clampInt } from '../utils/numericInput';
 import './SettingsModal.css';
 import './SupModal.css';
@@ -68,6 +70,10 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
     productoPrecio === null ? '' : String(productoPrecio),
   );
   const [savedToast, setSavedToast] = useState(false);
+  const [confirmChanges, setConfirmChanges] = useState<{
+    changes: ChangeEntry[];
+    cleaned: { newStock: number | null; newNombre: string; newPrecio: number | null };
+  } | null>(null);
   const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
   const submitting = saveStatus === 'saving';
 
@@ -83,6 +89,7 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
     setNombreInput(productoNombre);
     setPrecioInput(productoPrecio === null ? '' : String(productoPrecio));
     setSavedToast(false);
+    setConfirmChanges(null);
     resetSave();
   };
 
@@ -95,15 +102,38 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
     return Math.min(9999.99, Math.round(n * 100) / 100);
   };
 
+  const fmtPrecio = (p: number | null): string =>
+    p === null || p === undefined
+      ? '—'
+      : `${p.toFixed(2).replace('.', ',')} €`;
+
   // Guarda los 3 campos (nombre, precio, gramos) en una sola operación.
-  const handleSaveAll = async () => {
+  const handleSaveAll = () => {
     if (submitting || !sup) return;
-    if (closeTimer.current) clearTimeout(closeTimer.current);
     const trimmed = stockInput.trim();
     const newStock: number | null =
       trimmed === '' ? null : clampInt(trimmed, 0, 99999);
     const newNombre = nombreInput.trim().slice(0, 60);
     const newPrecio = parsePrecio(precioInput);
+
+    // Siempre es edit (los datos del producto ya existen).
+    const changes: ChangeEntry[] = [];
+    pushDiff(changes, 'Nombre', productoNombre, newNombre);
+    pushDiff(
+      changes,
+      'Precio bote',
+      fmtPrecio(productoPrecio),
+      fmtPrecio(newPrecio),
+    );
+    pushDiff(changes, 'Stock (g)', current, newStock);
+    setConfirmChanges({ changes, cleaned: { newStock, newNombre, newPrecio } });
+  };
+
+  const persistConfirmed = async () => {
+    if (!confirmChanges || !sup) return;
+    const { newStock, newNombre, newPrecio } = confirmChanges.cleaned;
+    setConfirmChanges(null);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
     const result = await runSave(async () => {
       if (kind === 'batido') {
         const next = {
@@ -270,6 +300,16 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
           </div>
         </IonContent>
       </IonModal>
+
+      <ConfirmDiffAlert
+        pending={confirmChanges}
+        onCancel={() => setConfirmChanges(null)}
+        onConfirm={() => {
+          persistConfirmed().catch((err) =>
+            console.error('[BTal] persistConfirmed sup stock:', err),
+          );
+        }}
+      />
 
       <IonToast
         isOpen={savedToast}

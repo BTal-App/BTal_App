@@ -14,7 +14,6 @@ import type {
   Comida,
   Compra,
   DayKey,
-  DiaEntreno,
   Entrenos,
   ItemCompra,
   Menu,
@@ -25,6 +24,7 @@ import type {
 } from './defaultUser';
 import {
   DAY_KEYS,
+  DEFAULT_COMPRA_CATEGORIAS,
   HORA_DEFECTO,
   defaultGeneraciones,
   defaultPlan,
@@ -266,105 +266,26 @@ const DEMO_MENU: Menu = Object.fromEntries(
 
 // ── Plan de entreno · 4 días Push/Pull/Legs/Brazos ────────────────────────
 
-// Helper para ejercicios · todos del demo son source='default' (la IA
-// puede sobrescribirlos al regenerar para el invitado convertido a user real).
-type Tipo = 'fuerza' | 'hipertrofia' | 'cardio' | 'movilidad';
-const ej = (
-  nombre: string,
-  setsReps: string,
-  pesoKg: number | null,
-  tipo: Tipo,
-  nota?: string,
-) => ({
-  nombre,
-  setsReps,
-  ...(nota !== undefined ? { nota } : {}),
-  pesoKg,
-  tipo,
-  source: 'default' as const,
-});
-
-const DEMO_DIAS_4: DiaEntreno[] = [
-  {
-    letra: 'A',
-    nombre: 'Empuje',
-    tags: ['Pecho', 'Tríceps', 'Hombros'],
-    diaSemana: 'lun',
-    duracionMin: 65,
-    source: 'default',
-    ejercicios: [
-      ej('Press banca con barra', '4×6-8', 80, 'fuerza', 'Calentamiento progresivo'),
-      ej('Press inclinado mancuernas', '3×8-10', 24, 'hipertrofia', 'Inclinación 30°'),
-      ej('Aperturas en polea', '3×12', 12, 'hipertrofia', 'Contracción controlada'),
-      ej('Fondos en paralelas', '3×8-10', 10, 'fuerza', 'Lastrado si puedes'),
-      ej('Press francés barra Z', '3×10', 25, 'hipertrofia'),
-      ej('Extensiones tríceps polea', '3×12', 18, 'hipertrofia', 'Cuerda'),
-    ],
-  },
-  {
-    letra: 'B',
-    nombre: 'Tirón',
-    tags: ['Espalda', 'Bíceps'],
-    diaSemana: 'mar',
-    duracionMin: 60,
-    source: 'default',
-    ejercicios: [
-      ej('Dominadas', '4×6-8', 5, 'fuerza', 'Lastradas si puedes'),
-      ej('Remo con barra', '4×8', 70, 'fuerza'),
-      ej('Jalón al pecho', '3×10', 55, 'hipertrofia'),
-      ej('Curl con barra Z', '3×8-10', 25, 'hipertrofia'),
-      ej('Curl martillo', '3×12', 14, 'hipertrofia', 'Alternando'),
-    ],
-  },
-  {
-    letra: 'C',
-    nombre: 'Pierna',
-    tags: ['Piernas', 'Fuerza'],
-    diaSemana: 'jue',
-    duracionMin: 70,
-    source: 'default',
-    ejercicios: [
-      ej('Sentadilla con barra', '4×6-8', 100, 'fuerza', 'Bajo paralelo'),
-      ej('Peso muerto rumano', '4×8', 80, 'fuerza'),
-      ej('Prensa 45°', '3×10', 150, 'hipertrofia'),
-      ej('Zancadas con mancuernas', '3×10', 16, 'hipertrofia'),
-    ],
-  },
-  {
-    letra: 'D',
-    nombre: 'Hombro y brazos',
-    tags: ['Hombros', 'Bíceps', 'Tríceps'],
-    diaSemana: 'vie',
-    duracionMin: 55,
-    source: 'default',
-    ejercicios: [
-      ej('Press militar mancuernas', '4×8', 18, 'fuerza'),
-      ej('Elevaciones laterales', '3×12', 10, 'hipertrofia'),
-      ej('Pájaros con mancuernas', '3×12', 8, 'hipertrofia'),
-      ej('Curl alterno', '3×10', 14, 'hipertrofia'),
-      ej('Patada de tríceps polea', '3×12', 10, 'hipertrofia'),
-    ],
-  },
-];
-
-// Para los demás planes (1-3, 5-7) dejamos los días vacíos del default —
-// el demo solo trae rellenos los 4 días del plan recomendado.
-const DEMO_ENTRENOS: Entrenos = {
-  ...defaultUserDocument().entrenos,
-  planes: {
-    ...defaultUserDocument().entrenos.planes,
-    4: {
-      diasPorSemana: 4,
-      nombre: 'Plan 4 días — Push/Pull/Legs + Brazos',
-      dias: DEMO_DIAS_4,
-    },
-  },
-  planActivo: 4,
-};
+// Demo entrenos · usa el `defaultEntrenos()` que ya incluye el plan 4
+// días con ejemplo Push/Pull/Legs (sub-fase 2D). El user invitado lo ve
+// cargado de inicio · si quiere otro plan, edita o crea custom.
+const DEMO_ENTRENOS: Entrenos = defaultUserDocument().entrenos;
 
 // ── Lista de la compra (los 12 productos del v2) ──────────────────────────
 
-const itemBought = (nombre: string, cantidad: string, precio: number): ItemCompra => ({
+// IDs deterministas para items demo · si fueran timestamp+random, cada
+// vez que se monta el invitado tendría ids distintos en Firestore (lo
+// que rompería los toggles de "comprado" si abre la app desde 2 sitios).
+// Con este patrón "demo_<categoria>_<n>" el doc del invitado mantiene
+// los mismos ids entre sesiones.
+const itemBought = (
+  catId: string,
+  n: number,
+  nombre: string,
+  cantidad: string,
+  precio: number,
+): ItemCompra => ({
+  id: `demo_${catId}_${n}`,
   nombre,
   cantidad,
   comprado: true,
@@ -372,7 +293,14 @@ const itemBought = (nombre: string, cantidad: string, precio: number): ItemCompr
   source: 'default',
 });
 
-const itemPending = (nombre: string, cantidad: string, precio: number): ItemCompra => ({
+const itemPending = (
+  catId: string,
+  n: number,
+  nombre: string,
+  cantidad: string,
+  precio: number,
+): ItemCompra => ({
+  id: `demo_${catId}_${n}`,
   nombre,
   cantidad,
   comprado: false,
@@ -381,29 +309,33 @@ const itemPending = (nombre: string, cantidad: string, precio: number): ItemComp
 });
 
 const DEMO_COMPRA: Compra = {
-  proteinas: [
-    itemBought('Pechuga de pollo', '1 kg', 8.4),
-    itemPending('Salmón fresco', '500 g', 12.9),
-    itemPending('Huevos', '1 docena', 3.2),
-  ],
-  lacteos: [
-    itemBought('Yogur griego', 'Pack 4 ud', 3.5),
-    itemPending('Leche desnatada', '1 L', 1.1),
-  ],
-  hidratos: [],
-  frutas_verduras: [
-    itemBought('Plátanos', '1 kg', 1.2),
-    itemBought('Manzanas', '1 kg', 1.8),
-    itemPending('Brócoli', '1 ud', 2.0),
-    itemPending('Espinacas', '500 g', 1.5),
-    itemPending('Tomates', '1 kg', 2.2),
-  ],
-  despensa: [],
-  grasas: [],
-  suplementacion: [
-    itemBought('Whey protein', '750 g', 14.9),
-    itemBought('Creatina monohidrato', '300 g', 9.9),
-  ],
+  // Reusamos las 7 categorías builtIn por defecto.
+  categorias: DEFAULT_COMPRA_CATEGORIAS.map((c) => ({ ...c })),
+  items: {
+    proteinas: [
+      itemBought('proteinas', 1, 'Pechuga de pollo', '1 kg', 8.4),
+      itemPending('proteinas', 2, 'Salmón fresco', '500 g', 12.9),
+      itemPending('proteinas', 3, 'Huevos', '1 docena', 3.2),
+    ],
+    lacteos: [
+      itemBought('lacteos', 1, 'Yogur griego', 'Pack 4 ud', 3.5),
+      itemPending('lacteos', 2, 'Leche desnatada', '1 L', 1.1),
+    ],
+    hidratos: [],
+    frutas_verduras: [
+      itemBought('frutas_verduras', 1, 'Plátanos', '1 kg', 1.2),
+      itemBought('frutas_verduras', 2, 'Manzanas', '1 kg', 1.8),
+      itemPending('frutas_verduras', 3, 'Brócoli', '1 ud', 2.0),
+      itemPending('frutas_verduras', 4, 'Espinacas', '500 g', 1.5),
+      itemPending('frutas_verduras', 5, 'Tomates', '1 kg', 2.2),
+    ],
+    despensa: [],
+    grasas: [],
+    suplementacion: [
+      itemBought('suplementacion', 1, 'Whey protein', '750 g', 14.9),
+      itemBought('suplementacion', 2, 'Creatina monohidrato', '300 g', 9.9),
+    ],
+  },
 };
 
 // ── Suplementos · contadores de dosis restantes ───────────────────────────
@@ -524,3 +456,13 @@ export function demoUserDocument(): UserDocument {
 // Re-export del listado de claves para componentes que iteren los días
 // del menú demo sin tener que mirar Object.keys (TS inferiría string).
 export const DEMO_DAY_ORDER: DayKey[] = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
+
+// Devuelve una copia del menú demo para un día concreto. Usado al
+// "Resetear día" desde MenuPage en cuentas invitadas (Sub-fase 2B.6) ·
+// las cuentas reales no usan el demo, sino `defaultMenu()[day]` (4
+// comidas vacías).
+export function defaultDemoMenuForDay(day: DayKey) {
+  // Clonado profundo · evita que mutaciones posteriores en la card
+  // del día afecten a la fuente original DEMO_MENU.
+  return JSON.parse(JSON.stringify(DEMO_MENU[day])) as typeof DEMO_MENU[DayKey];
+}

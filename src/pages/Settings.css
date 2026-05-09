@@ -98,7 +98,7 @@
   font-size: 0.95rem;
   color: var(--btal-t-1);
   font-weight: 500;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .settings-row-sub {
@@ -201,7 +201,7 @@ button.settings-row {
 }
 
 .settings-avatar span {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 1.5rem;
   letter-spacing: 0.04em;
   color: var(--btal-lime);
