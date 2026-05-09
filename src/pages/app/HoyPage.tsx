@@ -494,7 +494,11 @@ function SuplementacionBlock() {
 
   if (!showBatido && !showCreatina) {
     return (
-      <div className="hoy-empty-card">
+      // `--section-start` añade margin-top:28px para separar la card
+      // del bloque de comidas que tiene encima. Sin ese modifier la
+      // card queda pegada a "Cena" porque arranca una sección sin
+      // section-title propio.
+      <div className="hoy-empty-card hoy-empty-card--section-start">
         <div className="hoy-empty-icon">
           <IonIcon icon={flaskOutline} />
         </div>

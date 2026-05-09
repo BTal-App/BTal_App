@@ -248,6 +248,16 @@
   margin-top: 10px;
 }
 
+/* Variante usada cuando la card empty arranca una sección entera (ej.
+   "Sin suplementos para hoy" que reemplaza al bloque de suplementos
+   completo · NO tiene `.app-section-title` encima porque cada sup
+   trae el suyo propio). Le damos el mismo margen superior que un
+   section-title (28px) para mantener el rhythm vertical · sin esto
+   la card queda pegada a la última comida del bloque anterior. */
+.hoy-empty-card--section-start {
+  margin-top: 28px;
+}
+
 /* Variante clicable · usada en "Comidas de hoy" para llevar al tab
    Menú. Puntero, hover lift y flecha visible · invita al tap. */
 .hoy-empty-card--clickable {
