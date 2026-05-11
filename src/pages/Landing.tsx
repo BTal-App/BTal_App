@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonIcon,
@@ -138,8 +139,20 @@ const Landing: React.FC = () => {
     }
   };
 
-  const handleGuest = async () => {
+  // Estado de la alerta de aviso TTL · se abre al pulsar "Probar como
+  // invitado" y solo procede al sign-in tras confirmación explícita.
+  // Necesario porque la cuenta de invitado caduca a los 3 días de
+  // inactividad y queremos que el user lo sepa antes (no sea sorpresa
+  // si vuelve la semana siguiente y todo ha desaparecido).
+  const [guestWarningOpen, setGuestWarningOpen] = useState(false);
+
+  const handleGuest = () => {
     clearMessages();
+    setGuestWarningOpen(true);
+  };
+
+  const proceedAsGuest = async () => {
+    setGuestWarningOpen(false);
     setBusy(true);
     try {
       const cred = await signInGuest();
@@ -309,6 +322,29 @@ const Landing: React.FC = () => {
 
           <div className="landing-version">v{APP_VERSION}</div>
         </div>
+
+        <IonAlert
+          isOpen={guestWarningOpen}
+          onDidDismiss={() => setGuestWarningOpen(false)}
+          header="Modo prueba"
+          subHeader="Esta cuenta de invitado caducará en 3 días"
+          message={
+            'Te dejamos probar la app con un plan de ejemplo ya cargado. '
+            + 'Para no llenar nuestra base de datos de cuentas que no '
+            + 'continúan, esta sesión se mantendrá activa durante 3 días '
+            + 'desde tu última visita. Si pasado ese tiempo no has creado '
+            + 'una cuenta real, todos tus datos (perfil, menú, entrenos, '
+            + 'compra, suplementos, registro de pesos) se borrarán '
+            + 'permanentemente.\n\n'
+            + 'Si decides registrarte antes de que caduque, mantendrás '
+            + 'TODO lo que hayas tocado durante la prueba — el cambio a '
+            + 'cuenta real es transparente.'
+          }
+          buttons={[
+            { text: 'Cancelar', role: 'cancel' },
+            { text: 'Entendido, entrar', handler: proceedAsGuest },
+          ]}
+        />
 
         <ForgotPasswordModal
           isOpen={forgotOpen}

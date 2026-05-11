@@ -57,6 +57,56 @@
   letter-spacing: 0.12em;
   font-weight: 700;
   color: var(--btal-violet);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Contador "X días restantes" · pill discreto pegado al tag · color
+   ámbar normal, rojo cuando queda 1 día o menos para que el user lo
+   note de un vistazo. */
+.hoy-guest-banner-countdown {
+  font-size: 0.6rem;
+  color: var(--btal-t-2);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+/* Estado urgente · 0-1 días restantes. Fuerza el borde a coral, hace
+   el banner ligeramente "pulsar" y pone el contador en rojo. Es UN
+   solo modificador para que el cambio visual sea inequívoco. */
+.hoy-guest-banner--urgent {
+  border-color: rgba(255, 107, 107, 0.55);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.16),
+    rgba(176, 122, 240, 0.08)
+  );
+  animation: btal-pulse-danger 2.4s ease-in-out infinite;
+}
+
+.hoy-guest-banner--urgent:hover {
+  border-color: rgba(255, 107, 107, 0.75);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.22),
+    rgba(176, 122, 240, 0.1)
+  );
+}
+
+.hoy-guest-banner--urgent .hoy-guest-banner-tag {
+  color: #ff6b6b;
+}
+
+.hoy-guest-banner--urgent .hoy-guest-banner-countdown {
+  color: #ff6b6b;
+  font-weight: 700;
+}
+
+.hoy-guest-banner--urgent ion-icon {
+  color: #ff6b6b;
 }
 
 .hoy-guest-banner-text {
