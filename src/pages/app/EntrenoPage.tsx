@@ -9,6 +9,7 @@ import { MealIcon } from '../../components/MealIcon';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { TabHeader } from '../../components/TabHeader';
+import { GuestBanner } from '../../components/GuestBanner';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
@@ -293,6 +294,8 @@ const EntrenoPage: React.FC = () => {
               </>
             }
           />
+
+          <GuestBanner />
 
           {/* Plan switcher · scroll horizontal */}
           <div className="plan-cards" ref={planCardsRef}>

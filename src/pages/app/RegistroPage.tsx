@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonContent, IonPage, IonToast } from '@ionic/react';
 import { TabHeader } from '../../components/TabHeader';
+import { GuestBanner } from '../../components/GuestBanner';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
 import { RegistroCalendar } from '../../components/registro/RegistroCalendar';
 import { RegDayPanel } from '../../components/registro/RegDayPanel';
@@ -152,6 +153,8 @@ const RegistroPage: React.FC = () => {
             accent="pesos"
             right={<AppAvatarButton />}
           />
+
+          <GuestBanner />
 
           <RegistroStatsGrid
             rachaActual={stats.racha.actual}

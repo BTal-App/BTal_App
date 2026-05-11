@@ -1,0 +1,119 @@
+/* GuestBanner · CTA permanente para vincular cuenta antes de que la
+   TTL de Firestore borre el doc del invitado. Mismo look-and-feel
+   que tenía el banner inline de HoyPage · ahora reutilizable en las
+   5 tabs vía componente standalone.
+
+   Selectores `.guest-banner` (sin prefijo `hoy-`) para que pueda
+   vivir en cualquier tab sin colisionar con estilos específicos. */
+
+.guest-banner {
+  margin: 8px 16px 0;
+  width: calc(100% - 32px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(176, 122, 240, 0.16),
+    rgba(55, 224, 168, 0.06)
+  );
+  border: 1px solid rgba(176, 122, 240, 0.32);
+  border-radius: 16px;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--btal-t-1);
+  transition: all 0.18s;
+}
+
+.guest-banner:hover {
+  border-color: rgba(176, 122, 240, 0.55);
+  background: linear-gradient(
+    135deg,
+    rgba(176, 122, 240, 0.22),
+    rgba(55, 224, 168, 0.08)
+  );
+}
+
+.guest-banner ion-icon,
+.guest-banner svg {
+  color: var(--btal-violet);
+  flex-shrink: 0;
+}
+
+.guest-banner-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guest-banner-tag {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  color: var(--btal-violet);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.guest-banner-countdown {
+  font-size: 0.6rem;
+  color: var(--btal-t-2);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+.guest-banner-text {
+  font-size: 0.85rem;
+  color: var(--btal-t-2);
+  line-height: 1.5;
+}
+
+.guest-banner-text strong {
+  color: var(--btal-t-1);
+  font-weight: 700;
+}
+
+/* Estado urgente · 0-1 días restantes. Fuerza el borde a coral, hace
+   el banner ligeramente "pulsar" y pone el contador en rojo. Es UN
+   solo modificador para que el cambio visual sea inequívoco. */
+.guest-banner--urgent {
+  border-color: rgba(255, 107, 107, 0.55);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.16),
+    rgba(176, 122, 240, 0.08)
+  );
+  animation: btal-pulse-danger 2.4s ease-in-out infinite;
+}
+
+.guest-banner--urgent:hover {
+  border-color: rgba(255, 107, 107, 0.75);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.22),
+    rgba(176, 122, 240, 0.1)
+  );
+}
+
+.guest-banner--urgent .guest-banner-tag {
+  color: #ff6b6b;
+}
+
+.guest-banner--urgent .guest-banner-countdown {
+  color: #ff6b6b;
+  font-weight: 700;
+}
+
+.guest-banner--urgent ion-icon,
+.guest-banner--urgent svg {
+  color: #ff6b6b;
+}

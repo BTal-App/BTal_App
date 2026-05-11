@@ -7,6 +7,7 @@ import {
 } from '@ionic/react';
 import { MealIcon } from '../../components/MealIcon';
 import { TabHeader } from '../../components/TabHeader';
+import { GuestBanner } from '../../components/GuestBanner';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
 import { EditSupStockModal } from '../../components/EditSupStockModal';
 import { SupAlertBox } from '../../components/SupAlertBox';
@@ -222,6 +223,8 @@ const CompraPage: React.FC = () => {
             accent="compra"
             right={<AppAvatarButton />}
           />
+
+          <GuestBanner />
 
           {/* ─── Toolbar superior ─── */}
           <div className="compra-toolbar">

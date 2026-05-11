@@ -16,6 +16,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { TabHeader } from '../../components/TabHeader';
+import { GuestBanner } from '../../components/GuestBanner';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
@@ -542,6 +543,8 @@ const MenuPage: React.FC = () => {
               </>
             }
           />
+
+          <GuestBanner />
 
           {/* ── Day segment scrollable · chips marcados con clases
               `excluded` (no cuenta en media) y `hidden` (atenuado).

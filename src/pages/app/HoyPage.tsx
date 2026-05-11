@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   IonAlert,
   IonContent,
@@ -31,7 +31,7 @@ import { VerifyEmailBanner } from '../../components/VerifyEmailBanner';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
 import { MealSheet } from '../../components/MealSheet';
 import { TrainSheet } from '../../components/TrainSheet';
-import { LinkGuestAccountModal } from '../../components/LinkGuestAccountModal';
+import { GuestBanner } from '../../components/GuestBanner';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
@@ -64,7 +64,6 @@ const MEAL_LABEL: Record<MealKey, string> = {
 const HoyPage: React.FC = () => {
   const { user, loading } = useAuth();
   const { profile: userDoc, loading: profileLoading } = useProfile();
-  const [linkGuestOpen, setLinkGuestOpen] = useState(false);
   const [aiGenOpen, setAiGenOpen] = useState(false);
   // MealSheet · null = cerrado · al pulsar una comida del día se
   // abre con el detalle (mismo modal que en MenuPage). Las acciones
@@ -130,37 +129,6 @@ const HoyPage: React.FC = () => {
   // abrimos el TrainSheet (mismo componente que usa la tab Entreno)
   // con el detalle completo de ejercicios + series + reps.
   const [trainSheetOpen, setTrainSheetOpen] = useState(false);
-
-  // Días restantes antes de que la TTL de Firestore borre el doc del
-  // invitado. Sincronización con un sistema externo (el reloj) · el
-  // patrón canónico de React 19 para este tipo de valor es
-  // `useSyncExternalStore`: getSnapshot computa el valor actual y la
-  // función subscribe nos da la oportunidad de re-renderizar cuando
-  // pase el tiempo (cada 60s · suficiente para una cuenta atrás en
-  // días). Diseñado a propósito para evitar la regla
-  // `react-hooks/purity` (Date.now() es impura) sin disable.
-  //
-  // IMPORTANTE: declarado ANTES del early-return de loading para no
-  // violar las rules-of-hooks (orden estable entre renders).
-  const guestDaysLeft = useSyncExternalStore(
-    (callback) => {
-      const id = window.setInterval(callback, 60_000);
-      return () => window.clearInterval(id);
-    },
-    () => {
-      if (!user?.isAnonymous) return null;
-      const exp = userDoc?.expiresAt;
-      if (!exp) return null;
-      const expiresMs = typeof exp === 'object' && 'toMillis' in exp
-        ? (exp as { toMillis(): number }).toMillis()
-        : Number(exp);
-      if (!Number.isFinite(expiresMs)) return null;
-      return Math.max(0, Math.ceil((expiresMs - Date.now()) / 86400000));
-    },
-    // Server snapshot · SSR no aplica aquí pero la firma de
-    // useSyncExternalStore lo pide para evitar el warning.
-    () => null,
-  );
 
   if (loading || !user) {
     return (
@@ -229,40 +197,9 @@ const HoyPage: React.FC = () => {
 
           {/* Banner del invitado · CTA para registrarse conservando el uid.
               `linkAnonymousAccount` mantiene el doc /users/{uid} intacto,
-              así que el menú/entrenos demo se transfieren a la cuenta real. */}
-          {user.isAnonymous && (
-            <button
-              type="button"
-              className={
-                'hoy-guest-banner'
-                + (guestDaysLeft !== null && guestDaysLeft <= 1
-                  ? ' hoy-guest-banner--urgent'
-                  : '')
-              }
-              onClick={blurAndRun(() => setLinkGuestOpen(true))}
-            >
-              <div className="hoy-guest-banner-info">
-                <span className="hoy-guest-banner-tag">
-                  Modo prueba
-                  {guestDaysLeft !== null && (
-                    <span className="hoy-guest-banner-countdown">
-                      {guestDaysLeft === 0
-                        ? '· caduca hoy'
-                        : guestDaysLeft === 1
-                        ? '· 1 día restante'
-                        : `· ${guestDaysLeft} días restantes`}
-                    </span>
-                  )}
-                </span>
-                <span className="hoy-guest-banner-text">
-                  Crea una cuenta para <strong>guardar tus cambios</strong>{' '}
-                  antes de que esta sesión expire. Mantendrás todo lo que has
-                  tocado en el plan demo.
-                </span>
-              </div>
-              <MealIcon value="tb:arrow-right" size={20} />
-            </button>
-          )}
+              así que el menú/entrenos demo se transfieren a la cuenta real.
+              El componente se auto-oculta si !user.isAnonymous. */}
+          <GuestBanner />
 
           {/* ─────────────── HERO CARD ─────────────── */}
           {/* Mientras no haya plan, mostramos un hero "vacío" claro:
@@ -556,14 +493,9 @@ const HoyPage: React.FC = () => {
         {/* El avatar/profile-sheet se monta dentro de <AppAvatarButton />
             (header). No hace falta repetirlo aquí. */}
 
-        {/* Modal de conversión invitado → cuenta real. Solo se monta para
-            invitados (no tiene sentido para users con cuenta). */}
-        {user.isAnonymous && linkGuestOpen && (
-          <LinkGuestAccountModal
-            isOpen={linkGuestOpen}
-            onClose={() => setLinkGuestOpen(false)}
-          />
-        )}
+        {/* El modal de conversión invitado → cuenta real ahora vive
+            dentro de <GuestBanner /> (montado arriba) · cualquier tab
+            con el banner abre el mismo modal sin duplicar state. */}
 
         {/* MealSheet · al pulsar una comida del listado de hoy se
             abre el detalle (mismo sheet que en MenuPage). En esta
