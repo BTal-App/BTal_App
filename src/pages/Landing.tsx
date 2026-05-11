@@ -329,16 +329,10 @@ const Landing: React.FC = () => {
           header="Modo prueba"
           subHeader="Esta cuenta de invitado caducará en 3 días"
           message={
-            'Te dejamos probar la app con un plan de ejemplo ya cargado. '
-            + 'Para no llenar nuestra base de datos de cuentas que no '
-            + 'continúan, esta sesión se mantendrá activa durante 3 días '
-            + 'desde tu última visita. Si pasado ese tiempo no has creado '
-            + 'una cuenta real, todos tus datos (perfil, menú, entrenos, '
-            + 'compra, suplementos, registro de pesos) se borrarán '
-            + 'permanentemente.\n\n'
-            + 'Si decides registrarte antes de que caduque, mantendrás '
-            + 'TODO lo que hayas tocado durante la prueba — el cambio a '
-            + 'cuenta real es transparente.'
+            'A continuación, vas a probar la app con datos de ejemplo ya '
+            + 'precargados. Esta sesión se mantendrá activa durante 3 días. '
+            + 'Si pasado ese tiempo no has creado/vinculado una cuenta real, '
+            + 'todos los datos se borrarán permanentemente.'
           }
           buttons={[
             { text: 'Cancelar', role: 'cancel' },

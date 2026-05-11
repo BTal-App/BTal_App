@@ -246,10 +246,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       // escribimos si el user ya tiene perfil completo — pre-onboarding
       // no creamos doc parcial.
       if (doc?.profile?.completed) {
-        // El segundo argumento (isAnonymous) le dice a touchLastActive
-        // que también renueve `expiresAt` · TTL de 3 días desde esta
-        // visita. Para cuentas reales no se toca `expiresAt`.
-        touchLastActive(uid, isAnonymous).catch((err) => {
+        touchLastActive(uid).catch((err) => {
           console.warn('[BTal] touchLastActive error:', err);
         });
       }

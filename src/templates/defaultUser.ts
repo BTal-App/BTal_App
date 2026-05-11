@@ -1054,29 +1054,30 @@ export interface UserDocument {
   // momento, gracias a la TTL policy configurada en Firebase Console
   // sobre el campo `expiresAt` de la colección `/users`.
   //
-  // ⚠ TTL policy requiere plan Blaze (la consola devuelve 403
-  // "Project has billing disabled" en Spark). El campo se sigue
-  // sembrando en el doc sin coste · cuando se active Blaze en Fase
-  // 6 (para Cloud Functions + Gemini), la policy empieza a barrer
-  // los docs caducados que ya tienen el campo poblado, sin
-  // necesidad de tocar código.
-  //
-  // Mantenemos el campo "vivo" mientras el invitado siga usando la
-  // app · cada `touchLastActive(uid, true)` lo extiende a `now + 3
-  // días`. Si para de visitar la app durante 3 días → el doc se
-  // borra.
+  // Política: 3 días desde la CREACIÓN del doc, NO se renueva con
+  // las visitas. Aunque el invitado entre todos los días, el doc
+  // se borra al cumplirse 3 días desde que se sembró. Esto evita
+  // invitados "zombi" que usan la app indefinidamente sin convertir
+  // a cuenta real (Firebase Auth ya guarda la sesión en IndexedDB
+  // así que un invitado puede volver al día siguiente, pero el
+  // cronómetro del TTL sigue corriendo).
   //
   // Al vincular cuenta (linkAnonymousAccount/Google), el cliente
-  // hace un `updateDoc(ref, { expiresAt: deleteField() })` para que
-  // deje de caducar.
+  // hace un `updateDoc(ref, { expiresAt: deleteField() })` para
+  // que el doc deje de caducar permanentemente.
+  //
+  // ⚠ TTL policy requiere plan Blaze (la consola devuelve 403
+  // "Project has billing disabled" en Spark). El campo se sigue
+  // sembrando en el doc sin coste · cuando se active Blaze en
+  // Fase 6, la policy empieza a barrer los docs caducados que ya
+  // tienen el campo poblado, sin necesidad de tocar código.
   //
   // ⚠ TTL solo borra el doc principal. NO borra:
   //   - La subcolección /users/{uid}/registros/{...}
   //   - El usuario de Firebase Auth
-  // Una Cloud Function programada (Fase 6) hará la limpieza completa
-  // en cascada · busca docs caducados que aún tengan sub-collección
-  // viva o Auth user, y los borra. El campo `expiresAt` es la señal
-  // que la Function utiliza para decidir qué borrar.
+  // Una Cloud Function programada (Fase 6) hará la limpieza
+  // completa en cascada · busca docs caducados que aún tengan
+  // sub-colección viva o Auth user, y los borra.
   expiresAt?: import('firebase/firestore').Timestamp;
 
   // ── Flags por día del menú (Fase 2B.6) ──

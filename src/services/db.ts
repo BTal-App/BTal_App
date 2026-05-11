@@ -858,14 +858,21 @@ function migrateLegacyCompra(legacy: Record<string, unknown>): Compra {
 // Lo llama Landing.tsx justo después de signInAnonymously. La razón de
 // que esté aquí y no en Landing es que el modelo de datos vive en este
 // servicio — Landing solo orquesta el flujo, no decide qué se siembra.
-// TTL del invitado · días desde la última visita antes de auto-borrar.
-// La rule de Firestore TTL (configurada en Firebase Console sobre
-// `/users/expiresAt`) hará el barrido. 3 días permite a un user
-// volver al cabo de un fin de semana sin perder sus pruebas.
+// TTL del invitado · días desde la CREACIÓN del doc antes de
+// auto-borrar. La rule de Firestore TTL (configurada en Firebase
+// Console sobre `/users/expiresAt`) hará el barrido.
+//
+// Política: 3 días fijos desde la creación, NO se renueva en cada
+// visita. Si un invitado activo entra todos los días, igualmente el
+// doc se borra al cumplirse 3 días. Esto evita que invitados "zombi"
+// (usan la app pero no se registran) acumulen datos indefinidamente,
+// y obliga a la conversión a cuenta real en un plazo razonable.
 const GUEST_TTL_DAYS = 3;
 
-// Calcula el Timestamp futuro al que `expiresAt` debe apuntar para
-// renovar la vida del invitado por GUEST_TTL_DAYS desde ahora.
+// Calcula el Timestamp inicial al que `expiresAt` debe apuntar al
+// crear por primera vez el doc del invitado. Se llama UNA SOLA VEZ
+// dentro de seedGuestDocument (rama de doc nuevo). Una vez sembrado
+// no se vuelve a tocar.
 function guestExpiresAt(mod: typeof import('firebase/firestore')) {
   return mod.Timestamp.fromMillis(Date.now() + GUEST_TTL_DAYS * 86400 * 1000);
 }
@@ -875,16 +882,14 @@ export async function seedGuestDocument(uid: string): Promise<void> {
   const ref = mod.doc(db, 'users', uid);
   const existing = await mod.getDoc(ref);
   if (existing.exists()) {
-    // El invitado ya tiene doc — no lo pisamos. Refrescamos lastActive
-    // Y expiresAt (renueva los 3 días desde esta visita).
-    await mod.setDoc(
-      ref,
-      { lastActive: Date.now(), expiresAt: guestExpiresAt(mod) },
-      { merge: true },
-    );
+    // El invitado ya tiene doc · no lo pisamos. Solo refrescamos
+    // lastActive. NO tocamos expiresAt · el plazo de 3 días corre
+    // desde la creación original del doc, no desde esta visita.
+    await mod.setDoc(ref, { lastActive: Date.now() }, { merge: true });
     return;
   }
   // Doc principal con todos los demo + TTL inicial (3 días desde ahora).
+  // Es la ÚNICA vez en toda la vida del doc que se setea expiresAt.
   await mod.setDoc(ref, { ...demoUserDocument(), expiresAt: guestExpiresAt(mod) });
   // Subcolección /registros · entries demo de los últimos 6 días.
   // Promise.all paraleliza los writes (4-6 round-trips concurrentes).
@@ -927,24 +932,15 @@ export async function updateUserMode(
 // Actualiza solo `lastActive` (cada vez que el user abre el dashboard).
 // No-op si el doc todavía no existe — el onboarding lo creará.
 //
-// Si `isAnonymous` es true, también extiende el campo `expiresAt`
-// (`now + 3 días`) · la TTL de Firestore borrará el doc del invitado
-// cuando deje de visitar la app durante ese plazo. En cuentas reales
-// no tocamos `expiresAt` (no debería existir ahí, y si existe el
-// linkAnonymousAccount/Google ya lo limpia).
-export async function touchLastActive(
-  uid: string,
-  isAnonymous: boolean = false,
-): Promise<void> {
+// La política TTL del invitado se decide al crear el doc en
+// `seedGuestDocument` (3 días desde creación, sin renovación). Esta
+// función NO toca `expiresAt`.
+export async function touchLastActive(uid: string): Promise<void> {
   const { mod, db } = await getDb();
   const ref = mod.doc(db, 'users', uid);
-  const payload: Record<string, unknown> = { lastActive: Date.now() };
-  if (isAnonymous) {
-    payload.expiresAt = guestExpiresAt(mod);
-  }
   // updateDoc falla si el doc no existe; con setDoc + merge nunca crea
   // claves nuevas accidentalmente.
-  await mod.setDoc(ref, payload, { merge: true });
+  await mod.setDoc(ref, { lastActive: Date.now() }, { merge: true });
 }
 
 // Actualiza solo algunos campos dentro de `profile` (peso, altura, objetivo,
