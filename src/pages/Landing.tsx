@@ -7,13 +7,8 @@ import {
   IonPage,
   IonSpinner,
 } from '@ionic/react';
-import {
-  eyeOffOutline,
-  eyeOutline,
-  lockClosedOutline,
-  logoGoogle,
-  mailOutline,
-} from 'ionicons/icons';
+import { logoGoogle } from 'ionicons/icons';
+import { MealIcon } from '../components/MealIcon';
 import { getMultiFactorResolver, type MultiFactorResolver } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useAuth } from '../hooks/useAuth';
@@ -185,7 +180,7 @@ const Landing: React.FC = () => {
 
           <form className="landing-card" onSubmit={handleSubmit}>
             <div className="landing-input-wrap">
-              <IonIcon icon={mailOutline} className="landing-input-icon" />
+              <MealIcon value="tb:mail" size={18} className="landing-input-icon" />
               <input
                 className="landing-input"
                 type="email"
@@ -199,7 +194,7 @@ const Landing: React.FC = () => {
             </div>
 
             <div className="landing-input-wrap">
-              <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+              <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
               <input
                 className="landing-input landing-input--password"
                 type={showPwd ? 'text' : 'password'}
@@ -217,14 +212,14 @@ const Landing: React.FC = () => {
                 onClick={() => setShowPwd((v) => !v)}
                 aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
-                <IonIcon icon={showPwd ? eyeOffOutline : eyeOutline} />
+                <MealIcon value={showPwd ? 'tb:eye-off' : 'tb:eye'} size={18} />
               </button>
             </div>
 
             {mode === 'signup' && (
               <>
                 <div className="landing-input-wrap">
-                  <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+                  <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
                   <input
                     className="landing-input"
                     type={showPwd ? 'text' : 'password'}

@@ -36,6 +36,10 @@ ion-alert.entreno-confirm-alert .alert-message {
   border-radius: 16px;
   padding: 12px 14px;
   min-width: 110px;
+  /* max-width sólo en chips custom · los builtIn siempre son chips
+     compactos. Para custom, limitamos a 200px para que un nombre
+     largo no haga el chip absurdo · el texto se wrapea en 2 líneas
+     dentro del chip (ver `.plan-mini-name`). */
   cursor: pointer;
   transition:
     background 0.18s,
@@ -43,8 +47,22 @@ ion-alert.entreno-confirm-alert .alert-message {
     transform 0.14s;
   /* Reseteo de estilos por defecto del <button> */
   font-family: inherit;
-  text-align: left;
+  /* Centrado del contenido (número + DÍA/DÍAS) · antes era left lo
+     cual descentraba visualmente los chips builtIn. Centrado da el
+     look de pill consistent con el v2 mockup. */
+  text-align: center;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Plan custom · ancho mayor para acomodar el nombre. Multilínea
+   permitido (el nombre es lo principal del chip, sin número). */
+.plan-mini--custom {
+  min-width: 130px;
+  max-width: 200px;
 }
 
 .plan-mini:active {
@@ -80,30 +98,54 @@ ion-alert.entreno-confirm-alert .alert-message {
 }
 
 /* Marcador "★ Recomendado" · solo en el plan que coincide con
-   profile.diasEntreno (o el más cercano). El color es dinámico:
-   leemos `--rec-color` inyectado desde EntrenoPage según la escala
-   0 (peor, coral) → 7 (mejor, verde). Fallback `--btal-gold` para el
-   caso null (user sin días declarados). */
+   profile.diasEntreno (o el más cercano). Color oro fijo
+   (`--btal-gold`) para que destaque del resto del chip que es lima
+   · antes era `var(--rec-color)` con escala dinámica pero el user
+   pidió un color único oro/naranja para que el marcador se
+   distinga claramente independientemente de la "calidad" de la
+   recomendación. La escala `--rec-color` sigue activa en el banner
+   principal (gradient, borde) · solo aquí en el chip se fuerza oro. */
 .plan-mini--recommended::after {
   content: '★ Recomendado';
   display: block;
   font-size: 0.56rem;
-  color: var(--rec-color, var(--btal-gold));
+  color: var(--btal-gold);
   font-weight: 700;
   margin-top: 6px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-/* Tag "Custom" para planes no-builtIn · diferencia visual */
-.plan-mini-custom-tag {
-  display: inline-block;
-  margin-top: 4px;
-  font-size: 0.56rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--btal-blue);
-  font-weight: 700;
+/* Sub-fase 2D.1 · Cuando el chip recomendado es un custom marcado
+   como predeterminado, sustituimos "★ Recomendado" por
+   "★ Predeterminado" para reflejar la decisión explícita del user
+   (vs sugerencia automática del perfil). El selector más específico
+   gana sobre `.plan-mini--recommended::after` de arriba. */
+.plan-mini--custom-pred.plan-mini--recommended::after {
+  content: '★ Predeterminado';
+}
+
+/* Nombre del plan custom · sustituye al `.plan-num` en planes no
+   builtIn. Tipo título bold · multilínea permitida hasta 2 líneas
+   con ellipsis si supera. El maxLength=40 del editor mantiene el
+   chip dentro de un ancho razonable. */
+.plan-mini-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--btal-lime);
+  /* Permitimos hasta 2 líneas · si el nombre cabe en 1 queda igual
+     centrado vertical · si necesita 2, también centrado. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  hyphens: auto;
+  padding: 0 2px;
 }
 
 /* Slot "+ Nuevo" · borde sólido azul para diferenciarlo del resto */

@@ -41,7 +41,8 @@
 }
 
 .prefs-segment button {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   background: transparent;
   border: none;
   color: var(--btal-t-2);
@@ -52,6 +53,22 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.18s, color 0.18s;
+  /* Defensa para labels más largos como "Iconos + Textos" en
+     pantallas estrechas · que no se salgan del segment ni rompan el
+     layout. `min-width: 0` permite que flex shrink baje del width
+     natural del contenido. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pantallas muy estrechas (320-360px) · reduce padding y font-size
+   ligeramente para que las dos opciones quepan sin elipsis. */
+@media (max-width: 360px) {
+  .prefs-segment button {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+  }
 }
 
 .prefs-segment button:hover:not(.active) {

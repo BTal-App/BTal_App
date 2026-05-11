@@ -10,7 +10,10 @@
     var(--btal-bg);
   display: flex;
   justify-content: center;
-  padding: max(env(safe-area-inset-top), 64px) 24px max(env(safe-area-inset-bottom), 32px);
+  /* Padding-top alineado con `.settings-modal-bg` (32px). Antes 64px
+     reservaba espacio al X que vivía fuera del recuadro · ahora la X
+     vive DENTRO de la card, así que no necesitamos hueco extra arriba. */
+  padding: max(env(safe-area-inset-top), 32px) 24px max(env(safe-area-inset-bottom), 32px);
 }
 
 .edit-fp-card {
@@ -24,15 +27,17 @@
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  /* Ancla para el botón X · ahora vive DENTRO del card como primer hijo. */
+  position: relative;
   height: max-content;
   /* Sin animación propia · la gestiona el IonModal padre. */
 }
 
 /* Cerrar fijo en la esquina, fuera del IonContent — así no scrollea
    con el contenido (mismo patrón que AccountManageModal). */
-.edit-fp-close-fixed {
-  z-index: 10;
-}
+/* (La regla `.edit-fp-close-fixed` se eliminó · era idéntica a
+   `.settings-modal-close--fixed` del SettingsModal.css global. El JSX
+   ahora usa la clase global, mismo patrón unificado.) */
 
 /* Título de sección dentro del modal — separa Personales / Estilo /
    Objetivo con un pequeño label tipo categoría. */

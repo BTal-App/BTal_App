@@ -80,6 +80,11 @@ ion-tab-bar {
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--btal-border);
   padding-top: 4px;
+  /* Padding horizontal igual en ambos lados · evita que la primera
+     tab (HOY) toque el borde izquierdo y la última (REGISTRO) tenga
+     espacio asimétrico al derecho. Con esto los 5 slots se reparten
+     el ancho `bar_width - 2*N`, con N de margen a cada lado. */
+  padding-inline: 8px;
   height: calc(58px + env(safe-area-inset-bottom));
 }
 
@@ -89,6 +94,12 @@ ion-tab-button {
      activa sigue en lima como acento principal de la app. */
   --color: #fff;
   --color-selected: var(--btal-lime);
+  /* Padding interno a 0 · Ionic mete `--padding-start/--padding-end: 2px`
+     por defecto, lo que recorta el slot útil y agrava asimetrías
+     visuales con icons que tienen whitespace asimétrico (p.ej.
+     `barbellOutline`). A 0 cada tab usa el 100% de su flex-basis. */
+  --padding-start: 0;
+  --padding-end: 0;
   font-size: .65rem;
   font-weight: 700;
   letter-spacing: .04em;
@@ -96,8 +107,157 @@ ion-tab-button {
   /* Elimina el delay de ~300ms en mobile Safari sin afectar al zoom
      accesible (a diferencia de user-scalable=no en el viewport). */
   touch-action: manipulation;
+  /* `flex: 1 1 0` + `min-width: 0` · las 5 tabs se reparten
+     exactamente 20% del bar cada una, independientemente del largo
+     del label dentro. */
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
 }
 
 ion-tab-button ion-icon {
+  /* Tamaño explícito + display flex con centrado · obliga al SVG hijo
+     a renderizar centrado dentro del bounding box (1.4rem × 1.4rem).
+     Algunos glifos de Ionicons (`barbellOutline`, `calendarNumber`)
+     tienen whitespace asimétrico en su viewBox interno · con esto el
+     SVG se centra a posteriori dentro del box, neutralizando el offset. */
   font-size: 1.4rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+/* SVG hijo del ion-icon · `display: block` evita inline-baseline
+   shifts y le forzamos width/height 100% para que llene el bounding
+   box uniformemente. */
+ion-tab-button ion-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Label de las tabs · ancho 100% del slot + texto centrado · texto
+   centrado en X = slot center, coincidiendo con el centro del icono. */
+ion-tab-button ion-label {
+  margin-top: 0;
+  width: 100%;
+  text-align: center;
+}
+
+/* (Eliminado) translateX(-6px) en tabs 2-5 · creaba margen asimétrico
+   en los extremos del nav (HOY pegado al borde izquierdo, REGISTRO
+   con espacio extra al derecho). Volvemos al centrado natural de
+   Ionic + un pequeño `padding-inline` en el bar para que ambos lados
+   tengan el mismo margen. */
+
+/* ═══════════════════════════════════════════════════════════════════
+   PREVIEW · estilos de nav alternativos (temporales)
+   Activación: añadir `?nav=labeled` o `?nav=compact` a la URL. Persistido en
+   sessionStorage. Para volver al default: `?nav=reset`.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Estilo labeled · icono grande + label pequeño en Title Case ─── */
+body.nav-labeled ion-tab-bar {
+  height: calc(64px + env(safe-area-inset-bottom));
+  padding-top: 6px;
+}
+body.nav-labeled ion-tab-button {
+  font-size: .55rem;
+  /* `text-transform: lowercase` convierte "HOY" → "hoy". Después con
+     `::first-letter { uppercase }` la primera letra pasa a mayúscula.
+     Resultado: "Hoy", "Menú", "Compra", "Entreno", "Registro". */
+  text-transform: lowercase;
+  letter-spacing: .02em;
+  font-weight: 600;
+}
+body.nav-labeled ion-tab-button ion-label::first-letter {
+  text-transform: uppercase;
+}
+body.nav-labeled ion-tab-button ion-icon {
+  font-size: 1.7rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin-bottom: 3px;
+}
+/* En modo labeled el cart no necesita el translateY(-2px) (los iconos
+   son más pequeños y el visual offset no se nota tanto). Override
+   específico solo para COMPRA en este modo. */
+body.nav-labeled ion-tab-bar ion-tab-button:nth-of-type(3) ion-icon {
+  transform: scale(1);
+}
+
+/* ─── Estilo compact (solo iconos) · solo iconos, sin labels ─── */
+body.nav-compact ion-tab-bar {
+  /* Altura compacta · suficiente para iconos 1.9rem sin extra padding. */
+  height: calc(54px + env(safe-area-inset-bottom));
+  padding-top: 1px;
+  padding-bottom: 2px;
+}
+body.nav-compact ion-tab-button ion-icon {
+  font-size: 1.9rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-bottom: 0;
+}
+body.nav-compact ion-tab-button ion-label {
+  display: none !important;
+}
+
+/* Normalización visual de tamaños · cada Ionicon tiene padding interno
+   distinto en su viewBox 512×512 (calendar-number tiene número + grid
+   → fills well; barbell es solo una barra horizontal → fills less;
+   restaurant son trazos finos cruzados → looks smaller). Aplicamos
+   transform scale por tab para que el glifo visible sea uniforme.
+   Aplica tanto al estilo default como al IG/TikTok. */
+/* Todos los iconos del nav · alineados al MISMO nivel vertical
+   (translateY -2px aplicado uniforme). Sin esto, el cart (COMPRA)
+   tenía el offset pero los demás no, quedando 2px más abajo. Cada
+   tab mantiene su `scale` específico para normalizar el tamaño
+   visible, pero comparten el mismo translateY. */
+ion-tab-bar ion-tab-button:nth-of-type(1) ion-icon {
+  /* HOY · calendar-number-outline · scale DOWN para que no se vea
+     más grande que los demás (su glifo llena bien el viewBox). */
+  transform: scale(0.95) translateY(-2px);
+}
+ion-tab-bar ion-tab-button:nth-of-type(2) ion-icon {
+  /* MENÚ · restaurant-outline · también scale DOWN (cubiertos
+     cruzados llenan diagonal-a-diagonal). */
+  transform: scale(0.87) translateY(-2px);
+}
+ion-tab-bar ion-tab-button:nth-of-type(3) ion-icon {
+  /* COMPRA · cart-outline · referencia visual del tamaño (scale 1). */
+  transform: scale(1) translateY(-2px);
+}
+ion-tab-bar ion-tab-button:nth-of-type(4) ion-icon {
+  /* ENTRENO · barbell-outline · scale UP (barra horizontal con
+     mucho whitespace vertical). */
+  transform: scale(1.05) translateY(-2px);
+}
+ion-tab-bar ion-tab-button:nth-of-type(5) ion-icon {
+  /* REGISTRO · list-outline · scale 1 (3 líneas razonablemente
+     proporcionadas). */
+  transform: scale(1) translateY(-2px);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MealIcon (Tabler SVG) dentro de IonButton con slot=start|end.
+
+   Ionic aplica `margin-inline-end: 0.3em` solo a `ion-icon[slot=start]`
+   (y end al revés). Como ahora usamos Tabler que renderiza un `<svg>`
+   con `slot="start"|"end"`, debemos replicar ese spacing manualmente
+   para que el texto del botón no quede pegado al icono.
+
+   Solo aplica a SVGs DIRECTAMENTE en el slot (no a los anidados dentro
+   de otros componentes hijo). 0.3em = ~5-6px a font-size estándar.
+   ───────────────────────────────────────────────────────────── */
+ion-button svg[slot="start"],
+ion-button span[slot="start"] {
+  margin-inline-end: 0.5em;
+}
+ion-button svg[slot="end"],
+ion-button span[slot="end"] {
+  margin-inline-start: 0.5em;
 }

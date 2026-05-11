@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCountUp, useFirstVisible } from '../../utils/useCountUp';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
+import { horaToMinutes } from '../../utils/timeParser';
 import {
   IonAlert,
   IonContent,
-  IonIcon,
   IonPage,
   IonPopover,
   IonToast,
@@ -13,20 +13,6 @@ import {
   useIonViewWillEnter,
 } from '@ionic/react';
 import { useLocation } from 'react-router-dom';
-import {
-  addOutline,
-  barbellOutline,
-  cafeOutline,
-  ellipsisHorizontal,
-  eyeOffOutline,
-  eyeOutline,
-  flameOutline,
-  leafOutline,
-  refreshOutline,
-  removeCircleOutline,
-  sparklesOutline,
-  waterOutline,
-} from 'ionicons/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { TabHeader } from '../../components/TabHeader';
@@ -40,6 +26,7 @@ import { BatidoInfoModal } from '../../components/BatidoInfoModal';
 import { CreatinaInfoModal } from '../../components/CreatinaInfoModal';
 import { SupCardEditor } from '../../components/SupCardEditor';
 import { MealExtraEditorModal } from '../../components/MealExtraEditorModal';
+import { DuplicateMealExtraModal } from '../../components/DuplicateMealExtraModal';
 import { blurAndRun } from '../../utils/focus';
 import { todayDateStr, todayKey } from '../../utils/dateKeys';
 import { objetivoKcalEfectivo } from '../../utils/calorias';
@@ -47,8 +34,10 @@ import {
   DAY_KEYS,
   DAY_LABEL_FULL,
   DAY_LABEL_SHORT as DAY_LABEL,
+  EXTRA_ICON_DEFAULT,
   HORA_DEFECTO,
   MAX_EXTRAS_POR_DIA,
+  MEAL_ICON_DEFAULT,
   MEAL_KEYS,
   SUP_HORA_DEFECTO,
   SUP_TITULO_DEFECTO,
@@ -57,21 +46,16 @@ import {
   type DayKey,
   type MealKey,
 } from '../../templates/defaultUser';
+import { MealIcon } from '../../components/MealIcon';
 import './MenuPage.css';
 
 // `DAY_LABEL` (corto) y `DAY_LABEL_FULL` viven en
 // `templates/defaultUser.ts` · importados como alias arriba para
 // mantener legibilidad del código existente.
 
-// Mapping de cada comida a su emoji + nombre legible. El emoji se queda
-// hardcoded · no es preferencia del user, es identidad visual.
-const MEAL_EMOJI: Record<MealKey, string> = {
-  desayuno: '🌅',
-  comida: '☀️',
-  merienda: '🍎',
-  cena: '🌙',
-};
-
+// Etiquetas de las 4 comidas fijas (label). Los iconos de fallback
+// viven en `MEAL_ICON_DEFAULT` (templates/defaultUser.ts) · se aplican
+// vía `<MealIcon>` cuando `comida.emoji` es null.
 const MEAL_LABEL: Record<MealKey, string> = {
   desayuno: 'Desayuno',
   comida: 'Comida',
@@ -106,8 +90,12 @@ function calcTotalesDia(
     fat += c.fat;
     if (c.alimentos.length > 0) comidasConDatos += 1;
   }
-  // Extras del día · cuentan al total y al ring de progreso.
+  // Extras del día · cuentan al total y al ring de progreso. Los
+  // marcados como `deshabilitada` se saltan (mismo efecto que si no
+  // existieran a efectos de totales · siguen visibles en la card,
+  // atenuados en gris).
   for (const extra of comidas.extras) {
+    if (extra.deshabilitada) continue;
     kcal += extra.kcal;
     prot += extra.prot;
     carb += extra.carb;
@@ -174,21 +162,11 @@ function calcMediaSemanal(
   };
 }
 
-// Convierte "HH:mm" en minutos del día · usado para el sort por hora.
-// Si el string es inválido devuelve un valor alto · ese item cae al final.
-// Validación defensiva: el string puede llegar malformado (sin ':',
-// con ':' suelto, "14" sin minutos, etc.); todos esos casos se
-// tratan como "hora desconocida" → fin del día.
-function horaAMinutos(hora: string | null | undefined): number {
-  if (!hora) return 24 * 60;
-  const parts = hora.split(':');
-  if (parts.length !== 2) return 24 * 60;
-  const h = parseInt(parts[0], 10);
-  const m = parseInt(parts[1], 10);
-  if (Number.isNaN(h) || Number.isNaN(m)) return 24 * 60;
-  if (h < 0 || h > 23 || m < 0 || m > 59) return 24 * 60;
-  return h * 60 + m;
-}
+// Alias del util compartido `horaToMinutes` (utils/timeParser.ts) ·
+// mantenemos el nombre `horaAMinutos` local porque hay cinco callsites
+// en este fichero y refactorarlos todos no aporta valor · el alias
+// mantiene la huella de código mínima.
+const horaAMinutos = horaToMinutes;
 
 // Filas ordenadas por hora (4 comidas fijas + extras + posibles mini-cards
 // de batido y creatina). Solo lee data del doc · los callbacks (abrir
@@ -199,7 +177,6 @@ type OrderedRow =
   | {
       kind: 'batido' | 'creatina';
       title: string;
-      emoji: string;
       hora: string;
       desc: string;
       kcal?: number;
@@ -244,7 +221,6 @@ function buildOrderedRows(
     rows.push({
       kind: 'batido',
       title: titulo,
-      emoji: '🥤',
       hora,
       desc:
         `${c.gr_prot} g proteína`
@@ -267,7 +243,6 @@ function buildOrderedRows(
     rows.push({
       kind: 'creatina',
       title: titulo,
-      emoji: '🥄',
       hora,
       desc: `${c.gr_dose} g por dosis` + (c.notas ? ` · ${c.notas}` : ''),
       sortMinutes: horaAMinutos(hora),
@@ -306,6 +281,10 @@ const MenuPage: React.FC = () => {
   // MealSheet · null = cerrado · MealKey = abierta para esa comida del
   // día seleccionado. Cerrar = setear a null (ya hay onDidDismiss).
   const [openMeal, setOpenMeal] = useState<MealKey | null>(null);
+  // MealSheet para extras · null = cerrado · ComidaExtra = abierto para
+  // ese extra del día seleccionado. Mismo sheet que `openMeal` pero con
+  // título/icon override y wired al editor + duplicate + delete de extras.
+  const [openExtra, setOpenExtra] = useState<ComidaExtra | null>(null);
   // MealEditorModal · null = cerrado · MealKey = editando esa comida.
   // Cuando el user pulsa "Editar" en el sheet, cerramos el sheet y
   // abrimos este editor (no se solapan modales).
@@ -313,6 +292,11 @@ const MenuPage: React.FC = () => {
   // DuplicateMealModal · null = cerrado · MealKey = duplicando esa comida
   // del día seleccionado. Se abre desde MealSheet (botón "Duplicar").
   const [duplicatingMeal, setDuplicatingMeal] = useState<MealKey | null>(null);
+  // Duplicar EXTRA · null = cerrado · ComidaExtra = duplicando ese
+  // extra. Sheet → "Duplicar" cierra sheet + abre este modal.
+  const [duplicatingExtra, setDuplicatingExtra] = useState<ComidaExtra | null>(
+    null,
+  );
   // Modales de suplementación · Sub-fase 2B.5.a.
   // - batidoOpen / creatinaOpen abren el modal info global (toolbar) ·
   //   contiene receta + macros + contadores inline.
@@ -348,6 +332,7 @@ const MenuPage: React.FC = () => {
     restoreMeal,
     removeMealExtra,
     restoreMealExtra,
+    updateMealExtra,
     toggleDayExcludedFromAvg,
     toggleDayHidden,
     resetDayMenu,
@@ -393,6 +378,30 @@ const MenuPage: React.FC = () => {
       }, 5000);
     } catch (err) {
       console.error('[BTal] removeMealExtra error:', err);
+    }
+  };
+
+  // Confirmación previa al toggle deshabilitar/habilitar · IonAlert.
+  // Solo se usa para EXTRAS. Snapshot del extra + del estado destino
+  // (next = !current.deshabilitada) para que el mensaje del alert
+  // pueda mostrar la acción concreta.
+  const [pendingExtraToggle, setPendingExtraToggle] = useState<{
+    day: DayKey;
+    extra: ComidaExtra;
+    next: boolean;
+  } | null>(null);
+
+  const handleConfirmExtraToggle = async () => {
+    if (!pendingExtraToggle) return;
+    const { day, extra, next } = pendingExtraToggle;
+    setPendingExtraToggle(null);
+    try {
+      // Reusamos updateMealExtra · solo tocamos el flag `deshabilitada`.
+      // No persistimos cambios de macros ni nombre · el resto del
+      // objeto queda exactamente como estaba.
+      await updateMealExtra(day, extra.id, { deshabilitada: next });
+    } catch (err) {
+      console.error('[BTal] toggle deshabilitada error:', err);
     }
   };
 
@@ -524,7 +533,7 @@ const MenuPage: React.FC = () => {
                       onClick={blurAndRun(() => setAiGenOpen(true))}
                       aria-label="Generar con IA"
                     >
-                      <IonIcon icon={sparklesOutline} />
+                      <MealIcon value="tb:sparkles" size={18} />
                       <span>Generar con IA</span>
                     </button>
                   </>
@@ -589,14 +598,16 @@ const MenuPage: React.FC = () => {
               onClick={blurAndRun(handleAddExtraPress)}
               aria-label="Añadir comida nueva"
             >
-              <IonIcon icon={addOutline} />
+              <MealIcon value="tb:plus" size={16} />
               <span>Añadir comida</span>
             </button>
           </div>
 
-          {/* Toolbar de suplementos · Sub-fase 2B.5.a · 🥤 Batido + 🥄
-              Creatina. Cuando el día activo los tiene añadidos, el botón
-              cambia a verde y muestra ✓ inline al final del texto. */}
+          {/* Toolbar de suplementos · Sub-fase 2B.5.a · Batido +
+              Creatina con iconos Ionic (nutrition / medical) coherentes
+              con el resto de la UI. Cuando el día activo los tiene
+              añadidos, el botón cambia a verde y muestra ✓ inline al
+              final del texto. */}
           {userDoc?.suplementos && (
             <div className="menu-sup-toolbar">
               <button
@@ -610,8 +621,9 @@ const MenuPage: React.FC = () => {
                 onClick={blurAndRun(() => setBatidoOpen(true))}
                 aria-label="Batido protéico"
               >
-                <span>
-                  🥤 Batido
+                <span className="menu-sup-btn-label">
+                  <MealIcon value="tb:cup" size={16} className="menu-sup-btn-icon" />
+                  BATIDO
                   {userDoc.suplementos.daysWithBatido.includes(selectedDay)
                     ? ' ✓'
                     : ''}
@@ -628,8 +640,9 @@ const MenuPage: React.FC = () => {
                 onClick={blurAndRun(() => setCreatinaOpen(true))}
                 aria-label="Creatina"
               >
-                <span>
-                  🥄 Creatina
+                <span className="menu-sup-btn-label">
+                  <MealIcon value="tb:ladle" size={16} className="menu-sup-btn-icon" />
+                  CREATINA
                   {userDoc.suplementos.daysWithCreatina.includes(selectedDay)
                     ? ' ✓'
                     : ''}
@@ -644,7 +657,7 @@ const MenuPage: React.FC = () => {
             // Réplica del v1 .day-content.day-hidden (sin la grid).
             <div className="menu-day-hidden-card">
               <div className="menu-day-hidden-info">
-                <IonIcon icon={eyeOffOutline} />
+                <MealIcon value="tb:eye-off" size={20} />
                 <div>
                   <span className="menu-day-hidden-title">
                     {DAY_LABEL_FULL[selectedDay]} está oculto
@@ -664,7 +677,7 @@ const MenuPage: React.FC = () => {
                   );
                 }}
               >
-                <IonIcon icon={eyeOutline} />
+                <MealIcon value="tb:eye" size={18} />
                 Mostrar día
               </button>
             </div>
@@ -690,9 +703,11 @@ const MenuPage: React.FC = () => {
                     <ExtraMealCard
                       key={`extra-${row.extra.id}`}
                       extra={row.extra}
-                      onClick={() =>
-                        setExtraModal({ mode: 'edit', extra: row.extra })
-                      }
+                      // Antes abría el editor directamente · ahora abre
+                      // el sheet de detalle (lectura + acciones), igual
+                      // que las 4 fijas. Desde ahí se accede a edit /
+                      // duplicar / borrar.
+                      onClick={() => setOpenExtra(row.extra)}
                     />
                   );
                 }
@@ -713,7 +728,6 @@ const MenuPage: React.FC = () => {
                     key={`sup-${row.kind}`}
                     kind={row.kind}
                     title={row.title}
-                    emoji={row.emoji}
                     hora={row.hora}
                     desc={row.desc}
                     kcal={row.kcal}
@@ -732,7 +746,7 @@ const MenuPage: React.FC = () => {
           ) : (
             <div className="hoy-empty-card">
               <div className="hoy-empty-icon">
-                <IonIcon icon={cafeOutline} />
+                <MealIcon value="tb:coffee" size={24} />
               </div>
               <div className="hoy-empty-info">
                 <span className="hoy-empty-title">Cargando menú…</span>
@@ -800,8 +814,7 @@ const MenuPage: React.FC = () => {
         )}
 
         {/* Bottom sheet de detalle · solo se monta cuando hay una comida
-            abierta. onEdit cierra el sheet y abre el MealEditorModal.
-            onDuplicate sigue siendo placeholder hasta Sub-fase 2B.4. */}
+            abierta. onEdit cierra el sheet y abre el MealEditorModal. */}
         {openMeal && comidasDelDia && (
           <MealSheet
             isOpen={openMeal !== null}
@@ -831,6 +844,45 @@ const MenuPage: React.FC = () => {
               setOpenMeal(null);
               setPendingDelete(m);
               setDeleteAlertOpen(true);
+            }}
+          />
+        )}
+
+        {/* Sheet de detalle para EXTRAS · misma UX que el de las 4 fijas
+            pero con título = `extra.nombre`, fallback icon = EXTRA, y chip
+            "EXTRA" si está marcado. Las acciones cierran este sheet y
+            abren los modales correspondientes (editor / duplicate /
+            confirm delete). */}
+        {openExtra && (
+          <MealSheet
+            isOpen={openExtra !== null}
+            onClose={() => setOpenExtra(null)}
+            day={selectedDay}
+            comida={openExtra}
+            title={openExtra.nombre.trim() || 'Comida'}
+            iconFallback={EXTRA_ICON_DEFAULT}
+            isExtra={openExtra.esExtra ?? true}
+            isDisabled={!!openExtra.deshabilitada}
+            onEdit={() => {
+              const e = openExtra;
+              setOpenExtra(null);
+              setExtraModal({ mode: 'edit', extra: e });
+            }}
+            onDuplicate={() => {
+              const e = openExtra;
+              setOpenExtra(null);
+              setDuplicatingExtra(e);
+            }}
+            onDelete={() => {
+              const e = openExtra;
+              setOpenExtra(null);
+              setPendingExtraDelete({ day: selectedDay, extra: e });
+            }}
+            onToggleDisabled={() => {
+              const e = openExtra;
+              const next = !(e.deshabilitada ?? false);
+              setOpenExtra(null);
+              setPendingExtraToggle({ day: selectedDay, extra: e, next });
             }}
           />
         )}
@@ -937,6 +989,42 @@ const MenuPage: React.FC = () => {
             }
           />
         )}
+
+        {/* Confirmación previa al toggle deshabilitar/habilitar de un
+            extra. El mensaje cambia según `next` para que el user sepa
+            exactamente qué acción está confirmando. */}
+        <IonAlert
+          isOpen={pendingExtraToggle !== null}
+          onDidDismiss={() => setPendingExtraToggle(null)}
+          header={
+            pendingExtraToggle?.next
+              ? '¿Deshabilitar la comida?'
+              : '¿Habilitar la comida?'
+          }
+          message={
+            pendingExtraToggle
+              ? pendingExtraToggle.next
+                ? `"${pendingExtraToggle.extra.nombre}" se quedará atenuada en gris y dejará de sumar al total del día y a la media semanal. Puedes volver a habilitarla cuando quieras.`
+                : `"${pendingExtraToggle.extra.nombre}" volverá a contar al total del día y a la media semanal.`
+              : ''
+          }
+          buttons={[
+            {
+              text: 'Cancelar',
+              role: 'cancel',
+              handler: () => setPendingExtraToggle(null),
+            },
+            {
+              text: pendingExtraToggle?.next ? 'Deshabilitar' : 'Habilitar',
+              role: 'confirm',
+              handler: () => {
+                handleConfirmExtraToggle().catch((err) => {
+                  console.error('[BTal] handleConfirmExtraToggle unhandled:', err);
+                });
+              },
+            },
+          ]}
+        />
 
         {/* Confirmación de eliminar extra · IonAlert + IonToast undo. */}
         <IonAlert
@@ -1071,6 +1159,21 @@ const MenuPage: React.FC = () => {
             ) as Record<DayKey, boolean>}
           />
         )}
+
+        {/* Duplicar EXTRA · gemelo del modal de las fijas. Le pasamos
+            el count por día para que las filas de días llenos (8/8)
+            queden deshabilitadas con su chip "Lleno". */}
+        {duplicatingExtra && userDoc?.menu && (
+          <DuplicateMealExtraModal
+            isOpen={duplicatingExtra !== null}
+            onClose={() => setDuplicatingExtra(null)}
+            srcDay={selectedDay}
+            extra={duplicatingExtra}
+            extrasCountByDay={Object.fromEntries(
+              DAY_KEYS.map((d) => [d, userDoc.menu[d].extras.length]),
+            ) as Record<DayKey, number>}
+          />
+        )}
       </IonContent>
     </IonPage>
   );
@@ -1156,7 +1259,7 @@ function DayTotalCard({
             setPopoverOpen(true);
           }}
         >
-          <IonIcon icon={ellipsisHorizontal} />
+          <MealIcon value="tb:dots" size={20} />
         </button>
       </div>
       <div className="menu-day-total-macros">
@@ -1216,7 +1319,7 @@ function DayTotalCard({
               onToggleExcluded();
             }}
           >
-            <IonIcon icon={removeCircleOutline} />
+            <MealIcon value="tb:circle-minus" size={18} />
             <span>
               {isExcluded
                 ? 'Incluir en media semanal'
@@ -1231,7 +1334,7 @@ function DayTotalCard({
               onToggleHidden();
             }}
           >
-            <IonIcon icon={isHidden ? eyeOutline : eyeOffOutline} />
+            <MealIcon value={isHidden ? 'tb:eye' : 'tb:eye-off'} size={18} />
             <span>{isHidden ? 'Mostrar día' : 'Ocultar día'}</span>
           </button>
           <button
@@ -1242,7 +1345,7 @@ function DayTotalCard({
               onReset();
             }}
           >
-            <IonIcon icon={refreshOutline} />
+            <MealIcon value="tb:refresh" size={18} />
             <span>Resetear día</span>
           </button>
         </IonContent>
@@ -1405,20 +1508,24 @@ function MealCard({ meal, comida, onClick }: MealCardProps) {
       aria-label={`Abrir detalle de ${MEAL_LABEL[meal].toLowerCase()}`}
     >
       <div className="menu-meal-emoji" aria-hidden="true">
-        {comida.emoji ?? MEAL_EMOJI[meal]}
+        <MealIcon
+          value={comida.emoji}
+          fallback={MEAL_ICON_DEFAULT[meal]}
+          size={32}
+        />
       </div>
       <div className="menu-meal-body">
         <div className="menu-meal-row">
           <div className="menu-meal-name">
             {MEAL_LABEL[meal]}
             {comida.source === 'user' && (
-              <span className="menu-meal-source" title="Editado por ti">
-                ✎
+              <span className="menu-meal-source" title="Editado por ti" aria-hidden>
+                <MealIcon value="tb:pencil" size={14} />
               </span>
             )}
             {comida.source === 'ai' && (
-              <span className="menu-meal-source menu-meal-source--ai" title="Generado por IA">
-                ✨
+              <span className="menu-meal-source menu-meal-source--ai" title="Generado por IA" aria-hidden>
+                <MealIcon value="tb:sparkles" size={14} />
               </span>
             )}
           </div>
@@ -1441,25 +1548,25 @@ function MealCard({ meal, comida, onClick }: MealCardProps) {
           <div className="menu-meal-macros">
             {comida.kcal > 0 && (
               <span className="menu-macro-pill menu-macro-pill--kcal">
-                <IonIcon icon={flameOutline} />
+                <MealIcon value="tb:flame" size={14} />
                 {comida.kcal} kcal
               </span>
             )}
             {comida.prot > 0 && (
               <span className="menu-macro-pill menu-macro-pill--prot">
-                <IonIcon icon={barbellOutline} />
+                <MealIcon value="tb:barbell" size={14} />
                 {comida.prot}g P
               </span>
             )}
             {comida.carb > 0 && (
               <span className="menu-macro-pill menu-macro-pill--carb">
-                <IonIcon icon={leafOutline} />
+                <MealIcon value="tb:leaf" size={14} />
                 {comida.carb}g C
               </span>
             )}
             {comida.fat > 0 && (
               <span className="menu-macro-pill menu-macro-pill--fat">
-                <IonIcon icon={waterOutline} />
+                <MealIcon value="tb:droplet" size={14} />
                 {comida.fat}g G
               </span>
             )}
@@ -1473,7 +1580,6 @@ function MealCard({ meal, comida, onClick }: MealCardProps) {
 interface SupCardProps {
   kind: 'batido' | 'creatina';
   title: string;
-  emoji: string;
   hora: string; // siempre rellena (override → default)
   desc: string;
   // Macros opcionales · solo el batido los muestra (la creatina suelta no
@@ -1498,7 +1604,6 @@ interface SupCardProps {
 function SupCard({
   kind,
   title,
-  emoji,
   hora,
   desc,
   kcal,
@@ -1527,7 +1632,11 @@ function SupCard({
         </span>
       )}
       <div className="menu-meal-emoji" aria-hidden="true">
-        {emoji}
+        <MealIcon
+          value={kind === 'batido' ? 'tb:cup' : 'tb:ladle'}
+          size={32}
+          className="menu-meal-emoji-icon"
+        />
       </div>
       <div className="menu-meal-body">
         <div className="menu-meal-row">
@@ -1542,25 +1651,25 @@ function SupCard({
           <div className="menu-meal-macros">
             {kcal > 0 && (
               <span className="menu-macro-pill menu-macro-pill--kcal">
-                <IonIcon icon={flameOutline} />
+                <MealIcon value="tb:flame" size={14} />
                 {kcal} kcal
               </span>
             )}
             {prot !== undefined && prot > 0 && (
               <span className="menu-macro-pill menu-macro-pill--prot">
-                <IonIcon icon={barbellOutline} />
+                <MealIcon value="tb:barbell" size={14} />
                 {prot}g P
               </span>
             )}
             {carb !== undefined && carb > 0 && (
               <span className="menu-macro-pill menu-macro-pill--carb">
-                <IonIcon icon={leafOutline} />
+                <MealIcon value="tb:leaf" size={14} />
                 {carb}g C
               </span>
             )}
             {fat !== undefined && fat > 0 && (
               <span className="menu-macro-pill menu-macro-pill--fat">
-                <IonIcon icon={waterOutline} />
+                <MealIcon value="tb:droplet" size={14} />
                 {fat}g G
               </span>
             )}
@@ -1576,31 +1685,47 @@ interface ExtraMealCardProps {
   onClick: () => void;
 }
 
-// Card de una comida extra (custom). Mismo aspecto visual que MealCard
-// pero con borde sutil distinto (acento lima dashed) para que se distinga
-// como "tu comida" frente a las 4 fijas. Pulsar abre el editor.
+// Card de una comida extra (custom). Si `esExtra !== false` (default
+// para retro-compat con docs antiguos) la card adopta el borde
+// dashed lima + chip "EXTRA" junto al nombre. Si el user creó la
+// comida desde el editor con el check "EXTRA" desmarcado, la card se
+// renderiza como una comida normal (sin dashed, sin chip).
 function ExtraMealCard({ extra, onClick }: ExtraMealCardProps) {
   const isEmpty = extra.alimentos.length === 0;
+  const isExtra = extra.esExtra ?? true;
+  const isDisabled = !!extra.deshabilitada;
   const plato = (extra.nombrePlato ?? '').trim();
   return (
     <button
       type="button"
       className={
-        'menu-meal menu-meal-extra' + (isEmpty ? ' menu-meal--empty' : '')
+        'menu-meal'
+        + (isExtra ? ' menu-meal-extra' : '')
+        + (isEmpty ? ' menu-meal--empty' : '')
+        + (isDisabled ? ' menu-meal--disabled' : '')
       }
       onClick={blurAndRun(onClick)}
-      aria-label={`Editar ${extra.nombre || 'comida extra'}`}
+      aria-label={
+        (isDisabled ? 'Comida deshabilitada · ' : '')
+        + `Editar ${extra.nombre || 'comida'}`
+      }
     >
       <div className="menu-meal-emoji" aria-hidden="true">
-        {extra.emoji ?? '🍽'}
+        <MealIcon
+          value={extra.emoji}
+          fallback={EXTRA_ICON_DEFAULT}
+          size={32}
+        />
       </div>
       <div className="menu-meal-body">
         <div className="menu-meal-row">
           <div className="menu-meal-name">
-            {extra.nombre || 'Comida extra'}
-            <span className="menu-meal-extra-tag" aria-hidden="true">
-              extra
-            </span>
+            {extra.nombre || (isExtra ? 'Comida extra' : 'Comida')}
+            {isExtra && (
+              <span className="menu-meal-extra-tag" aria-hidden="true">
+                extra
+              </span>
+            )}
           </div>
           <div className="menu-meal-time">{extra.hora ?? '--:--'}</div>
         </div>
@@ -1618,25 +1743,25 @@ function ExtraMealCard({ extra, onClick }: ExtraMealCardProps) {
           <div className="menu-meal-macros">
             {extra.kcal > 0 && (
               <span className="menu-macro-pill menu-macro-pill--kcal">
-                <IonIcon icon={flameOutline} />
+                <MealIcon value="tb:flame" size={14} />
                 {extra.kcal} kcal
               </span>
             )}
             {extra.prot > 0 && (
               <span className="menu-macro-pill menu-macro-pill--prot">
-                <IonIcon icon={barbellOutline} />
+                <MealIcon value="tb:barbell" size={14} />
                 {extra.prot}g P
               </span>
             )}
             {extra.carb > 0 && (
               <span className="menu-macro-pill menu-macro-pill--carb">
-                <IonIcon icon={leafOutline} />
+                <MealIcon value="tb:leaf" size={14} />
                 {extra.carb}g C
               </span>
             )}
             {extra.fat > 0 && (
               <span className="menu-macro-pill menu-macro-pill--fat">
-                <IonIcon icon={waterOutline} />
+                <MealIcon value="tb:droplet" size={14} />
                 {extra.fat}g G
               </span>
             )}

@@ -3,15 +3,10 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import {
-  addOutline,
-  closeOutline,
-  trashOutline,
-} from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import {
   type DayKey,
   type DiaEntreno,
@@ -302,25 +297,20 @@ export function DiaEditorModal({
       className="settings-modal"
     >
       <IonContent>
-        {/* Botón X · vive DENTRO de IonContent (no hermano externo)
-            para que aparezca de forma síncrona con el contenido del
-            modal cuando hace su animación de entrada. Antes vivía
-            fuera con position: absolute relativo al IonModal · daba
-            un flicker en algunos navegadores · ahora se posiciona
-            absoluto sobre el .settings-modal-bg que sí se anima. */}
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <div className="settings-modal-bg">
           <div className="settings-modal-card">
+            {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+            <button
+              type="button"
+              className="settings-modal-close settings-modal-close--fixed"
+              onClick={(e) => {
+                (e.currentTarget as HTMLElement).blur();
+                onClose();
+              }}
+              aria-label="Cerrar"
+            >
+              <MealIcon value="tb:x" size={22} />
+            </button>
             <h2 className="settings-modal-title">
               Editar DÍA {diaIdx + 1}
             </h2>
@@ -450,6 +440,7 @@ export function DiaEditorModal({
                       min={0}
                       max={23}
                       step={1}
+                      maxLength={2}
                       placeholder="0"
                       value={tiempoHoras}
                       onChange={(e) => setTiempoHoras(e.target.value)}
@@ -466,6 +457,7 @@ export function DiaEditorModal({
                     min={0}
                     max={tiempoMode === 'hm' ? 59 : 999}
                     step={1}
+                    maxLength={3}
                     placeholder="0"
                     value={tiempoMinutos}
                     onChange={(e) => setTiempoMinutos(e.target.value)}
@@ -579,7 +571,7 @@ export function DiaEditorModal({
               className="dia-editor-add-btn"
               onClick={blurAndRun(addEjercicio)}
             >
-              <IonIcon icon={addOutline} />
+              <MealIcon value="tb:plus" size={18} />
               Añadir ejercicio
             </button>
 
@@ -633,7 +625,7 @@ export function DiaEditorModal({
                   onClick={blurAndRun(() => setConfirmDeleteDia(true))}
                   disabled={submitting}
                 >
-                  <IonIcon icon={trashOutline} />
+                  <MealIcon value="tb:trash" size={18} />
                   Eliminar día
                 </button>
               </>
@@ -1034,11 +1026,12 @@ function EjercicioRow({
             </label>
             <button
               type="button"
-              className="dia-editor-mode-toggle"
+              className="dia-editor-mode-toggle dia-editor-mode-toggle--icon"
               onClick={blurAndRun(toggleFreeMode)}
               title='Cambiar a texto libre (ej. "30 min")'
+              aria-label='Cambiar a texto libre'
             >
-              ✎
+              <MealIcon value="tb:pencil" size={16} />
             </button>
           </div>
         )}
@@ -1061,7 +1054,7 @@ function EjercicioRow({
             onClick={blurAndRun(onRemove)}
             aria-label={`Quitar ejercicio ${idx + 1}`}
           >
-            <IonIcon icon={trashOutline} />
+            <MealIcon value="tb:trash" size={16} />
           </button>
         </div>
       </div>

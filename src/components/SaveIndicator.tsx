@@ -1,8 +1,5 @@
-import { IonIcon, IonSpinner } from '@ionic/react';
-import {
-  alertCircleOutline,
-  checkmarkCircleOutline,
-} from 'ionicons/icons';
+import { IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import './SaveIndicator.css';
 
 // Estados del ciclo de guardado:
@@ -43,14 +40,14 @@ export function SaveIndicator({
   if (status === 'saved') {
     return (
       <span className="save-indicator save-indicator--saved" aria-live="polite">
-        <IonIcon icon={checkmarkCircleOutline} />
+        <MealIcon value="tb:circle-check" size={16} />
         <span>{savedLabel}</span>
       </span>
     );
   }
   return (
     <span className="save-indicator save-indicator--error" aria-live="assertive">
-      <IonIcon icon={alertCircleOutline} />
+      <MealIcon value="tb:alert-circle" size={16} />
       <span>{errorLabel}</span>
     </span>
   );

@@ -544,15 +544,31 @@
 }
 
 .menu-meal-emoji {
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
+  /* Tamaño igualado a `.hoy-meal-emoji` y `.hoy-train-icon` (52×52,
+     radius 16) para que las cards de MenuPage compartan dimensiones
+     con las de HoyPage · jerarquía visual uniforme entre tabs. */
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   background: var(--btal-surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   flex-shrink: 0;
+  /* Color del icono Tabler (heredado vía currentColor) y de los Ionic
+     icons que viven dentro del cuadro (SupCard de batido/creatina).
+     Lima por defecto para destacar sobre el bg surface-2. */
+  color: var(--btal-lime);
+}
+
+/* Mantiene compatibilidad con SupCard que usaba esta clase para los
+   IonIcon de batido/creatina dentro del cuadro emoji · ahora hereda
+   color del padre, así que técnicamente esta regla es redundante,
+   pero la conservamos por si algún punto la sigue invocando. */
+.menu-meal-emoji-icon {
+  font-size: 1.5rem;
+  color: var(--btal-lime);
 }
 
 .menu-meal-body {
@@ -603,11 +619,19 @@
   letter-spacing: normal;
 }
 
-/* Indicador de origen de la comida · ✎ user · ✨ ai */
+/* Indicador de origen de la comida · pencilOutline (user) ·
+   sparklesOutline (ai). Antes era ✎ / ✨ unicode · sustituido por
+   IonIcons para coherencia con el resto de la UI. */
 .menu-meal-source {
   font-size: 0.78rem;
   color: var(--btal-lime);
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.menu-meal-source ion-icon {
+  font-size: 0.95rem;
 }
 
 .menu-meal-source--ai {
@@ -746,6 +770,30 @@
   border-color: rgba(181, 240, 55, 0.6);
 }
 
+/* ── Comida deshabilitada · estado "pausada" ──────────────────────
+   Visualmente más oscura y desaturada para indicar que NO cuenta al
+   total del día ni a la media semanal. Sigue siendo clicable (abre
+   el sheet para poder volver a habilitarla). */
+.menu-meal--disabled {
+  background: var(--btal-bg-2);
+  opacity: 0.55;
+  filter: grayscale(0.6);
+}
+
+/* Hover sutil · indica que sigue siendo clicable pero sin levantar
+   visualmente la card como las activas. */
+.menu-meal--disabled:hover {
+  opacity: 0.75;
+  border-color: var(--btal-border-2);
+}
+
+/* Si la comida deshabilitada también está marcada como EXTRA,
+   sobrescribimos el dashed lima por un border-color gris neutral
+   · más coherente con el estado "off". */
+.menu-meal-extra.menu-meal--disabled {
+  border-color: var(--btal-border);
+}
+
 .menu-meal-extra-tag {
   font-size: 0.55rem;
   font-weight: 700;
@@ -788,6 +836,21 @@
   font-weight: 700;
   color: var(--btal-t-2);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Label inline (icono + texto) dentro del botón sup. Centrado y con gap. */
+.menu-sup-btn-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.menu-sup-btn-icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
   transition:
     background 0.18s,
     border-color 0.18s,
@@ -826,9 +889,8 @@
   }
 }
 
-.menu-sup-btn:active {
-  transform: scale(0.97);
-}
+/* (Regla `.menu-sup-btn:active` definida arriba en línea ~809 ·
+   esta segunda copia se eliminó por ser duplicado exacto.) */
 
 /* Variante batido · gold inactivo */
 .menu-sup-btn--batido {

@@ -8,6 +8,12 @@ html, body, #root {
   margin: 0;
   padding: 0;
   height: 100%;
+  /* Defensa contra elementos hijos que pudieran desbordar el ancho
+     del viewport · típico en pantallas <380 px con palabras muy
+     largas o emojis double-width. Ionic ya gestiona scroll vertical
+     dentro de cada IonContent · ocultar el horizontal a nivel raíz
+     no rompe ningún flujo. */
+  overflow-x: hidden;
 }
 
 body {
@@ -23,4 +29,21 @@ body {
      con Inter manteniendo coherencia en cualquier número. */
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum' 1, 'cv11' 1;
+}
+
+/* ── Anti iOS auto-zoom · inputs en touch devices ──────────────────
+   iOS Safari hace auto-zoom cuando un input recibe focus y su
+   font-size es < 16px · el viewport se rompe y el user tiene que
+   pinch-zoom out manualmente. Forzando 16px en TODOS los focusable
+   (input/textarea/select) cuando estamos en un device touch evita
+   el zoom y mantiene el viewport estable.
+   `@media (hover: none) and (pointer: coarse)` = touch device puro
+   (mobile/tablet) · desktop con mouse mantiene su tamaño original
+   de cada CSS por-componente para que no se rompa el diseño visual. */
+@media (hover: none) and (pointer: coarse) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }

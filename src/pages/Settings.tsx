@@ -3,19 +3,10 @@ import { useHistory } from 'react-router-dom';
 import {
   IonButton,
   IonContent,
-  IonIcon,
   IonPage,
   IonSpinner,
 } from '@ionic/react';
-import {
-  arrowBackOutline,
-  chevronForwardOutline,
-  helpCircleOutline,
-  informationCircleOutline,
-  mailOutline,
-  optionsOutline,
-  pencilOutline,
-} from 'ionicons/icons';
+import { MealIcon } from '../components/MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { AboutModal } from '../components/AboutModal';
 import { AccountManageModal } from '../components/AccountManageModal';
@@ -98,7 +89,7 @@ const Settings: React.FC = () => {
               }}
               aria-label="Volver"
             >
-              <IonIcon icon={arrowBackOutline} />
+              <MealIcon value="tb:arrow-left" size={22} />
             </button>
             <h1 className="settings-title">Ajustes</h1>
           </div>
@@ -129,7 +120,7 @@ const Settings: React.FC = () => {
                   {user.displayName?.trim() || 'Sin nombre'}
                 </span>
                 <span className="settings-profile-edit">
-                  <IonIcon icon={pencilOutline} />
+                  <MealIcon value="tb:pencil" size={16} />
                   Editar perfil
                 </span>
               </div>
@@ -150,7 +141,7 @@ const Settings: React.FC = () => {
                     Cuenta · Seguridad · Eliminar cuenta
                   </span>
                 </div>
-                <IonIcon icon={chevronForwardOutline} className="settings-row-chevron" />
+                <MealIcon value="tb:chevron-right" size={20} className="settings-row-chevron" />
               </button>
             </section>
           )}
@@ -168,7 +159,7 @@ const Settings: React.FC = () => {
                   Sistema de unidades · inicio de la semana
                 </span>
               </div>
-              <IonIcon icon={optionsOutline} className="settings-row-chevron" />
+              <MealIcon value="tb:adjustments" size={20} className="settings-row-chevron" />
             </button>
           </section>
 
@@ -187,7 +178,7 @@ const Settings: React.FC = () => {
                   Te abrimos tu email con asunto y datos pre-rellenados.
                 </span>
               </div>
-              <IonIcon icon={helpCircleOutline} className="settings-row-chevron" />
+              <MealIcon value="tb:help-circle" size={20} className="settings-row-chevron" />
             </a>
 
             <a
@@ -202,7 +193,7 @@ const Settings: React.FC = () => {
                   Envíanos lo que has visto y cómo reproducirlo.
                 </span>
               </div>
-              <IonIcon icon={mailOutline} className="settings-row-chevron" />
+              <MealIcon value="tb:mail" size={20} className="settings-row-chevron" />
             </a>
 
             <button
@@ -216,7 +207,7 @@ const Settings: React.FC = () => {
                   v{APP_VERSION} · privacidad, términos, aviso médico
                 </span>
               </div>
-              <IonIcon icon={informationCircleOutline} className="settings-row-chevron" />
+              <MealIcon value="tb:info-circle" size={20} className="settings-row-chevron" />
             </button>
           </section>
 

@@ -3,11 +3,10 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import { checkmarkCircle, closeOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -131,17 +130,18 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={blurAndRun(onClose)}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={blurAndRun(onClose)}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <h2 className="settings-modal-title">Modo de generación</h2>
               <p className="settings-modal-text">
                 Elige cómo se construye tu plan. Puedes cambiar de modo en
@@ -170,7 +170,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
                 }}
                 disabled={!dirty || !valid || submitting}
               >
-                <IonIcon icon={checkmarkCircle} slot="start" />
+                <MealIcon value="tb:circle-check-filled" size={18} slot="start" />
                 Guardar cambio
               </IonButton>
             </div>

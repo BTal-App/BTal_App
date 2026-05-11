@@ -1,6 +1,6 @@
 import { useHistory, useParams } from 'react-router-dom';
-import { IonContent, IonIcon, IonPage } from '@ionic/react';
-import { arrowBackOutline } from 'ionicons/icons';
+import { IonContent, IonPage } from '@ionic/react';
+import { MealIcon } from '../components/MealIcon';
 import './LegalPlaceholder.css';
 
 const TITLES: Record<string, string> = {
@@ -29,7 +29,7 @@ const LegalPlaceholder: React.FC = () => {
               }}
               aria-label="Volver"
             >
-              <IonIcon icon={arrowBackOutline} />
+              <MealIcon value="tb:arrow-left" size={22} />
             </button>
             <h1 className="legal-title">{title}</h1>
           </div>

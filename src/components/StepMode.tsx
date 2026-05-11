@@ -1,5 +1,4 @@
-import { IonIcon } from '@ionic/react';
-import { createOutline, sparklesOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import {
   AI_SCOPE_OPTIONS,
   type AiScopeChoice,
@@ -7,6 +6,17 @@ import {
   type StepModeValue,
 } from '../templates/defaultUser';
 import './StepMode.css';
+
+// Mapping scope → Ionicon outline · sustituye los emojis del schema
+// (✨ 🍽️ 📋 🏋️) por iconos coherentes con AiGenerateModal y el resto
+// de la UI. El campo `emoji` del schema sigue ahí pero ya no se
+// renderiza en la UI · podríamos retirarlo en una limpieza posterior.
+const SCOPE_ICON: Record<AiScopeChoice, string> = {
+  all: 'tb:sparkles',
+  menu_compra: 'tb:tools-kitchen-2',
+  menu_only: 'tb:list',
+  entrenos_only: 'tb:barbell',
+};
 
 // Re-export para no romper imports existentes que esperan el tipo desde
 // este archivo. La fuente de verdad ahora vive en templates/defaultUser.ts.
@@ -50,7 +60,7 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
         aria-pressed={value.modo === 'ai'}
       >
         <div className="step-mode-icon step-mode-icon--ai">
-          <IonIcon icon={sparklesOutline} />
+          <MealIcon value="tb:sparkles" size={26} />
         </div>
         <div className="step-mode-info">
           <div className="step-mode-title">
@@ -72,7 +82,7 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
         aria-pressed={value.modo === 'manual'}
       >
         <div className="step-mode-icon step-mode-icon--manual">
-          <IonIcon icon={createOutline} />
+          <MealIcon value="tb:edit" size={26} />
         </div>
         <div className="step-mode-info">
           <div className="step-mode-title">Lo relleno yo mismo</div>
@@ -102,7 +112,9 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
                   onClick={() => handleScopeClick(opt.value)}
                   aria-pressed={active}
                 >
-                  <span className="step-mode-scope-emoji">{opt.emoji}</span>
+                  <span className="step-mode-scope-emoji" aria-hidden>
+                    <MealIcon value={SCOPE_ICON[opt.value]} size={20} />
+                  </span>
                   <span className="step-mode-scope-info">
                     <span className="step-mode-scope-title">{opt.label}</span>
                     <span className="step-mode-scope-sub">{opt.sub}</span>

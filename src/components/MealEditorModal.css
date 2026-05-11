@@ -22,6 +22,8 @@
   justify-content: center;
   font-size: 1.4rem;
   flex-shrink: 0;
+  /* Color del icono Tabler · `<MealIcon>` lo hereda con currentColor. */
+  color: var(--btal-lime);
 }
 
 /* Variante clickable · el emoji actúa como botón que abre el picker.
@@ -217,4 +219,58 @@ button.meal-editor-emoji--clickable::after {
   font-weight: 600;
   text-transform: none;
   font-size: 0.92rem;
+}
+
+/* ───── Check "Marcar como EXTRA" (solo en MealExtraEditorModal) ─────
+   Toggle que decide si la comida se renderiza con borde dashed + chip
+   "EXTRA" en la card del menú o como una comida normal. Vive entre
+   "Nombre del plato" y "Hora (opcional)" en el form. */
+.meal-editor-extra-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.meal-editor-extra-check input[type='checkbox'] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--btal-lime);
+  cursor: pointer;
+  margin: 0;
+}
+
+.meal-editor-extra-check-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--btal-t-1);
+  letter-spacing: 0.01em;
+}
+
+/* Texto descriptivo bajo el check · explica qué hace el toggle.
+   Indentado para alinearse con el label del checkbox (28px = check
+   18px + gap 10px) y diferenciado en color t-3 + tamaño menor. */
+.meal-editor-extra-hint {
+  margin: 4px 0 6px 28px;
+  font-size: 0.75rem;
+  color: var(--btal-t-3);
+  line-height: 1.45;
+}
+
+.meal-editor-extra-hint strong {
+  color: var(--btal-lime);
+  font-weight: 700;
+}
+
+/* Asterisco lima para marcar el único campo obligatorio (título) en
+   `MealExtraEditorModal`. Usado tanto junto al label del input como
+   inline en el hint del bottom para que el user pueda escanear de un
+   vistazo qué es obligatorio. */
+.meal-editor-required {
+  color: var(--btal-lime);
+  font-weight: 800;
 }

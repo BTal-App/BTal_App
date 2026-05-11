@@ -227,6 +227,9 @@ export function diffPlan(
       from: '—',
       to: `${newP.dias.length} día${newP.dias.length === 1 ? '' : 's'}`,
     });
+    if (newP.esPredeterminado) {
+      out.push({ label: 'Predeterminado', from: '—', to: 'Sí' });
+    }
     newP.dias.forEach((d, i) => {
       diffDia(undefined, d, i).forEach((c) => out.push(c));
     });
@@ -250,6 +253,17 @@ export function diffPlan(
       label: 'Sub-estructura',
       from: SAFE(oldP.estructura2),
       to: SAFE(newP.estructura2),
+    });
+  // Sub-fase 2D.1 · cambio del flag "predeterminado" · solo aplica
+  // a planes custom (los builtIn nunca lo cambian). Mostramos como
+  // "Sí" / "No" en el diff antes/después.
+  const oldPred = !!oldP.esPredeterminado;
+  const newPred = !!newP.esPredeterminado;
+  if (oldPred !== newPred)
+    out.push({
+      label: 'Predeterminado',
+      from: oldPred ? 'Sí' : 'No',
+      to: newPred ? 'Sí' : 'No',
     });
   const oldN = oldP.dias.length;
   const newN = newP.dias.length;

@@ -1,0 +1,351 @@
+/* ─────────────────────────────────────────────────────────────────
+   GraphsModal · modal con gráficos accesible desde ProfileSheet.
+   Bottom sheet con tabs (4) y SVG charts en cada una.
+   ───────────────────────────────────────────────────────────────── */
+
+.graphs-modal::part(content) {
+  --background: var(--btal-bg);
+  --border-radius: 24px 24px 0 0;
+}
+
+.graphs-modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem 1rem 2rem;
+  overflow-y: auto;
+  background: var(--btal-bg);
+  color: var(--btal-t-1);
+}
+
+.graphs-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.graphs-modal-title {
+  font-family: 'Bebas Neue', 'DM Sans', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.6px;
+  color: var(--btal-lime);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.graphs-modal-title-icon {
+  font-size: 1.4rem;
+  color: var(--btal-lime);
+}
+
+/* Close X · mismo lenguaje visual que `.settings-modal-close` del resto
+   de modales de la app (círculo gris sutil con borde) en lugar del
+   chip rojo coral original. La posición sigue siendo inline en el head
+   row porque GraphsModal es un sheet con `handle` arriba — un X
+   absolute top-right chocaría con el área del handle. */
+.graphs-modal-close {
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--btal-t-2);
+  cursor: pointer;
+  font-size: 1.3rem;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  flex-shrink: 0;
+}
+
+.graphs-modal-close:hover {
+  background: var(--btal-surface-3);
+  color: var(--btal-t-1);
+  border-color: var(--btal-border-2);
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+.graphs-modal-tabs {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--btal-border);
+  scrollbar-width: none;
+}
+
+.graphs-modal-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.graphs-modal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-2);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.graphs-modal-tab:hover {
+  border-color: var(--btal-border-2);
+  color: var(--btal-t-1);
+}
+
+.graphs-modal-tab.is-active {
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border-color: var(--btal-lime);
+}
+
+/* Icono de cada tab · hereda color del padre (verde lima en activo,
+   gris en inactivo) para mantener legibilidad sobre ambos fondos. */
+.graphs-modal-tab-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+/* ── Body · contenedor del contenido de cada tab ──────────────── */
+.graphs-modal-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.graphs-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 0.25rem;
+}
+
+.graphs-tab-head h3 {
+  font-family: 'Bebas Neue', 'DM Sans', sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+  color: var(--btal-t-1);
+  margin: 0 0 0.25rem;
+}
+
+.graphs-tab-head p {
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.graphs-loading,
+.graphs-empty,
+.bt-chart-empty {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: var(--btal-t-2);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* (Anterior `.graphs-error` retirado · si la query falla tratamos
+   como "sin datos" y dejamos que el BarChart muestre su empty state.
+   Causaba falsos positivos en invitados nuevos sin /registros.) */
+
+.graphs-summary {
+  font-size: 0.8rem;
+  color: var(--btal-t-2);
+  text-align: center;
+}
+
+.graphs-summary strong {
+  color: var(--btal-t-1);
+}
+
+/* ── Charts SVG · width 100% del contenedor ─────────────────── */
+.bt-bar-chart,
+.bt-line-chart {
+  width: 100%;
+  height: auto;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 0.75rem 0.5rem;
+  box-sizing: border-box;
+}
+
+/* ── Selector ejercicio (Pesos tab) ──────────────────────────── */
+.graphs-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-1);
+  border-radius: 8px;
+  padding: 0.55rem 2rem 0.55rem 0.75rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7068'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  width: 100%;
+}
+
+/* ── PR's list ───────────────────────────────────────────────── */
+.graphs-pr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.graphs-pr-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.6rem;
+  align-items: center;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.graphs-pr-name {
+  color: var(--btal-t-1);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.graphs-pr-kg {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--btal-gold);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.graphs-pr-fecha {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  white-space: nowrap;
+}
+
+/* ── Period selector (tab Suplementación) · 4 chips ─────────── */
+.graphs-period-selector {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.graphs-period-btn {
+  flex: 1 1 auto;
+  min-width: 64px;
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-2);
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.graphs-period-btn:hover {
+  border-color: var(--btal-border-2);
+  color: var(--btal-t-1);
+}
+
+.graphs-period-btn.is-active {
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border-color: var(--btal-lime);
+}
+
+/* ── Suplementación blocks ──────────────────────────────────── */
+.graphs-sup-block {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.graphs-sup-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--btal-t-1);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.graphs-sup-title-icon {
+  font-size: 1.05rem;
+  color: var(--btal-lime);
+  flex-shrink: 0;
+}
+
+.graphs-sup-block .bt-bar-chart {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.graphs-note {
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  font-style: italic;
+  line-height: 1.4;
+  margin: 0;
+  background: var(--btal-surface);
+  border: 1px dashed var(--btal-border);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+}
+
+/* Icono ⓘ inline al inicio de la nota explicativa · vertical-align
+   middle para que cuadre con la primera línea de texto. */
+.graphs-note-icon {
+  font-size: 0.85rem;
+  color: var(--btal-t-2);
+  vertical-align: middle;
+  margin-right: 0.3rem;
+  position: relative;
+  top: -1px;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .graphs-modal-tab {
+    font-size: 0.76rem;
+    padding: 0.35rem 0.7rem;
+  }
+  .graphs-pr-row {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+  }
+  .graphs-pr-fecha {
+    grid-column: 1 / -1;
+    text-align: right;
+  }
+}

@@ -1,12 +1,6 @@
 import { useMemo } from 'react';
-import { IonIcon, IonToggle } from '@ionic/react';
-import {
-  alertCircleOutline,
-  barbellOutline,
-  cartOutline,
-  lockClosedOutline,
-  restaurantOutline,
-} from 'ionicons/icons';
+import { IonToggle } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import {
   affectedStats,
   isProtected,
@@ -37,9 +31,9 @@ const SECTION_LABEL: Record<AffectedSection, string> = {
 };
 
 const SECTION_ICON: Record<AffectedSection, string> = {
-  menu: restaurantOutline,
-  entrenos: barbellOutline,
-  compra: cartOutline,
+  menu: 'tb:tools-kitchen-2',
+  entrenos: 'tb:barbell',
+  compra: 'tb:shopping-cart',
 };
 
 const SOURCE_LABEL: Record<AffectedItem['source'], string> = {
@@ -79,7 +73,7 @@ export function AiAffectedItemsStep({
   if (items.length === 0) {
     return (
       <div className="ai-items-step ai-items-empty">
-        <IonIcon icon={alertCircleOutline} />
+        <MealIcon value="tb:alert-circle" size={18} />
         <p>
           No hay nada que la IA pueda generar con esta combinación. Si elegiste
           "Solo entrenos", revisa que tu perfil tenga al menos 1 día de entreno
@@ -103,7 +97,7 @@ export function AiAffectedItemsStep({
         <div className="ai-items-allow-row">
           <div className="ai-items-allow-info">
             <span className="ai-items-allow-title">
-              <IonIcon icon={lockClosedOutline} />
+              <MealIcon value="tb:lock" size={16} />
               Permitir que la IA toque mis cambios
             </span>
             <span className="ai-items-allow-sub">
@@ -127,7 +121,7 @@ export function AiAffectedItemsStep({
         return (
           <div key={section} className="ai-items-section">
             <div className="ai-items-section-head">
-              <IonIcon icon={SECTION_ICON[section]} />
+              <MealIcon value={SECTION_ICON[section]} size={18} />
               <span className="ai-items-section-title">
                 {SECTION_LABEL[section]}
               </span>
@@ -179,14 +173,14 @@ export function AiAffectedItemsStep({
       {/* Stats finales · siempre visibles */}
       <div className="ai-items-stats">
         <div className="ai-items-stat ai-items-stat--overwrite">
-          <IonIcon icon={alertCircleOutline} />
+          <MealIcon value="tb:alert-circle" size={18} />
           <div>
             <span className="ai-items-stat-num">{stats.willOverwrite}</span>
             <span className="ai-items-stat-label">se reemplazarán</span>
           </div>
         </div>
         <div className="ai-items-stat ai-items-stat--keep">
-          <IonIcon icon={lockClosedOutline} />
+          <MealIcon value="tb:lock" size={18} />
           <div>
             <span className="ai-items-stat-num">{stats.willKeep}</span>
             <span className="ai-items-stat-label">se mantendrán</span>

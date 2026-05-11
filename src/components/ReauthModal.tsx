@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { IonButton, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import { closeOutline, lockClosedOutline, logoGoogle } from 'ionicons/icons';
+import { logoGoogle } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { reauthEmail, reauthGoogle } from '../services/auth';
 import './SettingsModal.css';
@@ -83,19 +84,19 @@ export function ReauthModal({ isOpen, user, reason, onClose, onSuccess }: Props)
       className="settings-modal"
     >
       <div className="settings-modal-bg">
-        <button
-          type="button"
-          className="settings-modal-close"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         <div className="settings-modal-card">
+          {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+          <button
+            type="button"
+            className="settings-modal-close"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
+            aria-label="Cerrar"
+          >
+            <MealIcon value="tb:x" size={22} />
+          </button>
           <h2 className="settings-modal-title">Confirma tu identidad</h2>
           <p className="settings-modal-text">
             {reason ?? 'Por seguridad, te pedimos confirmar tu identidad antes de continuar.'}
@@ -104,7 +105,7 @@ export function ReauthModal({ isOpen, user, reason, onClose, onSuccess }: Props)
           {usedPassword(user) && (
             <form onSubmit={handlePasswordSubmit}>
               <div className="landing-input-wrap">
-                <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+                <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
                 <input
                   className="landing-input"
                   type="password"

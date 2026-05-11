@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { IonButton, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import { closeOutline, warningOutline } from 'ionicons/icons';
+import { IonButton, IonModal, IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { deleteAccount } from '../services/auth';
 import { ReauthModal } from './ReauthModal';
@@ -78,21 +78,21 @@ export function DeleteAccountModal({ isOpen, user, onClose }: Props) {
         className="settings-modal"
       >
         <div className="settings-modal-bg">
-          <button
-            type="button"
-            className="settings-modal-close"
-            onClick={(e) => {
-              e.currentTarget.blur();
-              onClose();
-            }}
-            aria-label="Cerrar"
-          >
-            <IonIcon icon={closeOutline} />
-          </button>
-
           <div className="settings-modal-card delete-account-card">
+            {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+            <button
+              type="button"
+              className="settings-modal-close"
+              onClick={(e) => {
+                e.currentTarget.blur();
+                onClose();
+              }}
+              aria-label="Cerrar"
+            >
+              <MealIcon value="tb:x" size={22} />
+            </button>
             <div className="delete-account-icon">
-              <IonIcon icon={warningOutline} />
+              <MealIcon value="tb:alert-triangle" size={28} />
             </div>
             <h2 className="settings-modal-title">¿Eliminar tu cuenta?</h2>
             <p className="settings-modal-text">

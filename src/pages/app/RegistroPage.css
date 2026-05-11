@@ -1,0 +1,924 @@
+/* ─────────────────────────────────────────────────────────────────────
+   RegistroPage · Sub-fase 2E
+   Stats grid 2×2, calendar mensual/semanal con dots, panel del día
+   con plan + ejercicios + sparkline + notas. Paleta lima (entreno) /
+   azul (rest) / cyan (today) / oro (PR) / coral (danger).
+   ───────────────────────────────────────────────────────────────────── */
+
+/* ── Stats grid ───────────────────────────────────────────────────── */
+.reg-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  /* Margen lateral 16 px para alinear con `.app-soon-card` y demás
+     cards del resto de tabs. El TabHeader usa 20 px lateral pero las
+     cards llevan 16 px (patrón establecido en HoyPage) · respetar. */
+  margin: 1.25rem 16px 1rem;
+}
+
+/* `.reg-stat-card` ahora es un <button> · text-align/font reset para
+   que herede del contenido y los hijos rendericen como en una card
+   estándar. Cursor pointer para señalizar la affordance del IonAlert
+   con descripción de la métrica. */
+.reg-stat-card {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 1rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color 0.15s, transform 0.12s;
+}
+
+.reg-stat-card:hover {
+  border-color: var(--btal-border-2);
+}
+
+.reg-stat-card:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.reg-stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--btal-lime) 6%, transparent),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+/* Icono ⓘ esquina superior-derecha · señaliza que la card tiene
+   info al pulsar. Color tenue para no competir con el valor. */
+.reg-stat-info-icon {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.55rem;
+  color: var(--btal-t-3);
+  font-size: 0.95rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.reg-stat-card:hover .reg-stat-info-icon {
+  color: var(--btal-lime);
+}
+
+.reg-stat-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--btal-t-2);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* Padding derecho para evitar que el icono ⓘ (top-right absoluto)
+     pise el label cuando los nombres son largos ("PR's (Personal…"). */
+  padding-right: 1rem;
+}
+
+.reg-stat-lbl-icon {
+  font-size: 1rem;
+  color: var(--btal-lime);
+  flex-shrink: 0;
+}
+
+.reg-stat-val {
+  font-family: 'Bebas Neue', 'DM Sans', sans-serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  color: var(--btal-lime);
+  margin-top: 0.15rem;
+}
+
+.reg-stat-sub {
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  line-height: 1.3;
+}
+
+/* ── Calendar nav ─────────────────────────────────────────────────── */
+.reg-cal {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 1rem 0.85rem;
+  /* Margen lateral simétrico · ver nota en .reg-stats-grid arriba. */
+  margin: 0 16px 1rem;
+}
+
+.reg-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.reg-cal-nav-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.reg-cal-nav-btn {
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-1);
+  font-size: 1.1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.reg-cal-nav-btn:hover {
+  background: var(--btal-surface-3);
+  border-color: var(--btal-border-2);
+}
+
+.reg-cal-month-label {
+  font-family: 'Bebas Neue', 'DM Sans', sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.6px;
+  color: var(--btal-lime);
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  min-width: 8.5rem;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.reg-cal-month-label:hover {
+  border-color: var(--btal-lime);
+  background: color-mix(in srgb, var(--btal-lime) 8%, var(--btal-surface-2));
+}
+
+/* Wrapper del lado derecho de la nav · agrupa el botón ⓘ y "Hoy"
+   inline con un pequeño gap para que respiren. */
+.reg-cal-nav-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Botón ⓘ información · sin recuadro · solo el icono. Mismo color y
+   comportamiento hover que `.reg-stat-info-icon` de las stat cards
+   (RACHA ACTUAL, PR's, etc.) para mantener la coherencia: gris tenue
+   en reposo (var(--btal-t-3)), lima al hover (var(--btal-lime)). */
+.reg-cal-info-btn {
+  background: transparent;
+  border: none;
+  color: var(--btal-t-3);
+  font-size: 1.05rem;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, transform 0.12s;
+  flex-shrink: 0;
+}
+
+.reg-cal-info-btn:hover {
+  color: var(--btal-lime);
+}
+
+.reg-cal-info-btn:active {
+  transform: scale(0.92);
+}
+
+.reg-cal-today-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-1);
+  border-radius: 8px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.reg-cal-today-btn:hover {
+  border-color: var(--btal-cyan);
+  color: var(--btal-cyan);
+}
+
+.reg-cal-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.reg-cal-view-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--btal-t-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reg-cal-view-btn {
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.reg-cal-view-btn.is-active {
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border-color: var(--btal-lime);
+}
+
+/* ── Calendar filter (mes + año dropdowns) ───────────────────────── */
+.reg-cal-filter {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-lime);
+  border-radius: 12px;
+  padding: 0.55rem 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.reg-cal-filter-label {
+  font-family: 'Bebas Neue', 'DM Sans', sans-serif;
+  font-size: 1.1rem;
+  color: var(--btal-lime);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.reg-cal-filter-label-icon {
+  font-size: 1.05rem;
+  color: var(--btal-lime);
+  flex-shrink: 0;
+}
+
+.reg-cal-filter-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-1);
+  border-radius: 6px;
+  padding: 0.3rem 1.5rem 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7068'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.reg-cal-filter-go {
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reg-cal-filter-close {
+  background: color-mix(in srgb, var(--btal-coral) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--btal-coral) 35%, transparent);
+  color: var(--btal-coral);
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.reg-cal-filter-close:hover {
+  background: color-mix(in srgb, var(--btal-coral) 18%, transparent);
+}
+
+/* ── Calendar grid ───────────────────────────────────────────────── */
+.reg-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-dow {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--btal-t-3);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  text-align: center;
+  padding: 0.25rem 0;
+}
+
+.cal-day {
+  aspect-ratio: 1 / 1;
+  background: var(--btal-surface-2);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--btal-t-1);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.25rem;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+}
+
+.cal-day:hover {
+  background: var(--btal-surface-3);
+}
+
+.cal-day:active {
+  transform: scale(0.96);
+}
+
+.cal-day-num {
+  line-height: 1;
+}
+
+.cal-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.cal-day.train {
+  color: var(--btal-lime);
+  background: color-mix(in srgb, var(--btal-lime) 8%, var(--btal-surface-2));
+}
+
+.cal-day.train .cal-dot {
+  background: var(--btal-lime);
+  box-shadow: 0 0 6px var(--btal-lime);
+}
+
+.cal-day.rest {
+  color: var(--btal-blue);
+  background: color-mix(in srgb, var(--btal-blue) 8%, var(--btal-surface-2));
+}
+
+.cal-day.rest .cal-dot {
+  background: var(--btal-blue);
+  box-shadow: 0 0 6px var(--btal-blue);
+}
+
+.cal-day.today {
+  border-color: var(--btal-cyan);
+}
+
+.cal-day.today .cal-dot {
+  background: var(--btal-cyan);
+}
+
+.cal-day.selected {
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border-color: var(--btal-lime);
+  font-weight: 700;
+}
+
+.cal-day.selected .cal-dot {
+  background: #0a0e0c;
+  box-shadow: none;
+}
+
+.cal-day.other {
+  color: var(--btal-t-3);
+  opacity: 0.55;
+}
+
+/* Días previos al MIN_DATE_KEY (enero 2026) · no clickables, opacidad
+   reducida y cursor not-allowed. La regla viene DESPUÉS de `.other`
+   para ganar especificidad cuando se combinan ambas. */
+.cal-day.disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.cal-day.disabled .cal-dot {
+  display: none;
+}
+
+/* Botón nav prev desactivado al alcanzar MIN_YEAR/MIN_MONTH0. */
+.reg-cal-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Day panel ───────────────────────────────────────────────────── */
+.reg-day-panel {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 16px;
+  padding: 1rem 0.85rem;
+  /* Margen lateral simétrico · ver nota en .reg-stats-grid arriba. */
+  margin: 0 16px 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.reg-day-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.reg-day-panel-title {
+  font-family: 'Bebas Neue', 'DM Sans', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.6px;
+  color: var(--btal-cyan);
+  margin: 0;
+}
+
+/* X de cerrar · mismo look que `.settings-modal-close` (círculo gris
+   sutil con borde) para coherencia con el resto de la app. Antes era
+   un botón rojo coral con texto "Cerrar" · sustituido por icono solo. */
+.reg-day-panel-close {
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--btal-t-2);
+  cursor: pointer;
+  font-size: 1.15rem;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  flex-shrink: 0;
+}
+
+.reg-day-panel-close:hover {
+  background: var(--btal-surface-3);
+  color: var(--btal-t-1);
+  border-color: var(--btal-border-2);
+}
+
+.reg-day-panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.reg-day-panel-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--btal-t-2);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.reg-day-panel-label-icon {
+  font-size: 0.95rem;
+  color: var(--btal-lime);
+  flex-shrink: 0;
+}
+
+.reg-day-panel-hint {
+  color: var(--btal-t-3);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.reg-day-panel-select,
+.reg-day-panel-textarea {
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-1);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.92rem;
+  font-family: inherit;
+  width: 100%;
+}
+
+.reg-day-panel-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7068'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 2rem;
+}
+
+.reg-day-panel-textarea {
+  resize: vertical;
+  min-height: 64px;
+  line-height: 1.4;
+}
+
+.reg-day-panel-charcount {
+  align-self: flex-end;
+  font-size: 0.68rem;
+  color: var(--btal-t-3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.reg-day-panel-empty {
+  font-size: 0.85rem;
+  color: var(--btal-t-2);
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.reg-day-panel-rest {
+  background: color-mix(in srgb, var(--btal-blue) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--btal-blue) 35%, transparent);
+  color: var(--btal-blue);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.reg-day-panel-rest-icon {
+  font-size: 1.1rem;
+  vertical-align: middle;
+  margin-right: 0.4rem;
+  position: relative;
+  top: -1px;
+}
+
+.reg-day-panel-error {
+  background: color-mix(in srgb, var(--btal-coral) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--btal-coral) 35%, transparent);
+  color: var(--btal-coral);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+.reg-day-panel-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.reg-day-panel-save {
+  flex: 1 1 auto;
+  background: var(--btal-lime);
+  color: #0a0e0c;
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.12s;
+}
+
+.reg-day-panel-save:hover {
+  background: var(--btal-lime-d);
+}
+
+.reg-day-panel-save:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.reg-day-panel-save:disabled {
+  background: var(--btal-surface-2);
+  color: var(--btal-t-3);
+  cursor: not-allowed;
+}
+
+.reg-day-panel-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: color-mix(in srgb, var(--btal-coral) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--btal-coral) 35%, transparent);
+  color: var(--btal-coral);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.reg-day-panel-delete:hover {
+  background: color-mix(in srgb, var(--btal-coral) 18%, transparent);
+}
+
+/* ── Day panel · exercises list ──────────────────────────────────── */
+.reg-day-panel-exercises {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.reg-day-panel-exercises-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.reg-day-panel-day-meta {
+  font-size: 0.78rem;
+  color: var(--btal-t-2);
+  font-style: italic;
+  /* El user puede personalizar el título del día con cualquier texto
+     en DiaEditorModal · si pega nombres muy largos sin espacios
+     (caracteres unicode, URLs, etc.) el padre flex permite wrap pero
+     necesitamos overflow-wrap para palabras largas. */
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.reg-ex-row {
+  background: var(--btal-surface-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.reg-ex-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.reg-ex-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--btal-t-1);
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.reg-ex-pr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: color-mix(in srgb, var(--btal-gold) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--btal-gold) 45%, transparent);
+  color: var(--btal-gold);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.reg-ex-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.reg-ex-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-2);
+  border-radius: 6px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.reg-ex-action ion-icon {
+  font-size: 0.85rem;
+}
+
+.reg-ex-action-info {
+  background: color-mix(in srgb, var(--btal-blue) 10%, transparent);
+  border-color: color-mix(in srgb, var(--btal-blue) 35%, transparent);
+  color: var(--btal-blue);
+  cursor: help;
+}
+
+.reg-ex-action-warn {
+  background: color-mix(in srgb, var(--btal-gold) 10%, transparent);
+  border-color: color-mix(in srgb, var(--btal-gold) 35%, transparent);
+  color: var(--btal-gold);
+}
+
+.reg-ex-action-warn:hover {
+  background: color-mix(in srgb, var(--btal-gold) 18%, transparent);
+}
+
+.reg-ex-action-danger {
+  background: color-mix(in srgb, var(--btal-coral) 10%, transparent);
+  border-color: color-mix(in srgb, var(--btal-coral) 35%, transparent);
+  color: var(--btal-coral);
+}
+
+.reg-ex-action-danger:hover {
+  background: color-mix(in srgb, var(--btal-coral) 18%, transparent);
+}
+
+.reg-ex-series {
+  font-family: 'JetBrains Mono', monospace;
+  /* Texto "series y repeticiones" del plan (ej. "4×6-8") · más
+     visible que la versión inicial · es el dato principal junto al
+     nombre del ejercicio. */
+  font-size: 1rem;
+  color: var(--btal-lime);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+.reg-ex-history {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 8px;
+  padding: 0.4rem 0.55rem;
+}
+
+.reg-sparkline {
+  width: 100px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.reg-ex-history-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--btal-t-2);
+}
+
+.reg-ex-history-sessions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.reg-ex-history-sessions-icon {
+  font-size: 0.85rem;
+  color: var(--btal-lime);
+  flex-shrink: 0;
+}
+
+.reg-ex-history-delta {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 0.72rem;
+}
+
+.reg-ex-history-delta.up {
+  color: var(--btal-lime);
+}
+
+.reg-ex-history-delta.down {
+  color: var(--btal-coral);
+}
+
+.reg-ex-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.reg-set-row {
+  display: grid;
+  /* Solo kg · sin reps · 24px para el nº de serie + 1 col fluida
+     para el input. Limitado a 200px máx para que el input no quede
+     gigante en pantallas anchas (es un campo numérico corto). */
+  grid-template-columns: 24px minmax(0, 200px);
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.reg-set-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--btal-t-3);
+  text-align: center;
+  font-weight: 700;
+}
+
+.reg-set-input {
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  color: var(--btal-t-1);
+  border-radius: 6px;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.88rem;
+  font-family: 'JetBrains Mono', monospace;
+  width: 100%;
+}
+
+.reg-set-input:focus {
+  border-color: var(--btal-lime);
+  outline: none;
+}
+
+/* ── Animaciones ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .cal-day,
+  .reg-day-panel-save {
+    transition: none;
+  }
+  .cal-day:active,
+  .reg-day-panel-save:active {
+    transform: none;
+  }
+}
+
+/* ── Responsive · pantallas estrechas ────────────────────────────── */
+@media (max-width: 380px) {
+  .reg-stat-val {
+    font-size: 2rem;
+  }
+  .reg-cal-month-label {
+    font-size: 1.1rem;
+    min-width: 7rem;
+    padding: 0.25rem 0.5rem;
+  }
+  .reg-ex-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .reg-ex-action span {
+    display: none;
+  }
+}

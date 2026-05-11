@@ -3,14 +3,8 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
 } from '@ionic/react';
-import {
-  closeOutline,
-  saveOutline,
-  timeOutline,
-} from 'ionicons/icons';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -21,9 +15,11 @@ import { blockNonInteger, clampInt } from '../utils/numericInput';
 import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { AlimentosListInput } from './AlimentosListInput';
-import { EmojiPicker } from './EmojiPicker';
+import { IconPicker } from './IconPicker';
+import { MealIcon } from './MealIcon';
 import {
   DAY_LABEL_FULL,
+  EXTRA_ICON_DEFAULT,
   newExtraId,
   type ComidaExtra,
   type DayKey,
@@ -67,8 +63,18 @@ export function MealExtraEditorModal({
   // Estado base · si estamos creando, snapshot original = "comida vacía"
   // con id nuevo. Al primer save haremos add con ese id. Si estamos
   // editando, snapshot = el extra que viene en props.
-  const buildInitial = (): ComidaExtra =>
-    extra ?? {
+  const buildInitial = (): ComidaExtra => {
+    if (extra) {
+      // Edit mode · normaliza `esExtra` para que el check del editor
+      // coincida con lo que la card muestra hoy (legacy = sin campo =
+      // visualmente EXTRA → check marcado). Sin esto, abrir un extra
+      // antiguo mostraría el check desmarcado pero la card sí dashed.
+      return { ...extra, esExtra: extra.esExtra ?? true };
+    }
+    // Create mode · arranca con el check desmarcado · el user lo
+    // activa solo si quiere el aspecto diferenciado (borde dashed +
+    // chip EXTRA junto al nombre).
+    return {
       id: newExtraId(),
       nombre: '',
       alimentos: [],
@@ -78,7 +84,9 @@ export function MealExtraEditorModal({
       carb: 0,
       fat: 0,
       source: 'user',
+      esExtra: false,
     };
+  };
 
   const [original, setOriginal] = useState<ComidaExtra>(buildInitial);
   const [local, setLocal] = useState<ComidaExtra>(buildInitial);
@@ -127,6 +135,7 @@ export function MealExtraEditorModal({
     if ((original.nombrePlato ?? '') !== (local.nombrePlato ?? '')) return true;
     if ((original.emoji ?? null) !== (local.emoji ?? null)) return true;
     if (original.hora !== local.hora) return true;
+    if ((original.esExtra ?? true) !== (local.esExtra ?? true)) return true;
     if (original.alimentos.length !== local.alimentos.length) return true;
     for (let i = 0; i < original.alimentos.length; i++) {
       if (original.alimentos[i].nombre !== local.alimentos[i].nombre) return true;
@@ -147,27 +156,19 @@ export function MealExtraEditorModal({
       || local.alimentos.length > 0
     : isDirtyEdit;
 
-  // ── Validaciones de campos obligatorios ─────────────────────────────
-  // En modo CREAR exigimos: nombre · nombrePlato · ≥1 alimento (sin
-  // necesidad de cantidad) · kcal > 0. Los demás macros son opcionales
-  // porque a veces son 0 reales (un café solo no tiene carb ni grasa).
-  // En modo EDITAR no aplicamos · si el user ya tenía datos buenos y
-  // quiere borrar algún campo, le dejamos (puede tener razón al hacerlo).
-  const nombreValido = local.nombre.trim() !== '';
-  const nombrePlatoValido = (local.nombrePlato ?? '').trim() !== '';
-  const tieneAlimento = local.alimentos.some(
-    (a) => a.nombre.trim() !== '',
-  );
-  const kcalValido = local.kcal > 0;
+  // ── Validaciones · campo obligatorio ──────────────────────────────
+  // Política actual (post-2026-05): SOLO el título es obligatorio.
+  // Plato, alimentos y macros son opcionales · si el user quiere crear
+  // una comida solo como recordatorio ("Snack tarde") sin datos, le
+  // dejamos. Si no introduce macros, esos quedan en 0 y no afectan al
+  // total del día ni a la media semanal (sumar 0 es idempotente).
+  const tituloValido = local.nombre.trim() !== '';
 
   // Lista de campos faltantes · usada para construir el mensaje de error
-  // y para deshabilitar el botón Guardar antes incluso del primer click.
+  // y para deshabilitar el botón Guardar antes del primer click.
   const camposFaltantes: string[] = [];
   if (isCreate) {
-    if (!nombreValido) camposFaltantes.push('nombre de la comida');
-    if (!nombrePlatoValido) camposFaltantes.push('nombre del plato');
-    if (!tieneAlimento) camposFaltantes.push('al menos un alimento');
-    if (!kcalValido) camposFaltantes.push('calorías (kcal)');
+    if (!tituloValido) camposFaltantes.push('título');
   }
   const camposOk = camposFaltantes.length === 0;
 
@@ -192,16 +193,27 @@ export function MealExtraEditorModal({
     };
     const changes: ChangeEntry[] = [];
     if (isCreate) {
-      // En modo create, todo va como '— → valor'.
+      // En modo create, todo va como '— → valor'. Solo añadimos
+      // entradas para campos con CONTENIDO real (evita líneas
+      // redundantes tipo "Alimentos: — → 0 alimentos" o
+      // "Tipo: — → Comida normal" cuando solo se rellenó el título).
       changes.push({ label: 'Nombre del bloque', from: '—', to: cleaned.nombre || '—' });
       if ((cleaned.nombrePlato ?? '').trim())
         changes.push({ label: 'Plato', from: '—', to: cleaned.nombrePlato ?? '—' });
       if (cleaned.hora) changes.push({ label: 'Hora', from: '—', to: cleaned.hora });
-      changes.push({
-        label: 'Alimentos',
-        from: '—',
-        to: `${cleaned.alimentos.length} alimentos`,
-      });
+      // Tipo · solo si el user marcó como EXTRA (el default es
+      // "Comida normal" · no merece línea de diff).
+      if (cleaned.esExtra) {
+        changes.push({ label: 'Tipo', from: '—', to: 'EXTRA' });
+      }
+      // Alimentos · solo si añadió alguno.
+      if (cleaned.alimentos.length > 0) {
+        changes.push({
+          label: 'Alimentos',
+          from: '—',
+          to: `${cleaned.alimentos.length} alimentos`,
+        });
+      }
       if (cleaned.kcal) changes.push({ label: 'Kcal', from: '—', to: String(cleaned.kcal) });
       if (cleaned.prot) changes.push({ label: 'Proteína', from: '—', to: String(cleaned.prot) });
       if (cleaned.carb) changes.push({ label: 'Carbos', from: '—', to: String(cleaned.carb) });
@@ -210,6 +222,12 @@ export function MealExtraEditorModal({
       pushDiff(changes, 'Nombre del bloque', original.nombre, cleaned.nombre);
       pushDiff(changes, 'Plato', original.nombrePlato ?? '', cleaned.nombrePlato ?? '');
       pushDiff(changes, 'Hora', original.hora ?? '', cleaned.hora ?? '');
+      pushDiff(
+        changes,
+        'Tipo',
+        (original.esExtra ?? true) ? 'EXTRA' : 'Comida normal',
+        cleaned.esExtra ? 'EXTRA' : 'Comida normal',
+      );
       pushDiff(
         changes,
         'Alimentos',
@@ -280,20 +298,21 @@ export function MealExtraEditorModal({
           return false;
         }}
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            handleClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card meal-editor-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  e.currentTarget.blur();
+                  handleClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <div className="meal-editor-head">
                 <button
                   type="button"
@@ -302,15 +321,19 @@ export function MealExtraEditorModal({
                     (e.currentTarget as HTMLElement).blur();
                     setEmojiOpen((v) => !v);
                   }}
-                  aria-label="Cambiar emoji"
+                  aria-label="Cambiar icono"
                   aria-expanded={emojiOpen}
                 >
-                  {local.emoji ?? '🍽'}
+                  <MealIcon
+                    value={local.emoji}
+                    fallback={EXTRA_ICON_DEFAULT}
+                    size={28}
+                  />
                 </button>
                 <div className="meal-editor-id">
                   <h2 className="settings-modal-title">
                     {isCreate
-                      ? 'NUEVA COMIDA EXTRA'
+                      ? 'NUEVA COMIDA'
                       : (local.nombre.trim() || 'EDITAR COMIDA').toUpperCase()}
                   </h2>
                   <p>{DAY_LABEL_FULL[day]}</p>
@@ -319,10 +342,10 @@ export function MealExtraEditorModal({
 
               {emojiOpen && (
                 <div className="meal-editor-emoji-panel">
-                  <EmojiPicker
+                  <IconPicker
                     selected={local.emoji ?? null}
-                    onSelect={(em) => {
-                      change('emoji', em);
+                    onSelect={(id) => {
+                      change('emoji', id);
                       setEmojiOpen(false);
                     }}
                     onReset={
@@ -338,7 +361,13 @@ export function MealExtraEditorModal({
               )}
 
               <label className="onboarding-field">
-                <span>Nombre</span>
+                <span>
+                  Título
+                  {' '}
+                  <span className="meal-editor-required" aria-hidden="true">
+                    *
+                  </span>
+                </span>
                 <input
                   type="text"
                   maxLength={50}
@@ -368,12 +397,35 @@ export function MealExtraEditorModal({
                 />
               </label>
 
+              {/* Check "Marcar como EXTRA" · cambia el aspecto visual
+                  de la card en el menú. Marcado = borde dashed +
+                  chip "EXTRA"; desmarcado = card normal como las
+                  fijas (desayuno/comida/...). El dato sigue
+                  guardándose en el array `extras` del día (no se
+                  convierte en una comida fija). */}
+              <label className="meal-editor-extra-check">
+                <input
+                  type="checkbox"
+                  checked={!!local.esExtra}
+                  onChange={(e) => change('esExtra', e.target.checked)}
+                />
+                <span className="meal-editor-extra-check-label">
+                  Marcar como EXTRA
+                </span>
+              </label>
+              <p className="meal-editor-extra-hint">
+                Si lo marcas, la comida aparece en el menú con un borde
+                discontinuo y una etiqueta <strong>EXTRA</strong> para
+                distinguirla de las comidas principales (desayuno,
+                comida, merienda, cena). Si lo dejas sin marcar, se
+                muestra como una comida más del día.
+              </p>
+
               <label className="onboarding-field">
                 <span>
-                  <IonIcon
-                    icon={timeOutline}
-                    style={{ verticalAlign: 'middle', fontSize: '0.9rem', marginRight: 4 }}
-                  />
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>
+                    <MealIcon value="tb:clock" size={14} />
+                  </span>
                   Hora (opcional)
                 </span>
                 <span className="sup-input-time">
@@ -382,10 +434,10 @@ export function MealExtraEditorModal({
                     value={local.hora ?? ''}
                     onChange={(e) => change('hora', e.target.value || null)}
                   />
-                  <IonIcon
-                    icon={timeOutline}
+                  <MealIcon
+                    value="tb:clock"
+                    size={16}
                     className="sup-input-time-icon"
-                    aria-hidden="true"
                   />
                 </span>
               </label>
@@ -433,10 +485,11 @@ export function MealExtraEditorModal({
                 {isCreate && (
                   <>
                     <br />
-                    Para crear una comida nueva son obligatorios:{' '}
-                    <strong>nombre</strong>, <strong>nombre del plato</strong>,
-                    al menos <strong>un alimento</strong> y las{' '}
-                    <strong>kcal</strong>.
+                    Solo el <span className="meal-editor-required">*</span>{' '}
+                    <strong>título</strong> es obligatorio. Los demás
+                    campos son opcionales · si no añades macros, esta
+                    comida no sumará al total del día ni a la media
+                    semanal.
                   </>
                 )}
               </p>
@@ -461,7 +514,7 @@ export function MealExtraEditorModal({
                 // editar campos sueltos sin reexigir todos.
                 disabled={!isDirty || (isCreate && !camposOk)}
               >
-                <IonIcon icon={saveOutline} slot="start" />
+                <MealIcon value="tb:device-floppy" size={18} slot="start" />
                 {isCreate ? 'Crear comida' : 'Guardar'}
               </IonButton>
 

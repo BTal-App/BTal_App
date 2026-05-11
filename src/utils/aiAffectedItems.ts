@@ -124,7 +124,11 @@ function compraItems(userDoc: UserDocument): AffectedItem[] {
       out.push({
         id: `compra:${cat.id}:${it.id}`,
         section: 'compra',
-        label: `${cat.emoji} ${it.nombre}`,
+        // El label es texto plano (sin JSX) y el campo `cat.emoji`
+        // ahora contiene un id Tabler `"tb:..."` no renderizable como
+        // string · usamos solo el nombre del item (la categoría se
+        // sobreentiende por el contexto del confirm dialog).
+        label: it.nombre,
         sublabel:
           [it.cantidad, it.precio !== null ? `${it.precio.toFixed(2)} €` : null]
             .filter((v): v is string => Boolean(v))

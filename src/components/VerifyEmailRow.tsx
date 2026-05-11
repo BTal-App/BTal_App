@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { IonButton, IonIcon, IonSpinner } from '@ionic/react';
-import { checkmarkCircle, mailOutline, refreshOutline } from 'ionicons/icons';
+import { IonButton, IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { sendVerificationEmail } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
@@ -70,7 +70,7 @@ export function VerifyEmailRow({ user }: Props) {
           </span>
         </div>
         <div className="verify-row-status verify-row-status--ok">
-          <IonIcon icon={checkmarkCircle} />
+          <MealIcon value="tb:circle-check-filled" size={16} />
           Email verificado
         </div>
       </div>
@@ -102,7 +102,7 @@ export function VerifyEmailRow({ user }: Props) {
               <IonSpinner name="dots" />
             ) : (
               <>
-                <IonIcon icon={checkmarkCircle} slot="start" />
+                <MealIcon value="tb:circle-check-filled" size={16} slot="start" />
                 Confirmar verificación
               </>
             )}
@@ -117,7 +117,7 @@ export function VerifyEmailRow({ user }: Props) {
               <IonSpinner name="dots" />
             ) : (
               <>
-                <IonIcon icon={refreshOutline} />
+                <MealIcon value="tb:refresh" size={16} />
                 Reenviar
               </>
             )}
@@ -135,7 +135,7 @@ export function VerifyEmailRow({ user }: Props) {
             <IonSpinner name="dots" />
           ) : (
             <>
-              <IonIcon icon={mailOutline} slot="start" />
+              <MealIcon value="tb:mail" size={16} slot="start" />
               Enviar email de verificación
             </>
           )}

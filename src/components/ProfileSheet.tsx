@@ -1,12 +1,7 @@
 import { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { IonButton, IonIcon, IonModal } from '@ionic/react';
-import {
-  closeOutline,
-  createOutline,
-  logOutOutline,
-  settingsOutline,
-} from 'ionicons/icons';
+import { IonButton, IonModal } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { useProfile } from '../hooks/useProfile';
 import { usePreferences } from '../hooks/usePreferences';
@@ -20,6 +15,7 @@ import {
   RESTRICCIONES,
 } from '../templates/defaultUser';
 import { EditFitnessProfileModal } from './EditFitnessProfileModal';
+import { GraphsModal } from './graphs/GraphsModal';
 import { blurAndRun } from '../utils/focus';
 import './ProfileSheet.css';
 
@@ -51,6 +47,7 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
   const { profile: userDoc } = useProfile();
   const { units } = usePreferences();
   const [editFitnessOpen, setEditFitnessOpen] = useState(false);
+  const [graphsOpen, setGraphsOpen] = useState(false);
 
   const p = userDoc?.profile;
   const completed = !!p?.completed;
@@ -122,7 +119,7 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
               onClick={onClose}
               aria-label="Cerrar"
             >
-              <IonIcon icon={closeOutline} />
+              <MealIcon value="tb:x" size={22} />
             </button>
           </div>
 
@@ -213,11 +210,26 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
                 className="profile-sheet-action profile-sheet-action--edit"
                 onClick={blurAndRun(() => setEditFitnessOpen(true))}
               >
-                <IonIcon icon={createOutline} slot="start" />
+                <MealIcon value="tb:edit" size={18} slot="start" />
                 Editar datos del perfil
               </IonButton>
             </>
           )}
+
+          {/* Gráficos · accesible siempre (incluso para invitados o
+              perfiles incompletos) · si no hay datos los charts
+              muestran su empty state. Va entre "Editar perfil" y
+              "Ajustes" como pidió el usuario. */}
+          <IonButton
+            type="button"
+            expand="block"
+            fill="outline"
+            className="profile-sheet-action"
+            onClick={blurAndRun(() => setGraphsOpen(true))}
+          >
+            <MealIcon value="tb:chart-line" size={18} slot="start" />
+            Gráficos
+          </IonButton>
 
           {/* Acciones secundarias siempre visibles */}
           <IonButton
@@ -227,7 +239,7 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
             className="profile-sheet-action"
             onClick={blurAndRun(handleSettings)}
           >
-            <IonIcon icon={settingsOutline} slot="start" />
+            <MealIcon value="tb:settings" size={18} slot="start" />
             Ajustes
           </IonButton>
 
@@ -238,7 +250,7 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
             className="profile-sheet-logout"
             onClick={handleLogout}
           >
-            <IonIcon icon={logOutOutline} slot="start" />
+            <MealIcon value="tb:logout" size={18} slot="start" />
             Cerrar sesión
           </IonButton>
         </div>
@@ -250,6 +262,11 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
           onClose={() => setEditFitnessOpen(false)}
         />
       )}
+
+      <GraphsModal
+        isOpen={graphsOpen}
+        onClose={() => setGraphsOpen(false)}
+      />
     </>
   );
 }

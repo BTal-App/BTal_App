@@ -20,39 +20,43 @@ ion-modal.settings-modal {
   position: relative;
 }
 
+/* X de cerrar · posicionada absolute relativa al card (que tiene
+   position: relative). Antes intentábamos posicionar relativo al
+   .settings-modal-bg con calculaciones de viewport pero fallaba en
+   desktop por --width del IonModal · ahora la X vive DENTRO del card
+   como primer hijo, así su anchor es el card mismo y el `top:12px;
+   right:12px` funciona en cualquier viewport sin calc de vw. */
 .settings-modal-close {
   position: absolute;
-  top: max(env(safe-area-inset-top), 16px);
-  right: 16px;
-  background: var(--btal-surface);
+  top: 12px;
+  right: 12px;
+  background: var(--btal-surface-2);
   border: 1px solid var(--btal-border);
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--btal-t-2);
   cursor: pointer;
-  font-size: 1.4rem;
-  transition: background 0.18s, color 0.18s;
+  font-size: 1.2rem;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 2;
 }
 
 .settings-modal-close:hover {
-  background: var(--btal-surface-2);
+  background: var(--btal-surface-3);
   color: var(--btal-t-1);
+  border-color: var(--btal-border-2);
 }
 
-/* Variante "fixed" · cuando el botón vive FUERA del IonContent (hermano
-   directo dentro del IonModal). Necesario en modales con scroll largo
-   para que la X siempre esté visible y no scrollee con el contenido.
-   Patrón usado por AccountManageModal, EditFitnessProfileModal, los
-   modales del wizard IA, etc. */
+/* La variante --fixed se mantiene por compatibilidad pero ya no añade
+   nada · el posicionamiento base es suficiente al estar dentro del
+   card. Mantenida para no tener que tocar todas las clases en el JSX. */
 .settings-modal-close--fixed {
-  position: absolute;
-  top: max(env(safe-area-inset-top), 16px);
-  right: 16px;
-  z-index: 10;
+  /* (sin override · el comportamiento base ya cubre el caso) */
 }
 
 .settings-modal-card {
@@ -61,6 +65,8 @@ ion-modal.settings-modal {
   background: var(--btal-surface);
   border: 1px solid var(--btal-border);
   border-radius: 20px;
+  /* Ancla para el botón X · ahora vive DENTRO del card como primer hijo. */
+  position: relative;
   padding: 28px 22px;
   display: flex;
   flex-direction: column;
@@ -79,6 +85,11 @@ ion-modal.settings-modal {
   letter-spacing: -0.02em;
   margin: 0;
   color: var(--btal-t-1);
+  /* Padding derecho para que el título no se solape con el botón X
+     que ahora vive dentro del recuadro · 40px del botón + 12px del
+     offset al borde + ~4 de aire = 56px. En títulos cortos no se
+     nota; en títulos largos evita el choque visual. */
+  padding-right: 56px;
 }
 
 .settings-modal-text {

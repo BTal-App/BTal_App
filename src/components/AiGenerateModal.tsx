@@ -3,17 +3,10 @@ import { useHistory } from 'react-router-dom';
 import {
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import {
-  arrowBackOutline,
-  arrowForwardOutline,
-  closeOutline,
-  lockClosedOutline,
-  sparklesOutline,
-} from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { canGenerateAi } from '../utils/ia';
@@ -32,6 +25,17 @@ import {
 } from '../templates/defaultUser';
 import './SettingsModal.css';
 import './AiGenerateModal.css';
+
+// Mapping de scope → Ionicon outline · sustituye los emojis (✨ 🍽️ 📋 🏋️)
+// del schema por iconos coherentes con la UI. El campo `emoji` del
+// schema se mantiene para Onboarding (StepMode) que prioriza render
+// rápido del primer paint; el modal completo usa Ionicons.
+const SCOPE_ICON: Record<AiScopeChoice, string> = {
+  all: 'tb:sparkles',
+  menu_compra: 'tb:tools-kitchen-2',
+  menu_only: 'tb:list',
+  entrenos_only: 'tb:barbell',
+};
 
 interface Props {
   isOpen: boolean;
@@ -216,24 +220,22 @@ export function AiGenerateModal({
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        {/* Botón cerrar FUERA del IonContent · queda fijo arriba a la
-            derecha y NO scrollea con el contenido (importante en wizard
-            de 3 pasos donde el contenido puede ser largo). */}
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={blurAndRun(onClose)}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card ai-gen-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={blurAndRun(onClose)}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               {/* Header · icono + título + paso actual del wizard */}
               <div className="ai-gen-head">
                 <div className="ai-gen-icon">
-                  <IonIcon icon={sparklesOutline} />
+                  <MealIcon value="tb:sparkles" size={28} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h2 className="settings-modal-title">{title}</h2>
@@ -260,7 +262,7 @@ export function AiGenerateModal({
                     + (eligibility.allowed ? ' ai-gen-hint--ok' : ' ai-gen-hint--blocked')
                   }
                 >
-                  {!eligibility.allowed && <IonIcon icon={lockClosedOutline} />}
+                  {!eligibility.allowed && <MealIcon value="tb:lock" size={16} />}
                   <span>{eligibility.hint}</span>
                 </div>
               )}
@@ -282,7 +284,9 @@ export function AiGenerateModal({
                               onClick={() => setSelected(opt.value)}
                               aria-pressed={active}
                             >
-                              <span className="ai-gen-scope-emoji">{opt.emoji}</span>
+                              <span className="ai-gen-scope-emoji" aria-hidden>
+                                <MealIcon value={SCOPE_ICON[opt.value]} size={20} />
+                              </span>
                               <span className="ai-gen-scope-info">
                                 <span className="ai-gen-scope-title">{opt.label}</span>
                                 <span className="ai-gen-scope-sub">{opt.sub}</span>
@@ -296,7 +300,9 @@ export function AiGenerateModal({
 
                   {visibleOptions.length === 1 && (
                     <div className="ai-gen-single">
-                      <span className="ai-gen-scope-emoji">{visibleOptions[0].emoji}</span>
+                      <span className="ai-gen-scope-emoji" aria-hidden>
+                        <MealIcon value={SCOPE_ICON[visibleOptions[0].value]} size={20} />
+                      </span>
                       <div>
                         <div className="ai-gen-scope-title">{visibleOptions[0].label}</div>
                         <div className="ai-gen-scope-sub">{visibleOptions[0].sub}</div>
@@ -312,7 +318,7 @@ export function AiGenerateModal({
                     disabled={!eligibility.allowed}
                   >
                     Continuar
-                    <IonIcon icon={arrowForwardOutline} slot="end" />
+                    <MealIcon value="tb:arrow-right" size={18} slot="end" />
                   </IonButton>
                 </>
               )}
@@ -334,7 +340,7 @@ export function AiGenerateModal({
                       className="ai-gen-nav-back"
                       onClick={blurAndRun(handleItemsBack)}
                     >
-                      <IonIcon icon={arrowBackOutline} slot="start" />
+                      <MealIcon value="tb:arrow-left" size={18} slot="start" />
                       Atrás
                     </IonButton>
                     <IonButton
@@ -344,7 +350,7 @@ export function AiGenerateModal({
                       disabled={!eligibility.allowed || items.length === 0}
                     >
                       Continuar
-                      <IonIcon icon={arrowForwardOutline} slot="end" />
+                      <MealIcon value="tb:arrow-right" size={18} slot="end" />
                     </IonButton>
                   </div>
                 </>

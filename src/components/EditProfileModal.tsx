@@ -1,11 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react';
-import { IonButton, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import {
-  cameraOutline,
-  closeOutline,
-  imageOutline,
-  trashOutline,
-} from 'ionicons/icons';
+import { IonButton, IonModal, IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { updateUserProfile } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
@@ -153,19 +148,19 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
       className="settings-modal"
     >
       <div className="settings-modal-bg">
-        <button
-          type="button"
-          className="settings-modal-close"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         <div className="settings-modal-card">
+          {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+          <button
+            type="button"
+            className="settings-modal-close"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
+            aria-label="Cerrar"
+          >
+            <MealIcon value="tb:x" size={22} />
+          </button>
           <h2 className="settings-modal-title">Editar perfil</h2>
 
           <div className="profile-avatar-wrap">
@@ -187,7 +182,7 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
                 onClick={() => cameraRef.current?.click()}
                 disabled={imgBusy}
               >
-                <IonIcon icon={cameraOutline} />
+                <MealIcon value="tb:camera" size={18} />
                 Tomar foto
               </button>
               <button
@@ -196,7 +191,7 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
                 onClick={() => galleryRef.current?.click()}
                 disabled={imgBusy}
               >
-                <IonIcon icon={imageOutline} />
+                <MealIcon value="tb:photo" size={18} />
                 Elegir de galería
               </button>
               {photoUrl && (
@@ -206,7 +201,7 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
                   onClick={handleRemovePhoto}
                   disabled={imgBusy}
                 >
-                  <IonIcon icon={trashOutline} />
+                  <MealIcon value="tb:trash" size={18} />
                   Quitar foto
                 </button>
               )}

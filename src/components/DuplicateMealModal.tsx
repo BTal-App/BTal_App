@@ -3,16 +3,10 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import {
-  checkmarkCircleOutline,
-  closeOutline,
-  copyOutline,
-  warningOutline,
-} from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -170,20 +164,21 @@ export function DuplicateMealModal({
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <h2 className="settings-modal-title">
                 Duplicar {MEAL_LABEL[meal].toLowerCase()}
               </h2>
@@ -216,14 +211,15 @@ export function DuplicateMealModal({
                       <span className="dup-row-day">{DAY_LABEL_FULL[day]}</span>
                       {occupied && (
                         <span className="dup-row-occupied">
-                          <IonIcon icon={warningOutline} />
+                          <MealIcon value="tb:alert-triangle" size={14} />
                           Ya tiene comida
                         </span>
                       )}
                       {checked && !occupied && (
-                        <IonIcon
+                        <MealIcon
+                          value="tb:circle-check"
+                          size={20}
                           className="dup-row-check"
-                          icon={checkmarkCircleOutline}
                         />
                       )}
                     </label>
@@ -233,7 +229,7 @@ export function DuplicateMealModal({
 
               {overwriteCount > 0 && (
                 <p className="dup-warning">
-                  <IonIcon icon={warningOutline} />
+                  <MealIcon value="tb:alert-triangle" size={16} />
                   Sobrescribirás {overwriteCount === 1
                     ? '1 comida que ya tienes'
                     : `${overwriteCount} comidas que ya tienes`}.
@@ -255,7 +251,7 @@ export function DuplicateMealModal({
                 }}
                 disabled={selected.size === 0 || submitting}
               >
-                <IonIcon icon={copyOutline} slot="start" />
+                <MealIcon value="tb:copy" size={18} slot="start" />
                 {buttonLabel}
               </IonButton>
             </div>

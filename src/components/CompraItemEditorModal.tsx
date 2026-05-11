@@ -3,11 +3,9 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import { closeOutline, trashOutline } from 'ionicons/icons';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -21,7 +19,9 @@ import {
 import { blurAndRun } from '../utils/focus';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { SaveIndicator } from './SaveIndicator';
+import { MealIcon } from './MealIcon';
 import {
+  COMPRA_CATEGORIA_ICON_DEFAULT,
   newCompraItemId,
   type CategoriaCompra,
   type ItemCompra,
@@ -263,22 +263,29 @@ export function CompraItemEditorModal({
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card">
-              <h2 className="settings-modal-title">
-                {categoria.emoji} {isEdit ? 'Editar producto' : 'Añadir producto'}
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
+              <h2 className="settings-modal-title cat-editor-title">
+                <MealIcon
+                  value={categoria.emoji}
+                  fallback={COMPRA_CATEGORIA_ICON_DEFAULT}
+                  size={22}
+                  className="cat-editor-title-icon"
+                />
+                {isEdit ? 'Editar producto' : 'Añadir producto'}
               </h2>
               <p className="settings-modal-text">
                 Categoría: <strong>{categoria.nombre}</strong>
@@ -377,7 +384,7 @@ export function CompraItemEditorModal({
                     onClick={blurAndRun(() => setConfirmDeleteOpen(true))}
                     disabled={submitting}
                   >
-                    <IonIcon icon={trashOutline} />
+                    <MealIcon value="tb:trash" size={18} />
                     Quitar de la lista
                   </button>
                 </>

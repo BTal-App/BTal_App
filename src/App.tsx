@@ -12,6 +12,8 @@ import { AuthProvider } from './hooks/AuthContext';
 import { VerifyBannerProvider } from './hooks/VerifyBannerProvider';
 import { ProfileProvider } from './hooks/ProfileProvider';
 import { PreferencesProvider } from './hooks/PreferencesProvider';
+import { ErrorProvider } from './hooks/ErrorProvider';
+import { AdblockBanner } from './hooks/AdblockBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 /* Ionic core CSS — obligatorio */
@@ -37,6 +39,8 @@ setupIonicReact();
 
 const App: React.FC = () => (
   <ErrorBoundary>
+    <ErrorProvider>
+    <AdblockBanner />
     <AuthProvider>
       <ProfileProvider>
         <PreferencesProvider>
@@ -77,6 +81,7 @@ const App: React.FC = () => (
         </PreferencesProvider>
       </ProfileProvider>
     </AuthProvider>
+    </ErrorProvider>
   </ErrorBoundary>
 );
 

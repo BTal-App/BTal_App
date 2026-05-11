@@ -8,6 +8,30 @@
 export type UnitsSystem = 'metric' | 'imperial';
 export type WeekStart = 'monday' | 'sunday';
 
+// Estilo del nav inferior · 'labeled' = icono grande + nombre debajo,
+// 'compact' = solo icono sin nombre. Default 'labeled'. Persistido en
+// preferences para sincronización cross-device.
+//
+// Compat con docs anteriores: los valores antiguos `'tiktok'` (→
+// `'labeled'`) y `'ig'` (→ `'compact'`) se aceptan en la lectura y se
+// normalizan al cargar · ver `loadFromLocal` en PreferencesProvider.
+export type NavStyle = 'labeled' | 'compact';
+
+// Vista del calendar de la tab Registro · 'month' (grid 7×N) o 'week'
+// (única fila con los 7 días de la semana actual). Réplica del v1
+// (`calView` global). Persistido cross-device en preferences.
+export type RegistroCalView = 'month' | 'week';
+
+// Posición persistida del calendar de Registro · año + mes (0-11) +
+// vista. Si vive en preferences, sobrevive a recargas y cambios de
+// dispositivo (igual que units / weekStart). null = sin posición
+// guardada · el calendar arranca en mes/año actual y vista 'month'.
+export interface RegistroCalPos {
+  year: number;
+  month0: number; // 0=enero · 11=diciembre (consistente con Date.getMonth())
+  view: RegistroCalView;
+}
+
 // Forma del bloque "preferences" tanto en localStorage como en Firestore.
 // Vive aquí (utils) en vez de en hooks para que la capa de servicios
 // (db.ts) y el modelo de datos (templates/defaultUser.ts) puedan tipar
@@ -15,11 +39,21 @@ export type WeekStart = 'monday' | 'sunday';
 export interface Preferences {
   units: UnitsSystem;
   weekStart: WeekStart;
+  // Última posición del calendar de Registro · null si nunca navegada.
+  // Optional para retrocompat con docs viejos sin este campo.
+  registroCal?: RegistroCalPos | null;
+  // Estilo del nav inferior · default 'labeled' (icono grande + nombre
+  // debajo). 'compact' = solo icono. Optional para retrocompat con
+  // docs viejos sin este campo (o con los nombres legados
+  // `'tiktok'`/`'ig'` antes de la migración).
+  navStyle?: NavStyle;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
   units: 'metric',
   weekStart: 'monday',
+  registroCal: null,
+  navStyle: 'labeled',
 };
 
 // ── Pesos ─────────────────────────────────────────────────────

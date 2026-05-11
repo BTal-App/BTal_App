@@ -2,6 +2,50 @@
    la estructura de SettingsModal y SupModal · las clases aquí cubren
    solo el listado de días (que es la parte específica). */
 
+/* Toggle "Marcar como predeterminado" · checkbox + label en una
+   pill discreta. Solo visible para planes custom (Sub-fase 2D.1). */
+.plan-editor-toggle {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 12px 14px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.plan-editor-toggle:hover {
+  border-color: var(--btal-border-2);
+}
+
+.plan-editor-toggle input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--btal-lime);
+  cursor: pointer;
+  grid-row: 1 / 3;
+  align-self: start;
+  margin-top: 2px;
+}
+
+.plan-editor-toggle-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--btal-t-1);
+  line-height: 1.25;
+}
+
+.plan-editor-toggle-hint {
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  line-height: 1.4;
+  grid-column: 2;
+}
+
 /* Header "DÍAS DEL PLAN *" + contador "X días seleccionados".
    Mismo patrón que DiaEditorModal.section-head: h3 al 100% en la
    primera línea, contador debajo alineado a la derecha con

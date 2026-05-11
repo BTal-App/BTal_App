@@ -3,21 +3,10 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import {
-  addCircleOutline,
-  barbellOutline,
-  closeOutline,
-  flameOutline,
-  flaskOutline,
-  leafOutline,
-  removeCircleOutline,
-  settingsOutline,
-  waterOutline,
-} from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -209,24 +198,29 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card">
+              {/* Botón X DENTRO del card como primer hijo · su `position:
+                  absolute` se ancla al card mismo (que tiene position:
+                  relative), garantizando que la X queda dentro del
+                  recuadro independientemente del viewport o IonModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               {view === 'info' ? (
                 <>
                   <h2 className="settings-modal-title sup-title-batido">
-                    🥤 BATIDO PROTÉICO
+                    <MealIcon value="tb:cup" size={22} className="sup-title-icon" />
+                    BATIDO PROTÉICO
                   </h2>
                   <p className="settings-modal-text">
                     Añade el batido como comida extra del{' '}
@@ -247,8 +241,9 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                     }}
                     disabled={toggling}
                   >
-                    <IonIcon
-                      icon={dayHasIt ? removeCircleOutline : addCircleOutline}
+                    <MealIcon
+                      value={dayHasIt ? 'tb:circle-minus' : 'tb:circle-plus'}
+                      size={20}
                     />
                     {dayHasIt
                       ? `Quitar del ${DAY_LABEL_FULL[day].toLowerCase()}`
@@ -266,7 +261,7 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                         enterEdit();
                       }}
                     >
-                      <IonIcon icon={settingsOutline} />
+                      <MealIcon value="tb:settings" size={16} />
                       Configurar
                     </button>
                   </div>
@@ -292,25 +287,25 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                   {/* Macros del batido completo */}
                   <div className="sup-macros">
                     <span className="menu-macro-pill menu-macro-pill--kcal">
-                      <IonIcon icon={flameOutline} />
+                      <MealIcon value="tb:flame" size={14} />
                       {config.kcal} kcal
                     </span>
                     <span className="menu-macro-pill menu-macro-pill--prot">
-                      <IonIcon icon={barbellOutline} />
+                      <MealIcon value="tb:barbell" size={14} />
                       {config.prot}g P
                     </span>
                     <span className="menu-macro-pill menu-macro-pill--carb">
-                      <IonIcon icon={leafOutline} />
+                      <MealIcon value="tb:leaf" size={14} />
                       {config.carb}g C
                     </span>
                     <span className="menu-macro-pill menu-macro-pill--fat">
-                      <IonIcon icon={waterOutline} />
+                      <MealIcon value="tb:droplet" size={14} />
                       {config.fat}g G
                     </span>
                   </div>
 
                   <p className="sup-footnote">
-                    <IonIcon icon={flaskOutline} />
+                    <MealIcon value="tb:cup" size={14} />
                     Estos macros son los del batido entero (proteína suplementaria
                     + creatina + extras). Edítalos en Configurar para que cuadren con
                     tu producto exacto.
@@ -327,7 +322,8 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                 form && (
                   <>
                     <h2 className="settings-modal-title sup-title-batido">
-                      ⚙ CONFIGURAR BATIDO
+                      <MealIcon value="tb:settings" size={22} className="sup-title-icon" />
+                      CONFIGURAR BATIDO
                     </h2>
 
                     {/* Form fields */}
@@ -361,9 +357,12 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                         }
                       />
                       <span>
-                        🥄 Añadir creatina al batido{' '}
+                        <MealIcon value="tb:ladle" size={16} className="sup-inline-icon" />
+                        Añadir creatina al batido{' '}
                         <span className="sup-checkbox-sub">
-                          (usa la dosis configurada en 🥄 Creatina)
+                          (usa la dosis configurada en{' '}
+                          <MealIcon value="tb:ladle" size={14} className="sup-inline-icon-sm" />
+                          Creatina)
                         </span>
                       </span>
                     </label>

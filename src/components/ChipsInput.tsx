@@ -1,6 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
-import { IonIcon } from '@ionic/react';
-import { addOutline, closeOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import './ChipsInput.css';
 
 interface Props {
@@ -87,7 +86,7 @@ export function ChipsInput({
           disabled={!draft.trim()}
           aria-label="Añadir"
         >
-          <IonIcon icon={addOutline} />
+          <MealIcon value="tb:plus" size={18} />
         </button>
       </div>
       {value.length > 0 && (
@@ -101,7 +100,7 @@ export function ChipsInput({
                 onClick={() => remove(i)}
                 aria-label={`Quitar ${chip}`}
               >
-                <IonIcon icon={closeOutline} />
+                <MealIcon value="tb:x" size={14} />
               </button>
             </span>
           ))}

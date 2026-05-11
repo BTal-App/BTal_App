@@ -1,3 +1,4 @@
+import { MealIcon } from './MealIcon';
 import type { SupAlert } from '../utils/supAlerts';
 import './SupModal.css';
 
@@ -9,8 +10,11 @@ interface Props {
 // vacío (danger) replicando los textos exactos del v1 `setAlert`.
 //
 // Mensajes:
-//   - danger (0 unidades posibles): 🚫 "No queda <prod> (Xg). Compra cuanto antes."
-//   - warn  (≤7 unidades posibles): ⚠ "Queda poca <prod> (Yg — para Z <unit>). Hace falta comprar."
+//   - danger (0 unidades posibles): "No queda <prod> (Xg). Compra cuanto antes."
+//   - warn  (≤7 unidades posibles): "Queda poca <prod> (Yg — para Z <unit>). Hace falta comprar."
+//
+// Iconografía · Tabler outline (alert-circle / alert-triangle) para
+// coherencia con el resto de la app.
 //
 // Usado en SupCountersInline (Menú), SupCardHoy (Hoy) y CompraPage row.
 export function SupAlertBox({ alert }: Props) {
@@ -18,8 +22,9 @@ export function SupAlertBox({ alert }: Props) {
   if (alert.level === 'danger') {
     return (
       <div className="sup-alert sup-alert--danger">
+        <MealIcon value="tb:alert-circle" size={18} className="sup-alert-icon" />
         <span>
-          🚫 <strong>No queda {alert.productoLabel}</strong> ({grRest}g).{' '}
+          <strong>No queda {alert.productoLabel}</strong> ({grRest}g).{' '}
           <strong>Compra cuanto antes.</strong>
         </span>
       </div>
@@ -34,8 +39,9 @@ export function SupAlertBox({ alert }: Props) {
       : 'dosis'; // dosis es invariable en plural
   return (
     <div className="sup-alert sup-alert--warn">
+      <MealIcon value="tb:alert-triangle" size={18} className="sup-alert-icon" />
       <span>
-        ⚠ <strong>Queda poca {alert.productoLabel}</strong> ({grRest}g — para{' '}
+        <strong>Queda poca {alert.productoLabel}</strong> ({grRest}g — para{' '}
         {alert.unidadesRestantes} {unitText}).{' '}
         <strong>Hace falta comprar.</strong>
       </span>

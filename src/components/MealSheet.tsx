@@ -1,37 +1,24 @@
 import {
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
 } from '@ionic/react';
-import {
-  barbellOutline,
-  closeOutline,
-  copyOutline,
-  createOutline,
-  flameOutline,
-  leafOutline,
-  trashOutline,
-  waterOutline,
-} from 'ionicons/icons';
 import { blurAndRun } from '../utils/focus';
 import {
   DAY_LABEL_FULL,
+  EXTRA_ICON_DEFAULT,
+  MEAL_ICON_DEFAULT,
   type Comida,
+  type ComidaExtra,
   type DayKey,
   type MealKey,
 } from '../templates/defaultUser';
+import { MealIcon } from './MealIcon';
 import './MealSheet.css';
 
-// Etiquetas locales (emoji + label corto) · DAY_LABEL_FULL importado
-// arriba para usar la única fuente de verdad.
-const MEAL_EMOJI: Record<MealKey, string> = {
-  desayuno: '🌅',
-  comida: '☀️',
-  merienda: '🍎',
-  cena: '🌙',
-};
-
+// Etiquetas de las 4 comidas fijas (label) · iconos default viven en
+// `MEAL_ICON_DEFAULT` (templates/defaultUser.ts) · se aplican vía
+// `<MealIcon>` cuando `comida.emoji` es null.
 const MEAL_LABEL: Record<MealKey, string> = {
   desayuno: 'Desayuno',
   comida: 'Comida',
@@ -43,17 +30,36 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   // El día y la comida que se está mostrando · necesarios para el header
-  // y para que el editor (Sub-fase 2B.3) sepa qué slot del menú está
-  // editando cuando lo abramos desde aquí.
+  // y para que el editor sepa qué slot/extra del menú está editando.
   day: DayKey;
-  meal: MealKey;
-  comida: Comida;
-  // Acciones · placeholders hasta Sub-fase 2B.3 (editor) y 2B.4 (duplicar).
+  // Para las 4 fijas pasa la MealKey · para extras o usos genéricos
+  // omítela y usa `title` + `iconFallback` directamente.
+  meal?: MealKey;
+  // El sheet sirve tanto para `Comida` (fija) como para `ComidaExtra`
+  // (custom · añadida desde "Añadir comida"). Como `ComidaExtra extends
+  // Comida` el tipo Comida cubre ambos casos en el render.
+  comida: Comida | ComidaExtra;
+  // Title/fallback override · si no se pasan, se derivan de `meal`.
+  // Se usan para extras: title = `extra.nombre`, iconFallback =
+  // EXTRA_ICON_DEFAULT. Mantienen el sheet 100% reutilizable.
+  title?: string;
+  iconFallback?: string;
+  // Si true, debajo del título aparece un chip "EXTRA" para que el user
+  // sepa que esa comida está marcada como extra (mismo distintivo que
+  // ya tiene la card en el menú).
+  isExtra?: boolean;
+  // Acciones · todas opcionales; se renderizan solo si se pasan.
   onEdit?: () => void;
   onDuplicate?: () => void;
-  // Eliminar la comida (vacía alimentos+macros). Solo se muestra si hay
-  // contenido · vaciar una comida ya vacía no aporta nada.
+  // Eliminar la comida (vacía alimentos+macros · para fijas / borra el
+  // extra entero · para extras). Solo se muestra si hay contenido.
   onDelete?: () => void;
+  // Toggle "deshabilitar/habilitar" · solo aplica a extras. Si se pasa,
+  // se renderiza un botón extra entre Duplicar y Editar que el caller
+  // conecta a un confirm + provider. `isDisabled` decide el label
+  // ("Deshabilitar" si está activa · "Habilitar" si está pausada).
+  onToggleDisabled?: () => void;
+  isDisabled?: boolean;
 }
 
 // Bottom sheet con el detalle de una comida concreta. Se abre al pulsar
@@ -73,11 +79,28 @@ export function MealSheet({
   day,
   meal,
   comida,
+  title,
+  iconFallback,
+  isExtra,
   onEdit,
   onDuplicate,
   onDelete,
+  onToggleDisabled,
+  isDisabled,
 }: Props) {
   const isEmpty = comida.alimentos.length === 0;
+  // Resolución de label e icon fallback · prioridad: override explícito
+  // > derivado de `meal` (si es una fija) > placeholders genéricos.
+  // Usamos `||` (no `??`) para que un `title=""` o `iconFallback=""` no
+  // pase como "valor válido" y caiga al fallback genérico.
+  const resolvedTitle =
+    title || (meal ? MEAL_LABEL[meal] : 'Comida');
+  const resolvedFallback =
+    iconFallback || (meal ? MEAL_ICON_DEFAULT[meal] : EXTRA_ICON_DEFAULT);
+  // Para el empty state del editor en blanco · "Añadir comida/extra/etc."
+  // En extras no hay un MealKey · usamos la palabra "comida" en lugar
+  // del nombre del meal (que en fijas sería "desayuno", "cena", etc.).
+  const emptyLabel = meal ? MEAL_LABEL[meal].toLowerCase() : 'esta comida';
 
   return (
     <IonModal
@@ -99,10 +122,21 @@ export function MealSheet({
                duplicar info. */}
           <div className="meal-sheet-head">
             <div className="meal-sheet-emoji">
-              {comida.emoji ?? MEAL_EMOJI[meal]}
+              <MealIcon
+                value={comida.emoji}
+                fallback={resolvedFallback}
+                size={32}
+              />
             </div>
             <div className="meal-sheet-id">
-              <h2>{MEAL_LABEL[meal].toUpperCase()}</h2>
+              <h2>
+                {resolvedTitle.toUpperCase()}
+                {isExtra && (
+                  <span className="meal-sheet-extra-tag" aria-hidden="true">
+                    extra
+                  </span>
+                )}
+              </h2>
               <p>
                 {DAY_LABEL_FULL[day]}
                 {comida.hora && ` · ${comida.hora}`}
@@ -114,7 +148,7 @@ export function MealSheet({
               onClick={blurAndRun(onClose)}
               aria-label="Cerrar"
             >
-              <IonIcon icon={closeOutline} />
+              <MealIcon value="tb:x" size={22} />
             </button>
           </div>
 
@@ -129,7 +163,7 @@ export function MealSheet({
           {/* ── Empty state ── */}
           {isEmpty ? (
             <div className="meal-sheet-empty">
-              <p>Aún no has añadido nada para {MEAL_LABEL[meal].toLowerCase()}.</p>
+              <p>Aún no has añadido nada para {emptyLabel}.</p>
               {onEdit && (
                 <IonButton
                   type="button"
@@ -137,8 +171,27 @@ export function MealSheet({
                   className="meal-sheet-action-primary"
                   onClick={blurAndRun(onEdit)}
                 >
-                  <IonIcon icon={createOutline} slot="start" />
+                  <MealIcon value="tb:edit" size={18} slot="start" />
                   Añadir comida
+                </IonButton>
+              )}
+              {/* Toggle también disponible en empty state · cubre el
+                  caso de un extra deshabilitado sin alimentos · si no,
+                  no habría forma de rehabilitarlo sin editar. */}
+              {onToggleDisabled && (
+                <IonButton
+                  type="button"
+                  expand="block"
+                  fill="outline"
+                  className="meal-sheet-action-secondary"
+                  onClick={blurAndRun(onToggleDisabled)}
+                >
+                  <MealIcon
+                    value={isDisabled ? 'tb:eye' : 'tb:eye-off'}
+                    size={18}
+                    slot="start"
+                  />
+                  {isDisabled ? 'Habilitar' : 'Deshabilitar'}
                 </IonButton>
               )}
             </div>
@@ -167,28 +220,28 @@ export function MealSheet({
                 <div className="meal-sheet-bento">
                   <div className="meal-sheet-bento-cell meal-sheet-bento-cell--kcal">
                     <span className="meal-sheet-bento-top">
-                      <IonIcon icon={flameOutline} />
+                      <MealIcon value="tb:flame" size={20} />
                       <span className="meal-sheet-bento-num">{comida.kcal}</span>
                     </span>
                     <span className="meal-sheet-bento-label">kcal</span>
                   </div>
                   <div className="meal-sheet-bento-cell meal-sheet-bento-cell--prot">
                     <span className="meal-sheet-bento-top">
-                      <IonIcon icon={barbellOutline} />
+                      <MealIcon value="tb:barbell" size={20} />
                       <span className="meal-sheet-bento-num">{comida.prot}g</span>
                     </span>
                     <span className="meal-sheet-bento-label">proteína</span>
                   </div>
                   <div className="meal-sheet-bento-cell meal-sheet-bento-cell--carb">
                     <span className="meal-sheet-bento-top">
-                      <IonIcon icon={leafOutline} />
+                      <MealIcon value="tb:leaf" size={20} />
                       <span className="meal-sheet-bento-num">{comida.carb}g</span>
                     </span>
                     <span className="meal-sheet-bento-label">carbos</span>
                   </div>
                   <div className="meal-sheet-bento-cell meal-sheet-bento-cell--fat">
                     <span className="meal-sheet-bento-top">
-                      <IonIcon icon={waterOutline} />
+                      <MealIcon value="tb:droplet" size={20} />
                       <span className="meal-sheet-bento-num">{comida.fat}g</span>
                     </span>
                     <span className="meal-sheet-bento-label">grasas</span>
@@ -197,7 +250,8 @@ export function MealSheet({
               </div>
 
               {/* ── Acciones · solo si hay alimentos ──
-                   Layout: Eliminar (icono rojo) + Duplicar + Editar.
+                   Layout: Eliminar (icono rojo) + Duplicar +
+                   [Deshabilitar/Habilitar · solo extras] + Editar.
                    En móvil envolvemos a 2 filas via flex-wrap. */}
               <div className="meal-sheet-actions">
                 {onDelete && (
@@ -208,7 +262,7 @@ export function MealSheet({
                     onClick={blurAndRun(onDelete)}
                     aria-label="Eliminar comida"
                   >
-                    <IonIcon icon={trashOutline} slot="icon-only" />
+                    <MealIcon value="tb:trash" size={20} slot="icon-only" />
                   </IonButton>
                 )}
                 {onDuplicate && (
@@ -218,8 +272,28 @@ export function MealSheet({
                     className="meal-sheet-action-secondary"
                     onClick={blurAndRun(onDuplicate)}
                   >
-                    <IonIcon icon={copyOutline} slot="start" />
+                    <MealIcon value="tb:copy" size={18} slot="start" />
                     Duplicar
+                  </IonButton>
+                )}
+                {onToggleDisabled && (
+                  <IonButton
+                    type="button"
+                    fill="outline"
+                    className="meal-sheet-action-secondary"
+                    onClick={blurAndRun(onToggleDisabled)}
+                    aria-label={
+                      isDisabled
+                        ? 'Habilitar comida · volverá a contar en el total'
+                        : 'Deshabilitar comida · dejará de contar en el total'
+                    }
+                  >
+                    <MealIcon
+                      value={isDisabled ? 'tb:eye' : 'tb:eye-off'}
+                      size={18}
+                      slot="start"
+                    />
+                    {isDisabled ? 'Habilitar' : 'Deshabilitar'}
                   </IonButton>
                 )}
                 {onEdit && (
@@ -228,7 +302,7 @@ export function MealSheet({
                     className="meal-sheet-action-primary"
                     onClick={blurAndRun(onEdit)}
                   >
-                    <IonIcon icon={createOutline} slot="start" />
+                    <MealIcon value="tb:edit" size={18} slot="start" />
                     Editar
                   </IonButton>
                 )}

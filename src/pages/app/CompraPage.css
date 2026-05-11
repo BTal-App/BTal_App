@@ -42,6 +42,15 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--btal-lime);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.compra-sup-cat-icon {
+  font-size: 1.05rem;
+  color: var(--btal-lime);
+  flex-shrink: 0;
 }
 
 /* ── Fila de producto · Proteína / Creatina ─────────────────────────── */
@@ -256,6 +265,9 @@
   background: rgba(55, 240, 168, 0.08);
   border: 1px solid rgba(55, 240, 168, 0.3);
   color: rgb(55, 240, 168);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .compra-sup-badge--warn {
@@ -269,6 +281,20 @@
   color: var(--btal-t-3);
   margin: 10px 0 0;
   line-height: 1.5;
+}
+
+.compra-sup-badge-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.compra-sup-note-icon {
+  font-size: 0.95em;
+  vertical-align: middle;
+  margin: 0 0.15rem;
+  position: relative;
+  top: -1px;
+  color: var(--btal-lime);
 }
 
 /* ── Coste mensual / anual · igual que v1 ──────────────────────────── */
@@ -484,6 +510,10 @@
   justify-content: center;
   font-size: 1.2rem;
   flex-shrink: 0;
+  /* Color del icono Tabler · usa el acento de la categoría · cada
+     CategoriaCompra row pasa `--compra-cat-color` como inline style.
+     Si está sin definir cae a t-1. */
+  color: var(--compra-cat-color, var(--btal-t-1));
 }
 
 .compra-cat-id {

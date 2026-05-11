@@ -1,15 +1,12 @@
 /* AccountManageModal · usa IonContent para scroll nativo, el botón cerrar
-   queda fijo arriba a la derecha sobre el modal. */
+   queda fijo arriba a la derecha sobre el modal.
+   (La regla `.account-manage-close-fixed` se eliminó · era idéntica a
+   `.settings-modal-close--fixed` del SettingsModal.css global. Ahora
+   el JSX usa esa clase compartida y mantenemos un único patrón.) */
 
-/* Botón cerrar fijo en la esquina superior derecha · sobre el IonContent */
-.account-manage-close-fixed {
-  position: absolute;
-  top: max(env(safe-area-inset-top), 16px);
-  right: 16px;
-  z-index: 10;
-}
-
-/* Wrapper interno · padding y centrado de la card */
+/* Wrapper interno · padding y centrado de la card · alineado con
+   `.settings-modal-bg` global (32px) ahora que la X vive DENTRO del
+   recuadro de la card y no necesita 64px de espacio reservado. */
 .account-manage-bg {
   min-height: 100%;
   background:
@@ -18,8 +15,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* Padding-top mayor para dejar espacio al botón cerrar */
-  padding: max(env(safe-area-inset-top), 64px) 24px max(env(safe-area-inset-bottom), 32px);
+  padding: max(env(safe-area-inset-top), 32px) 24px max(env(safe-area-inset-bottom), 32px);
 }
 
 .account-manage-card {
@@ -33,6 +29,8 @@
   flex-direction: column;
   gap: 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  /* Ancla para el botón X · ahora vive DENTRO del card como primer hijo. */
+  position: relative;
   /* Sin animación propia · la apertura/cierre las gestiona el IonModal
      padre con sus animaciones nativas, sin solapamientos. */
 }

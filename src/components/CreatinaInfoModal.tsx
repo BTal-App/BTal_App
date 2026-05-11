@@ -3,16 +3,10 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import {
-  addCircleOutline,
-  closeOutline,
-  removeCircleOutline,
-  settingsOutline,
-} from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -171,24 +165,26 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               {view === 'info' ? (
                 <>
                   <h2 className="settings-modal-title sup-title-creatina">
-                    🥄 CREATINA
+                    <MealIcon value="tb:ladle" size={22} className="sup-title-icon" />
+                    CREATINA
                   </h2>
                   <p className="settings-modal-text">
                     Añade una dosis suelta como comida extra del{' '}
@@ -198,7 +194,8 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
 
                   {includedInBatidoToday && !dayHasIt && (
                     <p className="sup-warning-soft">
-                      ℹ El batido de hoy ya incluye creatina. Añadir una dosis
+                      <MealIcon value="tb:info-circle" size={16} className="sup-inline-icon" />
+                      El batido de hoy ya incluye creatina. Añadir una dosis
                       suelta sería duplicar.
                     </p>
                   )}
@@ -215,8 +212,9 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
                     }}
                     disabled={toggling}
                   >
-                    <IonIcon
-                      icon={dayHasIt ? removeCircleOutline : addCircleOutline}
+                    <MealIcon
+                      value={dayHasIt ? 'tb:circle-minus' : 'tb:circle-plus'}
+                      size={20}
                     />
                     {dayHasIt
                       ? `Quitar del ${DAY_LABEL_FULL[day].toLowerCase()}`
@@ -233,7 +231,7 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
                         enterEdit();
                       }}
                     >
-                      <IonIcon icon={settingsOutline} />
+                      <MealIcon value="tb:settings" size={16} />
                       Configurar
                     </button>
                   </div>
@@ -257,7 +255,8 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
                 form && (
                   <>
                     <h2 className="settings-modal-title sup-title-creatina">
-                      ⚙ CONFIGURAR CREATINA
+                      <MealIcon value="tb:settings" size={22} className="sup-title-icon" />
+                      CONFIGURAR CREATINA
                     </h2>
 
                     <div className="sup-form-group">

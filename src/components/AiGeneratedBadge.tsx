@@ -1,5 +1,4 @@
-import { IonIcon } from '@ionic/react';
-import { sparklesOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import type { UserDocument } from '../templates/defaultUser';
 import './AiGeneratedBadge.css';
 
@@ -45,7 +44,7 @@ export function AiGeneratedBadge({ userDoc, scope }: Props) {
 
   return (
     <span className="ai-generated-badge" aria-label="Plan generado por IA">
-      <IonIcon icon={sparklesOutline} />
+      <MealIcon value="tb:sparkles" size={14} />
       <span className="ai-generated-badge-label">
         {SCOPE_LABEL[scope]} · {formatDate(timestamp)}
       </span>

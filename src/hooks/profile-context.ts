@@ -140,6 +140,15 @@ export interface ProfileState {
   ) => Promise<void>;
   removeMealExtra: (day: DayKey, id: string) => Promise<ComidaExtra | null>;
   restoreMealExtra: (day: DayKey, extra: ComidaExtra) => Promise<void>;
+  // Duplica un extra del `srcDay` a uno o varios `destDays`. La copia
+  // se crea con un id nuevo en cada destino. Devuelve `{added, skipped}`
+  // · `skipped` lista los días que estaban al límite MAX_EXTRAS_POR_DIA
+  // (la UI puede mostrarlos en toast).
+  duplicateMealExtra: (
+    srcDay: DayKey,
+    srcExtraId: string,
+    destDays: DayKey[],
+  ) => Promise<{ added: DayKey[]; skipped: DayKey[] }>;
 
   // ── Flags por día del menú · Sub-fase 2B.6 ────────────────────────
   // Réplica del v1 (`weekend_excluded` / `days_hidden` localStorage):

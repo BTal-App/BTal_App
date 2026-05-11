@@ -1,11 +1,9 @@
-import { IonContent, IonIcon, IonModal } from '@ionic/react';
-import {
-  closeOutline,
-  createOutline,
-} from 'ionicons/icons';
+import { IonContent, IonModal } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import type { PlanEntreno } from '../templates/defaultUser';
 import { badgeLabel, BADGE_BY_VAL } from '../templates/exerciseCatalog';
 import { formatDiaSemana } from '../utils/diaSemana';
+import { formatTiempoEstimado } from '../utils/timeParser';
 import './TrainSheet.css';
 
 // Bottom sheet con el detalle completo de un día del plan de entreno.
@@ -47,11 +45,22 @@ export function TrainSheet({ isOpen, onClose, plan, diaIdx, onEdit }: Props) {
       <IonContent>
         <div className="train-sheet-content">
           <div className="train-sheet-head">
-            {dia.diaSemana && (
-              <span className="train-sheet-week">
-                {formatDiaSemana(dia.diaSemana)}
-              </span>
-            )}
+            <div className="train-sheet-head-left">
+              {dia.diaSemana && (
+                <span className="train-sheet-week">
+                  {formatDiaSemana(dia.diaSemana)}
+                </span>
+              )}
+              {/* Tiempo estimado · pill azul a la derecha del día
+                  semana · mismo color que el badge en la card de
+                  Entreno de Hoy para coherencia visual. */}
+              {dia.tiempoEstimadoMin && dia.tiempoEstimadoMin > 0 && (
+                <span className="train-sheet-time">
+                  <MealIcon value="tb:clock" size={12} />
+                  {formatTiempoEstimado(dia.tiempoEstimadoMin)}
+                </span>
+              )}
+            </div>
             <button
               type="button"
               className="train-sheet-close"
@@ -61,7 +70,7 @@ export function TrainSheet({ isOpen, onClose, plan, diaIdx, onEdit }: Props) {
               }}
               aria-label="Cerrar"
             >
-              <IonIcon icon={closeOutline} />
+              <MealIcon value="tb:x" size={22} />
             </button>
           </div>
 
@@ -113,7 +122,7 @@ export function TrainSheet({ isOpen, onClose, plan, diaIdx, onEdit }: Props) {
                 onEdit();
               }}
             >
-              <IonIcon icon={createOutline} />
+              <MealIcon value="tb:edit" size={18} />
               Editar día
             </button>
           </div>

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { IonButton, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import { closeOutline, mailOutline } from 'ionicons/icons';
+import { IonButton, IonModal, IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import { resetPassword } from '../services/auth';
 import './ForgotPasswordModal.css';
 
@@ -58,19 +58,19 @@ export function ForgotPasswordModal({ isOpen, initialEmail = '', onClose }: Prop
       className="forgot-modal"
     >
       <div className="forgot-bg">
-        <button
-          type="button"
-          className="forgot-close"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         <div className="forgot-card">
+          {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+          <button
+            type="button"
+            className="forgot-close"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
+            aria-label="Cerrar"
+          >
+            <MealIcon value="tb:x" size={22} />
+          </button>
           <h2 className="forgot-title">Restablecer contraseña</h2>
 
           {sent ? (
@@ -99,7 +99,7 @@ export function ForgotPasswordModal({ isOpen, initialEmail = '', onClose }: Prop
 
               <form onSubmit={handleSubmit}>
                 <div className="landing-input-wrap">
-                  <IonIcon icon={mailOutline} className="landing-input-icon" />
+                  <MealIcon value="tb:mail" size={18} className="landing-input-icon" />
                   <input
                     className="landing-input"
                     type="email"

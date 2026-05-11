@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import {
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import { closeOutline, saveOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -170,8 +169,9 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
 
   const titleCls =
     kind === 'batido' ? 'sup-title-batido' : 'sup-title-creatina';
+  const titleIconId = kind === 'batido' ? 'tb:cup' : 'tb:ladle';
   const titleTxt =
-    kind === 'batido' ? '🥤 PRODUCTO · BATIDO' : '🥄 PRODUCTO · CREATINA';
+    kind === 'batido' ? 'PRODUCTO · BATIDO' : 'PRODUCTO · CREATINA';
 
   return (
     <>
@@ -181,21 +181,23 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <h2 className={'settings-modal-title ' + titleCls}>
+                <MealIcon value={titleIconId} size={22} className="sup-title-icon" />
                 {titleTxt}
               </h2>
               <p className="settings-modal-text">
@@ -203,7 +205,13 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
                 suplementación de la lista de la compra y el cálculo de
                 cuántos {kind === 'batido' ? 'batidos' : 'dosis'} puedes
                 hacer. Para ver/editar contadores, ve a{' '}
-                <strong>Menú → {kind === 'batido' ? '🥤 BATIDO' : '🥄 CREATINA'} → 📊 Stock y contadores</strong>.
+                <strong>
+                  Menú →{' '}
+                  <MealIcon value={titleIconId} size={14} className="sup-inline-icon-sm" />
+                  {kind === 'batido' ? 'BATIDO' : 'CREATINA'} →{' '}
+                  <MealIcon value="tb:chart-line" size={14} className="sup-inline-icon-sm" />
+                  Stock y contadores
+                </strong>.
               </p>
 
               <div className="sup-form-group">
@@ -293,7 +301,7 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
                 }}
                 disabled={submitting}
               >
-                <IonIcon icon={saveOutline} slot="start" />
+                <MealIcon value="tb:device-floppy" size={18} slot="start" />
                 Guardar
               </IonButton>
             </div>

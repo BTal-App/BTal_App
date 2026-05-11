@@ -221,6 +221,9 @@ button.settings-row {
   font-weight: 700;
   color: var(--btal-t-1);
   letter-spacing: -0.01em;
+  /* User-input · `Auth.displayName` o `profile.nombre`. Permite romper
+     palabras largas en lugar de desbordar el bloque del perfil. */
+  overflow-wrap: anywhere;
 }
 
 .settings-profile-edit {

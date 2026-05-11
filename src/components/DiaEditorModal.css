@@ -176,29 +176,9 @@
   transition: border-color 0.18s, background-color 0.18s;
 }
 
-/* Estilo de los <optgroup> · réplica del v1 (color #ffd54f, uppercase,
-   peso 700, letterspacing). Los <option> heredan del parent select.
-   Nota · Firefox/Safari respetan estos estilos en optgroup; Chrome
-   solo en algunos casos. */
-.dia-editor-ej-select optgroup {
-  background: var(--btal-bg-2);
-  color: #ffd54f;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.dia-editor-ej-select option {
-  background: var(--btal-bg-2);
-  color: var(--btal-t-1);
-  font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-}
+/* (Estilo de <optgroup> y <option> movido a animations.css como
+   regla GLOBAL · aplica a todos los selects de la app. Coherencia
+   visual entre DiaEditor, PlanEditor, RegDayPanel y futuros.) */
 
 /* Input de ejercicio custom · solo visible cuando se elige
    "Personalizado…" o el valor actual no está en ningún catálogo. */
@@ -355,6 +335,17 @@
 .dia-editor-mode-toggle:hover {
   background: var(--btal-surface);
   color: var(--btal-t-1);
+}
+
+/* Cuando el toggle lleva un IonIcon (ej. pencilOutline) en lugar de
+   texto "S×R", quitamos el padding-bottom (que solo era para el ✎
+   unicode) y aumentamos el font-size del icono. */
+.dia-editor-mode-toggle--icon {
+  padding-bottom: 0;
+}
+
+.dia-editor-mode-toggle--icon ion-icon {
+  font-size: 0.95rem;
 }
 
 .dia-editor-ej-del {

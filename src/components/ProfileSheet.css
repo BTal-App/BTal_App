@@ -82,8 +82,12 @@ ion-modal.profile-sheet::part(content) {
   text-overflow: ellipsis;
 }
 
+/* Estilo unificado con `.settings-modal-close` (modales) y demás
+   sheets · todas las X de cerrar de la app comparten el mismo
+   lenguaje visual: círculo gris sutil con borde, 36x36, hover lima
+   sobre fondo surface-3. */
 .profile-sheet-close {
-  background: var(--btal-bg-2);
+  background: var(--btal-surface-2);
   border: 1px solid var(--btal-border);
   border-radius: 50%;
   width: 36px;
@@ -93,14 +97,15 @@ ion-modal.profile-sheet::part(content) {
   justify-content: center;
   color: var(--btal-t-2);
   cursor: pointer;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   flex-shrink: 0;
-  transition: background 0.18s, color 0.18s;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 
 .profile-sheet-close:hover {
-  background: var(--btal-surface-2);
+  background: var(--btal-surface-3);
   color: var(--btal-t-1);
+  border-color: var(--btal-border-2);
 }
 
 /* Empty state cuando el perfil aún no está completo o invitado */

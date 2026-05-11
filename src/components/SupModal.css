@@ -12,6 +12,36 @@
   color: #b07af0 !important;
 }
 
+/* Iconos inline en los h2 de los modales sup · sustituyen a los emojis
+   🥤 / 🥄 / ⚙ que rendereaban con la fuente del sistema · ahora son
+   Ionicons heredando el color del título (gold/violeta). */
+.sup-title-icon {
+  font-size: 1.25em;
+  vertical-align: middle;
+  margin-right: 0.4rem;
+  position: relative;
+  top: -2px;
+}
+
+/* Iconos inline en frases corridas · texto de checkboxes, breadcrumbs
+   ("Menú → 🥤 BATIDO → 📊 Stock"), warnings inline. Hereda color del
+   párrafo padre. */
+.sup-inline-icon {
+  font-size: 1.05em;
+  vertical-align: middle;
+  margin-right: 0.25rem;
+  position: relative;
+  top: -1px;
+}
+
+.sup-inline-icon-sm {
+  font-size: 0.95em;
+  vertical-align: middle;
+  margin: 0 0.15rem;
+  position: relative;
+  top: -1px;
+}
+
 /* ── Botón "Añadir / Quitar al día" ────────────────────────────────── */
 .sup-day-btn {
   display: flex;
@@ -428,10 +458,19 @@
   border-radius: 9px;
   margin-top: 8px;
   overflow-wrap: anywhere;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .sup-alert strong {
   font-weight: 700;
+}
+
+.sup-alert-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .sup-alert--warn {

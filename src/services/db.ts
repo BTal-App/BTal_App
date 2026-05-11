@@ -5,6 +5,7 @@ import {
   DAY_KEYS,
   DEFAULT_COMPRA_CATEGORIAS,
   HORA_DEFECTO,
+  MAX_EXERCISE_HISTORY,
   MEAL_KEYS,
   defaultBatidoConfig,
   defaultCompra,
@@ -14,9 +15,12 @@ import {
   defaultMenu,
   defaultMenuFlags,
   defaultPlan,
+  defaultRegistroStats,
   defaultSuplementos,
   defaultUserDocument,
+  maxKgEjercicio,
   newCompraItemId,
+  normalizeExerciseName,
   parseAlimentoString,
   type Alimento,
   type BatidoConfig,
@@ -34,13 +38,15 @@ import {
   type Menu,
   type MealKey,
   type PlanEntreno,
+  type RegistroDia,
+  type RegistroStats,
   type SourceTag,
   type SupDayOverride,
   type Suplementos,
   type UserDocument,
   type UserProfile,
 } from '../templates/defaultUser';
-import { demoUserDocument } from '../templates/demoUser';
+import { demoUserDocument, generateDemoRegistros } from '../templates/demoUser';
 import type { Preferences } from '../utils/units';
 
 // Toda lectura/escritura a Firestore pasa por aquí.
@@ -230,6 +236,15 @@ export async function ensureUserDocumentSchema(
     if (sup.last_creatina_date === undefined) {
       updates['suplementos.last_creatina_date'] = null;
     }
+    // Histórico fechado de tomas (Sub-fase 2E.1) · []
+    // en docs pre-2E.1. La lógica de marcar/incrementar empieza a
+    // poblarlo desde la primera escritura post-migración.
+    if (sup.batidoHistory === undefined) {
+      updates['suplementos.batidoHistory'] = [];
+    }
+    if (sup.creatinaHistory === undefined) {
+      updates['suplementos.creatinaHistory'] = [];
+    }
     // Sub-fase 2B.5.b extension · contadores semanal/mensual del batido.
     if (sup.batidos_tomados_semana === undefined) {
       updates['suplementos.batidos_tomados_semana'] = 0;
@@ -302,9 +317,26 @@ export async function ensureUserDocumentSchema(
   if (raw.fecha_expiracion === undefined) updates.fecha_expiracion = null;
   if (raw.fecha_ultima_generacion === undefined) updates.fecha_ultima_generacion = null;
   if (raw.medicalDisclaimerAcceptedAt === undefined) updates.medicalDisclaimerAcceptedAt = null;
+  // Metadata · `createdAt` y `lastActive` son campos obligatorios del
+  // `UserDocument` (no opcionales). `saveOnboardingProfile` y
+  // `seedGuestDocument` ya los siembran al crear, pero docs creados
+  // antes de Fase 2A o por scripts pueden carecer de ellos. Si el
+  // campo falta, lo inicializamos a "ahora" como aproximación —
+  // mejor un timestamp ligeramente impreciso que tener `undefined`
+  // donde el JSX espera number.
+  const nowMs = Date.now();
+  if (raw.createdAt === undefined) updates.createdAt = nowMs;
+  if (raw.lastActive === undefined) updates.lastActive = nowMs;
   // Flags por día (Fase 2B.6) · array vacío en docs viejos.
   if (raw.menuFlags === undefined) {
     updates.menuFlags = defaultMenuFlags();
+  }
+  // Stats agregadas del registro de pesos (Sub-fase 2E) · vacías en
+  // docs viejos. La transacción `setRegistroDia` las recalcula a partir
+  // de aquí en cada save · cuentas viejas siguen funcionando con stats
+  // 0/0/0 hasta que el user empiece a registrar pesos.
+  if (raw.registroStats === undefined) {
+    updates.registroStats = defaultRegistroStats();
   }
 
   // ── Migración campos del profile (Fase 2A.1) ──
@@ -817,19 +849,64 @@ function migrateLegacyCompra(legacy: Record<string, unknown>): Compra {
 // `demoUser` completo. Idempotente: si el doc ya existe (porque el invitado
 // ya entró en una sesión anterior y editó algo), no lo pisa.
 //
+// Sub-fase 2E.1 · al primer login también siembra la subcolección
+// `/users/{uid}/registros/{fecha}` con varios registros de los últimos
+// días · permite al invitado ver el calendar de Registro y los gráficos
+// con datos reales sin tener que registrar él mismo. Los writes de
+// registros van en paralelo con `Promise.all` · 4-6 round-trips · acepable.
+//
 // Lo llama Landing.tsx justo después de signInAnonymously. La razón de
 // que esté aquí y no en Landing es que el modelo de datos vive en este
 // servicio — Landing solo orquesta el flujo, no decide qué se siembra.
+// TTL del invitado · días desde la última visita antes de auto-borrar.
+// La rule de Firestore TTL (configurada en Firebase Console sobre
+// `/users/expiresAt`) hará el barrido. 3 días permite a un user
+// volver al cabo de un fin de semana sin perder sus pruebas.
+const GUEST_TTL_DAYS = 3;
+
+// Calcula el Timestamp futuro al que `expiresAt` debe apuntar para
+// renovar la vida del invitado por GUEST_TTL_DAYS desde ahora.
+function guestExpiresAt(mod: typeof import('firebase/firestore')) {
+  return mod.Timestamp.fromMillis(Date.now() + GUEST_TTL_DAYS * 86400 * 1000);
+}
+
 export async function seedGuestDocument(uid: string): Promise<void> {
   const { mod, db } = await getDb();
   const ref = mod.doc(db, 'users', uid);
   const existing = await mod.getDoc(ref);
   if (existing.exists()) {
-    // El invitado ya tiene doc — no lo pisamos. Solo refrescamos lastActive.
-    await mod.setDoc(ref, { lastActive: Date.now() }, { merge: true });
+    // El invitado ya tiene doc — no lo pisamos. Refrescamos lastActive
+    // Y expiresAt (renueva los 3 días desde esta visita).
+    await mod.setDoc(
+      ref,
+      { lastActive: Date.now(), expiresAt: guestExpiresAt(mod) },
+      { merge: true },
+    );
     return;
   }
-  await mod.setDoc(ref, demoUserDocument());
+  // Doc principal con todos los demo + TTL inicial (3 días desde ahora).
+  await mod.setDoc(ref, { ...demoUserDocument(), expiresAt: guestExpiresAt(mod) });
+  // Subcolección /registros · entries demo de los últimos 6 días.
+  // Promise.all paraleliza los writes (4-6 round-trips concurrentes).
+  const registros = generateDemoRegistros();
+  await Promise.all(
+    registros.map((r) => {
+      const regRef = mod.doc(db, 'users', uid, 'registros', r.fecha);
+      return mod.setDoc(regRef, r);
+    }),
+  );
+}
+
+// Quita el campo `expiresAt` del doc · usado tras vincular cuenta
+// (anonymous → real). El doc pasa a tener vida indefinida · no caduca
+// más. `deleteField()` es el sentinel oficial de Firestore para
+// "borrar este campo" en un updateDoc · idempotente, no falla si el
+// campo no existe (cuentas reales desde el principio nunca lo
+// tuvieron · llamarlo igual no rompe nada).
+export async function clearGuestExpiration(uid: string): Promise<void> {
+  const { mod, db } = await getDb();
+  const ref = mod.doc(db, 'users', uid);
+  await mod.updateDoc(ref, { expiresAt: mod.deleteField() });
 }
 
 // Actualiza solo el campo `profile.modo` (paso usado por Settings →
@@ -849,12 +926,25 @@ export async function updateUserMode(
 
 // Actualiza solo `lastActive` (cada vez que el user abre el dashboard).
 // No-op si el doc todavía no existe — el onboarding lo creará.
-export async function touchLastActive(uid: string): Promise<void> {
+//
+// Si `isAnonymous` es true, también extiende el campo `expiresAt`
+// (`now + 3 días`) · la TTL de Firestore borrará el doc del invitado
+// cuando deje de visitar la app durante ese plazo. En cuentas reales
+// no tocamos `expiresAt` (no debería existir ahí, y si existe el
+// linkAnonymousAccount/Google ya lo limpia).
+export async function touchLastActive(
+  uid: string,
+  isAnonymous: boolean = false,
+): Promise<void> {
   const { mod, db } = await getDb();
   const ref = mod.doc(db, 'users', uid);
+  const payload: Record<string, unknown> = { lastActive: Date.now() };
+  if (isAnonymous) {
+    payload.expiresAt = guestExpiresAt(mod);
+  }
   // updateDoc falla si el doc no existe; con setDoc + merge nunca crea
   // claves nuevas accidentalmente.
-  await mod.setDoc(ref, { lastActive: Date.now() }, { merge: true });
+  await mod.setDoc(ref, payload, { merge: true });
 }
 
 // Actualiza solo algunos campos dentro de `profile` (peso, altura, objetivo,
@@ -1044,6 +1134,28 @@ export async function duplicateUserMeal(
     updates[`menu.${day}.${meal}.carb`] = comidaSrc.carb;
     updates[`menu.${day}.${meal}.fat`] = comidaSrc.fat;
     updates[`menu.${day}.${meal}.source`] = 'user';
+  }
+  await mod.updateDoc(ref, updates);
+}
+
+// Duplica una `ComidaExtra` a uno o varios días destino. A diferencia
+// de las 4 fijas, los extras viven en un array por día (`menu.{day}.
+// extras`), así que el caller debe pasarnos el array final ya
+// construido por día. Aquí solo escribimos todos los paths en una
+// única `updateDoc` para que Firestore lo aplique atómicamente.
+export async function duplicateUserMealExtras(
+  uid: string,
+  // Mapa `{ day → array completo final de extras }`. El provider lo
+  // construye con los extras actuales + la copia nueva (con id propio).
+  perDay: Partial<Record<DayKey, ComidaExtra[]>>,
+): Promise<void> {
+  const entries = Object.entries(perDay) as Array<[DayKey, ComidaExtra[]]>;
+  if (entries.length === 0) return;
+  const { mod, db } = await getDb();
+  const ref = mod.doc(db, 'users', uid);
+  const updates: Record<string, unknown> = { lastActive: Date.now() };
+  for (const [day, extras] of entries) {
+    updates[`menu.${day}.extras`] = extras;
   }
   await mod.updateDoc(ref, updates);
 }
@@ -1264,5 +1376,297 @@ export async function setUserDiaEntreno(
   await mod.updateDoc(ref, {
     [`entrenos.planes.${planId}.dias`]: next,
     lastActive: Date.now(),
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Registro de pesos · Sub-fase 2E · subcolección /users/{uid}/registros
+// ──────────────────────────────────────────────────────────────────────────
+//
+// Cada doc tiene como id la fecha 'YYYY-MM-DD' y contiene un `RegistroDia`
+// (plan elegido, exercises map, notas, updatedAt). Las stats agregadas
+// (`totalEntrenos`, `prs`, `exerciseHistory`) viven en el doc del user
+// bajo `registroStats` y se mantienen vía `runTransaction` al guardar/
+// borrar para garantizar consistencia. La racha NO se persiste · se
+// calcula en `useRegistroStats` leyendo los últimos 60 días.
+
+// Path helper · centralizado para que si cambia la nomenclatura solo
+// se toque aquí.
+function registroDocPath(uid: string, fecha: string): [string, string, string, string] {
+  return ['users', uid, 'registros', fecha];
+}
+
+// Considera "registrado" un día con plan asignado (entreno o descanso
+// explícito). Plan vacío significa que el doc nunca debería estar
+// persistido · `setRegistroDia` rechaza ese caso para mantener la
+// invariante "si existe doc, plan != ''".
+function isRegistrado(reg: RegistroDia | null): boolean {
+  return !!reg && reg.plan !== '';
+}
+
+// Aplica el delta entre el registro previo y el nuevo a las stats
+// existentes. Función PURA · ningún side effect · útil para tests.
+//
+// Reglas:
+//  - totalEntrenos: +1 si pasa de no-registrado a registrado · -1 al revés.
+//  - exerciseHistory: para cada ex en `next.exercises`, reemplaza la
+//    entry de esa fecha con el nuevo maxKg (o lo borra si maxKg=0).
+//    Para cada ex en prev pero NO en next, borra la entry de esa fecha.
+//  - prs: solo se actualiza al ALZA (best-effort · ver nota en
+//    `RegistroStats.prs`). No hay rollback al editar/borrar.
+function applyRegistroDelta(
+  prevStats: RegistroStats,
+  prev: RegistroDia | null,
+  next: RegistroDia,
+): RegistroStats {
+  const out: RegistroStats = {
+    totalEntrenos: prevStats.totalEntrenos,
+    prs: { ...prevStats.prs },
+    exerciseHistory: { ...prevStats.exerciseHistory },
+  };
+
+  const wasReg = isRegistrado(prev);
+  const willBeReg = isRegistrado(next);
+  if (!wasReg && willBeReg) out.totalEntrenos += 1;
+  else if (wasReg && !willBeReg) out.totalEntrenos = Math.max(0, out.totalEntrenos - 1);
+
+  const fecha = next.fecha;
+  const seenNorms = new Set<string>();
+
+  // Para cada ejercicio en `next.exercises`: refresh history entry de
+  // esa fecha + bump PR si procede.
+  for (const [exName, ej] of Object.entries(next.exercises ?? {})) {
+    const exNorm = normalizeExerciseName(exName);
+    if (!exNorm) continue;
+    seenNorms.add(exNorm);
+    const newMax = maxKgEjercicio(ej);
+
+    let arr = (out.exerciseHistory[exNorm] ?? []).filter((e) => e.fecha !== fecha);
+    if (newMax > 0) arr.push({ fecha, maxKg: newMax });
+    arr.sort((a, b) => (a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0));
+    if (arr.length > MAX_EXERCISE_HISTORY) {
+      arr = arr.slice(-MAX_EXERCISE_HISTORY);
+    }
+    if (arr.length === 0) delete out.exerciseHistory[exNorm];
+    else out.exerciseHistory[exNorm] = arr;
+
+    const curPR = out.prs[exNorm];
+    if (newMax > 0 && (!curPR || newMax > curPR.kg)) {
+      out.prs[exNorm] = { kg: newMax, fecha };
+    }
+  }
+
+  // Para cada ejercicio en prev que YA NO está en next: limpiar su
+  // history entry de fecha. No tocamos PRs (best-effort).
+  if (prev) {
+    for (const exName of Object.keys(prev.exercises ?? {})) {
+      const exNorm = normalizeExerciseName(exName);
+      if (!exNorm || seenNorms.has(exNorm)) continue;
+      const arr = (out.exerciseHistory[exNorm] ?? []).filter((e) => e.fecha !== fecha);
+      if (arr.length === 0) delete out.exerciseHistory[exNorm];
+      else out.exerciseHistory[exNorm] = arr;
+    }
+  }
+
+  return out;
+}
+
+// Aplica el delta de un borrado · resta totalEntrenos si estaba
+// registrado y limpia entries de history para esa fecha. Sin rollback
+// de PRs (best-effort).
+function applyRegistroDelete(
+  prevStats: RegistroStats,
+  prev: RegistroDia,
+): RegistroStats {
+  const out: RegistroStats = {
+    totalEntrenos: prevStats.totalEntrenos,
+    prs: { ...prevStats.prs },
+    exerciseHistory: { ...prevStats.exerciseHistory },
+  };
+  if (isRegistrado(prev)) {
+    out.totalEntrenos = Math.max(0, out.totalEntrenos - 1);
+  }
+  const fecha = prev.fecha;
+  for (const exName of Object.keys(prev.exercises ?? {})) {
+    const exNorm = normalizeExerciseName(exName);
+    if (!exNorm) continue;
+    const arr = (out.exerciseHistory[exNorm] ?? []).filter((e) => e.fecha !== fecha);
+    if (arr.length === 0) delete out.exerciseHistory[exNorm];
+    else out.exerciseHistory[exNorm] = arr;
+  }
+  return out;
+}
+
+// Lee un registro concreto (un día) · null si no existe.
+export async function getRegistroDia(
+  uid: string,
+  fecha: string,
+): Promise<RegistroDia | null> {
+  const { mod, db } = await getDb();
+  const ref = mod.doc(db, ...registroDocPath(uid, fecha));
+  const snap = await mod.getDoc(ref);
+  if (!snap.exists()) return null;
+  return snap.data() as RegistroDia;
+}
+
+// Devuelve el primer día (inclusive) y el último (exclusivo) en formato
+// 'YYYY-MM-DD' para la query por id de un mes concreto. Útil para
+// `getRegistroMes` y `subscribeRegistroMes`. month0 es 0-11.
+function monthRangeKeys(year: number, month0: number): { startInc: string; endExc: string } {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const startInc = `${year}-${pad(month0 + 1)}-01`;
+  const endY = month0 === 11 ? year + 1 : year;
+  const endM0 = month0 === 11 ? 0 : month0 + 1;
+  const endExc = `${endY}-${pad(endM0 + 1)}-01`;
+  return { startInc, endExc };
+}
+
+// Lee TODOS los registros de un mes concreto · devuelve map fecha → reg.
+// Una sola query (~31 docs máx) usando documentId() como filtro.
+export async function getRegistroMes(
+  uid: string,
+  year: number,
+  month0: number,
+): Promise<Record<string, RegistroDia>> {
+  const { mod, db } = await getDb();
+  const col = mod.collection(db, 'users', uid, 'registros');
+  const { startInc, endExc } = monthRangeKeys(year, month0);
+  const q = mod.query(
+    col,
+    mod.where(mod.documentId(), '>=', startInc),
+    mod.where(mod.documentId(), '<', endExc),
+  );
+  const snap = await mod.getDocs(q);
+  const out: Record<string, RegistroDia> = {};
+  snap.forEach((d) => {
+    out[d.id] = d.data() as RegistroDia;
+  });
+  return out;
+}
+
+// Suscripción reactiva a los registros de un mes · onSnapshot. El cb
+// recibe el map completo (re-emitido en cada cambio). Devuelve la
+// función de unsubscribe para que el caller la llame en cleanup.
+export async function subscribeRegistroMes(
+  uid: string,
+  year: number,
+  month0: number,
+  cb: (byDate: Record<string, RegistroDia>) => void,
+): Promise<() => void> {
+  const { mod, db } = await getDb();
+  const col = mod.collection(db, 'users', uid, 'registros');
+  const { startInc, endExc } = monthRangeKeys(year, month0);
+  const q = mod.query(
+    col,
+    mod.where(mod.documentId(), '>=', startInc),
+    mod.where(mod.documentId(), '<', endExc),
+  );
+  return mod.onSnapshot(q, (snap) => {
+    const out: Record<string, RegistroDia> = {};
+    snap.forEach((d) => {
+      out[d.id] = d.data() as RegistroDia;
+    });
+    cb(out);
+  });
+}
+
+// Lee los últimos N registros (orderBy id desc) · usado por
+// `useRegistroStats` para calcular la racha on-the-fly. Limit 60 da
+// margen suficiente para una racha máxima realista (un usuario que
+// entrena/descansa cada día durante 2 meses).
+//
+// IMPORTANTE · ordenamos por el campo `fecha` (denormalizado · igual
+// al doc id `YYYY-MM-DD`) en lugar de `documentId()` porque Firestore
+// requiere un índice compuesto explícito para `orderBy(documentId,
+// 'desc')` en colecciones (auto-índice solo cubre ASC). El campo
+// `fecha` es un single-field auto-indexed que cubre ambas direcciones
+// y produce el mismo orden lexicográfico que el doc id.
+export async function getRegistrosRecientes(
+  uid: string,
+  limit: number = 60,
+): Promise<RegistroDia[]> {
+  const { mod, db } = await getDb();
+  const col = mod.collection(db, 'users', uid, 'registros');
+  const q = mod.query(col, mod.orderBy('fecha', 'desc'), mod.limit(limit));
+  const snap = await mod.getDocs(q);
+  const out: RegistroDia[] = [];
+  snap.forEach((d) => out.push(d.data() as RegistroDia));
+  return out;
+}
+
+// Guarda un registro · escribe el doc + actualiza `registroStats` del
+// user en una transacción atómica. Devuelve las nuevas stats para que
+// el provider sincronice estado local sin re-leer el doc del user.
+//
+// Lanza si:
+//   - `next.plan === ''` (no hay registro real que persistir; usar
+//     `deleteRegistroDia` si quieres limpiar el día).
+//   - El user doc no existe (no debería ocurrir post-onboarding).
+export async function setRegistroDia(
+  uid: string,
+  fecha: string,
+  next: RegistroDia,
+): Promise<RegistroStats> {
+  if (!next.plan) {
+    throw new Error('setRegistroDia: plan vacío · usa deleteRegistroDia para limpiar');
+  }
+  const { mod, db } = await getDb();
+  const userRef = mod.doc(db, 'users', uid);
+  const regRef = mod.doc(db, ...registroDocPath(uid, fecha));
+
+  return mod.runTransaction(db, async (tx) => {
+    const userSnap = await tx.get(userRef);
+    if (!userSnap.exists()) {
+      throw new Error('setRegistroDia: user document no existe');
+    }
+    const regSnap = await tx.get(regRef);
+    const userData = userSnap.data() as UserDocument;
+    const prevReg = regSnap.exists() ? (regSnap.data() as RegistroDia) : null;
+    const prevStats = userData.registroStats ?? defaultRegistroStats();
+
+    const nextWithTimestamp: RegistroDia = { ...next, fecha, updatedAt: Date.now() };
+    const newStats = applyRegistroDelta(prevStats, prevReg, nextWithTimestamp);
+
+    tx.set(regRef, nextWithTimestamp);
+    tx.update(userRef, {
+      registroStats: newStats,
+      lastActive: Date.now(),
+    });
+
+    return newStats;
+  });
+}
+
+// Borra el registro de un día · idem con tx + recalc stats. Devuelve
+// las nuevas stats. Idempotente: si el doc no existía, devuelve las
+// stats sin tocar (no escribe el user doc).
+export async function deleteRegistroDia(
+  uid: string,
+  fecha: string,
+): Promise<RegistroStats> {
+  const { mod, db } = await getDb();
+  const userRef = mod.doc(db, 'users', uid);
+  const regRef = mod.doc(db, ...registroDocPath(uid, fecha));
+
+  return mod.runTransaction(db, async (tx) => {
+    const userSnap = await tx.get(userRef);
+    if (!userSnap.exists()) {
+      throw new Error('deleteRegistroDia: user document no existe');
+    }
+    const regSnap = await tx.get(regRef);
+    const userData = userSnap.data() as UserDocument;
+    const prevStats = userData.registroStats ?? defaultRegistroStats();
+    if (!regSnap.exists()) return prevStats;
+
+    const prevReg = regSnap.data() as RegistroDia;
+    const newStats = applyRegistroDelete(prevStats, prevReg);
+
+    tx.delete(regRef);
+    tx.update(userRef, {
+      registroStats: newStats,
+      lastActive: Date.now(),
+    });
+
+    return newStats;
   });
 }

@@ -68,7 +68,22 @@ export const signOut = () => fbSignOut(auth);
 // Llamar una sola vez al arrancar la app (en AuthProvider).
 // Si el usuario vuelve de un redirect de Google, Firebase ya habrá actualizado
 // onAuthStateChanged; esta llamada solo limpia el estado interno y propaga errores.
-export const consumePendingRedirect = () => getRedirectResult(auth);
+//
+// Además, si el redirect fue una operación de link (anonymous→real) ahora
+// completada, limpiamos `expiresAt` del doc para que deje de caducar · es
+// lo equivalente al `clearGuestExpiration` que hace `linkAnonymousGoogle`
+// en su rama popup. Sin esto, un user que vincula vía redirect mantiene
+// el TTL del invitado y su cuenta nueva se borraría a los 3 días.
+export const consumePendingRedirect = async () => {
+  const result = await getRedirectResult(auth);
+  if (result?.user && !result.user.isAnonymous) {
+    const { clearGuestExpiration } = await import('./db');
+    clearGuestExpiration(result.user.uid).catch((err) => {
+      console.warn('[BTal] clearGuestExpiration error (redirect):', err);
+    });
+  }
+  return result;
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // Reauth · operaciones sensibles (cambio de email, enrolar MFA) requieren
@@ -181,6 +196,16 @@ export async function linkAnonymousAccount(
   }
   const credential = EmailAuthProvider.credential(email, password);
   const result = await linkWithCredential(current, credential);
+  // El doc del invitado tenía `expiresAt` para auto-borrar a los 3 días
+  // (TTL Firestore). Tras vincular pasa a ser cuenta real · debe vivir
+  // indefinidamente. Lo limpiamos en fire-and-forget · si fallara (red)
+  // peor caso es que la cuenta nueva se borre en 3 días, raro pero el
+  // user puede volver a vincular o `touchLastActive` lo seguirá
+  // renovando si pasa por el path de "anonymous" (que ya no será su caso).
+  const { clearGuestExpiration } = await import('./db');
+  clearGuestExpiration(result.user.uid).catch((err) => {
+    console.warn('[BTal] clearGuestExpiration error:', err);
+  });
   return result.user;
 }
 
@@ -198,9 +223,17 @@ export async function linkAnonymousGoogle(): Promise<User | null> {
   if (isStandalone()) {
     await linkWithRedirect(current, provider);
     // En redirect el resultado se recoge tras volver, vía getRedirectResult.
+    // Nota: el limpiado de expiresAt en el caso redirect se hace en
+    // consumePendingRedirect cuando descubra que el user ya no es anónimo.
     return null;
   }
   const result = await linkWithPopup(current, provider);
+  // Limpiamos `expiresAt` para que el doc deje de caducar (ver nota
+  // idéntica en linkAnonymousAccount arriba).
+  const { clearGuestExpiration } = await import('./db');
+  clearGuestExpiration(result.user.uid).catch((err) => {
+    console.warn('[BTal] clearGuestExpiration error:', err);
+  });
   return result.user;
 }
 

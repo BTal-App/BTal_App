@@ -1,0 +1,238 @@
+/* IconPicker · grid local de iconos Tabler con buscador. Reemplazo del
+   antiguo EmojiPicker · misma arquitectura visual (grid scrollable
+   dentro de un IonModal del padre, tabs horizontales). Diferencias:
+   - Iconos SVG monocromos (vs glyph emoji de fuente del sistema).
+   - Cells con el icono renderizado en `currentColor` heredado.
+   - Sin warning offline (los iconos son locales, no CDN). */
+
+.icon-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--btal-bg-2);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* ── Barra de búsqueda ── */
+.icon-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 9px;
+  padding: 6px 10px;
+}
+
+.icon-picker-search ion-icon {
+  font-size: 1rem;
+  color: var(--btal-t-3);
+  flex-shrink: 0;
+}
+
+.icon-picker-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--btal-t-1);
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 4px 0;
+}
+
+.icon-picker-search input::placeholder {
+  color: var(--btal-t-3);
+}
+
+.icon-picker-reset {
+  background: rgba(90, 168, 255, 0.1);
+  border: 1px solid rgba(90, 168, 255, 0.35);
+  color: var(--btal-blue);
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.icon-picker-reset:hover {
+  background: rgba(90, 168, 255, 0.2);
+  border-color: var(--btal-blue);
+}
+
+/* ── Tabs ── */
+.icon-picker-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.icon-picker-tabs::-webkit-scrollbar {
+  height: 3px;
+}
+.icon-picker-tabs::-webkit-scrollbar-thumb {
+  background: var(--btal-border);
+  border-radius: 4px;
+}
+
+.icon-picker-tab {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--btal-t-2);
+  transition: background 0.13s, border-color 0.13s, color 0.13s, transform 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-picker-tab:hover {
+  background: var(--btal-surface);
+  color: var(--btal-t-1);
+}
+
+.icon-picker-tab:active {
+  transform: scale(0.92);
+}
+
+.icon-picker-tab.active {
+  background: rgba(181, 240, 55, 0.16);
+  border-color: var(--btal-lime);
+  color: var(--btal-lime);
+}
+
+.icon-picker-tab:focus-visible {
+  outline: 2px solid var(--btal-lime);
+  outline-offset: 1px;
+}
+
+.icon-picker-tab-icon {
+  pointer-events: none;
+  display: inline-flex;
+}
+
+/* ── Meta · etiqueta de categoría + contador total ── */
+.icon-picker-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  margin: -2px 2px 0;
+}
+
+.icon-picker-meta-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon-picker-meta-count {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 0.65rem;
+}
+
+/* ── Grid ── */
+.icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.icon-picker-grid::-webkit-scrollbar {
+  width: 4px;
+}
+.icon-picker-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+.icon-picker-grid::-webkit-scrollbar-thumb {
+  background: var(--btal-border);
+  border-radius: 4px;
+}
+
+.icon-picker-cell {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  color: var(--btal-t-2);
+  transition: background 0.13s, border-color 0.13s, color 0.13s, transform 0.12s;
+}
+
+.icon-picker-cell:hover {
+  background: var(--btal-surface);
+  border-color: var(--btal-border);
+  color: var(--btal-t-1);
+}
+
+.icon-picker-cell:active {
+  transform: scale(0.92);
+}
+
+.icon-picker-cell.active {
+  background: rgba(181, 240, 55, 0.16);
+  border-color: var(--btal-lime);
+  color: var(--btal-lime);
+}
+
+.icon-picker-cell:focus-visible {
+  outline: 2px solid var(--btal-lime);
+  outline-offset: 1px;
+}
+
+.icon-picker-empty,
+.icon-picker-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--btal-t-3);
+  padding: 24px 8px;
+}
+
+.icon-picker-loading {
+  font-style: italic;
+}
+
+.icon-picker-more {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  padding: 8px;
+  font-style: italic;
+}
+
+@media (max-width: 480px) {
+  .icon-picker-grid {
+    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+    max-height: 180px;
+  }
+  .icon-picker-cell {
+    height: 34px;
+  }
+}

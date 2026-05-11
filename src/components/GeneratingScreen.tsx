@@ -1,5 +1,5 @@
-import { IonContent, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import { sparklesOutline } from 'ionicons/icons';
+import { IonContent, IonModal, IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import './GeneratingScreen.css';
 
 interface Props {
@@ -40,13 +40,14 @@ export function GeneratingScreen({
       <IonContent>
         <div className="generating-screen-content">
           <div className="generating-screen-icon">
-            <IonIcon icon={sparklesOutline} />
+            <MealIcon value="tb:sparkles" size={32} />
           </div>
           <IonSpinner name="crescent" className="generating-screen-spinner" />
           <h2 className="generating-screen-title">{title}</h2>
           <p className="generating-screen-subtitle">{subtitle}</p>
           <div className="generating-screen-tip">
-            ✨ Procesando tu perfil · alergias, objetivos y preferencias
+            <MealIcon value="tb:sparkles" size={14} className="generating-screen-tip-icon" />
+            Procesando tu perfil · alergias, objetivos y preferencias
           </div>
         </div>
       </IonContent>

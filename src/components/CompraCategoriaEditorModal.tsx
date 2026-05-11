@@ -3,11 +3,9 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import { closeOutline, trashOutline } from 'ionicons/icons';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -18,8 +16,10 @@ import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { blurAndRun } from '../utils/focus';
 import { SaveIndicator } from './SaveIndicator';
-import { EmojiPicker } from './EmojiPicker';
+import { IconPicker } from './IconPicker';
+import { MealIcon } from './MealIcon';
 import {
+  COMPRA_CATEGORIA_ICON_DEFAULT,
   newCompraCategoriaId,
   type CategoriaCompra,
 } from '../templates/defaultUser';
@@ -68,9 +68,9 @@ export function CompraCategoriaEditorModal({
   } = useProfile();
 
   const [nombre, setNombre] = useState(categoria?.nombre ?? '');
-  const [emoji, setEmoji] = useState(categoria?.emoji ?? '🛒');
+  const [emoji, setEmoji] = useState(categoria?.emoji ?? COMPRA_CATEGORIA_ICON_DEFAULT);
   const [color, setColor] = useState(categoria?.color ?? COLORES[0].value);
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
@@ -87,9 +87,9 @@ export function CompraCategoriaEditorModal({
 
   const resetState = () => {
     setNombre(categoria?.nombre ?? '');
-    setEmoji(categoria?.emoji ?? '🛒');
+    setEmoji(categoria?.emoji ?? COMPRA_CATEGORIA_ICON_DEFAULT);
     setColor(categoria?.color ?? COLORES[0].value);
-    setEmojiPickerOpen(false);
+    setIconPickerOpen(false);
     setConfirmDeleteOpen(false);
     setConfirmChanges(null);
     resetSave();
@@ -114,11 +114,11 @@ export function CompraCategoriaEditorModal({
     const changes: ChangeEntry[] = [];
     if (isEdit && categoria) {
       pushDiff(changes, 'Nombre', categoria.nombre, cleaned.nombre);
-      pushDiff(changes, 'Emoji', categoria.emoji, cleaned.emoji);
+      pushDiff(changes, 'Icono', categoria.emoji, cleaned.emoji);
       pushDiff(changes, 'Color', categoria.color, cleaned.color);
     } else {
       changes.push({ label: 'Nombre', from: '—', to: cleaned.nombre });
-      changes.push({ label: 'Emoji', from: '—', to: cleaned.emoji });
+      changes.push({ label: 'Icono', from: '—', to: cleaned.emoji });
       changes.push({ label: 'Color', from: '—', to: cleaned.color });
     }
     setConfirmChanges({ changes, cleaned });
@@ -193,22 +193,29 @@ export function CompraCategoriaEditorModal({
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card">
-              <h2 className="settings-modal-title">
-                {emoji} {isEdit ? 'Editar categoría' : 'Nueva categoría'}
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
+              <h2 className="settings-modal-title cat-editor-title">
+                <MealIcon
+                  value={emoji}
+                  fallback={COMPRA_CATEGORIA_ICON_DEFAULT}
+                  size={22}
+                  className="cat-editor-title-icon"
+                />
+                {isEdit ? 'Editar categoría' : 'Nueva categoría'}
               </h2>
               {isBuiltIn && (
                 <p className="settings-modal-text">
@@ -235,10 +242,16 @@ export function CompraCategoriaEditorModal({
                 <button
                   type="button"
                   className="cat-editor-emoji-btn"
-                  onClick={blurAndRun(() => setEmojiPickerOpen(true))}
+                  onClick={blurAndRun(() => setIconPickerOpen(true))}
                   aria-label="Cambiar icono"
                 >
-                  <span className="cat-editor-emoji-preview">{emoji}</span>
+                  <span className="cat-editor-emoji-preview">
+                    <MealIcon
+                      value={emoji}
+                      fallback={COMPRA_CATEGORIA_ICON_DEFAULT}
+                      size={32}
+                    />
+                  </span>
                   <span className="cat-editor-emoji-hint">
                     Pulsa para elegir otro
                   </span>
@@ -307,7 +320,7 @@ export function CompraCategoriaEditorModal({
                     onClick={blurAndRun(() => setConfirmDeleteOpen(true))}
                     disabled={submitting}
                   >
-                    <IonIcon icon={trashOutline} />
+                    <MealIcon value="tb:trash" size={18} />
                     Eliminar categoría
                   </button>
                 </>
@@ -317,11 +330,11 @@ export function CompraCategoriaEditorModal({
         </IonContent>
       </IonModal>
 
-      {/* Picker de emojis · reutiliza el de comidas. */}
-      {emojiPickerOpen && (
+      {/* Picker de iconos Tabler · reutiliza el de comidas. */}
+      {iconPickerOpen && (
         <IonModal
-          isOpen={emojiPickerOpen}
-          onDidDismiss={() => setEmojiPickerOpen(false)}
+          isOpen={iconPickerOpen}
+          onDidDismiss={() => setIconPickerOpen(false)}
           className="settings-modal cat-editor-emoji-modal"
         >
           <IonContent>
@@ -329,17 +342,17 @@ export function CompraCategoriaEditorModal({
               <button
                 type="button"
                 className="settings-modal-close settings-modal-close--fixed"
-                onClick={blurAndRun(() => setEmojiPickerOpen(false))}
+                onClick={blurAndRun(() => setIconPickerOpen(false))}
                 aria-label="Cerrar"
               >
-                <IonIcon icon={closeOutline} />
+                <MealIcon value="tb:x" size={22} />
               </button>
               <h3 className="cat-editor-emoji-modal-title">Elige un icono</h3>
-              <EmojiPicker
+              <IconPicker
                 selected={emoji}
-                onSelect={(e) => {
-                  setEmoji(e);
-                  setEmojiPickerOpen(false);
+                onSelect={(id) => {
+                  setEmoji(id);
+                  setIconPickerOpen(false);
                 }}
               />
             </div>

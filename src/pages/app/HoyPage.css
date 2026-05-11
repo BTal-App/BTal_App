@@ -233,10 +233,13 @@
   background: var(--btal-surface);
   border: 1px dashed var(--btal-border-2);
   border-radius: 20px;
-  padding: 18px;
+  /* Padding + gap unificados con `.hoy-meal-card`/`.hoy-sup-card`/
+     `.hoy-train-card` para que el icono (52×52) quede en la misma
+     posición vertical y horizontal en todas las cards de HOY. */
+  padding: 14px 16px;
   display: flex;
-  gap: 14px;
-  align-items: center;
+  gap: 12px;
+  align-items: flex-start;
   /* Resets para que la card pueda ser un <button> sin perder el look. */
   width: calc(100% - 32px);
   text-align: left;
@@ -327,7 +330,9 @@
   align-items: flex-start;
   gap: 12px;
   width: 100%;
-  padding: 12px 14px;
+  /* Padding unificado con resto de cards de HOY (14×16) para que el
+     icono (52×52) quede en la misma posición Y/X en toda la página. */
+  padding: 14px 16px;
   background: var(--btal-surface);
   border: 1px solid var(--btal-border);
   border-radius: 14px;
@@ -372,16 +377,22 @@
 }
 
 .hoy-meal-emoji {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  /* Tamaño igualado a `.hoy-train-icon` (52×52, radius 16) para que
+     todas las cards de la pestaña HOY (comidas, sup y entreno)
+     compartan dimensiones de recuadro y se vean uniformes. */
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   background: var(--btal-bg-2);
   border: 1px solid var(--btal-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   flex-shrink: 0;
+  /* Color del icono Tabler · `<MealIcon>` lo hereda con currentColor.
+     Lima por defecto para que el icono destaque sobre el bg-2 oscuro. */
+  color: var(--btal-lime);
 }
 
 .hoy-meal-body {
@@ -405,6 +416,31 @@
   letter-spacing: 0.04em;
   color: var(--btal-t-1);
   text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  /* Cuando el nombre viene de un extra (`extra.nombre` user-typed)
+     puede ser largo · romper palabras antes que desbordar la card. */
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Chip "extra" junto al título · mismo estilo que `.menu-meal-extra-tag`
+   en MenuPage para coherencia visual entre tabs. Solo aparece cuando
+   el extra del día está marcado como `esExtra: true`. */
+.hoy-meal-extra-tag {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(181, 240, 55, 0.12);
+  border: 1px solid rgba(181, 240, 55, 0.4);
+  color: var(--btal-lime);
+  padding: 1px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .hoy-meal-time {
@@ -493,16 +529,17 @@
 }
 
 .hoy-empty-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  /* 52×52 radius 16 · igualado a `.hoy-meal-emoji`, `.hoy-sup-emoji`
+     y `.hoy-train-icon` para alineación vertical entre cards. */
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   background: var(--btal-bg-2);
   border: 1px solid var(--btal-border);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--btal-t-2);
-  font-size: 1.4rem;
   flex-shrink: 0;
 }
 
@@ -537,7 +574,10 @@
   background: var(--btal-surface);
   border: 1px solid var(--btal-border);
   border-radius: 16px;
-  padding: 16px;
+  /* Padding unificado con resto de cards de HOY (14×16) para que el
+     icono del head row arranque a la misma altura que en
+     `.hoy-meal-card`/`.hoy-empty-card`/`.hoy-train-card`. */
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -584,28 +624,56 @@
 }
 
 .hoy-sup-emoji {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  /* Tamaño igualado a `.hoy-train-icon` (52×52, radius 16) · ver
+     nota en `.hoy-meal-emoji`. */
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   background: var(--btal-bg-2);
   border: 1px solid var(--btal-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   flex-shrink: 0;
 }
 
+.hoy-sup-emoji-icon {
+  font-size: 1.6rem;
+  color: var(--btal-lime);
+}
+
+/* Inline icon dentro del breadcrumb del empty state ("Menú → BATIDO"). */
+.hoy-sup-inline-icon {
+  font-size: 1em;
+  vertical-align: middle;
+  margin: 0 0.2rem;
+  position: relative;
+  top: -1px;
+}
+
 .hoy-sup-id {
+  /* Misma estructura que `.hoy-meal-body` · flex column con gap entre
+     título y subtítulo · así el h3 queda alineado verticalmente con
+     el icono 52×52 de la misma forma que en las cards de comidas. */
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .hoy-sup-id h3 {
   margin: 0;
-  font-size: 0.92rem;
+  /* Font-size + line-height igualados a `.hoy-meal-name` (0.85rem +
+     line-height inherit) · sin esto el h3 tiene la box de línea más
+     grande y queda visualmente desplazado respecto al icono cuando
+     se comparan card a card. Antes era 0.92rem pero el user pidió
+     consistencia con las cards de comidas. */
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--btal-t-1);
   /* El título del batido/creatina puede llegar a 50 chars · si el
      user usa un nombre largo, parte palabra antes que desbordar. */
@@ -637,7 +705,11 @@
 }
 
 .hoy-sup-id p {
-  margin: 3px 0 0;
+  /* `margin: 0` · el gap del `.hoy-sup-id` flex column (4px) ya
+     separa el subtítulo del título. Antes era `margin: 3px 0 0`
+     pero al usar `display: flex` con gap, ese margin extra rompe
+     la consistencia con `.hoy-meal-body`. */
+  margin: 0;
   font-size: 0.78rem;
   color: var(--btal-t-3);
   line-height: 1.4;
@@ -1041,8 +1113,13 @@
    la disposición visual. */
 
 .hoy-sup-card .hoy-sup-head {
-  /* Espacio para el CTA a la derecha · era flex-start, ahora lo
-     mantenemos pero el CTA crece hasta el ancho que necesite. */
+  /* `align-items: center` · el icono 52×52 y el bloque título+sub
+     (más compacto, ~40px) se centran verticalmente entre sí. El user
+     prefiere este patrón porque las cards de sup tienen menos
+     contenido que las de comida y al `flex-start` el título quedaba
+     visualmente "alto" respecto al icono. Las cards de comida
+     mantienen `flex-start` (su body tiene 3 filas y rellena el alto
+     del icono naturalmente). */
   align-items: center;
 }
 
@@ -1276,7 +1353,11 @@
    train-card del preview (icono cuadrado-redondeado, info en columna). */
 .hoy-train-card {
   display: flex;
-  align-items: stretch;
+  /* `flex-start` (antes `stretch`) · el icono (52×52) mantiene su
+     tamaño declarado y queda anclado al top del card con offset
+     igual a `padding-top` (14px), coincidiendo con el resto de
+     cards de HOY (`hoy-meal-card`, `hoy-sup-card`, `hoy-empty-card`). */
+  align-items: flex-start;
   gap: 14px;
   margin: 0 16px 12px;
   padding: 14px 16px;
@@ -1311,6 +1392,21 @@
   opacity: 0.85;
 }
 
+/* Variante NO clickable · usada cuando no hay día de entreno asignado
+   (descanso o sin plan). Quita cursor pointer y hover/active para
+   comunicar visualmente que la card es informativa, no interactiva.
+   El "Ver plan →" del header de la sección ya redirige a la tab
+   Entreno si el user quiere configurar/ver el plan. */
+.hoy-train-card--static {
+  cursor: default;
+}
+.hoy-train-card--static:hover {
+  border-color: var(--btal-border);
+}
+.hoy-train-card--static:active {
+  background: var(--btal-surface);
+}
+
 .hoy-train-icon {
   width: 52px;
   height: 52px;
@@ -1327,12 +1423,14 @@
   border: 1px solid rgba(181, 240, 55, 0.25);
 }
 
-.hoy-train-icon ion-icon {
-  font-size: 1.6rem;
+/* Color del icono · MealIcon (Tabler) hereda `currentColor` desde el
+   contenedor, así que basta con setear `color` aquí. Antes esto era
+   `.hoy-train-icon ion-icon { color: ... }` pero tras la migración a
+   Tabler ya no hay `ion-icon` dentro de `.hoy-train-icon`. */
+.hoy-train-icon {
   color: var(--btal-lime);
 }
 
-/* Variante descanso · icono más neutro, sin acento lima. */
 /* Variante "descanso" · icono cama en azul, gradiente azul/violeta
    sutil. Diferencia visual con el día de entreno (lima/cyan). */
 .hoy-train-icon--rest {
@@ -1342,8 +1440,6 @@
     rgba(176, 122, 240, 0.06)
   );
   border-color: rgba(90, 168, 255, 0.25);
-}
-.hoy-train-icon--rest ion-icon {
   color: var(--btal-blue);
 }
 
@@ -1358,8 +1454,6 @@
     rgba(255, 213, 79, 0.06)
   );
   border-color: rgba(255, 213, 79, 0.4);
-}
-.hoy-train-icon--alert ion-icon {
   color: #ffd54f;
 }
 
@@ -1384,6 +1478,11 @@
   color: var(--btal-t-3);
   font-weight: 700;
   overflow-wrap: anywhere;
+  /* Row: tag "HOY" + tag duración a su derecha. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .hoy-train-title {
@@ -1445,14 +1544,26 @@
   text-transform: uppercase;
 }
 
-/* Tag azul "⏱ 1h 20m" en la card de Entreno de hoy · diferenciado
-   del resto de tipos (lima/coral/etc) por su color azul · mismo
-   estilo que el badge `.train-day-time` de la tab Entreno. */
-.hoy-train-card .tag.hoy-train-time-tag {
+/* Tag azul "⏱ 1h 20m" · vive a la derecha del tag "HOY" dentro de
+   `.hoy-train-label`. Mismo color azul que tenía antes (variante
+   visual del badge `.train-day-time` de la tab Entreno) · solo
+   cambia su posición en el layout, no sus colores. */
+.hoy-train-time-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border-radius: 999px;
   background: rgba(90, 168, 255, 0.16);
   color: var(--btal-blue);
-  border-color: rgba(90, 168, 255, 0.3);
+  border: 1px solid rgba(90, 168, 255, 0.3);
+  font-size: 0.6rem;
+  font-weight: 700;
   font-feature-settings: 'tnum';
   text-transform: none;
   letter-spacing: 0;
+}
+
+.hoy-train-time-icon {
+  flex-shrink: 0;
 }

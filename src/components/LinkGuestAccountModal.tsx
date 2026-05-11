@@ -7,15 +7,8 @@ import {
   IonSpinner,
   IonToast,
 } from '@ionic/react';
-import {
-  closeOutline,
-  eyeOffOutline,
-  eyeOutline,
-  lockClosedOutline,
-  logoGoogle,
-  mailOutline,
-  saveOutline,
-} from 'ionicons/icons';
+import { logoGoogle } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import {
@@ -142,17 +135,18 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={blurAndRun(onClose)}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <form className="settings-modal-card" onSubmit={handleSubmit}>
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={blurAndRun(onClose)}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <h2 className="settings-modal-title">Crea tu cuenta</h2>
               <p className="settings-modal-text">
                 Vamos a registrarte sin perder nada.{' '}
@@ -162,7 +156,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
               </p>
 
               <div className="link-guest-input-wrap">
-                <IonIcon icon={mailOutline} className="link-guest-input-icon" />
+                <MealIcon value="tb:mail" size={18} className="link-guest-input-icon" />
                 <input
                   className="link-guest-input"
                   type="email"
@@ -176,7 +170,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
               </div>
 
               <div className="link-guest-input-wrap">
-                <IonIcon icon={lockClosedOutline} className="link-guest-input-icon" />
+                <MealIcon value="tb:lock" size={18} className="link-guest-input-icon" />
                 <input
                   className="link-guest-input link-guest-input--password"
                   type={showPwd ? 'text' : 'password'}
@@ -194,12 +188,12 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
                   onClick={() => setShowPwd((v) => !v)}
                   aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  <IonIcon icon={showPwd ? eyeOffOutline : eyeOutline} />
+                  <MealIcon value={showPwd ? 'tb:eye-off' : 'tb:eye'} size={18} />
                 </button>
               </div>
 
               <div className="link-guest-input-wrap">
-                <IonIcon icon={lockClosedOutline} className="link-guest-input-icon" />
+                <MealIcon value="tb:lock" size={18} className="link-guest-input-icon" />
                 <input
                   className="link-guest-input"
                   type={showPwd ? 'text' : 'password'}
@@ -229,7 +223,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
                   <IonSpinner name="dots" />
                 ) : (
                   <>
-                    <IonIcon icon={saveOutline} slot="start" />
+                    <MealIcon value="tb:device-floppy" size={18} slot="start" />
                     Crear cuenta y guardar
                   </>
                 )}

@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Preferences, UnitsSystem, WeekStart } from '../utils/units';
+import type {
+  NavStyle,
+  Preferences,
+  RegistroCalPos,
+  UnitsSystem,
+  WeekStart,
+} from '../utils/units';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
+import { useError } from './useError';
 import { setUserPreferences } from '../services/db';
 import {
   DEFAULT_PREFERENCES,
@@ -21,6 +28,29 @@ import {
 // arriba. Así sus elecciones (Imperial, Domingo) viajan con él.
 const STORAGE_KEY = 'btal_preferences';
 
+// Valida que un objeto desconocido tiene la forma de RegistroCalPos.
+// Hace clamp: month0 ∈ [0,11], view ∈ {'month','week'}. Si algo está
+// mal, devuelve null y el caller cae al default.
+function parseRegistroCal(raw: unknown): RegistroCalPos | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Partial<RegistroCalPos>;
+  const y = typeof r.year === 'number' ? r.year : NaN;
+  const m = typeof r.month0 === 'number' ? r.month0 : NaN;
+  const v = r.view === 'week' ? 'week' : r.view === 'month' ? 'month' : null;
+  if (!Number.isFinite(y) || !Number.isFinite(m) || v === null) return null;
+  if (m < 0 || m > 11) return null;
+  return { year: y, month0: m, view: v };
+}
+
+// Normaliza el valor de `navStyle` leído de storage/Firestore al tipo
+// actual `'labeled' | 'compact'`. Acepta legacy `'tiktok'` → `'labeled'`
+// y `'ig'` → `'compact'`. Cualquier otra cosa cae al default `'labeled'`.
+function normalizeNavStyle(raw: unknown): 'labeled' | 'compact' {
+  if (raw === 'compact' || raw === 'ig') return 'compact';
+  // 'labeled', 'tiktok', undefined, null, cualquier otro → default
+  return 'labeled';
+}
+
 function loadFromLocal(): Preferences {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -29,6 +59,8 @@ function loadFromLocal(): Preferences {
     return {
       units: parsed.units === 'imperial' ? 'imperial' : 'metric',
       weekStart: parsed.weekStart === 'sunday' ? 'sunday' : 'monday',
+      registroCal: parseRegistroCal(parsed.registroCal),
+      navStyle: normalizeNavStyle(parsed.navStyle),
     };
   } catch {
     return DEFAULT_PREFERENCES;
@@ -46,6 +78,7 @@ function saveToLocal(prefs: Preferences) {
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
+  const { showError } = useError();
   const uid = user?.uid ?? null;
   const isAnonymous = user?.isAnonymous ?? false;
 
@@ -111,6 +144,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       // Usamos prefsRef para no depender de `prefs` en las deps del effect.
       setUserPreferences(uid, prefsRef.current).catch((err) => {
         console.warn('[BTal] migrate preferences error:', err);
+        // Le contamos al user que sus prefs viven solo en local hasta
+        // el siguiente save exitoso · si la red estaba caída en este
+        // primer load no se sincronizan con otros dispositivos hasta
+        // que `setUnits`/`setWeekStart`/etc dispare otro write.
+        showError(
+          'No hemos podido sincronizar tus preferencias con la nube. '
+          + 'Siguen funcionando en este dispositivo.',
+        );
       });
     }
     // Si profile es null (no hay doc todavía — onboarding pendiente),
@@ -120,7 +161,37 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     // doc de React. La regla de eslint no distingue, así que la silenciamos.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSyncedFor(uid);
-  }, [uid, isAnonymous, profile, profileLoading, syncedFor]);
+  }, [uid, isAnonymous, profile, profileLoading, syncedFor, showError]);
+
+  // Aplica la clase del nav style al `<body>` según la preferencia
+  // efectiva. Prioridad:
+  //   1. Override de preview vía URL param (sessionStorage
+  //      `btal-nav-preview`) · efímero por pestaña.
+  //   2. Preferencia persistente (`prefs.navStyle` · localStorage +
+  //      Firestore) · default `'labeled'`.
+  // CSS bajo selectores `body.nav-labeled` y `body.nav-compact` en
+  // `theme/variables.css`. Sin clase aplicada el AppShell quedaría
+  // con el layout base (no deseado), por eso siempre garantizamos
+  // UNA de las dos clases.
+  //
+  // Acepta valores legados (`'tiktok'`/`'ig'`) en sessionStorage para
+  // que URLs antiguas compartidas (`?nav=tiktok`) sigan funcionando.
+  useEffect(() => {
+    const preview = (() => {
+      try { return sessionStorage.getItem('btal-nav-preview'); }
+      catch { return null; }
+    })();
+    const previewNorm =
+      preview === 'tiktok' || preview === 'labeled' ? 'labeled'
+      : preview === 'ig' || preview === 'compact' ? 'compact'
+      : null;
+    const effective: NavStyle =
+      previewNorm ?? prefs.navStyle ?? 'labeled';
+    document.body.classList.remove('nav-labeled', 'nav-compact');
+    document.body.classList.add(
+      effective === 'compact' ? 'nav-compact' : 'nav-labeled',
+    );
+  }, [prefs.navStyle]);
 
   // Devuelve la Promise del write a Firestore para que setPreferences
   // pueda awaitarla y exponer la duración real al caller (SaveIndicator).
@@ -146,14 +217,18 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       userTouchedRef.current = true;
       setPrefs((p) => {
         const next = { ...p, units };
-        // Fire-and-forget · el caller no espera feedback visual aquí.
+        // Fire-and-forget pero ya NO silencioso · si la escritura falla
+        // mostramos toast rojo para que el user sepa que su elección no
+        // se persistió (sigue en local, pero no se sincroniza con otros
+        // dispositivos hasta el siguiente save exitoso).
         persist(next).catch((err) => {
           console.warn('[BTal] save preferences error:', err);
+          showError('No hemos podido guardar tus preferencias. Comprueba tu conexión.');
         });
         return next;
       });
     },
-    [persist],
+    [persist, showError],
   );
 
   const setWeekStart = useCallback(
@@ -163,11 +238,54 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         const next = { ...p, weekStart };
         persist(next).catch((err) => {
           console.warn('[BTal] save preferences error:', err);
+          showError('No hemos podido guardar tus preferencias. Comprueba tu conexión.');
+        });
+        return next;
+      });
+    },
+    [persist, showError],
+  );
+
+  const setRegistroCal = useCallback(
+    (pos: RegistroCalPos | null) => {
+      userTouchedRef.current = true;
+      setPrefs((p) => {
+        const next: Preferences = { ...p, registroCal: pos };
+        // Posición del calendar · cambios MUY frecuentes (cada
+        // navegación) y de bajo impacto · si fallan lo logueamos pero
+        // NO molestamos al user con un toast cada vez. La posición se
+        // queda en local hasta el siguiente save exitoso.
+        persist(next).catch((err) => {
+          console.warn('[BTal] save preferences (registroCal) error:', err);
         });
         return next;
       });
     },
     [persist],
+  );
+
+  const setNavStyle = useCallback(
+    (navStyle: NavStyle) => {
+      userTouchedRef.current = true;
+      setPrefs((p) => {
+        const next: Preferences = { ...p, navStyle };
+        persist(next).catch((err) => {
+          console.warn('[BTal] save preferences (navStyle) error:', err);
+          showError('No hemos podido guardar el estilo del menú. Comprueba tu conexión.');
+        });
+        return next;
+      });
+      // Al elegir explícitamente desde Settings, descartamos cualquier
+      // override de preview via URL param (`?nav=...`) que viviera en
+      // sessionStorage · así el efecto en App.tsx aplica la preferencia
+      // recién guardada inmediatamente.
+      try {
+        sessionStorage.removeItem('btal-nav-preview');
+      } catch {
+        /* private mode · best effort */
+      }
+    },
+    [persist, showError],
   );
 
   // Guarda varias prefs de golpe (un único write a Firestore). Devuelve
@@ -189,11 +307,25 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     () => ({
       units: prefs.units,
       weekStart: prefs.weekStart,
+      registroCal: prefs.registroCal ?? null,
+      navStyle: prefs.navStyle ?? 'labeled',
       setUnits,
       setWeekStart,
+      setRegistroCal,
+      setNavStyle,
       setPreferences,
     }),
-    [prefs.units, prefs.weekStart, setUnits, setWeekStart, setPreferences],
+    [
+      prefs.units,
+      prefs.weekStart,
+      prefs.registroCal,
+      prefs.navStyle,
+      setUnits,
+      setWeekStart,
+      setRegistroCal,
+      setNavStyle,
+      setPreferences,
+    ],
   );
 
   return (

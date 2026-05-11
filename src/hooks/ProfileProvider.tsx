@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from './useAuth';
 import {
   clearUserMeal,
   deleteUserPlanEntreno,
   duplicateUserMeal,
+  duplicateUserMealExtras,
   ensureUserDocumentSchema,
   getUserDocument,
   patchSuplementos,
@@ -42,6 +43,7 @@ import {
   defaultCompra,
   defaultMenu,
   defaultMenuFlags,
+  newExtraId,
   type BatidoConfig,
   type CategoriaCompra,
   type Comida,
@@ -60,6 +62,7 @@ import {
   type UserProfile,
 } from '../templates/defaultUser';
 import { defaultDemoMenuForDay } from '../templates/demoUser';
+import { applySupHistoryDelta } from '../utils/supHistory';
 import { ProfileContext, type ProfileState } from './profile-context';
 
 // Auto-reset de los contadores semanal/mensual de creatina si las marcas
@@ -243,7 +246,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       // escribimos si el user ya tiene perfil completo — pre-onboarding
       // no creamos doc parcial.
       if (doc?.profile?.completed) {
-        touchLastActive(uid).catch((err) => {
+        // El segundo argumento (isAnonymous) le dice a touchLastActive
+        // que también renueve `expiresAt` · TTL de 3 días desde esta
+        // visita. Para cuentas reales no se toca `expiresAt`.
+        touchLastActive(uid, isAnonymous).catch((err) => {
           console.warn('[BTal] touchLastActive error:', err);
         });
       }
@@ -737,6 +743,21 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   // Helper interno · aplica un patch de suplementos con optimistic update
   // y revert. Recibe el patch ya construido (con la lógica de incrementos
   // / decrementos / resets) y se encarga del transporte.
+  //
+  // ⚠ Anti-race: si el caller dispara dos clicks muy rápidos (típico en
+  // pantallas táctiles · double-tap accidental) ambas invocaciones
+  // pueden leer el state local ANTES del optimistic update del primer
+  // tap. `supBusyRef` actúa como mutex: si una operación de suplementos
+  // ya está en vuelo, el segundo tap se descarta. Es un ref (no state)
+  // para no provocar re-render del Provider y mantener estables las
+  // referencias de los handlers en el contexto.
+  //
+  // Bloquea a TODOS los handlers de suplementos (marcar/cancelar/inc/dec)
+  // porque cualquier patch concurrente sobre `suplementos.*` puede
+  // basarse en state stale. La operación dura ~50-200 ms (1 round trip
+  // a Firestore) · imperceptible para el user.
+  const supBusyRef = useRef(false);
+
   const applySupPatch = useCallback(
     async (patch: Partial<UserDocument['suplementos']>) => {
       if (!uid) throw new Error('No hay usuario autenticado.');
@@ -785,6 +806,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   // `Math.min(maxBatidos, ...)`. Si el user ya consumió todo el stock,
   // no se incrementa (necesita comprar/declarar más bote primero).
   const marcarBatidoTomadoHoy = useCallback(async () => {
+    if (supBusyRef.current) return; // anti-race · doble-tap protect
     const sup = profile?.suplementos;
     if (!sup) return;
     const today = todayDateStr();
@@ -792,32 +814,49 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const max = calcBatidoStats(sup).posibles ?? Infinity;
     if (sup.batidos_tomados_total >= max) return; // sin stock disponible
     const now = Date.now();
-    await applySupPatch({
-      batidos_tomados_total: sup.batidos_tomados_total + 1,
-      batidos_tomados_semana: sup.batidos_tomados_semana + 1,
-      batidos_tomados_mes: sup.batidos_tomados_mes + 1,
-      batidos_tomados_anio: sup.batidos_tomados_anio + 1,
-      batido_semana_inicio: sup.batido_semana_inicio ?? now,
-      batido_mes_inicio: sup.batido_mes_inicio ?? now,
-      batido_anio_inicio: sup.batido_anio_inicio ?? now,
-      last_batido_date: today,
-    });
+    // Histórico fechado (Sub-fase 2E.1) · +1 al entry de hoy.
+    const nextHistory = applySupHistoryDelta(sup.batidoHistory, today, +1);
+    supBusyRef.current = true;
+    try {
+      await applySupPatch({
+        batidos_tomados_total: sup.batidos_tomados_total + 1,
+        batidos_tomados_semana: sup.batidos_tomados_semana + 1,
+        batidos_tomados_mes: sup.batidos_tomados_mes + 1,
+        batidos_tomados_anio: sup.batidos_tomados_anio + 1,
+        batido_semana_inicio: sup.batido_semana_inicio ?? now,
+        batido_mes_inicio: sup.batido_mes_inicio ?? now,
+        batido_anio_inicio: sup.batido_anio_inicio ?? now,
+        last_batido_date: today,
+        batidoHistory: nextHistory,
+      });
+    } finally {
+      supBusyRef.current = false;
+    }
   }, [profile, applySupPatch]);
 
   // Cancelar el batido marcado hoy · revierte los 4 contadores
   // (total/semana/mes/año). Idempotente.
   const cancelarBatidoTomadoHoy = useCallback(async () => {
+    if (supBusyRef.current) return;
     const sup = profile?.suplementos;
     if (!sup) return;
     const today = todayDateStr();
     if (sup.last_batido_date !== today) return;
-    await applySupPatch({
-      batidos_tomados_total: Math.max(0, sup.batidos_tomados_total - 1),
-      batidos_tomados_semana: Math.max(0, sup.batidos_tomados_semana - 1),
-      batidos_tomados_mes: Math.max(0, sup.batidos_tomados_mes - 1),
-      batidos_tomados_anio: Math.max(0, sup.batidos_tomados_anio - 1),
-      last_batido_date: null,
-    });
+    // Histórico · -1 al entry de hoy (si llega a 0 se elimina la entry).
+    const nextHistory = applySupHistoryDelta(sup.batidoHistory, today, -1);
+    supBusyRef.current = true;
+    try {
+      await applySupPatch({
+        batidos_tomados_total: Math.max(0, sup.batidos_tomados_total - 1),
+        batidos_tomados_semana: Math.max(0, sup.batidos_tomados_semana - 1),
+        batidos_tomados_mes: Math.max(0, sup.batidos_tomados_mes - 1),
+        batidos_tomados_anio: Math.max(0, sup.batidos_tomados_anio - 1),
+        last_batido_date: null,
+        batidoHistory: nextHistory,
+      });
+    } finally {
+      supBusyRef.current = false;
+    }
   }, [profile, applySupPatch]);
 
   // Marcar creatina suelta como TOMADA HOY · 1 vez/día. Actualiza
@@ -828,6 +867,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   // que los batidos ya tomados reservan creatina del bote (si
   // includeCreatina) · `calcCreatinaStats.posibles` lo aplica.
   const marcarCreatinaTomadaHoy = useCallback(async () => {
+    if (supBusyRef.current) return;
     const sup = profile?.suplementos;
     if (!sup) return;
     const today = todayDateStr();
@@ -835,31 +875,46 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const max = calcCreatinaStats(sup).posibles ?? Infinity;
     if (sup.creatinas_tomadas_total >= max) return;
     const now = Date.now();
-    await applySupPatch({
-      creatinas_tomadas_total: sup.creatinas_tomadas_total + 1,
-      creatinas_tomadas_semana: sup.creatinas_tomadas_semana + 1,
-      creatinas_tomadas_mes: sup.creatinas_tomadas_mes + 1,
-      creatinas_tomadas_anio: sup.creatinas_tomadas_anio + 1,
-      creatina_semana_inicio: sup.creatina_semana_inicio ?? now,
-      creatina_mes_inicio: sup.creatina_mes_inicio ?? now,
-      creatina_anio_inicio: sup.creatina_anio_inicio ?? now,
-      last_creatina_date: today,
-    });
+    const nextHistory = applySupHistoryDelta(sup.creatinaHistory, today, +1);
+    supBusyRef.current = true;
+    try {
+      await applySupPatch({
+        creatinas_tomadas_total: sup.creatinas_tomadas_total + 1,
+        creatinas_tomadas_semana: sup.creatinas_tomadas_semana + 1,
+        creatinas_tomadas_mes: sup.creatinas_tomadas_mes + 1,
+        creatinas_tomadas_anio: sup.creatinas_tomadas_anio + 1,
+        creatina_semana_inicio: sup.creatina_semana_inicio ?? now,
+        creatina_mes_inicio: sup.creatina_mes_inicio ?? now,
+        creatina_anio_inicio: sup.creatina_anio_inicio ?? now,
+        last_creatina_date: today,
+        creatinaHistory: nextHistory,
+      });
+    } finally {
+      supBusyRef.current = false;
+    }
   }, [profile, applySupPatch]);
 
   // Cancelar creatina marcada hoy · revierte total/semanal/mensual/anual.
   const cancelarCreatinaTomadaHoy = useCallback(async () => {
+    if (supBusyRef.current) return;
     const sup = profile?.suplementos;
     if (!sup) return;
     const today = todayDateStr();
     if (sup.last_creatina_date !== today) return;
-    await applySupPatch({
-      creatinas_tomadas_total: Math.max(0, sup.creatinas_tomadas_total - 1),
-      creatinas_tomadas_semana: Math.max(0, sup.creatinas_tomadas_semana - 1),
-      creatinas_tomadas_mes: Math.max(0, sup.creatinas_tomadas_mes - 1),
-      creatinas_tomadas_anio: Math.max(0, sup.creatinas_tomadas_anio - 1),
-      last_creatina_date: null,
-    });
+    const nextHistory = applySupHistoryDelta(sup.creatinaHistory, today, -1);
+    supBusyRef.current = true;
+    try {
+      await applySupPatch({
+        creatinas_tomadas_total: Math.max(0, sup.creatinas_tomadas_total - 1),
+        creatinas_tomadas_semana: Math.max(0, sup.creatinas_tomadas_semana - 1),
+        creatinas_tomadas_mes: Math.max(0, sup.creatinas_tomadas_mes - 1),
+        creatinas_tomadas_anio: Math.max(0, sup.creatinas_tomadas_anio - 1),
+        last_creatina_date: null,
+        creatinaHistory: nextHistory,
+      });
+    } finally {
+      supBusyRef.current = false;
+    }
   }, [profile, applySupPatch]);
 
   const resetCreatinaSemanal = useCallback(async () => {
@@ -914,61 +969,101 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   //
   // Cap al máximo · igual que v1 `changeBatidos(1)` con `Math.min(maxBatidos, ...)`.
   const incrementarBatidoTomado = useCallback(async () => {
+    if (supBusyRef.current) return;
     const sup = profile?.suplementos;
     if (!sup) return;
     const max = calcBatidoStats(sup).posibles ?? Infinity;
     if (sup.batidos_tomados_total >= max) return; // sin stock disponible
     const now = Date.now();
-    await applySupPatch({
-      batidos_tomados_total: sup.batidos_tomados_total + 1,
-      batidos_tomados_semana: sup.batidos_tomados_semana + 1,
-      batidos_tomados_mes: sup.batidos_tomados_mes + 1,
-      batidos_tomados_anio: sup.batidos_tomados_anio + 1,
-      batido_semana_inicio: sup.batido_semana_inicio ?? now,
-      batido_mes_inicio: sup.batido_mes_inicio ?? now,
-      batido_anio_inicio: sup.batido_anio_inicio ?? now,
-    });
+    const today = todayDateStr();
+    const nextHistory = applySupHistoryDelta(sup.batidoHistory, today, +1);
+    supBusyRef.current = true;
+    try {
+      await applySupPatch({
+        batidos_tomados_total: sup.batidos_tomados_total + 1,
+        batidos_tomados_semana: sup.batidos_tomados_semana + 1,
+        batidos_tomados_mes: sup.batidos_tomados_mes + 1,
+        batidos_tomados_anio: sup.batidos_tomados_anio + 1,
+        batido_semana_inicio: sup.batido_semana_inicio ?? now,
+        batido_mes_inicio: sup.batido_mes_inicio ?? now,
+        batido_anio_inicio: sup.batido_anio_inicio ?? now,
+        batidoHistory: nextHistory,
+      });
+    } finally {
+      supBusyRef.current = false;
+    }
   }, [profile, applySupPatch]);
 
   const decrementarBatidoTomado = useCallback(async () => {
+    if (supBusyRef.current) return;
     const sup = profile?.suplementos;
     if (!sup || sup.batidos_tomados_total === 0) return;
-    await applySupPatch({
-      batidos_tomados_total: Math.max(0, sup.batidos_tomados_total - 1),
-      batidos_tomados_semana: Math.max(0, sup.batidos_tomados_semana - 1),
-      batidos_tomados_mes: Math.max(0, sup.batidos_tomados_mes - 1),
-      batidos_tomados_anio: Math.max(0, sup.batidos_tomados_anio - 1),
-    });
+    // History · -1 al entry de hoy. Si no hay entry de hoy
+    // (decremento manual sin haber tomado nada hoy) · `applySupHistoryDelta`
+    // hace no-op · el counter total baja pero history no se desincroniza
+    // hacia atrás (limitación documentada en utils/supHistory.ts).
+    const today = todayDateStr();
+    const nextHistory = applySupHistoryDelta(sup.batidoHistory, today, -1);
+    supBusyRef.current = true;
+    try {
+      await applySupPatch({
+        batidos_tomados_total: Math.max(0, sup.batidos_tomados_total - 1),
+        batidos_tomados_semana: Math.max(0, sup.batidos_tomados_semana - 1),
+        batidos_tomados_mes: Math.max(0, sup.batidos_tomados_mes - 1),
+        batidos_tomados_anio: Math.max(0, sup.batidos_tomados_anio - 1),
+        batidoHistory: nextHistory,
+      });
+    } finally {
+      supBusyRef.current = false;
+    }
   }, [profile, applySupPatch]);
 
   // Cap considera lo ya consumido por batidos (si includeCreatina) ·
   // calcCreatinaStats.posibles ya lo descuenta.
   const incrementarCreatinaTomada = useCallback(async () => {
+    if (supBusyRef.current) return;
     const sup = profile?.suplementos;
     if (!sup) return;
     const max = calcCreatinaStats(sup).posibles ?? Infinity;
     if (sup.creatinas_tomadas_total >= max) return;
     const now = Date.now();
-    await applySupPatch({
-      creatinas_tomadas_total: sup.creatinas_tomadas_total + 1,
-      creatinas_tomadas_semana: sup.creatinas_tomadas_semana + 1,
-      creatinas_tomadas_mes: sup.creatinas_tomadas_mes + 1,
-      creatinas_tomadas_anio: sup.creatinas_tomadas_anio + 1,
-      creatina_semana_inicio: sup.creatina_semana_inicio ?? now,
-      creatina_mes_inicio: sup.creatina_mes_inicio ?? now,
-      creatina_anio_inicio: sup.creatina_anio_inicio ?? now,
-    });
+    const today = todayDateStr();
+    const nextHistory = applySupHistoryDelta(sup.creatinaHistory, today, +1);
+    supBusyRef.current = true;
+    try {
+      await applySupPatch({
+        creatinas_tomadas_total: sup.creatinas_tomadas_total + 1,
+        creatinas_tomadas_semana: sup.creatinas_tomadas_semana + 1,
+        creatinas_tomadas_mes: sup.creatinas_tomadas_mes + 1,
+        creatinas_tomadas_anio: sup.creatinas_tomadas_anio + 1,
+        creatina_semana_inicio: sup.creatina_semana_inicio ?? now,
+        creatina_mes_inicio: sup.creatina_mes_inicio ?? now,
+        creatina_anio_inicio: sup.creatina_anio_inicio ?? now,
+        creatinaHistory: nextHistory,
+      });
+    } finally {
+      supBusyRef.current = false;
+    }
   }, [profile, applySupPatch]);
 
   const decrementarCreatinaTomada = useCallback(async () => {
+    if (supBusyRef.current) return;
     const sup = profile?.suplementos;
     if (!sup || sup.creatinas_tomadas_total === 0) return;
-    await applySupPatch({
-      creatinas_tomadas_total: Math.max(0, sup.creatinas_tomadas_total - 1),
-      creatinas_tomadas_semana: Math.max(0, sup.creatinas_tomadas_semana - 1),
-      creatinas_tomadas_mes: Math.max(0, sup.creatinas_tomadas_mes - 1),
-      creatinas_tomadas_anio: Math.max(0, sup.creatinas_tomadas_anio - 1),
-    });
+    const today = todayDateStr();
+    const nextHistory = applySupHistoryDelta(sup.creatinaHistory, today, -1);
+    supBusyRef.current = true;
+    try {
+      await applySupPatch({
+        creatinas_tomadas_total: Math.max(0, sup.creatinas_tomadas_total - 1),
+        creatinas_tomadas_semana: Math.max(0, sup.creatinas_tomadas_semana - 1),
+        creatinas_tomadas_mes: Math.max(0, sup.creatinas_tomadas_mes - 1),
+        creatinas_tomadas_anio: Math.max(0, sup.creatinas_tomadas_anio - 1),
+        creatinaHistory: nextHistory,
+      });
+    } finally {
+      supBusyRef.current = false;
+    }
   }, [profile, applySupPatch]);
 
   const resetBatidoSemanal = useCallback(async () => {
@@ -1078,10 +1173,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         if (!prev) return prev;
         const current = prev.menu[day].extras;
         snapshot = current;
+        // Solo sobrescribimos `source` cuando el caller lo pasa
+        // explícitamente · llamadas que solo tocan otros campos (p.ej.
+        // toggle `deshabilitada` desde MenuPage) no deben alterar la
+        // procedencia (IA vs user) del extra. Antes el `?? 'user'`
+        // forzaba siempre a 'user' aunque el partial no incluyera
+        // `source`, marcando como del usuario un extra que la IA
+        // todavía debería poder regenerar.
         nextExtras = current.map((e) =>
-          e.id === id
-            ? { ...e, ...partial, source: partial.source ?? 'user' }
-            : e,
+          e.id === id ? { ...e, ...partial } : e,
         );
         return {
           ...prev,
@@ -1111,6 +1211,86 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         }
         throw err;
       }
+    },
+    [uid],
+  );
+
+  // Duplica una `ComidaExtra` a uno o varios días destino. La copia
+  // se crea con un id nuevo en cada destino (para que delete/edit
+  // funcionen independientes). Devuelve `{added, skipped}` para que
+  // la UI pueda mostrar feedback (días que estaban al límite de
+  // MAX_EXTRAS_POR_DIA quedan en `skipped`). Optimistic local +
+  // revert si falla la escritura remota.
+  const duplicateMealExtra = useCallback(
+    async (
+      srcDay: DayKey,
+      srcExtraId: string,
+      destDays: DayKey[],
+    ): Promise<{ added: DayKey[]; skipped: DayKey[] }> => {
+      if (!uid) throw new Error('No hay usuario autenticado.');
+      const targets = Array.from(
+        new Set(destDays.filter((d) => d !== srcDay)),
+      );
+      if (targets.length === 0) return { added: [], skipped: [] };
+
+      // Snapshot por día de los arrays de extras a tocar · permite
+      // revertir si el write a Firestore falla.
+      const snapshots = new Map<DayKey, ComidaExtra[]>();
+      const writes: Partial<Record<DayKey, ComidaExtra[]>> = {};
+      const added: DayKey[] = [];
+      const skipped: DayKey[] = [];
+
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const src = prev.menu[srcDay].extras.find(
+          (e) => e.id === srcExtraId,
+        );
+        if (!src) return prev;
+        const nextMenu = { ...prev.menu };
+        for (const day of targets) {
+          const currentList = prev.menu[day].extras;
+          if (currentList.length >= MAX_EXTRAS_POR_DIA) {
+            skipped.push(day);
+            continue;
+          }
+          // Copia con nuevo id · resto de campos clonados. source='user'
+          // siempre, igual que en duplicateMeal (duplicar es un acto
+          // manual aunque la origen venga de IA).
+          const copy: ComidaExtra = {
+            ...src,
+            id: newExtraId(),
+            source: 'user',
+          };
+          snapshots.set(day, currentList);
+          const nextList = [...currentList, copy];
+          writes[day] = nextList;
+          added.push(day);
+          nextMenu[day] = { ...prev.menu[day], extras: nextList };
+        }
+        if (added.length === 0) return prev;
+        return { ...prev, menu: nextMenu, lastActive: Date.now() };
+      });
+
+      if (added.length === 0) return { added, skipped };
+
+      try {
+        await duplicateUserMealExtras(uid, writes);
+      } catch (err) {
+        // Revert por día · respeta otras escrituras concurrentes.
+        setProfile((current) => {
+          if (!current) return current;
+          const nextMenu = { ...current.menu };
+          for (const day of added) {
+            const snap = snapshots.get(day);
+            if (!snap) continue;
+            nextMenu[day] = { ...current.menu[day], extras: snap };
+          }
+          return { ...current, menu: nextMenu };
+        });
+        throw err;
+      }
+
+      return { added, skipped };
     },
     [uid],
   );
@@ -1168,6 +1348,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       if (!uid) throw new Error('No hay usuario autenticado.');
       let snapshot: ComidaExtra[] | null = null;
       let nextExtras: ComidaExtra[] | null = null;
+      let aborted = false;
       setProfile((prev) => {
         if (!prev) return prev;
         const current = prev.menu[day].extras;
@@ -1175,6 +1356,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         // duplicamos · sustituimos para que la UI quede consistente.
         snapshot = current;
         const filtered = current.filter((e) => e.id !== extra.id);
+        // Defensa por límite MAX_EXTRAS_POR_DIA · si entre el borrado
+        // y el undo el user (o un sync remoto) añadió suficientes
+        // extras para llenar el día, el restore crearía una lista de
+        // 9+ items y rompería la invariante. Abortamos y dejamos el
+        // estado tal cual.
+        if (filtered.length >= MAX_EXTRAS_POR_DIA) {
+          aborted = true;
+          return prev;
+        }
         nextExtras = [...filtered, extra];
         return {
           ...prev,
@@ -1185,6 +1375,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           lastActive: Date.now(),
         };
       });
+      if (aborted) {
+        throw new Error(
+          `Máximo ${MAX_EXTRAS_POR_DIA} comidas extras por día.`,
+        );
+      }
       if (!nextExtras) return;
       try {
         await setUserMealExtras(uid, day, nextExtras);
@@ -2049,6 +2244,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       updateMealExtra,
       removeMealExtra,
       restoreMealExtra,
+      duplicateMealExtra,
       toggleDayExcludedFromAvg,
       toggleDayHidden,
       resetDayMenu,
@@ -2106,6 +2302,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       updateMealExtra,
       removeMealExtra,
       restoreMealExtra,
+      duplicateMealExtra,
       toggleDayExcludedFromAvg,
       toggleDayHidden,
       resetDayMenu,

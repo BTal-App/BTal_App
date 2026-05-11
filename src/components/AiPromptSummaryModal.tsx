@@ -1,15 +1,10 @@
 import {
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonSpinner,
 } from '@ionic/react';
-import {
-  closeOutline,
-  createOutline,
-  sparklesOutline,
-} from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { canGenerateAi } from '../utils/ia';
@@ -25,10 +20,21 @@ import {
   alergiaLabel,
   intoleranciaLabel,
   type AiScopeChoice,
+  type Entrenos,
+  type RegistroStats,
   type UserProfile,
 } from '../templates/defaultUser';
 import './SettingsModal.css';
 import './AiPromptSummaryModal.css';
+
+// Mismo mapping de scope → Ionicon que en AiGenerateModal · sustituye
+// los emojis (✨ 🍽️ 📋 🏋️) por iconos coherentes con el resto de la UI.
+const SCOPE_ICON: Record<AiScopeChoice, string> = {
+  all: 'tb:sparkles',
+  menu_compra: 'tb:tools-kitchen-2',
+  menu_only: 'tb:list',
+  entrenos_only: 'tb:barbell',
+};
 
 interface Props {
   isOpen: boolean;
@@ -83,6 +89,15 @@ export function AiPromptSummaryModal({
   // Profile a renderizar · prioriza override (onboarding) sobre profile
   // ya guardado (caller desde botón Generar IA).
   const profile = profileOverride ?? userDoc?.profile ?? null;
+  // Plan de entreno actual y stats · solo del userDoc real (no aplica
+  // al onboarding · ahí no hay plan ni stats todavía). La IA real
+  // (Fase 6, Cloud Function `generatePlan`) lee el doc del user en
+  // server-side · este bloque es informativo para que el user vea
+  // qué contexto tiene la IA antes de generar.
+  const entrenos: Entrenos | undefined = profileOverride ? undefined : userDoc?.entrenos;
+  const registroStats: RegistroStats | undefined = profileOverride
+    ? undefined
+    : userDoc?.registroStats;
 
   // Elegibilidad — en el onboarding aún no hay generaciones consumidas
   // (consumidas_ciclo=0), así que siempre allowed=true. En botones IA
@@ -109,28 +124,48 @@ export function AiPromptSummaryModal({
   const renderAlergias = profile.alergias.map((a) => alergiaLabel(a));
   const renderIntolerancias = profile.intolerancias.map((i) => intoleranciaLabel(i));
 
+  // Plan de entreno activo + custom predeterminado para el bloque "Plan
+  // de entreno". Cuando hay custom predeterminado, la IA debería
+  // RESPETARLO (no sobrescribirlo) salvo que el user lo desmarque o
+  // active "permitir tocar lo mío". Se lo indicamos al user en el
+  // resumen para que sepa lo que la IA va a recibir.
+  const activePlan = entrenos?.planes[entrenos.activePlan] ?? null;
+  const customPredeterminado = entrenos
+    ? Object.values(entrenos.planes).find(
+        (p) => p && !p.builtIn && p.esPredeterminado,
+      ) ?? null
+    : null;
+
+  // Top 3 PRs · ordenados por kg desc · informativo para que el user
+  // vea que la IA "conoce" sus récords al sugerir progresiones.
+  const topPRs = registroStats
+    ? Object.entries(registroStats.prs)
+        .map(([exNorm, pr]) => ({ exercise: exNorm, kg: pr.kg }))
+        .sort((a, b) => b.kg - a.kg)
+        .slice(0, 3)
+    : [];
+
   return (
     <IonModal
       isOpen={isOpen}
       onDidDismiss={onClose}
       className="settings-modal"
     >
-      {/* Cerrar fuera del IonContent · siempre visible aunque el resumen
-          sea muy largo (perfil completo + scope + chips de personalización). */}
-      <button
-        type="button"
-        className="settings-modal-close settings-modal-close--fixed"
-        onClick={blurAndRun(onClose)}
-        aria-label="Cerrar"
-      >
-        <IonIcon icon={closeOutline} />
-      </button>
       <IonContent>
         <div className="settings-modal-bg">
           <div className="settings-modal-card ai-summary-card">
+            {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+            <button
+              type="button"
+              className="settings-modal-close settings-modal-close--fixed"
+              onClick={blurAndRun(onClose)}
+              aria-label="Cerrar"
+            >
+              <MealIcon value="tb:x" size={22} />
+            </button>
             <div className="ai-summary-head">
               <div className="ai-summary-icon">
-                <IonIcon icon={sparklesOutline} />
+                <MealIcon value="tb:sparkles" size={28} />
               </div>
               <div>
                 <h2 className="settings-modal-title">Confirma lo que enviaremos a la IA</h2>
@@ -144,7 +179,9 @@ export function AiPromptSummaryModal({
             {/* Scope destacado arriba · el user ve qué exactamente va a generar */}
             {scopeOption && (
               <div className="ai-summary-scope-banner">
-                <span className="ai-summary-scope-emoji">{scopeOption.emoji}</span>
+                <span className="ai-summary-scope-emoji" aria-hidden>
+                  <MealIcon value={SCOPE_ICON[scopeOption.value]} size={20} />
+                </span>
                 <div>
                   <div className="ai-summary-scope-title">{scopeOption.label}</div>
                   <div className="ai-summary-scope-sub">{scopeOption.sub}</div>
@@ -186,6 +223,14 @@ export function AiPromptSummaryModal({
             {/* ── Objetivo + restricciones genéricas ── */}
             <SummaryBlock title="Objetivo">
               <SummaryRow label="Quiero" value={obj?.label ?? '—'} highlight />
+              <SummaryRow
+                label="Kcal/día objetivo"
+                value={
+                  profile.objetivoKcal !== null
+                    ? `${profile.objetivoKcal} kcal`
+                    : 'Calculado automáticamente'
+                }
+              />
               <SummaryChips
                 label="Restricciones"
                 items={restriccionesLabels}
@@ -193,6 +238,49 @@ export function AiPromptSummaryModal({
                 empty="Ninguna"
               />
             </SummaryBlock>
+
+            {/* ── Plan de entreno actual ──
+                Solo se renderiza fuera del onboarding (cuando ya hay
+                userDoc real). Si hay un custom predeterminado, lo
+                destacamos · la IA debe respetarlo al regenerar.
+                Ayuda al user a entender qué contexto recibe la IA. */}
+            {activePlan && (
+              <SummaryBlock title="Plan de entreno actual">
+                <SummaryRow
+                  label="Plan activo"
+                  value={activePlan.nombre}
+                  highlight
+                />
+                <SummaryRow
+                  label="Días del plan"
+                  value={`${activePlan.dias.length} ${activePlan.dias.length === 1 ? 'día' : 'días'}`}
+                />
+                {customPredeterminado && (
+                  <SummaryRow
+                    label="Predeterminado"
+                    value={`${customPredeterminado.nombre} (la IA respetará este plan)`}
+                  />
+                )}
+              </SummaryBlock>
+            )}
+
+            {/* ── Récords personales ──
+                Solo si hay alguno. Top 3 por kg desc · informativo
+                para que el user vea que la IA "conoce" sus PRs. La
+                IA real (Fase 6) usará estos datos para sugerir
+                progresiones realistas (ej. no proponer cargas por
+                debajo del PR ya alcanzado). */}
+            {topPRs.length > 0 && (
+              <SummaryBlock title="Tus récords actuales">
+                {topPRs.map((pr) => (
+                  <SummaryRow
+                    key={pr.exercise}
+                    label={pr.exercise.charAt(0).toUpperCase() + pr.exercise.slice(1)}
+                    value={`${pr.kg.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg`}
+                  />
+                ))}
+              </SummaryBlock>
+            )}
 
             {/* ── Personalización IA · solo si hay algo ── */}
             {(profile.notas.trim()
@@ -253,7 +341,7 @@ export function AiPromptSummaryModal({
                   onClick={blurAndRun(onModify)}
                   disabled={submitting}
                 >
-                  <IonIcon icon={createOutline} slot="start" />
+                  <MealIcon value="tb:edit" size={18} slot="start" />
                   Modificar
                 </IonButton>
               )}
@@ -268,8 +356,8 @@ export function AiPromptSummaryModal({
                   <IonSpinner name="dots" />
                 ) : (
                   <>
-                    <IonIcon icon={sparklesOutline} slot="start" />
-                    {confirmLabel}
+                    <MealIcon value="tb:sparkles" size={18} />
+                    <span style={{ marginLeft: 8 }}>{confirmLabel}</span>
                   </>
                 )}
               </IonButton>

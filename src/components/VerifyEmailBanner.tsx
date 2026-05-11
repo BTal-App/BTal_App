@@ -1,11 +1,6 @@
 import { useState } from 'react';
-import { IonIcon, IonSpinner } from '@ionic/react';
-import {
-  checkmarkCircle,
-  closeOutline,
-  mailOutline,
-  refreshOutline,
-} from 'ionicons/icons';
+import { IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { sendVerificationEmail } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
@@ -94,7 +89,7 @@ export function VerifyEmailBanner({ user, place }: Props) {
   return (
     <div className="verify-banner">
       <div className="verify-banner-icon">
-        <IonIcon icon={mailOutline} />
+        <MealIcon value="tb:mail" size={20} />
       </div>
       <div className="verify-banner-content">
         {sent ? (
@@ -114,7 +109,7 @@ export function VerifyEmailBanner({ user, place }: Props) {
                   <IonSpinner name="dots" />
                 ) : (
                   <>
-                    <IonIcon icon={checkmarkCircle} />
+                    <MealIcon value="tb:circle-check-filled" size={16} />
                     Confirmar verificación
                   </>
                 )}
@@ -129,7 +124,7 @@ export function VerifyEmailBanner({ user, place }: Props) {
                   <IonSpinner name="dots" />
                 ) : (
                   <>
-                    <IonIcon icon={refreshOutline} />
+                    <MealIcon value="tb:refresh" size={16} />
                     Reenviar
                   </>
                 )}
@@ -164,7 +159,7 @@ export function VerifyEmailBanner({ user, place }: Props) {
         }}
         aria-label="Cerrar aviso de verificación"
       >
-        <IonIcon icon={closeOutline} />
+        <MealIcon value="tb:x" size={18} />
       </button>
     </div>
   );

@@ -36,6 +36,14 @@ export default defineConfig({
             if (id.includes('@ionic/') || id.includes('ionicons')) {
               return 'ionic';
             }
+            // Tabler Icons React · subset curado (~100 iconos del
+            // barrel `utils/iconBarrel.ts`) · ~30-50 KB gzip tras
+            // tree-shake. Lazy chunk · solo se carga al primer mount
+            // de un `<MealIcon>` (ver utils/iconLoader.ts que hace
+            // `import('./iconBarrel')` dinámico).
+            if (id.includes('@tabler/icons-react')) {
+              return 'tabler-icons';
+            }
             // React DOM y router
             if (id.includes('react-dom') || id.includes('react-router')) {
               return 'react-vendor';

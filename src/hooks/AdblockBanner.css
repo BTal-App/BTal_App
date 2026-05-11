@@ -1,0 +1,68 @@
+/* Banner global anti-adblocker · vive fixed-top, encima de todo, para
+   que el user lo vea aunque esté en cualquier tab. Color coral (danger
+   suave) que llama la atención sin ser agresivo. */
+.adblock-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  background: rgba(255, 107, 107, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #1a0808;
+  font-family: 'Inter', sans-serif;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.adblock-banner-content {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.adblock-banner-content strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.adblock-banner-content p {
+  margin: 0;
+  color: #1a0808;
+}
+
+.adblock-banner-content code {
+  background: rgba(0, 0, 0, 0.15);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+}
+
+.adblock-banner-dismiss {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  color: #1a0808;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

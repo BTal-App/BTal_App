@@ -1,6 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
-import { IonIcon } from '@ionic/react';
-import { addOutline, closeOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import type { Alimento } from '../templates/defaultUser';
 import './AlimentosListInput.css';
 
@@ -86,7 +85,7 @@ export function AlimentosListInput({
                 onClick={() => removeAt(i)}
                 aria-label={`Quitar ${al.nombre || 'alimento ' + (i + 1)}`}
               >
-                <IonIcon icon={closeOutline} />
+                <MealIcon value="tb:x" size={16} />
               </button>
             </div>
           ))}
@@ -122,7 +121,7 @@ export function AlimentosListInput({
           disabled={!draftNombre.trim()}
           aria-label="Añadir alimento"
         >
-          <IonIcon icon={addOutline} />
+          <MealIcon value="tb:plus" size={18} />
         </button>
       </div>
     </div>

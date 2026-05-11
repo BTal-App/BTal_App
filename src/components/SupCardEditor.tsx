@@ -2,15 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import {
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import {
-  closeOutline,
-  removeCircleOutline,
-  timeOutline,
-} from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -182,27 +177,33 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <h2
                 className={
                   'settings-modal-title '
                   + (kind === 'batido' ? 'sup-title-batido' : 'sup-title-creatina')
                 }
               >
-                {kind === 'batido' ? '🥤 Editar batido' : '🥄 Editar creatina'}
+                <MealIcon
+                  value={kind === 'batido' ? 'tb:cup' : 'tb:ladle'}
+                  size={22}
+                  className="sup-title-icon"
+                />
+                {kind === 'batido' ? 'Editar batido' : 'Editar creatina'}
               </h2>
               <p className="settings-modal-text">
                 Ajusta la hora y el título solo para el{' '}
@@ -231,10 +232,10 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
                     value={hora}
                     onChange={(e) => setHora(e.target.value)}
                   />
-                  <IonIcon
-                    icon={timeOutline}
+                  <MealIcon
+                    value="tb:clock"
+                    size={16}
                     className="sup-input-time-icon"
-                    aria-hidden="true"
                   />
                 </div>
                 {!horaValida && (
@@ -270,7 +271,7 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
                 }}
                 disabled={removing}
               >
-                <IonIcon icon={removeCircleOutline} />
+                <MealIcon value="tb:circle-minus" size={18} />
                 Quitar del {DAY_LABEL_FULL[day].toLowerCase()}
               </button>
             </div>

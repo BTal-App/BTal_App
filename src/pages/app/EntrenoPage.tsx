@@ -2,19 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IonAlert,
   IonContent,
-  IonIcon,
   IonPage,
   IonToast,
 } from '@ionic/react';
-import {
-  addOutline,
-  barbellOutline,
-  closeOutline,
-  createOutline,
-  pencilOutline,
-  sparklesOutline,
-  trashOutline,
-} from 'ionicons/icons';
+import { MealIcon } from '../../components/MealIcon';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { TabHeader } from '../../components/TabHeader';
@@ -92,16 +83,40 @@ const EntrenoPage: React.FC = () => {
   const activePlanId = entrenos.activePlan;
   const activePlan: PlanEntreno | undefined = entrenos.planes[activePlanId];
   const diasEntreno = userDoc?.profile?.diasEntreno ?? null;
-  const recommendedId = getRecommendedPlanId(diasEntreno);
+
+  // Sub-fase 2D.1 · Si el user tiene algún plan custom marcado como
+  // predeterminado, ese es SIEMPRE el "recomendado" e IGNORA el cálculo
+  // basado en `profile.diasEntreno`. Solo cuando se borra ese plan
+  // (o se desmarca el flag), vuelve la lógica del perfil.
+  // Iteración corta · `entrenos.planes` es máx ~10-15 entries.
+  const customPredeterminado: PlanEntreno | null = useMemo(() => {
+    for (const p of Object.values(entrenos.planes)) {
+      if (p && !p.builtIn && p.esPredeterminado) return p;
+    }
+    return null;
+  }, [entrenos.planes]);
+
+  // recommendedId · prioridad al custom predeterminado, fallback al
+  // builtIn según diasEntreno (lógica histórica preservada).
+  const recommendedId = customPredeterminado
+    ? customPredeterminado.id
+    : getRecommendedPlanId(diasEntreno);
   // Color dinámico de la recomendación · escala 0 (peor, coral) → 7
   // (mejor, verde) según `profile.diasEntreno`. Se inyecta como
   // CSS custom prop `--rec-color` en el banner y en el plan-mini
-  // recomendado, y todos los acentos lo consumen vía var().
-  const recColor = colorForRecommendedDays(diasEntreno);
+  // recomendado. Si hay customPredeterminado usamos lima sólida (la
+  // referencia ya no es el perfil sino la decisión del user).
+  const recColor = customPredeterminado
+    ? 'var(--btal-lime)'
+    : colorForRecommendedDays(diasEntreno);
 
-  // Lista ordenada de planes para el switcher · primero los builtIn por
-  // número de días (1..7), luego los custom por orden de creación (id
-  // contiene timestamp en base 36 → comparación lexicográfica funciona).
+  // Lista ordenada de planes para el switcher:
+  //   1. builtIn (1..7 días) por orden de número
+  //   2. custom marcados como predeterminados (Sub-fase 2D.1) ·
+  //      ganan prominencia al ir justo después de los builtIn
+  //   3. custom no predeterminados · al final por orden de creación
+  // El id de los custom contiene timestamp en base 36 → comparación
+  // lexicográfica equivale a orden cronológico.
   const planList = useMemo(() => {
     const builtIn: PlanEntreno[] = [];
     const custom: PlanEntreno[] = [];
@@ -114,7 +129,13 @@ const EntrenoPage: React.FC = () => {
         custom.push(p);
       }
     }
-    custom.sort((a, b) => a.id.localeCompare(b.id));
+    custom.sort((a, b) => {
+      // Predeterminados primero · luego cronológico por id.
+      const aP = a.esPredeterminado ? 0 : 1;
+      const bP = b.esPredeterminado ? 0 : 1;
+      if (aP !== bP) return aP - bP;
+      return a.id.localeCompare(b.id);
+    });
     return [...builtIn, ...custom];
   }, [entrenos.planes]);
 
@@ -263,7 +284,7 @@ const EntrenoPage: React.FC = () => {
                       onClick={blurAndRun(() => setAiGenOpen(true))}
                       aria-label="Generar con IA"
                     >
-                      <IonIcon icon={sparklesOutline} />
+                      <MealIcon value="tb:sparkles" size={18} />
                       <span>Generar con IA</span>
                     </button>
                   </>
@@ -277,11 +298,15 @@ const EntrenoPage: React.FC = () => {
           <div className="plan-cards" ref={planCardsRef}>
             {planList.map((p) => {
               const numDias = p.dias.length;
-              // Si el user declaró 0 días, ningún plan debe marcarse
-              // como recomendado · no tiene sentido sugerir un plan de
-              // entreno cuando ha pedido entrenar 0 días.
-              const isRecommended =
-                diasEntreno !== 0 && p.id === recommendedId;
+              // Sub-fase 2D.1 · Lógica del marcador "★ Recomendado":
+              //   - Si hay customPredeterminado · ese plan se marca,
+              //     IGNORANDO `diasEntreno` (incluso si es 0).
+              //   - Si NO hay · fallback a la lógica del perfil (que
+              //     no marca nada cuando diasEntreno === 0).
+              const isRecommended = customPredeterminado
+                ? p.id === customPredeterminado.id
+                : diasEntreno !== 0 && p.id === recommendedId;
+              const isCustomPredeterminado = !p.builtIn && !!p.esPredeterminado;
               return (
                 <button
                   type="button"
@@ -291,10 +316,13 @@ const EntrenoPage: React.FC = () => {
                     'plan-mini'
                     + (p.id === activePlanId ? ' plan-mini--active' : '')
                     + (isRecommended ? ' plan-mini--recommended' : '')
+                    + (!p.builtIn ? ' plan-mini--custom' : '')
+                    + (isCustomPredeterminado ? ' plan-mini--custom-pred' : '')
                   }
-                  // En la card recomendada inyectamos `--rec-color` para
-                  // que el ::after "★ Recomendado" use el color dinámico
-                  // de la escala de `diasEntreno`.
+                  // Inyectamos --rec-color para el ::after "★ ..." que
+                  // usa este token. Los builtIn-recomendados usan la
+                  // escala dinámica de diasEntreno · los custom-pred
+                  // siempre lima sólida (decisión del user, no perfil).
                   style={
                     isRecommended
                       ? ({ '--rec-color': recColor } as React.CSSProperties)
@@ -304,12 +332,23 @@ const EntrenoPage: React.FC = () => {
                   aria-label={`Activar ${p.nombre}`}
                   aria-pressed={p.id === activePlanId}
                 >
-                  <div className="plan-num">{numDias}</div>
-                  <div className="plan-lbl">
-                    {numDias === 1 ? 'día' : 'días'}
-                  </div>
-                  {!p.builtIn && (
-                    <div className="plan-mini-custom-tag">Custom</div>
+                  {p.builtIn ? (
+                    // Plan builtIn · número grande + DÍA(S) (look v2).
+                    <>
+                      <div className="plan-num">{numDias}</div>
+                      <div className="plan-lbl">
+                        {numDias === 1 ? 'día' : 'días'}
+                      </div>
+                    </>
+                  ) : (
+                    // Plan custom · nombre del plan en lugar del número
+                    // (limitado a NOMBRE_MAX=40 chars en el editor para
+                    // que el chip no se haga absurdo). Para el caso
+                    // predeterminado, el ::after "★ Predeterminado" se
+                    // añade vía CSS · NO requiere markup extra.
+                    <div className="plan-mini-name" title={p.nombre}>
+                      {p.nombre}
+                    </div>
                   )}
                 </button>
               );
@@ -342,16 +381,45 @@ const EntrenoPage: React.FC = () => {
               style={{ '--rec-color': recColor } as React.CSSProperties}
             >
               <div className="entreno-banner-icon">
-                {/* Caso 0 días · X simple (closeOutline) para señalizar
-                    que el user no ha seleccionado ninguno. Resto de
-                    casos · pesa (barbellOutline) coherente con el icono
-                    de los días de entreno en HoyPage y en las cards. */}
-                <IonIcon
-                  icon={diasEntreno === 0 ? closeOutline : barbellOutline}
-                />
+                {/* Caso 0 días · X simple (closeOutline Ionic) para
+                    señalizar que el user no ha seleccionado ninguno.
+                    Resto de casos · pesa Tabler coherente con el resto
+                    de identidades de entreno (HoyPage, StatsGrid). */}
+                {diasEntreno === 0 ? (
+                  <MealIcon value="tb:x" size={26} />
+                ) : (
+                  <MealIcon value="tb:barbell" size={26} />
+                )}
               </div>
               <div className="entreno-banner-text">
-                {diasEntreno === 0 ? (
+                {customPredeterminado && activePlanId === customPredeterminado.id ? (
+                  // Caso PRIORITARIO · custom predeterminado activo.
+                  // Sustituye a TODAS las variantes basadas en
+                  // diasEntreno · el predeterminado ignora el perfil.
+                  <>
+                    Tu plan predeterminado:{' '}
+                    <b className="entreno-banner-rec">
+                      {customPredeterminado.nombre}
+                    </b>.{' '}
+                    {customPredeterminado.dias.length}{' '}
+                    {customPredeterminado.dias.length === 1 ? 'día' : 'días'}{' '}
+                    de entreno.
+                  </>
+                ) : customPredeterminado ? (
+                  // Hay un predeterminado pero el user está mirando otro.
+                  // Sugerir volver al predeterminado.
+                  <>
+                    Estás viendo <b>{activePlan.nombre}</b>. Tu plan
+                    predeterminado es{' '}
+                    <button
+                      type="button"
+                      className="entreno-banner-link"
+                      onClick={blurAndRun(() => handleSelectPlan(customPredeterminado.id))}
+                    >
+                      {customPredeterminado.nombre}
+                    </button>.
+                  </>
+                ) : diasEntreno === 0 ? (
                   // Caso 0 · user declaró 0 días · pídele que seleccione.
                   <>
                     No has seleccionado ningún día de entrenamiento.{' '}
@@ -360,7 +428,7 @@ const EntrenoPage: React.FC = () => {
                     </b>
                   </>
                 ) : !activePlan.builtIn ? (
-                  // Caso 1 · plan custom creado por el user.
+                  // Caso 1 · plan custom creado por el user (sin pred).
                   <>
                     Vas a entrenar{' '}
                     <b>
@@ -400,12 +468,17 @@ const EntrenoPage: React.FC = () => {
                     </button>.
                   </>
                 )}
-                {/* Recordatorio común a las 3 variantes · siempre al
-                    final del banner. */}
-                <div className="entreno-banner-hint">
-                  Puedes cambiar los días declarados en{' '}
-                  <b>Editar datos del perfil</b>.
-                </div>
+                {/* Recordatorio · solo aplica cuando la recomendación
+                    se basa en `profile.diasEntreno`. Si el user tiene
+                    un plan custom marcado como predeterminado, ese
+                    plan IGNORA el perfil y el hint no tiene sentido.
+                    Mostrarlo solo en las variantes basadas en perfil. */}
+                {!customPredeterminado && (
+                  <div className="entreno-banner-hint">
+                    Puedes cambiar los días declarados en{' '}
+                    <b>Editar datos del perfil</b>.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -424,7 +497,7 @@ const EntrenoPage: React.FC = () => {
                   aria-label="Editar plan"
                   title="Editar plan"
                 >
-                  <IonIcon icon={createOutline} />
+                  <MealIcon value="tb:edit" size={18} />
                 </button>
                 {!activePlan.builtIn && (
                   <button
@@ -434,7 +507,7 @@ const EntrenoPage: React.FC = () => {
                     aria-label="Eliminar plan"
                     title="Eliminar plan"
                   >
-                    <IonIcon icon={trashOutline} />
+                    <MealIcon value="tb:trash" size={18} />
                   </button>
                 )}
               </div>
@@ -444,7 +517,7 @@ const EntrenoPage: React.FC = () => {
           {/* Días del plan activo */}
           {activePlan && activePlan.dias.length === 0 && (
             <div className="entreno-empty">
-              <IonIcon icon={barbellOutline} />
+              <MealIcon value="tb:barbell" size={20} />
               <p>Este plan no tiene días aún. Pulsa ✏ para añadir.</p>
             </div>
           )}
@@ -669,7 +742,7 @@ function DiaCard({ dia, onClick, onEditQuick }: DiaCardProps) {
             aria-label="Editar día"
             title="Editar día"
           >
-            <IonIcon icon={pencilOutline} />
+            <MealIcon value="tb:pencil" size={16} />
           </button>
         </div>
       </div>
@@ -692,7 +765,7 @@ function DiaCard({ dia, onClick, onEditQuick }: DiaCardProps) {
             onEditQuick();
           }}
         >
-          <IonIcon icon={addOutline} />
+          <MealIcon value="tb:plus" size={18} />
           Añadir ejercicios
         </button>
       ) : (

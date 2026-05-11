@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { IonButton, IonContent, IonIcon, IonPage, IonSpinner } from '@ionic/react';
-import { eyeOffOutline, eyeOutline, lockClosedOutline } from 'ionicons/icons';
+import { IonButton, IonContent, IonPage, IonSpinner } from '@ionic/react';
+import { MealIcon } from '../components/MealIcon';
 import {
   applyActionCode,
   checkActionCode,
@@ -191,7 +191,7 @@ const AuthAction: React.FC = () => {
 
         <form onSubmit={handleResetSubmit}>
           <div className="landing-input-wrap">
-            <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+            <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
             <input
               className="landing-input landing-input--password"
               type={showPwd ? 'text' : 'password'}
@@ -210,12 +210,12 @@ const AuthAction: React.FC = () => {
               onClick={() => setShowPwd((v) => !v)}
               aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
-              <IonIcon icon={showPwd ? eyeOffOutline : eyeOutline} />
+              <MealIcon value={showPwd ? 'tb:eye-off' : 'tb:eye'} size={18} />
             </button>
           </div>
 
           <div className="landing-input-wrap">
-            <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+            <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
             <input
               className="landing-input"
               type={showPwd ? 'text' : 'password'}

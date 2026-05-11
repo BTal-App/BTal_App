@@ -1,10 +1,5 @@
-import { IonIcon, IonModal } from '@ionic/react';
-import {
-  closeOutline,
-  documentTextOutline,
-  medkitOutline,
-  shieldCheckmarkOutline,
-} from 'ionicons/icons';
+import { IonModal } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import './SettingsModal.css';
 import './AboutModal.css';
 
@@ -26,19 +21,19 @@ export function AboutModal({ isOpen, onClose }: Props) {
       className="settings-modal"
     >
       <div className="settings-modal-bg">
-        <button
-          type="button"
-          className="settings-modal-close"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         <div className="settings-modal-card about-card">
+          {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+          <button
+            type="button"
+            className="settings-modal-close"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
+            aria-label="Cerrar"
+          >
+            <MealIcon value="tb:x" size={22} />
+          </button>
           <img src="/logo.png" alt="BTal" className="about-logo" />
 
           <div className="about-tagline">
@@ -53,7 +48,7 @@ export function AboutModal({ isOpen, onClose }: Props) {
               target="_blank"
               rel="noreferrer"
             >
-              <IonIcon icon={shieldCheckmarkOutline} />
+              <MealIcon value="tb:shield-check" size={20} />
               <span>Política de privacidad</span>
             </a>
             <a
@@ -62,7 +57,7 @@ export function AboutModal({ isOpen, onClose }: Props) {
               target="_blank"
               rel="noreferrer"
             >
-              <IonIcon icon={documentTextOutline} />
+              <MealIcon value="tb:file-text" size={20} />
               <span>Términos de uso</span>
             </a>
             <a
@@ -71,7 +66,7 @@ export function AboutModal({ isOpen, onClose }: Props) {
               target="_blank"
               rel="noreferrer"
             >
-              <IonIcon icon={medkitOutline} />
+              <MealIcon value="tb:first-aid-kit" size={20} />
               <span>Aviso médico</span>
             </a>
           </div>

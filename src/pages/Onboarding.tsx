@@ -4,15 +4,10 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonPage,
   IonSpinner,
 } from '@ionic/react';
-import {
-  arrowBackOutline,
-  arrowForwardOutline,
-  checkmarkCircle,
-} from 'ionicons/icons';
+import { MealIcon } from '../components/MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { signOut } from '../services/auth';
@@ -277,6 +272,7 @@ const Onboarding: React.FC = () => {
                       inputMode="numeric"
                       min={14}
                       max={90}
+                      maxLength={3}
                       placeholder="28"
                       value={data.edad ?? ''}
                       onChange={(e) => setField('edad', e.target.value === '' ? null : Number(e.target.value))}
@@ -312,6 +308,7 @@ const Onboarding: React.FC = () => {
                       min={30}
                       max={300}
                       step="0.1"
+                      maxLength={5}
                       placeholder="75"
                       value={data.peso ?? ''}
                       onChange={(e) => setField('peso', e.target.value === '' ? null : Number(e.target.value))}
@@ -324,6 +321,7 @@ const Onboarding: React.FC = () => {
                       inputMode="numeric"
                       min={120}
                       max={230}
+                      maxLength={3}
                       placeholder="178"
                       value={data.altura ?? ''}
                       onChange={(e) => setField('altura', e.target.value === '' ? null : Number(e.target.value))}
@@ -443,7 +441,7 @@ const Onboarding: React.FC = () => {
                         className={'onboarding-pill' + (active ? ' active' : '')}
                         onClick={() => toggleRestriccion(r.value)}
                       >
-                        {active && <IonIcon icon={checkmarkCircle} />}
+                        {active && <MealIcon value="tb:circle-check-filled" size={16} />}
                         {r.label}
                       </button>
                     );
@@ -499,7 +497,7 @@ const Onboarding: React.FC = () => {
                             setField('alergias', toggleInArray(data.alergias, a.value))
                           }
                         >
-                          {active && <IonIcon icon={checkmarkCircle} />}
+                          {active && <MealIcon value="tb:circle-check-filled" size={16} />}
                           {a.label}
                         </button>
                       );
@@ -550,7 +548,7 @@ const Onboarding: React.FC = () => {
                               : undefined
                           }
                         >
-                          {active && <IonIcon icon={checkmarkCircle} />}
+                          {active && <MealIcon value="tb:circle-check-filled" size={16} />}
                           {i.label}
                         </button>
                       );
@@ -652,7 +650,7 @@ const Onboarding: React.FC = () => {
                   disabled={submitting}
                   aria-label={`Volver al paso ${step} de 5 — corregir lo que ya rellenaste`}
                 >
-                  <IonIcon icon={arrowBackOutline} slot="start" />
+                  <MealIcon value="tb:arrow-left" size={18} slot="start" />
                   Atrás
                 </IonButton>
               ) : (
@@ -667,7 +665,7 @@ const Onboarding: React.FC = () => {
                   disabled={!stepValid}
                 >
                   Siguiente
-                  <IonIcon icon={arrowForwardOutline} slot="end" />
+                  <MealIcon value="tb:arrow-right" size={18} slot="end" />
                 </IonButton>
               ) : (
                 <IonButton

@@ -64,3 +64,20 @@ export function formatTiempoEstimado(min: number | null | undefined): string {
   if (mins === 0) return `${horas}h`;
   return `${horas}h ${mins}m`;
 }
+
+// Convierte "HH:mm" en minutos del día · usado para el sort por hora de
+// comidas (fijas + extras) en HoyPage y MenuPage. Defensa contra valores
+// inválidos: si el string es null, undefined, malformado, o fuera de
+// rango (h<0|>23, m<0|>59) → devuelve 24*60 (fin del día · cae al final
+// del orden). Centralizado aquí porque HoyPage y MenuPage tenían
+// versiones casi idénticas duplicadas.
+export function horaToMinutes(hora: string | null | undefined): number {
+  if (!hora) return 24 * 60;
+  const parts = hora.split(':');
+  if (parts.length !== 2) return 24 * 60;
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  if (Number.isNaN(h) || Number.isNaN(m)) return 24 * 60;
+  if (h < 0 || h > 23 || m < 0 || m > 59) return 24 * 60;
+  return h * 60 + m;
+}

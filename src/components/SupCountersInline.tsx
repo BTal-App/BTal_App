@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { IonAlert, IonIcon, IonToast } from '@ionic/react';
-import {
-  addOutline,
-  helpCircleOutline,
-  refreshOutline,
-  removeOutline,
-} from 'ionicons/icons';
+import { IonAlert, IonToast } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import {
   calcBatidoStats,
@@ -296,7 +291,7 @@ export function SupCountersInline({ kind }: Props) {
             kind === 'batido' ? 'Restar batido' : 'Restar dosis'
           }
         >
-          <IonIcon icon={removeOutline} />
+          <MealIcon value="tb:minus" size={20} />
         </button>
         <div className="sup-counter-num">
           {/* `key={tomados}` re-monta el span en cada cambio de valor,
@@ -329,7 +324,7 @@ export function SupCountersInline({ kind }: Props) {
               : undefined
           }
         >
-          <IonIcon icon={addOutline} />
+          <MealIcon value="tb:plus" size={20} />
         </button>
       </div>
 
@@ -389,7 +384,7 @@ export function SupCountersInline({ kind }: Props) {
             aria-label="Reiniciar contador semanal"
             title="Reiniciar contador semanal"
           >
-            <IonIcon icon={refreshOutline} />
+            <MealIcon value="tb:refresh" size={16} />
           </button>
         </div>
         <div className="sup-stat">
@@ -410,7 +405,7 @@ export function SupCountersInline({ kind }: Props) {
             aria-label="Reiniciar contador mensual"
             title="Reiniciar contador mensual"
           >
-            <IonIcon icon={refreshOutline} />
+            <MealIcon value="tb:refresh" size={16} />
           </button>
         </div>
         <div className="sup-stat">
@@ -424,7 +419,7 @@ export function SupCountersInline({ kind }: Props) {
             aria-label="Información sobre Total este año"
             title="¿Qué significa Total este año?"
           >
-            <IonIcon icon={helpCircleOutline} />
+            <MealIcon value="tb:info-circle" size={16} />
           </button>
           <span className="sup-stat-label">Total este año</span>
           <span
@@ -443,7 +438,7 @@ export function SupCountersInline({ kind }: Props) {
             aria-label="Reiniciar contador anual"
             title="Reiniciar contador anual"
           >
-            <IonIcon icon={refreshOutline} />
+            <MealIcon value="tb:refresh" size={16} />
           </button>
         </div>
       </div>
@@ -476,7 +471,7 @@ export function SupCountersInline({ kind }: Props) {
           askResetTotal();
         }}
       >
-        <IonIcon icon={refreshOutline} />
+        <MealIcon value="tb:refresh" size={18} />
         Reiniciar todos los contadores
       </button>
 

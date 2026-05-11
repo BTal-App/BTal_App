@@ -2,11 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import { checkmarkCircle, closeOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import { usePreferences } from '../hooks/usePreferences';
 import {
@@ -335,21 +334,21 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        <button
-          type="button"
-          className="settings-modal-close edit-fp-close-fixed"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         <IonContent>
           <div className="edit-fp-bg">
             <div className="edit-fp-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  e.currentTarget.blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <h2 className="settings-modal-title">Editar datos del perfil</h2>
               <p className="settings-modal-text">
                 Cambia tu peso, objetivo o equipamiento. La próxima generación
@@ -378,6 +377,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                     inputMode="numeric"
                     min={14}
                     max={90}
+                    maxLength={3}
                     value={data.edad ?? ''}
                     onChange={(e) =>
                       setField('edad', e.target.value === '' ? null : Number(e.target.value))
@@ -415,6 +415,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                       inputMode="decimal"
                       min={66}
                       max={660}
+                      maxLength={5}
                       value={pesoLbInput}
                       onChange={(e) => onPesoLbChange(e.target.value)}
                     />
@@ -428,6 +429,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                       min={30}
                       max={300}
                       step="0.1"
+                      maxLength={5}
                       value={data.peso ?? ''}
                       onChange={(e) =>
                         setField('peso', e.target.value === '' ? null : Number(e.target.value))
@@ -446,6 +448,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                         inputMode="numeric"
                         min={3}
                         max={7}
+                        maxLength={1}
                         value={feetInput}
                         placeholder="ft"
                         onChange={(e) => onHeightImperialChange(e.target.value, inchesInput)}
@@ -455,6 +458,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                         inputMode="numeric"
                         min={0}
                         max={11}
+                        maxLength={2}
                         value={inchesInput}
                         placeholder="in"
                         onChange={(e) => onHeightImperialChange(feetInput, e.target.value)}
@@ -469,6 +473,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                       inputMode="numeric"
                       min={120}
                       max={230}
+                      maxLength={3}
                       value={data.altura ?? ''}
                       onChange={(e) =>
                         setField('altura', e.target.value === '' ? null : Number(e.target.value))
@@ -559,7 +564,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                       className={'onboarding-pill' + (active ? ' active' : '')}
                       onClick={() => toggleRestriccion(r.value)}
                     >
-                      {active && <IonIcon icon={checkmarkCircle} />}
+                      {active && <MealIcon value="tb:circle-check-filled" size={16} />}
                       {r.label}
                     </button>
                   );
@@ -590,6 +595,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                       min={1000}
                       max={6000}
                       step={10}
+                      maxLength={5}
                       placeholder={sugerido ? `Sugerido: ${sugerido} kcal` : 'Necesitas rellenar tu perfil'}
                       value={data.objetivoKcal ?? ''}
                       onChange={(e) =>
@@ -649,7 +655,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                         className={'onboarding-pill' + (active ? ' coral' : '')}
                         onClick={() => setField('alergias', toggleArr(data.alergias, a.value))}
                       >
-                        {active && <IonIcon icon={checkmarkCircle} />}
+                        {active && <MealIcon value="tb:circle-check-filled" size={16} />}
                         {a.label}
                       </button>
                     );
@@ -699,7 +705,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                             : undefined
                         }
                       >
-                        {active && <IonIcon icon={checkmarkCircle} />}
+                        {active && <MealIcon value="tb:circle-check-filled" size={16} />}
                         {i.label}
                       </button>
                     );
@@ -778,7 +784,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                 onClick={handleSave}
                 disabled={!valid || !dirty || submitting}
               >
-                <IonIcon icon={checkmarkCircle} slot="start" />
+                <MealIcon value="tb:circle-check-filled" size={18} slot="start" />
                 Guardar cambios
               </IonButton>
             </div>

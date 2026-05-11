@@ -1,10 +1,9 @@
 import {
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
 } from '@ionic/react';
-import { closeOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { type ChangeEntry } from '../utils/confirmDiff';
 import './ConfirmDiffAlert.css';
 
@@ -66,7 +65,7 @@ export function ConfirmDiffAlert<T>({
               }}
               aria-label="Cerrar"
             >
-              <IonIcon icon={closeOutline} />
+              <MealIcon value="tb:x" size={22} />
             </button>
           </div>
 

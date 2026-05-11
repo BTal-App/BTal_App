@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { IonButton, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import { closeOutline } from 'ionicons/icons';
+import { IonButton, IonModal, IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import { TotpMultiFactorGenerator, type MultiFactorResolver } from 'firebase/auth';
 import './SettingsModal.css';
 
@@ -66,19 +66,19 @@ export function TotpSignInModal({ isOpen, resolver, onClose, onSuccess }: Props)
       className="settings-modal"
     >
       <div className="settings-modal-bg">
-        <button
-          type="button"
-          className="settings-modal-close"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         <div className="settings-modal-card">
+          {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+          <button
+            type="button"
+            className="settings-modal-close"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
+            aria-label="Cerrar"
+          >
+            <MealIcon value="tb:x" size={22} />
+          </button>
           <h2 className="settings-modal-title">Verificación en dos pasos</h2>
           <p className="settings-modal-text">
             Escribe el código de 6 dígitos que muestra tu app authenticator.

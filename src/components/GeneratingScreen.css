@@ -91,4 +91,13 @@ ion-modal.generating-screen ion-content {
   border: 1px solid rgba(181, 240, 55, 0.25);
   border-radius: 999px;
   padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.generating-screen-tip-icon {
+  font-size: 0.9rem;
+  color: var(--btal-lime);
+  flex-shrink: 0;
 }

@@ -1,11 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { IonButton, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import {
-  closeOutline,
-  eyeOffOutline,
-  eyeOutline,
-  lockClosedOutline,
-} from 'ionicons/icons';
+import { IonButton, IonModal, IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { changePassword, reauthEmail } from '../services/auth';
 import './SettingsModal.css';
@@ -120,19 +115,19 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
       className="settings-modal"
     >
       <div className="settings-modal-bg">
-        <button
-          type="button"
-          className="settings-modal-close"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         <div className="settings-modal-card">
+          {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+          <button
+            type="button"
+            className="settings-modal-close"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
+            aria-label="Cerrar"
+          >
+            <MealIcon value="tb:x" size={22} />
+          </button>
           <h2 className="settings-modal-title">Cambiar contraseña</h2>
 
           {stage === 'verify' && (
@@ -142,7 +137,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
               </p>
               <form onSubmit={handleVerify}>
                 <div className="landing-input-wrap">
-                  <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+                  <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
                   <input
                     className="landing-input landing-input--password"
                     type={showPwd ? 'text' : 'password'}
@@ -160,7 +155,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                     onClick={() => setShowPwd((v) => !v)}
                     aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
-                    <IonIcon icon={showPwd ? eyeOffOutline : eyeOutline} />
+                    <MealIcon value={showPwd ? 'tb:eye-off' : 'tb:eye'} size={18} />
                   </button>
                 </div>
 
@@ -193,7 +188,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
               </p>
               <form onSubmit={handleSetNew}>
                 <div className="landing-input-wrap">
-                  <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+                  <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
                   <input
                     className="landing-input landing-input--password"
                     type={showPwd ? 'text' : 'password'}
@@ -212,12 +207,12 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                     onClick={() => setShowPwd((v) => !v)}
                     aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
-                    <IonIcon icon={showPwd ? eyeOffOutline : eyeOutline} />
+                    <MealIcon value={showPwd ? 'tb:eye-off' : 'tb:eye'} size={18} />
                   </button>
                 </div>
 
                 <div className="landing-input-wrap">
-                  <IonIcon icon={lockClosedOutline} className="landing-input-icon" />
+                  <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
                   <input
                     className="landing-input"
                     type={showPwd ? 'text' : 'password'}

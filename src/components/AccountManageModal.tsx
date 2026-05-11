@@ -6,18 +6,8 @@ import {
   IonIcon,
   IonModal,
 } from '@ionic/react';
-import {
-  closeOutline,
-  createOutline,
-  informationCircleOutline,
-  keyOutline,
-  lockClosedOutline,
-  logOutOutline,
-  logoGoogle,
-  mailOutline,
-  shieldCheckmarkOutline,
-  sparklesOutline,
-} from 'ionicons/icons';
+import { logoGoogle } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { AccountInfoModal } from './AccountInfoModal';
 import { ChangeEmailModal } from './ChangeEmailModal';
@@ -112,23 +102,21 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
   return (
     <>
       <IonModal isOpen={isOpen} onDidDismiss={onClose} className="settings-modal">
-        {/* Botón cerrar fuera del IonContent — así no scrollea con el contenido */}
-        <button
-          type="button"
-          className="settings-modal-close account-manage-close-fixed"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
-        {/* IonContent provee scroll nativo cuando el contenido excede la altura */}
         <IonContent>
           <div className="account-manage-bg">
             <div className="account-manage-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  e.currentTarget.blur();
+                  onClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <h2 className="settings-modal-title">Administrar cuenta</h2>
 
               {/* ════════ SECCIÓN PERFIL ════════ */}
@@ -155,12 +143,13 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                           : 'Lo relleno yo mismo · pulsa para activar la IA'}
                       </span>
                     </div>
-                    <IonIcon
-                      icon={
+                    <MealIcon
+                      value={
                         userDoc?.profile?.modo === 'ai'
-                          ? sparklesOutline
-                          : createOutline
+                          ? 'tb:sparkles'
+                          : 'tb:edit'
                       }
+                      size={20}
                       className="settings-row-chevron"
                     />
                   </button>
@@ -181,7 +170,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                     Email, fecha de registro, métodos de inicio.
                   </span>
                 </div>
-                <IonIcon icon={informationCircleOutline} className="settings-row-chevron" />
+                <MealIcon value="tb:info-circle" size={20} className="settings-row-chevron" />
               </button>
 
               {user.email && <VerifyEmailRow user={user} />}
@@ -197,7 +186,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                     Te enviamos verificación a la nueva dirección antes del cambio.
                   </span>
                 </div>
-                <IonIcon icon={mailOutline} className="settings-row-chevron" />
+                <MealIcon value="tb:mail" size={20} className="settings-row-chevron" />
               </button>
 
               <div className="settings-row">
@@ -270,7 +259,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                     className="settings-row-action"
                     onClick={blurAndRun(() => setEnableTotpOpen(true))}
                   >
-                    <IonIcon icon={shieldCheckmarkOutline} slot="start" />
+                    <MealIcon value="tb:shield-check" size={18} slot="start" />
                     Activar
                   </IonButton>
                 )}
@@ -288,7 +277,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                       Confirma la actual y elige una nueva.
                     </span>
                   </div>
-                  <IonIcon icon={lockClosedOutline} className="settings-row-chevron" />
+                  <MealIcon value="tb:lock" size={20} className="settings-row-chevron" />
                 </button>
               )}
 
@@ -304,7 +293,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                       Te enviamos un enlace al email para crear una nueva sin necesitar la actual.
                     </span>
                   </div>
-                  <IonIcon icon={keyOutline} className="settings-row-chevron" />
+                  <MealIcon value="tb:key" size={20} className="settings-row-chevron" />
                 </button>
               )}
 
@@ -322,7 +311,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                     Mantiene esta sesión y cierra el resto.
                   </span>
                 </div>
-                <IonIcon icon={logOutOutline} className="settings-row-chevron" />
+                <MealIcon value="tb:logout" size={20} className="settings-row-chevron" />
               </button>
 
               <div className="settings-row settings-row--danger">

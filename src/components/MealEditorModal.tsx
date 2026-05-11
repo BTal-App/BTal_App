@@ -3,14 +3,8 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
 } from '@ionic/react';
-import {
-  closeOutline,
-  saveOutline,
-  timeOutline,
-} from 'ionicons/icons';
 import { useProfile } from '../hooks/useProfile';
 import {
   SAVED_INDICATOR_MS,
@@ -21,22 +15,17 @@ import { blockNonInteger, clampInt } from '../utils/numericInput';
 import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { AlimentosListInput } from './AlimentosListInput';
-import { EmojiPicker } from './EmojiPicker';
+import { IconPicker } from './IconPicker';
+import { MealIcon } from './MealIcon';
 import {
   DAY_LABEL_FULL,
+  MEAL_ICON_DEFAULT,
   type Comida,
   type DayKey,
   type MealKey,
 } from '../templates/defaultUser';
 import './SettingsModal.css';
 import './MealEditorModal.css';
-
-const MEAL_EMOJI: Record<MealKey, string> = {
-  desayuno: '🌅',
-  comida: '☀️',
-  merienda: '🍎',
-  cena: '🌙',
-};
 
 const MEAL_LABEL: Record<MealKey, string> = {
   desayuno: 'Desayuno',
@@ -210,20 +199,21 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
           return false;
         }}
       >
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            handleClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <IonContent>
           <div className="settings-modal-bg">
             <div className="settings-modal-card meal-editor-card">
+              {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+              <button
+                type="button"
+                className="settings-modal-close settings-modal-close--fixed"
+                onClick={(e) => {
+                  e.currentTarget.blur();
+                  handleClose();
+                }}
+                aria-label="Cerrar"
+              >
+                <MealIcon value="tb:x" size={22} />
+              </button>
               <div className="meal-editor-head">
                 <button
                   type="button"
@@ -232,10 +222,14 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
                     (e.currentTarget as HTMLElement).blur();
                     setEmojiOpen((v) => !v);
                   }}
-                  aria-label="Cambiar emoji"
+                  aria-label="Cambiar icono"
                   aria-expanded={emojiOpen}
                 >
-                  {local.emoji ?? MEAL_EMOJI[meal]}
+                  <MealIcon
+                    value={local.emoji}
+                    fallback={MEAL_ICON_DEFAULT[meal]}
+                    size={28}
+                  />
                 </button>
                 <div className="meal-editor-id">
                   <h2 className="settings-modal-title">
@@ -245,15 +239,15 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
                 </div>
               </div>
 
-              {/* EmojiPicker inline · solo cuando el user pulsa el emoji.
-                  onSelect aplica el emoji y cierra el panel · onReset
-                  vuelve al default y cierra. */}
+              {/* IconPicker inline · solo cuando el user pulsa el icono
+                  del header. onSelect aplica el id Tabler y cierra el
+                  panel · onReset vuelve al default (null) y cierra. */}
               {emojiOpen && (
                 <div className="meal-editor-emoji-panel">
-                  <EmojiPicker
+                  <IconPicker
                     selected={local.emoji ?? null}
-                    onSelect={(em) => {
-                      change('emoji', em);
+                    onSelect={(id) => {
+                      change('emoji', id);
                       setEmojiOpen(false);
                     }}
                     onReset={
@@ -281,10 +275,9 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
 
               <label className="onboarding-field">
                 <span>
-                  <IonIcon
-                    icon={timeOutline}
-                    style={{ verticalAlign: 'middle', fontSize: '0.9rem', marginRight: 4 }}
-                  />
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>
+                    <MealIcon value="tb:clock" size={14} />
+                  </span>
                   Hora (opcional)
                 </span>
                 <span className="sup-input-time">
@@ -293,10 +286,10 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
                     value={local.hora ?? ''}
                     onChange={(e) => change('hora', e.target.value || null)}
                   />
-                  <IonIcon
-                    icon={timeOutline}
+                  <MealIcon
+                    value="tb:clock"
+                    size={16}
                     className="sup-input-time-icon"
-                    aria-hidden="true"
                   />
                 </span>
               </label>
@@ -354,7 +347,7 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
                 }}
                 disabled={!isDirty}
               >
-                <IonIcon icon={saveOutline} slot="start" />
+                <MealIcon value="tb:device-floppy" size={18} slot="start" />
                 Guardar
               </IonButton>
             </div>
@@ -413,7 +406,8 @@ function buildPartial(data: Comida): Partial<Comida> {
     fat: data.fat,
     // emoji puede ser null (volver al default) · lo enviamos siempre.
     // Firestore acepta null y lo guarda explícito; el render lee
-    // comida.emoji ?? MEAL_EMOJI[meal] así que null = default.
+    // <MealIcon value={comida.emoji} fallback={MEAL_ICON_DEFAULT[meal]}/>
+    // así que null = default visual.
     emoji: data.emoji ?? null,
     // Nombre del plato · null cuando vacío · la card del menú lee
     // comida.nombrePlato ?? placeholder.

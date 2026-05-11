@@ -6,17 +6,32 @@ import type { DayKey } from '../templates/defaultUser';
 
 // Convierte el día de la semana JS (0=domingo, 1=lunes…) a nuestra DayKey.
 // Fuente única para que HoyPage y MenuPage no diverjan.
+const DAY_OF_WEEK_TO_KEY: Record<number, DayKey> = {
+  0: 'dom',
+  1: 'lun',
+  2: 'mar',
+  3: 'mie',
+  4: 'jue',
+  5: 'vie',
+  6: 'sab',
+};
+
 export function todayKey(): DayKey {
-  const map: Record<number, DayKey> = {
-    0: 'dom',
-    1: 'lun',
-    2: 'mar',
-    3: 'mie',
-    4: 'jue',
-    5: 'vie',
-    6: 'sab',
-  };
-  return map[new Date().getDay()];
+  return DAY_OF_WEEK_TO_KEY[new Date().getDay()];
+}
+
+// Convierte 'YYYY-MM-DD' (zona local) → DayKey ('lun'..'dom'). Usado
+// por RegDayPanel para filtrar el selector de plan a solo los días
+// del plan que coincidan con el día de la semana de la fecha
+// seleccionada en el calendar. Devuelve null si el formato es
+// inválido (defensa, no debería ocurrir en la práctica).
+export function dayKeyFromFecha(fecha: string): DayKey | null {
+  const [y, m, d] = fecha.split('-').map(Number);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) {
+    return null;
+  }
+  const dt = new Date(y, m - 1, d);
+  return DAY_OF_WEEK_TO_KEY[dt.getDay()] ?? null;
 }
 
 // Fecha de hoy como string YYYY-MM-DD en zona local · se usa para
@@ -59,4 +74,24 @@ export function monthKey(d: Date = new Date()): string {
 // de batido/creatina. El ciclo va del 1 enero al 31 diciembre.
 export function yearKey(d: Date = new Date()): string {
   return String(d.getFullYear());
+}
+
+// 'YYYY-MM-DD' → 'YYYY-MM-DD' del día anterior. Parsea como fecha local
+// (`new Date(y, m-1, d)`) · el `Date.setDate` maneja correctamente el
+// cambio de mes/año y DST. Usado por `useRegistroStats` para iterar la
+// racha y por el calendar al navegar día a día.
+export function previousDayKey(fecha: string): string {
+  const [y, m, d] = fecha.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() - 1);
+  return todayDateStr(dt);
+}
+
+// 'YYYY-MM-DD' → 'YYYY-MM-DD' + N días (puede ser negativo). Mismo
+// patrón que `previousDayKey` · pasar 1 ≡ siguiente, -1 ≡ previo, etc.
+export function addDaysKey(fecha: string, n: number): string {
+  const [y, m, d] = fecha.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + n);
+  return todayDateStr(dt);
 }

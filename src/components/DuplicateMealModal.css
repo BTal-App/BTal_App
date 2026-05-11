@@ -92,6 +92,15 @@
   font-size: 1rem;
 }
 
+/* Contador "n/8" en las filas de `DuplicateMealExtraModal` · días que
+   aún no están al límite. Más sutil que el chip naranja "Lleno". */
+.dup-row-day-count {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  color: var(--btal-t-3);
+  font-feature-settings: 'tnum';
+}
+
 .dup-row-check {
   font-size: 1.4rem;
   color: var(--btal-lime);

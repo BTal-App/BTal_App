@@ -1,39 +1,28 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   IonAlert,
   IonContent,
-  IonIcon,
   IonPage,
   IonSpinner,
   useIonRouter,
 } from '@ionic/react';
-import {
-  addOutline,
-  alertCircleOutline,
-  arrowForwardOutline,
-  barbellOutline,
-  bedOutline,
-  cafeOutline,
-  checkmarkCircleOutline,
-  chevronForwardOutline,
-  flashOutline,
-  flaskOutline,
-  refreshOutline,
-  sparklesOutline,
-} from 'ionicons/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import {
+  EXTRA_ICON_DEFAULT,
   HORA_DEFECTO,
+  MEAL_ICON_DEFAULT,
   MEAL_KEYS,
   calcBatidoStats,
   calcCreatinaStats,
+  type ComidaExtra,
   type DiaEntreno,
   type MealKey,
   type PlanEntreno,
 } from '../../templates/defaultUser';
+import { MealIcon } from '../../components/MealIcon';
 import { badgeLabel, BADGE_BY_VAL } from '../../templates/exerciseCatalog';
-import { formatTiempoEstimado } from '../../utils/timeParser';
+import { formatTiempoEstimado, horaToMinutes } from '../../utils/timeParser';
 import { computeSupAlerts } from '../../utils/supAlerts';
 import { SupAlertBox } from '../../components/SupAlertBox';
 import { todayDateStr, todayKey } from '../../utils/dateKeys';
@@ -61,15 +50,9 @@ function formatToday(date: Date): string {
   return `${cap(dow)} · ${day} ${cap(month)} ${year}`;
 }
 
-// Etiquetas locales de las 4 comidas fijas (emoji + label). No
-// reusamos las de MenuPage porque son privadas a ese módulo · si en
-// el futuro se quiere unificar, mover a `templates/defaultUser.ts`.
-const MEAL_EMOJI: Record<MealKey, string> = {
-  desayuno: '🌅',
-  comida: '☀️',
-  merienda: '🍎',
-  cena: '🌙',
-};
+// Etiquetas locales de las 4 comidas fijas (label). Los iconos de
+// fallback viven en `MEAL_ICON_DEFAULT` (templates/defaultUser.ts) ·
+// se aplican vía `<MealIcon>` cuando `comida.emoji` es null.
 const MEAL_LABEL: Record<MealKey, string> = {
   desayuno: 'Desayuno',
   comida: 'Comida',
@@ -87,6 +70,11 @@ const HoyPage: React.FC = () => {
   // abre con el detalle (mismo modal que en MenuPage). Las acciones
   // de Editar / Duplicar viven en MenuPage; aquí solo lectura.
   const [openMeal, setOpenMeal] = useState<MealKey | null>(null);
+  // Sheet para las comidas extras (custom · añadidas desde "Añadir
+  // comida" en MenuPage). En HOY se renderizan después de las 4 fijas
+  // y al pulsarlas se abre el mismo sheet · "Editar" redirige al tab
+  // Menú igual que con las fijas.
+  const [openExtra, setOpenExtra] = useState<ComidaExtra | null>(null);
   // Reset del scroll al top al volver a la tab Hoy.
   const contentRef = useRef<HTMLIonContentElement>(null);
   useScrollTopOnEnter(contentRef);
@@ -98,6 +86,34 @@ const HoyPage: React.FC = () => {
   // Comidas del día de hoy · si el doc aún no se cargó, undefined.
   const todayDay = todayKey();
   const comidasHoy = userDoc?.menu?.[todayDay];
+
+  // Lista unificada de filas (4 fijas + extras visibles) ordenadas por
+  // hora · misma UX que MenuPage's `orderedRows`. Sin esto, los extras
+  // siempre quedaban al final aunque tuvieran una hora intermedia.
+  // Filtramos los `deshabilitada` · no aparecen ni cuentan en totales.
+  // `useMemo` evita re-construir la lista en cada render (cambia solo
+  // cuando `comidasHoy` cambia · referencia distinta tras escritura).
+  type HoyRow =
+    | { kind: 'meal'; meal: MealKey; sortMin: number }
+    | { kind: 'extra'; extra: ComidaExtra; sortMin: number };
+  const orderedMealRows = useMemo<HoyRow[]>(() => {
+    if (!comidasHoy) return [];
+    const rows: HoyRow[] = MEAL_KEYS.map((meal) => {
+      const comida = comidasHoy[meal];
+      const hora = comida.hora ?? HORA_DEFECTO[meal];
+      return { kind: 'meal', meal, sortMin: horaToMinutes(hora) };
+    });
+    for (const extra of comidasHoy.extras) {
+      if (extra.deshabilitada) continue;
+      rows.push({
+        kind: 'extra',
+        extra,
+        sortMin: horaToMinutes(extra.hora),
+      });
+    }
+    rows.sort((a, b) => a.sortMin - b.sortMin);
+    return rows;
+  }, [comidasHoy]);
 
   // Entreno de hoy · busca el día del plan activo cuyo `diaSemana`
   // coincide con la clave de hoy. Si no hay match, hoy es día de
@@ -165,7 +181,7 @@ const HoyPage: React.FC = () => {
               <>
                 {streak !== null && (
                   <div className="app-streak-pill">
-                    <IonIcon icon={flashOutline} />
+                    <MealIcon value="tb:bolt" size={14} />
                     {streak} días
                   </div>
                 )}
@@ -196,7 +212,7 @@ const HoyPage: React.FC = () => {
                   Mantendrás todo lo que has tocado en el plan demo.
                 </span>
               </div>
-              <IonIcon icon={arrowForwardOutline} />
+              <MealIcon value="tb:arrow-right" size={20} />
             </button>
           )}
 
@@ -224,12 +240,12 @@ const HoyPage: React.FC = () => {
                   className="hoy-hero-cta"
                   onClick={blurAndRun(() => setAiGenOpen(true))}
                 >
-                  <IonIcon icon={sparklesOutline} />
+                  <MealIcon value="tb:sparkles" size={18} />
                   Generar mi plan con IA
                 </button>
               ) : (
                 <div className="hoy-hero-tag">
-                  <IonIcon icon={sparklesOutline} />
+                  <MealIcon value="tb:sparkles" size={16} />
                   {user.isAnonymous
                     ? 'Datos de ejemplo · regístrate para personalizar'
                     : 'Cambia a modo IA en Ajustes para generar tu plan'}
@@ -253,20 +269,20 @@ const HoyPage: React.FC = () => {
               aria-label="Abrir plan de entreno completo"
             >
               Ver plan
-              <IonIcon icon={chevronForwardOutline} />
+              <MealIcon value="tb:chevron-right" size={16} />
             </button>
           </div>
           <EntrenoHoyCard
             activePlan={activePlanHoy}
             diaHoy={diaEntrenoHoy}
-            // Si hay día asignado a HOY · click abre el bottom sheet
-            // con el detalle de ejercicios. Si no (descanso/sin plan)
-            // · click navega a la tab Entreno para configurar.
+            // Solo abre el TrainSheet si HAY día de entreno asignado.
+            // Para descanso/sin plan la card es informativa (no clickable):
+            // el "Ver plan →" del header ya redirige a la tab Entreno
+            // si el user quiere configurar · evita doble redirección al
+            // mismo sitio desde la misma sección.
             onClick={() => {
               if (diaEntrenoHoy) {
                 setTrainSheetOpen(true);
-              } else {
-                router.push('/app/entreno', 'forward');
               }
             }}
           />
@@ -302,60 +318,151 @@ const HoyPage: React.FC = () => {
               aria-label="Abrir menú completo"
             >
               Ver menú
-              <IonIcon icon={chevronForwardOutline} />
+              <MealIcon value="tb:chevron-right" size={16} />
             </button>
           </div>
           {comidasHoy ? (
             <div className="hoy-meal-list">
-              {MEAL_KEYS.map((meal) => {
-                const comida = comidasHoy[meal];
-                const isEmpty = comida.alimentos.length === 0;
-                const plato = (comida.nombrePlato ?? '').trim();
-                const hora = comida.hora ?? HORA_DEFECTO[meal];
+              {/* Lista única ordenada por hora · las 4 fijas y los
+                  extras visibles se intercalan según `sortMin`. Sin
+                  esto los extras siempre quedaban detrás de cena (21:00)
+                  aunque tuvieran una hora intermedia como 17:00. */}
+              {orderedMealRows.map((row) => {
+                if (row.kind === 'meal') {
+                  const meal = row.meal;
+                  const comida = comidasHoy[meal];
+                  const isEmpty = comida.alimentos.length === 0;
+                  const plato = (comida.nombrePlato ?? '').trim();
+                  const hora = comida.hora ?? HORA_DEFECTO[meal];
+                  return (
+                    <button
+                      key={meal}
+                      type="button"
+                      className={
+                        'hoy-meal-card'
+                        + (isEmpty ? ' hoy-meal-card--empty' : '')
+                      }
+                      onClick={blurAndRun(() => setOpenMeal(meal))}
+                      aria-label={`Ver detalle de ${MEAL_LABEL[meal]}`}
+                    >
+                      <div className="hoy-meal-emoji" aria-hidden="true">
+                        <MealIcon
+                          value={comida.emoji}
+                          fallback={MEAL_ICON_DEFAULT[meal]}
+                          size={32}
+                        />
+                      </div>
+                      <div className="hoy-meal-body">
+                        <div className="hoy-meal-row">
+                          <span className="hoy-meal-name">
+                            {MEAL_LABEL[meal]}
+                          </span>
+                          <span className="hoy-meal-time">{hora}</span>
+                        </div>
+                        {!isEmpty && plato && (
+                          <p className="hoy-meal-plato">{plato}</p>
+                        )}
+                        {!isEmpty ? (
+                          <div className="hoy-meal-macros">
+                            {comida.kcal > 0 && (
+                              <span className="hoy-meal-macro hoy-meal-macro--kcal">
+                                {comida.kcal} kcal
+                              </span>
+                            )}
+                            {comida.prot > 0 && (
+                              <span className="hoy-meal-macro hoy-meal-macro--prot">
+                                {comida.prot}g P
+                              </span>
+                            )}
+                            {comida.carb > 0 && (
+                              <span className="hoy-meal-macro hoy-meal-macro--carb">
+                                {comida.carb}g C
+                              </span>
+                            )}
+                            {comida.fat > 0 && (
+                              <span className="hoy-meal-macro hoy-meal-macro--fat">
+                                {comida.fat}g G
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="hoy-meal-empty-text">
+                            Aún sin definir · pulsa para añadir
+                          </p>
+                        )}
+                      </div>
+                      <MealIcon
+                        value="tb:chevron-right"
+                        size={20}
+                        className="hoy-meal-arrow"
+                      />
+                    </button>
+                  );
+                }
+                // row.kind === 'extra'
+                const extra = row.extra;
+                const isEmpty = extra.alimentos.length === 0;
+                const isExtra = extra.esExtra ?? true;
+                const plato = (extra.nombrePlato ?? '').trim();
+                const titulo = extra.nombre.trim() || 'Comida';
                 return (
                   <button
-                    key={meal}
+                    key={`extra-${extra.id}`}
                     type="button"
                     className={
                       'hoy-meal-card'
                       + (isEmpty ? ' hoy-meal-card--empty' : '')
                     }
-                    onClick={blurAndRun(() => setOpenMeal(meal))}
-                    aria-label={`Ver detalle de ${MEAL_LABEL[meal]}`}
+                    onClick={blurAndRun(() => setOpenExtra(extra))}
+                    aria-label={`Ver detalle de ${titulo}${isExtra ? ' (extra)' : ''}`}
                   >
                     <div className="hoy-meal-emoji" aria-hidden="true">
-                      {comida.emoji ?? MEAL_EMOJI[meal]}
+                      <MealIcon
+                        value={extra.emoji}
+                        fallback={EXTRA_ICON_DEFAULT}
+                        size={32}
+                      />
                     </div>
                     <div className="hoy-meal-body">
                       <div className="hoy-meal-row">
                         <span className="hoy-meal-name">
-                          {MEAL_LABEL[meal]}
+                          {titulo}
+                          {isExtra && (
+                            <span
+                              className="hoy-meal-extra-tag"
+                              aria-hidden="true"
+                            >
+                              extra
+                            </span>
+                          )}
                         </span>
-                        <span className="hoy-meal-time">{hora}</span>
+                        <span className="hoy-meal-time">
+                          {extra.hora ?? '--:--'}
+                        </span>
                       </div>
                       {!isEmpty && plato && (
                         <p className="hoy-meal-plato">{plato}</p>
                       )}
                       {!isEmpty ? (
                         <div className="hoy-meal-macros">
-                          {comida.kcal > 0 && (
+                          {extra.kcal > 0 && (
                             <span className="hoy-meal-macro hoy-meal-macro--kcal">
-                              {comida.kcal} kcal
+                              {extra.kcal} kcal
                             </span>
                           )}
-                          {comida.prot > 0 && (
+                          {extra.prot > 0 && (
                             <span className="hoy-meal-macro hoy-meal-macro--prot">
-                              {comida.prot}g P
+                              {extra.prot}g P
                             </span>
                           )}
-                          {comida.carb > 0 && (
+                          {extra.carb > 0 && (
                             <span className="hoy-meal-macro hoy-meal-macro--carb">
-                              {comida.carb}g C
+                              {extra.carb}g C
                             </span>
                           )}
-                          {comida.fat > 0 && (
+                          {extra.fat > 0 && (
                             <span className="hoy-meal-macro hoy-meal-macro--fat">
-                              {comida.fat}g G
+                              {extra.fat}g G
                             </span>
                           )}
                         </div>
@@ -365,10 +472,10 @@ const HoyPage: React.FC = () => {
                         </p>
                       )}
                     </div>
-                    <IonIcon
-                      icon={chevronForwardOutline}
+                    <MealIcon
+                      value="tb:chevron-right"
+                      size={20}
                       className="hoy-meal-arrow"
-                      aria-hidden="true"
                     />
                   </button>
                 );
@@ -377,7 +484,7 @@ const HoyPage: React.FC = () => {
           ) : (
             <div className="hoy-empty-card">
               <div className="hoy-empty-icon">
-                <IonIcon icon={cafeOutline} />
+                <MealIcon value="tb:coffee" size={24} />
               </div>
               <div className="hoy-empty-info">
                 <span className="hoy-empty-title">Cargando menú…</span>
@@ -423,6 +530,26 @@ const HoyPage: React.FC = () => {
             comida={comidasHoy[openMeal]}
             onEdit={() => {
               setOpenMeal(null);
+              goToMenu();
+            }}
+          />
+        )}
+
+        {/* Mismo sheet pero para extras del día · sin botón duplicar/
+            deshabilitar/eliminar (esas acciones viven en Menú). Al
+            pulsar "Editar" redirigimos a la tab Menú igual que con
+            las 4 fijas. */}
+        {openExtra && (
+          <MealSheet
+            isOpen={openExtra !== null}
+            onClose={() => setOpenExtra(null)}
+            day={todayDay}
+            comida={openExtra}
+            title={openExtra.nombre.trim() || 'Comida'}
+            iconFallback={EXTRA_ICON_DEFAULT}
+            isExtra={openExtra.esExtra ?? true}
+            onEdit={() => {
+              setOpenExtra(null);
               goToMenu();
             }}
           />
@@ -501,7 +628,7 @@ function SuplementacionBlock() {
       // section-title propio.
       <div className="hoy-empty-card hoy-empty-card--section-start">
         <div className="hoy-empty-icon">
-          <IonIcon icon={flaskOutline} />
+          <MealIcon value="tb:flask" size={24} />
         </div>
         <div className="hoy-empty-info">
           <span className="hoy-empty-title">Sin suplementos para hoy</span>
@@ -547,12 +674,11 @@ function SuplementacionBlock() {
               aria-label="Ver detalles del batido"
             >
               Ver batido
-              <IonIcon icon={chevronForwardOutline} />
+              <MealIcon value="tb:chevron-right" size={16} />
             </button>
           </div>
           <SupCardHoy
             kind="batido"
-            emoji="🥤"
             titulo="BATIDO PROTÉICO"
             sub={
               sup.batidoConfig.includeCreatina
@@ -594,12 +720,11 @@ function SuplementacionBlock() {
               aria-label="Ver detalles de la creatina"
             >
               Ver creatina
-              <IonIcon icon={chevronForwardOutline} />
+              <MealIcon value="tb:chevron-right" size={16} />
             </button>
           </div>
           <SupCardHoy
             kind="creatina"
-            emoji="🥄"
             titulo="CREATINA"
             sub={`${sup.creatinaConfig.gr_dose}g por dosis`}
             tomados={sup.creatinas_tomadas_total}
@@ -634,7 +759,6 @@ function SuplementacionBlock() {
 
 interface SupCardHoyProps {
   kind: 'batido' | 'creatina';
-  emoji: string;
   titulo: string;
   sub: string;
   tomados: number;
@@ -656,7 +780,6 @@ interface SupCardHoyProps {
 
 function SupCardHoy({
   kind,
-  emoji,
   titulo,
   sub,
   tomados,
@@ -708,7 +831,11 @@ function SupCardHoy({
           pulsar, glow al pasar a estado tomado, fade-up del cancel). */}
       <div className="hoy-sup-head">
         <div className="hoy-sup-emoji" aria-hidden="true">
-          {emoji}
+          <MealIcon
+            value={kind === 'batido' ? 'tb:cup' : 'tb:ladle'}
+            size={32}
+            className="hoy-sup-emoji-icon"
+          />
         </div>
         <div className="hoy-sup-id">
           <h3>{titulo}</h3>
@@ -722,8 +849,9 @@ function SupCardHoy({
                 + 'hoy-sup-cta--enter'
               }
             >
-              <IonIcon
-                icon={checkmarkCircleOutline}
+              <MealIcon
+                value="tb:circle-check"
+                size={16}
                 className="hoy-sup-taken-check"
               />
               {ctaLabel}
@@ -735,7 +863,7 @@ function SupCardHoy({
               aria-label={`Cancelar ${palabraSing} tomado hoy`}
               title={`Cancelar (descontar ${palabraSing})`}
             >
-              <IonIcon icon={refreshOutline} />
+              <MealIcon value="tb:refresh" size={16} />
             </button>
           </div>
         ) : (
@@ -745,7 +873,7 @@ function SupCardHoy({
             onClick={blurAndRun(onMarcar)}
             disabled={marcarDisabled}
           >
-            <IonIcon icon={addOutline} />
+            <MealIcon value="tb:plus" size={18} />
             Tomar
           </button>
         )}
@@ -801,7 +929,15 @@ function SupCardHoy({
       {stockState === 'none' && (
         <div className="hoy-sup-stock-empty-info">
           Define el stock desde{' '}
-          <strong>Menú → {kind === 'batido' ? '🥤 BATIDO' : '🥄 CREATINA'}</strong>
+          <strong>
+            Menú →{' '}
+            <MealIcon
+              value={kind === 'batido' ? 'tb:cup' : 'tb:ladle'}
+              size={14}
+              className="hoy-sup-inline-icon"
+            />
+            {kind === 'batido' ? 'BATIDO' : 'CREATINA'}
+          </strong>
         </div>
       )}
 
@@ -869,22 +1005,22 @@ interface EntrenoHoyCardProps {
 
 function EntrenoHoyCard({ activePlan, diaHoy, onClick }: EntrenoHoyCardProps) {
   // Sin plan activo o sin día asignado a HOY · estado vacío "descanso".
-  // Click → tab Entreno (para configurar o ver el plan).
+  // Card NO clickable · sin chevron · sin redirect (el "Ver plan →" del
+  // header ya cubre la navegación a Entreno · evita doble redirección
+  // desde la misma sección).
   if (!activePlan || !diaHoy) {
     // 2 sub-casos:
     //   · activePlan presente pero hoy no es día de entreno · cama azul.
     //   · activePlan ausente (corrupción/edge case) · alerta naranja.
     const isAlert = !activePlan;
     return (
-      <button
-        type="button"
+      <div
         className={
-          'hoy-train-card hoy-train-card--rest'
+          'hoy-train-card hoy-train-card--rest hoy-train-card--static'
           + (isAlert ? ' hoy-train-card--alert' : '')
         }
-        onClick={blurAndRun(onClick)}
         aria-label={
-          isAlert ? 'Sin plan asignado · ir a Entreno' : 'Día de descanso · ver plan'
+          isAlert ? 'Sin plan asignado' : 'Día de descanso'
         }
       >
         <div
@@ -895,7 +1031,7 @@ function EntrenoHoyCard({ activePlan, diaHoy, onClick }: EntrenoHoyCardProps) {
         >
           {/* Cama azul para descanso · alerta naranja si no hay plan
               asignado (caso defensivo, prácticamente nunca pasa). */}
-          <IonIcon icon={isAlert ? alertCircleOutline : bedOutline} />
+          <MealIcon value={isAlert ? 'tb:alert-circle' : 'tb:bed'} size={26} />
         </div>
         <div className="hoy-train-info">
           <div className="hoy-train-label">
@@ -905,11 +1041,8 @@ function EntrenoHoyCard({ activePlan, diaHoy, onClick }: EntrenoHoyCardProps) {
             {isAlert ? 'Sin plan asignado' : 'No hay entrenamiento programado para hoy'}
           </h3>
         </div>
-        <IonIcon
-          icon={chevronForwardOutline}
-          className="hoy-train-chevron"
-        />
-      </button>
+        {/* Sin chevron · la card es informativa, no clickable. */}
+      </div>
     );
   }
 
@@ -935,26 +1068,26 @@ function EntrenoHoyCard({ activePlan, diaHoy, onClick }: EntrenoHoyCardProps) {
       aria-label={`Entreno de hoy · ${diaHoy.titulo} · ver detalle`}
     >
       <div className="hoy-train-icon">
-        <IonIcon icon={barbellOutline} />
+        <MealIcon value="tb:barbell" size={26} />
       </div>
       <div className="hoy-train-info">
         <div className="hoy-train-label">
           <span className="hoy-train-label-tag">HOY</span>
+          {/* Duración a la derecha del tag HOY · mantiene el azul
+              original (no se mezcla visualmente con el lima del HOY,
+              pero comparte la fila por jerarquía "esto es hoy y dura X"). */}
+          {diaHoy.tiempoEstimadoMin && diaHoy.tiempoEstimadoMin > 0 && (
+            <span className="hoy-train-time-tag">
+              <MealIcon value="tb:clock" size={12} className="hoy-train-time-icon" />
+              {formatTiempoEstimado(diaHoy.tiempoEstimadoMin)}
+            </span>
+          )}
         </div>
         <h3 className="hoy-train-title">
           {diaHoy.titulo || 'Entreno'}
         </h3>
-        {(tags.length > 0 || (diaHoy.tiempoEstimadoMin && diaHoy.tiempoEstimadoMin > 0)) && (
+        {tags.length > 0 && (
           <div className="hoy-train-tags">
-            {/* Badge azul de duración · si el día tiene tiempo
-                estimado configurado, se muestra como tag adicional
-                junto a los tipos. Mismo color azul que el badge en
-                la card del tab Entreno. */}
-            {diaHoy.tiempoEstimadoMin && diaHoy.tiempoEstimadoMin > 0 && (
-              <span className="tag hoy-train-time-tag">
-                ⏱ {formatTiempoEstimado(diaHoy.tiempoEstimadoMin)}
-              </span>
-            )}
             {tags.map((t, i) => (
               <span key={i} className={`tag ${t.cls}`}>
                 {t.label}
@@ -963,8 +1096,9 @@ function EntrenoHoyCard({ activePlan, diaHoy, onClick }: EntrenoHoyCardProps) {
           </div>
         )}
       </div>
-      <IonIcon
-        icon={chevronForwardOutline}
+      <MealIcon
+        value="tb:chevron-right"
+        size={20}
         className="hoy-train-chevron"
       />
     </button>

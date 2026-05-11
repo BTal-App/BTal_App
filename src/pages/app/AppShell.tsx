@@ -14,9 +14,9 @@ import {
 } from '@ionic/react';
 import {
   barbellOutline,
-  calendarOutline,
+  calendarNumberOutline,
   cartOutline,
-  flashOutline,
+  listOutline,
   restaurantOutline,
 } from 'ionicons/icons';
 import { useAuth } from '../../hooks/useAuth';
@@ -84,9 +84,13 @@ const AppShell: React.FC = () => {
       {/* Labels en mayúsculas literales (no via text-transform CSS) porque
           ion-label vive en shadow DOM en Ionic 8 y el text-transform
           desde fuera no la atraviesa de forma fiable. */}
+      {/* Las 5 tabs usan Ionicons outline para que compartan metrics
+          (font-size 1.4rem en variables.css → `ion-tab-button ion-icon`).
+          Mismo lenguaje visual + sizing uniforme → iconos y labels a
+          la misma altura entre tabs. */}
       <IonTabBar slot="bottom">
         <IonTabButton tab="hoy" href="/app/hoy">
-          <IonIcon icon={flashOutline} />
+          <IonIcon icon={calendarNumberOutline} />
           <IonLabel>HOY</IonLabel>
         </IonTabButton>
         <IonTabButton tab="menu" href="/app/menu">
@@ -102,7 +106,7 @@ const AppShell: React.FC = () => {
           <IonLabel>ENTRENO</IonLabel>
         </IonTabButton>
         <IonTabButton tab="registro" href="/app/registro">
-          <IonIcon icon={calendarOutline} />
+          <IonIcon icon={listOutline} />
           <IonLabel>REGISTRO</IonLabel>
         </IonTabButton>
       </IonTabBar>

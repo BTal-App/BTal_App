@@ -26,6 +26,25 @@
   font-size: 1.6rem;
   line-height: 1;
   flex-shrink: 0;
+  /* Container para el `<MealIcon>` Tabler · color lima por defecto
+     para destacar sobre el bg-2 del botón. */
+  color: var(--btal-lime);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Title del modal con icono Tabler inline · usado en
+   CompraCategoriaEditorModal y CompraItemEditorModal. */
+.cat-editor-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cat-editor-title-icon {
+  color: var(--btal-lime);
+  flex-shrink: 0;
 }
 
 .cat-editor-emoji-hint {
@@ -67,6 +86,9 @@
   display: flex;
   flex-direction: column;
   padding: max(env(safe-area-inset-top), 24px) 18px 24px;
+  /* Ancla para el botón X · vive como hijo del content y se posiciona
+     absolute al top-right del content. */
+  position: relative;
 }
 
 .cat-editor-emoji-modal-title {

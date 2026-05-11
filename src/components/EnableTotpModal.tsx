@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { IonButton, IonContent, IonIcon, IonModal, IonSpinner } from '@ionic/react';
-import { closeOutline } from 'ionicons/icons';
+import { IonButton, IonContent, IonModal, IonSpinner } from '@ionic/react';
+import { MealIcon } from './MealIcon';
 import QRCode from 'react-qr-code';
 import type { TotpSecret, User } from 'firebase/auth';
 import { finishTotpEnrollment, startTotpEnrollment } from '../services/auth';
@@ -98,23 +98,22 @@ export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {
         onDidDismiss={onClose}
         className="settings-modal"
       >
-        {/* Botón cerrar fuera del IonContent — así no scrollea con el contenido */}
-        <button
-          type="button"
-          className="settings-modal-close account-manage-close-fixed"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         {/* IonContent: scroll nativo cuando el QR + form no caben en altura */}
         <IonContent>
           <div className="settings-modal-bg account-manage-bg">
             <div className="settings-modal-card">
+            {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+            <button
+              type="button"
+              className="settings-modal-close settings-modal-close--fixed"
+              onClick={(e) => {
+                e.currentTarget.blur();
+                onClose();
+              }}
+              aria-label="Cerrar"
+            >
+              <MealIcon value="tb:x" size={22} />
+            </button>
             {stage === 'init' && (
               <>
                 <h2 className="settings-modal-title">Activar verificación en dos pasos</h2>

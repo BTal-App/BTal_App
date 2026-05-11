@@ -205,7 +205,8 @@ button:not(:disabled):hover {
    en :active (border-color, background, box-shadow…) siguen
    funcionando intactas. */
 button:not(:disabled):active,
-a:not([disabled]):active {
+a:not([disabled]):active,
+[role="button"]:not([aria-disabled="true"]):active {
   transform: translateY(1px) scale(0.97) !important;
   filter: brightness(0.92) !important;
 }
@@ -213,6 +214,24 @@ a:not([disabled]):active {
 ion-button:not(.button-disabled):active {
   transform: translateY(1px) scale(0.97) !important;
   filter: brightness(0.92) !important;
+}
+
+/* `<div role="button">` interactivos (ej: train-day card) · misma
+   transición que button para que el press-in se sienta nativo. */
+[role="button"] {
+  transition:
+    transform 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    filter 0.16s ease,
+    box-shadow 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [role="button"]:not([aria-disabled="true"]):hover {
+    filter: brightness(1.06);
+  }
 }
 
 /* IonButton · web-component · usa CSS variables propias. Lo
@@ -236,6 +255,159 @@ ion-button {
 /* (El estado :active/data-pressed unificado para ion-button y <a>
    está definido en el bloque "Press-in robusto" más abajo, junto con
    <button>. Mantenemos aquí solo el hover y la transición.) */
+
+/* ── Optgroup global · coherencia visual entre todos los selectores
+   con `<optgroup>` (DiaEditor "Día" / "GRUPO MUSCULAR", PlanEditor
+   "Día", RegDayPanel "PLANES POR DEFECTO" / "PLANES CREADOS" /
+   "OTROS"). Replica del v1 que ya usaba este amarillo claro
+   (#ffd54f) para los headers de sección dentro de selects.
+
+   Browser support: Firefox/Safari respetan estos estilos en
+   optgroup completamente; Chrome solo aplica color y font-weight
+   (limitación del web-component nativo). Aceptamos esa
+   degradación · en Chrome sigue viéndose en bold con el color
+   custom, que es lo importante. */
+optgroup {
+  background: var(--btal-bg-2);
+  color: #ffd54f;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+optgroup option {
+  background: var(--btal-bg-2);
+  color: var(--btal-t-1);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ── Wrap global para textareas ────────────────────────────────────
+   `<textarea>` por defecto envuelve en boundaries de palabra (wrap=
+   soft), pero un string sin espacios (URL larga, palabra unida) sigue
+   desbordando horizontalmente. `overflow-wrap: anywhere` permite
+   romper en cualquier punto si la palabra excede el ancho · evita
+   scrollbars horizontales en el textarea. Mismo comportamiento para
+   word-break, asegurando compatibilidad cross-browser. */
+textarea {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* ── Focus-visible global para inputs / textarea / select ────────
+   Muchos componentes ponen `outline: none` para evitar el outline
+   feo del browser y añaden `:focus { border-color: lime }` propio.
+   Pero NO todos hicieron el reemplazo · varios inputs quedaron sin
+   feedback visual de focus (Onboarding, MealEditor, CompraPage,
+   EditFitnessProfile, DiaEditor time-input, IconPicker search,
+   LinkGuestAccount, etc.), rompiendo accesibilidad para keyboard
+   users. Este fallback con `outline` lima sutil coexiste con
+   cualquier border-color custom (props distintas, no se pisan) y
+   solo se activa con `:focus-visible` · NO aparece en taps táctiles
+   donde sería ruido visual. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--btal-lime);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    /* Mantenemos el outline para accesibilidad incluso con
+       reduced motion · no es animación sino contraste. */
+  }
+}
+
+/* ── IonAlert · press feedback en shadow DOM ──────────────────────
+   Los botones de IonAlert (Confirmar / Cancelar / Eliminar / etc.)
+   viven en el shadow DOM de Ionic, así que el selector global
+   `button:active` no los alcanza. Ionic expone los botones del alert
+   como `::part(button)`, que SÍ traspasa la barrera del shadow DOM
+   cuando el componente lo declara explícitamente.
+
+   Resultado: cualquier IonAlert de la app (confirmar registro,
+   eliminar serie, info de PR's, etc.) gana el mismo press-in que
+   el resto de botones de la app. */
+ion-alert::part(button) {
+  transition:
+    transform 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.16s ease;
+}
+
+ion-alert::part(button):active {
+  transform: translateY(1px) scale(0.97);
+  filter: brightness(0.92);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  ion-alert::part(button):hover {
+    filter: brightness(1.06);
+  }
+}
+
+/* IonActionSheet · mismo patrón que IonAlert · botones en shadow DOM. */
+ion-action-sheet::part(button) {
+  transition:
+    transform 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.16s ease;
+}
+
+ion-action-sheet::part(button):active {
+  transform: translateY(1px) scale(0.97);
+  filter: brightness(0.92);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  ion-action-sheet::part(button):hover {
+    filter: brightness(1.06);
+  }
+}
+
+/* IonToast · botón de acción ("Deshacer" en undo toasts). */
+ion-toast::part(button) {
+  transition:
+    transform 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.16s ease;
+}
+
+ion-toast::part(button):active {
+  transform: translateY(1px) scale(0.97);
+  filter: brightness(0.92);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  ion-toast::part(button):hover {
+    filter: brightness(1.06);
+  }
+}
+
+/* IonPicker · botones de header (Cancelar / OK) en shadow DOM ·
+   replicamos el press/hover. Cubre el wheel picker que Ionic muestra
+   en algunos formularios (tiempo, fecha) si se usa <IonPicker>. */
+ion-picker::part(button) {
+  transition:
+    transform 0.13s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.16s ease;
+}
+
+ion-picker::part(button):active {
+  transform: translateY(1px) scale(0.97);
+  filter: brightness(0.92);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  ion-picker::part(button):hover {
+    filter: brightness(1.06);
+  }
+}
 
 /* ── Wrapper global para inputs type="time" / type="date" ──────────
    Posiciona un icono custom de IonIcon en la esquina derecha del
@@ -319,10 +491,21 @@ ion-button {
   button:not(:disabled):active,
   ion-button:not(.button-disabled):hover,
   ion-button:not(.button-disabled):active,
-  a:not([disabled]):active {
+  a:not([disabled]):active,
+  [role="button"]:not([aria-disabled="true"]):active,
+  [role="button"]:not([aria-disabled="true"]):hover,
+  ion-alert::part(button):active,
+  ion-alert::part(button):hover,
+  ion-action-sheet::part(button):active,
+  ion-action-sheet::part(button):hover,
+  ion-toast::part(button):active,
+  ion-toast::part(button):hover,
+  ion-picker::part(button):active,
+  ion-picker::part(button):hover {
     transform: none !important;
     filter: none !important;
     box-shadow: none !important;
     animation: none !important;
+    transition: none !important;
   }
 }

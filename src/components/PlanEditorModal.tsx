@@ -3,15 +3,10 @@ import {
   IonAlert,
   IonButton,
   IonContent,
-  IonIcon,
   IonModal,
   IonToast,
 } from '@ionic/react';
-import {
-  addOutline,
-  closeOutline,
-  trashOutline,
-} from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import {
   emptyDiaEntreno,
   newPlanEntrenoId,
@@ -64,6 +59,12 @@ export function PlanEditorModal({
   const isEdit = !!plan;
   const [nombre, setNombre] = useState(plan?.nombre ?? '');
   const [dias, setDias] = useState<DiaEntreno[]>(plan?.dias ?? []);
+  // Toggle "Marcar como predeterminado" · solo aplica a planes custom
+  // (no a builtIn). Si está activo, el chip de EntrenoPage se renderiza
+  // sin tag con el nombre · idéntico a los builtIn 1-7 días. Sub-fase 2D.1.
+  const [esPredeterminado, setEsPredeterminado] = useState<boolean>(
+    plan?.esPredeterminado ?? false,
+  );
   // Status del guardado · saving/saved/error · alimenta el SaveIndicator.
   const { status, runSave, reset: resetSave } = useSaveStatus();
   const submitting = status === 'saving';
@@ -95,6 +96,7 @@ export function PlanEditorModal({
         { ...emptyDiaEntreno(), titulo: 'Día 1' },
       ],
     );
+    setEsPredeterminado(plan?.esPredeterminado ?? false);
     resetSave();
     setMissingAlert(null);
     setConfirmChanges(null);
@@ -181,6 +183,13 @@ export function PlanEditorModal({
       // builtIn solo si veníamos editando uno · al crear nuevo siempre
       // es custom (false). v1 distingue 1dias..7dias como builtIn.
       builtIn: isEdit && plan ? plan.builtIn : false,
+      // Sub-fase 2D.1 · solo persistimos esPredeterminado en planes
+      // custom · los builtIn ya son predeterminados implícitamente y
+      // no necesitan la flag (sería redundante). Si el plan es builtIn,
+      // dejamos esPredeterminado fuera del doc (undefined).
+      ...(isEdit && plan?.builtIn
+        ? {}
+        : { esPredeterminado }),
     };
 
     // Construye el diff antes/después · réplica del v1 confirmSave.
@@ -220,22 +229,20 @@ export function PlanEditorModal({
       className="settings-modal"
     >
       <IonContent>
-        {/* Botón X · DENTRO de IonContent (no hermano externo) para
-            que entre con la misma animación que el contenido del
-            modal · evita flicker. */}
-        <button
-          type="button"
-          className="settings-modal-close settings-modal-close--fixed"
-          onClick={(e) => {
-            (e.currentTarget as HTMLElement).blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
         <div className="settings-modal-bg">
           <div className="settings-modal-card">
+            {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+            <button
+              type="button"
+              className="settings-modal-close settings-modal-close--fixed"
+              onClick={(e) => {
+                (e.currentTarget as HTMLElement).blur();
+                onClose();
+              }}
+              aria-label="Cerrar"
+            >
+              <MealIcon value="tb:x" size={22} />
+            </button>
             <h2 className="settings-modal-title">
               {isEdit ? 'Editar plan' : 'Nuevo plan'}
             </h2>
@@ -260,6 +267,31 @@ export function PlanEditorModal({
                 autoFocus={!isEdit}
               />
             </div>
+
+            {/* Toggle "predeterminado" · solo en planes custom (los
+                builtIn 1-7 días ya son predeterminados implícitamente).
+                Cuando está activo, el chip de EntrenoPage se renderiza
+                centrado sin la tag con el nombre debajo · idéntico look
+                a los builtIn. Útil para que el user destaque su plan
+                habitual entre el resto de custom. */}
+            {!plan?.builtIn && (
+              <div className="sup-form-group">
+                <label className="plan-editor-toggle">
+                  <input
+                    type="checkbox"
+                    checked={esPredeterminado}
+                    onChange={(e) => setEsPredeterminado(e.target.checked)}
+                  />
+                  <span className="plan-editor-toggle-label">
+                    Marcar como predeterminado
+                  </span>
+                  <span className="plan-editor-toggle-hint">
+                    Se mostrará centrado y sin etiqueta, igual que los
+                    planes 1–7 días.
+                  </span>
+                </label>
+              </div>
+            )}
 
             {/* Lista de días · sólo título + día semana + borrar · el
                 resto (badges, ejercicios, comentario) se edita después
@@ -323,7 +355,7 @@ export function PlanEditorModal({
                   // Permitimos quedar a 1 día mínimo · si es el último, deshabilitamos.
                   disabled={dias.length <= 1}
                 >
-                  <IonIcon icon={trashOutline} />
+                  <MealIcon value="tb:trash" size={16} />
                 </button>
               </div>
             ))}
@@ -333,7 +365,7 @@ export function PlanEditorModal({
               className="plan-editor-add-btn"
               onClick={blurAndRun(addDia)}
             >
-              <IonIcon icon={addOutline} />
+              <MealIcon value="tb:plus" size={18} />
               Añadir día
             </button>
 

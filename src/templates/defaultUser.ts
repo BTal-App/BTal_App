@@ -169,9 +169,15 @@ export interface Comida {
   // Origen del item — la IA respeta items con source='user' a menos que
   // el user active "permitir tocar lo mío" en el AiGenerateModal.
   source: SourceTag;
-  // Emoji custom opcional · si está null/undefined, la UI usa el default
-  // por meal-key (MEAL_EMOJI). Para extras, el default es 🍽. Editable
-  // desde el modal de edición vía EmojiPicker.
+  // Icono custom opcional · formato `"tb:<slug>"` (ids del catálogo en
+  // `utils/iconRegistry.ts`). Si está null/undefined la UI usa el
+  // default por meal-key (MEAL_ICON_DEFAULT) o EXTRA_ICON_DEFAULT para
+  // extras. Editable desde el modal de edición vía IconPicker.
+  //
+  // (Antes este campo guardaba un emoji unicode legacy con el antiguo
+  // EmojiPicker · se mantiene el mismo nombre `emoji` por estabilidad
+  // del schema, pero ahora siempre contiene un id Tabler tras la
+  // migración de Sub-fase 2F.)
   emoji?: string | null;
   // Nombre del plato · texto libre que describe el contenido (ej. "Bowl
   // de avena con frutos rojos"). En la card del menú es lo único que se
@@ -203,6 +209,29 @@ export interface Comida {
 export interface ComidaExtra extends Comida {
   id: string;
   nombre: string;
+  /**
+   * Marca visual "EXTRA" · cuando `true` la card en el menú aparece
+   * con borde discontinuo lima + chip "EXTRA" junto al nombre (forma
+   * de distinguirla de las 4 comidas fijas). Cuando `false`, la card
+   * se renderiza como una comida normal.
+   *
+   * Campo opcional por retro-compatibilidad · los docs anteriores a
+   * esta opción (sin el campo) se tratan como EXTRA por defecto
+   * (mismo aspecto que ya tenían en Firestore). Los nuevos se crean
+   * con `false` desde el editor salvo que el user marque el check.
+   */
+  esExtra?: boolean;
+  /**
+   * Comida deshabilitada · cuando `true` la card se renderiza atenuada
+   * en gris y NO suma sus macros al total del día ni a la media
+   * semanal (igual que si no existiera). Pulsar la card sigue abriendo
+   * el sheet · desde ahí se puede volver a habilitar.
+   *
+   * Pensado para que el user pueda "pausar" una comida sin perder los
+   * datos (por ejemplo: hoy no la voy a comer pero la quiero conservar
+   * para mañana). Diferente de borrar (que elimina del array).
+   */
+  deshabilitada?: boolean;
 }
 
 // Genera un id único para una ComidaExtra. Usamos base36 del timestamp +
@@ -348,6 +377,13 @@ export interface PlanEntreno {
   // True para los 7 builtIn (1dias..7dias) · no se pueden eliminar.
   // False para los custom · sí se pueden borrar.
   builtIn: boolean;
+  // Sub-fase 2D.1 · Marca un plan custom como "predeterminado". Cuando
+  // está activo, el chip se renderiza idéntico a los builtIn (centrado
+  // sin tag con el nombre debajo) · útil para que el user destaque su
+  // plan habitual. Optional para retrocompat con docs creados antes.
+  // Los planes builtIn tienen builtIn=true · esta flag NO aplica a
+  // ellos (siempre se consideran predeterminados implícitamente).
+  esPredeterminado?: boolean;
 }
 
 export interface Entrenos {
@@ -383,6 +419,24 @@ export function getRecommendedPlanId(diasEntreno: number | null): BuiltInPlanId 
   if (diasEntreno === null) return '4dias';
   const clamp = Math.max(1, Math.min(7, diasEntreno));
   return `${clamp}dias` as BuiltInPlanId;
+}
+
+// Versión que respeta `customPredeterminado` · si el user ha marcado
+// algún plan suyo como predeterminado, ése gana sobre el builtIn
+// derivado de `diasEntreno`. Es la lógica histórica de EntrenoPage,
+// extraída aquí para reutilizarla desde RegistroPage (el selector de
+// plan por día debe mostrar la estrella en el plan que el user marcó
+// como predeterminado, no en el builtIn que sugiere el perfil).
+export function getEffectiveRecommendedPlanId(
+  entrenos: Entrenos | null | undefined,
+  diasEntreno: number | null,
+): string {
+  if (entrenos) {
+    for (const p of Object.values(entrenos.planes)) {
+      if (p && !p.builtIn && p.esPredeterminado) return p.id;
+    }
+  }
+  return getRecommendedPlanId(diasEntreno);
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -521,6 +575,24 @@ export interface SupDayOverride {
   titulo: string | null;
 }
 
+// Entrada del histórico fechado de tomas de suplementación · una por
+// día con tomas. La inserta `addToSupHistory` (utils/supHistory.ts)
+// cada vez que el user marca tomado / incrementa manualmente.
+//
+// Formato `fecha`: 'YYYY-MM-DD' local · `count` es la suma de tomas
+// de ese día (≥ 1). Si por revertirse llega a 0, la entrada se borra
+// del array para mantenerlo bounded.
+export interface SupHistoryEntry {
+  fecha: string;
+  count: number;
+}
+
+// Tope del array de histórico · 366 días (1 año + bisiesto). Suficiente
+// para los gráficos diario/semanal/mensual/anual del GraphsModal y
+// mantiene el doc del user pequeño. Al sobrepasar, se descartan las
+// entradas más antiguas.
+export const SUP_HISTORY_MAX_DAYS = 366;
+
 export interface Suplementos {
   // ── Stock en GRAMOS (igual que el v1) ──────────────────────────────────
   // El stock se guarda en gramos (lo que pone el bote: "750g de whey")
@@ -589,6 +661,20 @@ export interface Suplementos {
   // tomado). Con YYYY-MM-DD el comportamiento es estricto y correcto.
   last_batido_date: string | null;
   last_creatina_date: string | null;
+
+  // ── Histórico fechado de tomas (Sub-fase 2E.1) ──────────────────────
+  // Cada vez que el user marca/incrementa una toma, se añade/incrementa
+  // la entry de hoy. Bounded a SUP_HISTORY_MAX_DAYS días (los más
+  // antiguos se descartan al sobrepasar). Optional para retrocompat
+  // con docs pre-2E.1 · `ensureUserDocumentSchema` los siembra `[]`.
+  //
+  // Alimenta los gráficos histórico día/semana/mes/año del GraphsModal
+  // (tab Suplementación). Los counters acumulados (semana/mes/año/total)
+  // siguen siendo la fuente de verdad para HoyPage; este histórico es
+  // adicional, no reemplaza nada.
+  batidoHistory?: SupHistoryEntry[];
+  creatinaHistory?: SupHistoryEntry[];
+
   // Espacio para crecer · vitamina D, omega-3, etc. en futuras versiones.
 }
 
@@ -720,6 +806,130 @@ export function calcCreatinaStats(sup: Suplementos): SupCalc {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// REGISTRO DE PESOS · Sub-fase 2E
+//
+// Subcolección /users/{uid}/registros/{YYYY-MM-DD} · cada doc = un día con
+// su selección de plan (entreno o descanso explícito), kgs/reps por serie
+// de cada ejercicio y notas libres. Réplica funcional del v1 (`regCache`)
+// pero migrada a Firestore como subcolección · queries por rango,
+// paginación y reglas por documento.
+//
+// El plan referenciado es siempre uno de los `entrenos.planes` del propio
+// user (mismo origen que EntrenoPage/HoyPage) · format: 'PLANID|DAYINDEX'.
+
+// Una serie loggeada · kg/reps como string para preservar coma decimal
+// ("80,5") y permitir vacíos parciales (kg sin reps o viceversa). El v1
+// usaba el mismo formato y lo respetamos para no perder fidelidad.
+export interface SerieRegistrada {
+  kg: string;   // "80,5" o "" (vacío = no registrado todavía)
+  reps: string; // "8" o ""
+}
+
+export interface EjercicioRegistrado {
+  sets: SerieRegistrada[];
+}
+
+// Doc /users/{uid}/registros/{YYYY-MM-DD}.
+//
+// `plan` formato (réplica del v1):
+//   - 'PLANID|DAYINDEX' → entreno (ej. '4dias|0' = Día A del Plan 4 Días)
+//   - 'rest' → día de descanso explícito (cuenta para racha pero no para PRs)
+//
+// La key del `exercises` map es el NOMBRE EXACTO del ejercicio del plan
+// (case-preserving · útil para mostrar en el panel sin reabrir el plan).
+// La normalización (`normalizeExerciseName`) solo se usa al cruzar con
+// `registroStats.prs` y `registroStats.exerciseHistory` para evitar PRs
+// duplicados por casing/espacios extra.
+export interface RegistroDia {
+  fecha: string;            // 'YYYY-MM-DD' · denormalizado (igual que el id)
+  plan: string;             // 'PLANID|DAYINDEX' | 'rest'
+  exercises: Record<string, EjercicioRegistrado>;
+  notes: string;            // texto libre · max 500 chars (validar cliente)
+  updatedAt: number;        // ms epoch · última escritura
+}
+
+export function defaultRegistroDia(fecha: string): RegistroDia {
+  return { fecha, plan: '', exercises: {}, notes: '', updatedAt: Date.now() };
+}
+
+// ── Stats agregados sobre el histórico de /registros ──────────────────
+//
+// Mantenidos por el cliente vía `runTransaction` en `setRegistroDia` /
+// `deleteRegistroDia`. Decisión Fase 2E: stats en cliente (plan Spark ·
+// sin Cloud Functions todavía). Cuando llegue Fase 6 podemos migrar a
+// una CF que escuche `onWrite(/registros/{fecha})` y reescriba esto.
+//
+// `racha` NO está aquí · se calcula on-the-fly en `useRegistroStats`
+// leyendo los últimos ~60 días (1 query barata) y contando consecutivos
+// desde el más reciente. Persistirla forzaría recalcular en cada read
+// porque depende de "hasta hoy" · no es un delta puro.
+
+export interface PRStat {
+  kg: number;        // peso máximo nunca registrado · número parseado
+  fecha: string;     // 'YYYY-MM-DD' del PR
+}
+
+export interface ExerciseHistoryEntry {
+  fecha: string;     // 'YYYY-MM-DD' de la sesión
+  maxKg: number;     // max kg de las series ese día (0 si todas vacías)
+}
+
+export interface RegistroStats {
+  // Días con registro · suma 'rest' + entrenos con al menos un kg loggeado.
+  // Es el "Total entrenos" del v2 mockup (cuenta adherencia al plan).
+  totalEntrenos: number;
+  // PRs por ejercicio · key = nombre normalizado.
+  // ⚠ Best-effort: solo se ACTUALIZA al alza en set, NO se recalcula al
+  // borrar/editar a la baja. Si user borra el día del PR, el peso queda
+  // intacto en el cache (la fecha ya no existe en /registros). Aceptado
+  // para Fase 2E · Fase 6 con Cloud Function refinará.
+  prs: Record<string, PRStat>;
+  // Historial bounded para sparkline · key = nombre normalizado.
+  // Ordenado por fecha asc · max MAX_EXERCISE_HISTORY entradas. Al
+  // sobrepasar el límite se descarta la más antigua.
+  exerciseHistory: Record<string, ExerciseHistoryEntry[]>;
+}
+
+export function defaultRegistroStats(): RegistroStats {
+  return { totalEntrenos: 0, prs: {}, exerciseHistory: {} };
+}
+
+// Tope del array de historial por ejercicio · suficiente para un
+// sparkline visual (>10 puntos no caben legibles en una línea de
+// ~120px de la card del día) y mantiene el doc del user bounded.
+export const MAX_EXERCISE_HISTORY = 10;
+
+// Normaliza el nombre de un ejercicio para usarlo como key en stats.
+// "Press banca con barra" / "press banca con barra " / "PRESS BANCA CON BARRA"
+// → "press banca con barra". Evita PRs duplicados por casing/espacios.
+export function normalizeExerciseName(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+// Parsea "80,5" / "80.5" / "92.5kg" → 80.5. Devuelve 0 si no se puede.
+// Réplica de la heurística del v1 (RegistroPage acepta coma decimal por
+// localización española). Usado en el cliente al guardar el registro
+// para calcular max series y comparar contra PR existente.
+export function parseKgString(raw: string): number {
+  if (!raw) return 0;
+  const cleaned = String(raw).replace(',', '.').replace(/[^\d.]/g, '');
+  const n = parseFloat(cleaned);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+// Devuelve el max kg de las series de un ejercicio registrado · 0 si
+// no hay ninguna serie con kg parseable.
+export function maxKgEjercicio(ej: EjercicioRegistrado): number {
+  if (!ej?.sets?.length) return 0;
+  let max = 0;
+  for (const s of ej.sets) {
+    const v = parseKgString(s.kg);
+    if (v > max) max = v;
+  }
+  return max;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // MONETIZACIÓN E IA · plan + límites de generación
 //
 // Modelo de negocio (decidido en Fase 2A):
@@ -837,6 +1047,31 @@ export interface UserDocument {
   // que mirar `user.isAnonymous` desde Auth en cada tab.
   isDemo?: boolean;
 
+  // ── TTL · auto-delete de invitados (Fase 11-2) ──
+  // Solo se setea para usuarios anónimos. Apunta a un Timestamp de
+  // Firestore (NO number ms · TTL requiere tipo Timestamp). El doc
+  // se borra automáticamente cuando el reloj de servidor supera ese
+  // momento, gracias a la TTL policy configurada en Firebase Console
+  // sobre el campo `expiresAt` de la colección `/users`.
+  //
+  // Mantenemos el campo "vivo" mientras el invitado siga usando la
+  // app · cada `touchLastActive(uid, true)` lo extiende a `now + 3
+  // días`. Si para de visitar la app durante 3 días → el doc se
+  // borra.
+  //
+  // Al vincular cuenta (linkAnonymousAccount/Google), el cliente
+  // hace un `updateDoc(ref, { expiresAt: deleteField() })` para que
+  // deje de caducar.
+  //
+  // ⚠ TTL solo borra el doc principal. NO borra:
+  //   - La subcolección /users/{uid}/registros/{...}
+  //   - El usuario de Firebase Auth
+  // Una Cloud Function programada (Fase 6) hará la limpieza completa
+  // en cascada · busca docs caducados que aún tengan sub-collección
+  // viva o Auth user, y los borra. El campo `expiresAt` es la señal
+  // que la Function utiliza para decidir qué borrar.
+  expiresAt?: import('firebase/firestore').Timestamp;
+
   // ── Flags por día del menú (Fase 2B.6) ──
   // Réplica del v1 (`weekend_excluded` + `days_hidden` localStorage):
   // permite excluir un día de la media semanal o esconder un día
@@ -844,6 +1079,14 @@ export interface UserDocument {
   // DayKey afectados (no `Record` para que la persistencia y la
   // serialización a Firestore sean limpias). Vacíos por defecto.
   menuFlags?: MenuFlags;
+
+  // ── Stats agregadas del registro de pesos (Sub-fase 2E) ──
+  // Mantenidas por el cliente vía `runTransaction` al guardar/borrar
+  // un doc en /users/{uid}/registros/{fecha}. Optional para retrocompat
+  // con docs creados antes de Fase 2E · `ensureUserDocumentSchema` lo
+  // siembra vacío cuando falta. La racha NO está aquí · se calcula
+  // on-the-fly en `useRegistroStats` (1 query a /registros).
+  registroStats?: RegistroStats;
 }
 
 export interface MenuFlags {
@@ -1118,17 +1361,40 @@ export function defaultEntrenos(): Entrenos {
 }
 
 // Catálogo de las 7 categorías builtIn · default que se siembra al
-// crear el doc. El user puede renombrarlas / cambiar emoji / color
+// crear el doc. El user puede renombrarlas / cambiar icono / color
 // pero NO eliminarlas (builtIn=true). Ordenadas como en v1.
+//
+// El campo `emoji` ahora contiene ids Tabler `"tb:<slug>"` (ver
+// `utils/iconRegistry.ts`). Antes eran emojis unicode (🥦🥛🍗🌾🥑🛒🧪)
+// · sustituidos por iconos Tabler outline para coherencia visual con
+// el resto de la UI (Ionicons outline).
 export const DEFAULT_COMPRA_CATEGORIAS: CategoriaCompra[] = [
-  { id: 'frutas_verduras', nombre: 'Frutas y verduras', emoji: '🥦', color: 'var(--btal-lime)',  order: 0, builtIn: true },
-  { id: 'lacteos',         nombre: 'Lácteos',           emoji: '🥛', color: 'var(--btal-violet)', order: 1, builtIn: true },
-  { id: 'proteinas',       nombre: 'Proteínas',         emoji: '🍗', color: 'var(--btal-coral)',  order: 2, builtIn: true },
-  { id: 'hidratos',        nombre: 'Hidratos',          emoji: '🌾', color: 'var(--btal-gold)',   order: 3, builtIn: true },
-  { id: 'grasas',          nombre: 'Grasas',            emoji: '🥑', color: 'var(--btal-cyan)',   order: 4, builtIn: true },
-  { id: 'despensa',        nombre: 'Despensa',          emoji: '🛒', color: 'var(--btal-blue)',   order: 5, builtIn: true },
-  { id: 'suplementacion',  nombre: 'Suplementación',    emoji: '🧪', color: 'var(--btal-lime)',  order: 6, builtIn: true },
+  { id: 'frutas_verduras', nombre: 'Frutas y verduras', emoji: 'tb:salad',         color: 'var(--btal-lime)',  order: 0, builtIn: true },
+  { id: 'lacteos',         nombre: 'Lácteos',           emoji: 'tb:milk',          color: 'var(--btal-violet)', order: 1, builtIn: true },
+  { id: 'proteinas',       nombre: 'Proteínas',         emoji: 'tb:meat',          color: 'var(--btal-coral)',  order: 2, builtIn: true },
+  { id: 'hidratos',        nombre: 'Hidratos',          emoji: 'tb:wheat',         color: 'var(--btal-gold)',   order: 3, builtIn: true },
+  { id: 'grasas',          nombre: 'Grasas',            emoji: 'tb:avocado',       color: 'var(--btal-cyan)',   order: 4, builtIn: true },
+  { id: 'despensa',        nombre: 'Despensa',          emoji: 'tb:shopping-cart', color: 'var(--btal-blue)',   order: 5, builtIn: true },
+  { id: 'suplementacion',  nombre: 'Suplementación',    emoji: 'tb:flask',         color: 'var(--btal-lime)',  order: 6, builtIn: true },
 ];
+
+// Defaults centralizados para los iconos fallback de la UI · usados
+// por `<MealIcon>` cuando el campo `emoji` de la entidad es null/undef.
+//
+// Antes vivían duplicados como `MEAL_EMOJI` (🌅☀️🍎🌙) en HoyPage,
+// MenuPage, MealSheet y MealEditorModal · unificados aquí como única
+// fuente de verdad. Ids del registry curado en `utils/iconRegistry.ts`.
+
+export const MEAL_ICON_DEFAULT: Record<MealKey, string> = {
+  desayuno: 'tb:sunrise',
+  comida:   'tb:sun',
+  merienda: 'tb:apple',
+  cena:     'tb:moon',
+};
+
+export const EXTRA_ICON_DEFAULT = 'tb:tools-kitchen-2';
+
+export const COMPRA_CATEGORIA_ICON_DEFAULT = 'tb:shopping-cart';
 
 export function defaultCompra(): Compra {
   return {
@@ -1191,6 +1457,8 @@ export function defaultSuplementos(): Suplementos {
     creatina_anio_inicio: null,
     last_batido_date: null,
     last_creatina_date: null,
+    batidoHistory: [],
+    creatinaHistory: [],
   };
 }
 
@@ -1211,6 +1479,7 @@ export function defaultUserDocument(): UserDocument {
     lastActive: now,
     medicalDisclaimerAcceptedAt: null,
     menuFlags: defaultMenuFlags(),
+    registroStats: defaultRegistroStats(),
   };
 }
 

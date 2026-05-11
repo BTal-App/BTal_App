@@ -1,21 +1,148 @@
-import { useRef } from 'react';
-import { IonContent, IonIcon, IonPage } from '@ionic/react';
-import { calendarOutline } from 'ionicons/icons';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { IonContent, IonPage, IonToast } from '@ionic/react';
 import { TabHeader } from '../../components/TabHeader';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
+import { RegistroCalendar } from '../../components/registro/RegistroCalendar';
+import { RegDayPanel } from '../../components/registro/RegDayPanel';
+import { RegistroStatsGrid } from '../../components/registro/RegistroStatsGrid';
+import { useAuth } from '../../hooks/useAuth';
+import { useProfile } from '../../hooks/useProfile';
+import { usePreferences } from '../../hooks/usePreferences';
+import { useRegistroMes } from '../../hooks/useRegistroMes';
+import { useRegistroStats } from '../../hooks/useRegistroStats';
+import {
+  deleteRegistroDia as deleteRegistroDiaDb,
+  setRegistroDia as setRegistroDiaDb,
+} from '../../services/db';
+import { getEffectiveRecommendedPlanId, type RegistroDia } from '../../templates/defaultUser';
+import { todayDateStr } from '../../utils/dateKeys';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
+import './RegistroPage.css';
 
-// Tab Registro · placeholder de Fase 1.
-// En la Fase 5 montaremos: stats grid (racha, este mes, PRs, total
-// entrenos) + calendar mensual con días train/rest/PR + tarjeta del día
-// seleccionado con los pesos registrados de cada ejercicio.
+// Tab Registro · Sub-fase 2E.
 //
-// Todo se persiste en Firestore — históricos por sesión bajo
-// /users/{uid}/registros/{fecha} (esquema a definir en Fase 5).
+// Réplica funcional del REGISTRO DE PESOS del v1 (sección
+// `progresion` del index.html monolítico) sobre Firestore (subcolección
+// `/users/{uid}/registros/{YYYY-MM-DD}`). Compone:
+//   - StatsGrid: 4 cards (racha, este mes, PRs, total)
+//   - Calendar: grid mensual / semanal con dots de estado
+//   - DayPanel inline (cuando hay día seleccionado): selector de plan,
+//     ejercicios con kg/serie, sparkline de historial, notas y CRUD
+//
+// La posición del calendar (year + month0 + view) se persiste en
+// `preferences.registroCal` para que sobreviva a recargas y cambios
+// de dispositivo. La fecha seleccionada NO se persiste · entrar a la
+// tab arranca sin selección y muestra solo stats + calendar.
+
 const RegistroPage: React.FC = () => {
-  // Reset del scroll al top al volver a la tab Registro.
+  const { user } = useAuth();
+  const { profile: userDoc } = useProfile();
+  const { weekStart, registroCal, setRegistroCal } = usePreferences();
+
   const contentRef = useRef<HTMLIonContentElement>(null);
   useScrollTopOnEnter(contentRef);
+
+  // Posición efectiva del calendar · si la pref está vacía, arrancamos
+  // en mes/año actual y vista 'month'. Construir la fallback con
+  // `useMemo` evita que cada render pinte un objeto nuevo (que
+  // dispararía useEffect de useRegistroMes en cascada).
+  const fallbackPos = useMemo(() => {
+    const dt = new Date();
+    return { year: dt.getFullYear(), month0: dt.getMonth(), view: 'month' as const };
+  }, []);
+  const pos = registroCal ?? fallbackPos;
+
+  // Día seleccionado · null = nada abierto debajo del calendar.
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // Datos
+  const { byDate } = useRegistroMes(pos.year, pos.month0);
+  const stats = useRegistroStats();
+
+  // Plan recomendado · si el user ha marcado algún plan custom como
+  // predeterminado, la ★ del selector va en ÉSE. Si no, fallback al
+  // builtIn derivado de `profile.diasEntreno`. Misma lógica que
+  // EntrenoPage para que ambas tabs coincidan visualmente.
+  const recommendedPlanId = userDoc
+    ? getEffectiveRecommendedPlanId(
+        userDoc.entrenos,
+        userDoc.profile?.diasEntreno ?? null,
+      )
+    : null;
+
+  // Stats "Este mes" · entrenamientos efectivos (plan != 'rest') hasta
+  // hoy si estamos viendo el mes actual, o hasta fin de mes si es uno
+  // pasado/futuro. Y = días pasados del mes (referencia humana).
+  const today = todayDateStr();
+  const { esteMesEntrenados, esteMesTotalDias } = useMemo(() => {
+    const now = new Date();
+    const isCurrent = pos.year === now.getFullYear() && pos.month0 === now.getMonth();
+    const daysInMonth = new Date(pos.year, pos.month0 + 1, 0).getDate();
+    const daysToCount = isCurrent ? now.getDate() : daysInMonth;
+    let trained = 0;
+    for (const fecha of Object.keys(byDate)) {
+      const day = parseInt(fecha.slice(8, 10), 10);
+      if (!Number.isFinite(day) || day > daysToCount) continue;
+      const reg = byDate[fecha];
+      if (reg && reg.plan && reg.plan !== 'rest') trained++;
+    }
+    return { esteMesEntrenados: trained, esteMesTotalDias: daysToCount };
+  }, [byDate, pos.year, pos.month0]);
+
+  // ── Handlers ─────────────────────────────────────────────────────────
+  function handleChangePos(next: { year: number; month0: number; view: 'month' | 'week' }) {
+    setRegistroCal(next);
+  }
+
+  function handleSelectDate(fecha: string) {
+    setSelectedDate(fecha);
+    // Auto-scroll al panel del día tras la transición de Ionic. Lo
+    // aplazamos un tick para que el panel ya esté en el DOM.
+    requestAnimationFrame(() => {
+      const el = document.getElementById('reg-day-panel-anchor');
+      if (el && contentRef.current) {
+        contentRef.current.scrollToPoint(0, el.offsetTop - 16, 300);
+      }
+    });
+  }
+
+  function handleClosePanel() {
+    setSelectedDate(null);
+  }
+
+  async function handleSave(next: RegistroDia) {
+    if (!user || !selectedDate) return;
+    await setRegistroDiaDb(user.uid, selectedDate, next);
+    setToastMsg('✓ Registro guardado');
+    // Refrescamos los recientes para que la racha se recalcule
+    // inmediatamente (sin esperar a re-mount).
+    void stats.refresh();
+  }
+
+  async function handleDelete() {
+    if (!user || !selectedDate) return;
+    await deleteRegistroDiaDb(user.uid, selectedDate);
+    setToastMsg('🗑 Registro eliminado');
+    void stats.refresh();
+    setSelectedDate(null);
+  }
+
+  // Si user navegó a otro mes y la fecha seleccionada cae fuera del
+  // rango visible, limpiamos la selección · evita inconsistencia entre
+  // el panel (mostrando un día que ya no aparece en el grid) y el
+  // calendar.
+  useEffect(() => {
+    if (!selectedDate) return;
+    const [y, m] = selectedDate.split('-').map(Number);
+    if (y !== pos.year || m - 1 !== pos.month0) {
+      // No limpiamos en vista 'week' porque el anchor del panel ES la
+      // fecha seleccionada · si cambia de mes la semana también.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (pos.view === 'month') setSelectedDate(null);
+    }
+  }, [pos.year, pos.month0, pos.view, selectedDate]);
+
   return (
     <IonPage className="app-tab-page">
       <IonContent ref={contentRef} fullscreen>
@@ -26,23 +153,53 @@ const RegistroPage: React.FC = () => {
             right={<AppAvatarButton />}
           />
 
-          <div className="app-soon-card">
-            <div className="app-soon-icon">
-              <IonIcon icon={calendarOutline} />
+          <RegistroStatsGrid
+            rachaActual={stats.racha.actual}
+            rachaUltimaFecha={stats.racha.ultimaFecha}
+            esteMesEntrenados={esteMesEntrenados}
+            esteMesTotalDias={esteMesTotalDias}
+            prsTotal={stats.prsTotal}
+            totalEntrenos={stats.totalEntrenos}
+          />
+
+          <RegistroCalendar
+            byDate={byDate}
+            year={pos.year}
+            month0={pos.month0}
+            view={pos.view}
+            selectedDate={selectedDate ?? today}
+            weekStart={weekStart}
+            onChangePos={handleChangePos}
+            onSelectDate={handleSelectDate}
+          />
+
+          {selectedDate && (
+            <div id="reg-day-panel-anchor">
+              <RegDayPanel
+                fecha={selectedDate}
+                registro={byDate[selectedDate] ?? null}
+                entrenos={userDoc?.entrenos}
+                recommendedPlanId={recommendedPlanId}
+                exerciseHistory={stats.exerciseHistory}
+                prs={stats.prs}
+                onSave={handleSave}
+                onDelete={handleDelete}
+                onClose={handleClosePanel}
+              />
             </div>
-            <h3>Pronto aquí</h3>
-            <p>
-              Calendario mensual con tus días entrenados, descansos y PRs.
-              Stats grid (racha, días del mes, PRs totales, sesiones desde
-              enero) y detalle del día seleccionado con los pesos de cada
-              ejercicio.
-            </p>
-            <span className="app-soon-tag">Fase 5 · Registro</span>
-          </div>
+          )}
 
           <div className="app-tab-pad-bottom" />
         </div>
       </IonContent>
+
+      <IonToast
+        isOpen={toastMsg !== null}
+        message={toastMsg ?? ''}
+        duration={1800}
+        position="bottom"
+        onDidDismiss={() => setToastMsg(null)}
+      />
     </IonPage>
   );
 };

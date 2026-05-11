@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { IonIcon } from '@ionic/react';
-import { chevronDownOutline } from 'ionicons/icons';
+import { MealIcon } from './MealIcon';
 import { blurAndRun } from '../utils/focus';
 import './CollapsibleSection.css';
 
@@ -42,8 +41,9 @@ export function CollapsibleSection({
           {subtitle && <span className="collapsible-subtitle">{subtitle}</span>}
         </div>
         {badge && <span className="collapsible-badge">{badge}</span>}
-        <IonIcon
-          icon={chevronDownOutline}
+        <MealIcon
+          value="tb:chevron-down"
+          size={20}
           className={'collapsible-chevron' + (open ? ' open' : '')}
         />
       </button>

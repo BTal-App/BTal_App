@@ -2,19 +2,10 @@ import { useMemo, useRef, useState } from 'react';
 import {
   IonAlert,
   IonContent,
-  IonIcon,
   IonPage,
   IonToast,
 } from '@ionic/react';
-import {
-  addOutline,
-  closeOutline,
-  flaskOutline,
-  pencilOutline,
-  refreshOutline,
-  searchOutline,
-  shareSocialOutline,
-} from 'ionicons/icons';
+import { MealIcon } from '../../components/MealIcon';
 import { TabHeader } from '../../components/TabHeader';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
 import { EditSupStockModal } from '../../components/EditSupStockModal';
@@ -26,6 +17,7 @@ import {
   calcBatidoStats,
   calcCreatinaStats,
   defaultCompra,
+  COMPRA_CATEGORIA_ICON_DEFAULT,
   type CategoriaCompra,
   type Compra,
   type ItemCompra,
@@ -172,7 +164,10 @@ const CompraPage: React.FC = () => {
       const items = (compra.items[cat.id] ?? []).filter((it) => !it.comprado);
       if (items.length === 0) continue;
       hasItems = true;
-      lines.push(`\n${cat.emoji} ${cat.nombre.toUpperCase()}`);
+      // El emoji 🛒 del header del shareText se conserva (string literal)
+      // pero el `cat.emoji` ahora es un id Tabler `"tb:..."` no
+      // renderizable como string · lo omitimos · solo nombre en mayus.
+      lines.push(`\n${cat.nombre.toUpperCase()}`);
       for (const item of items) {
         const precio = item.precio !== null ? ` · ${fmtPrice(item.precio)}` : '';
         const cantidad = item.cantidad ? ` · ${item.cantidad}` : '';
@@ -231,7 +226,7 @@ const CompraPage: React.FC = () => {
           {/* ─── Toolbar superior ─── */}
           <div className="compra-toolbar">
             <div className="compra-search">
-              <IonIcon icon={searchOutline} className="compra-search-icon" />
+              <MealIcon value="tb:search" size={18} className="compra-search-icon" />
               <input
                 type="text"
                 className="compra-search-input"
@@ -248,7 +243,7 @@ const CompraPage: React.FC = () => {
                   onClick={blurAndRun(() => setQuery(''))}
                   aria-label="Limpiar búsqueda"
                 >
-                  <IonIcon icon={closeOutline} />
+                  <MealIcon value="tb:x" size={16} />
                 </button>
               )}
             </div>
@@ -259,7 +254,7 @@ const CompraPage: React.FC = () => {
               aria-label="Reiniciar marcas de comprado"
               title="Reiniciar carrito"
             >
-              <IonIcon icon={refreshOutline} />
+              <MealIcon value="tb:refresh" size={20} />
             </button>
             <button
               type="button"
@@ -268,7 +263,7 @@ const CompraPage: React.FC = () => {
               aria-label="Compartir lista"
               title="Compartir lista"
             >
-              <IonIcon icon={shareSocialOutline} />
+              <MealIcon value="tb:share" size={20} />
             </button>
           </div>
 
@@ -305,7 +300,7 @@ const CompraPage: React.FC = () => {
               className="compra-add-categoria-btn"
               onClick={blurAndRun(() => setCategoriaModal({ mode: 'create' }))}
             >
-              <IonIcon icon={addOutline} />
+              <MealIcon value="tb:plus" size={18} />
               Nueva categoría
             </button>
           )}
@@ -323,7 +318,10 @@ const CompraPage: React.FC = () => {
           {!queryNorm && sup && batidoStats && creatinaStats && (
             <div className="compra-sup-card">
               <div className="compra-sup-cat-header">
-                <h2>💪 SUPLEMENTACIÓN</h2>
+                <h2>
+                  <MealIcon value="tb:barbell" size={18} className="compra-sup-cat-icon" />
+                  SUPLEMENTACIÓN
+                </h2>
               </div>
               <SupProductoRow
                 defaultName="Proteína"
@@ -357,7 +355,7 @@ const CompraPage: React.FC = () => {
                       : '')
                   }
                 >
-                  🥤{' '}
+                  <MealIcon value="tb:cup" size={14} className="compra-sup-badge-icon" />
                   {batidoStats.posibles === null
                     ? '—'
                     : `${batidoStats.posibles} batido${
@@ -366,8 +364,9 @@ const CompraPage: React.FC = () => {
                 </span>
               </div>
               <p className="compra-sup-note">
-                Pulsa <strong>✏</strong> en cada producto para ajustar
-                nombre, precio y los gramos del bote.
+                Pulsa el icono{' '}
+                <MealIcon value="tb:pencil" size={14} className="compra-sup-note-icon" />
+                en cada producto para ajustar nombre, precio y los gramos del bote.
               </p>
             </div>
           )}
@@ -591,7 +590,11 @@ function CategoriaCard({
     >
       <div className="compra-cat-header">
         <span className="compra-cat-emoji" aria-hidden="true">
-          {categoria.emoji}
+          <MealIcon
+            value={categoria.emoji}
+            fallback={COMPRA_CATEGORIA_ICON_DEFAULT}
+            size={28}
+          />
         </span>
         <div className="compra-cat-id">
           <h3 className="compra-cat-name">{categoria.nombre}</h3>
@@ -633,7 +636,7 @@ function CategoriaCard({
           aria-label={`Editar categoría ${categoria.nombre}`}
           title="Editar categoría"
         >
-          <IonIcon icon={pencilOutline} />
+          <MealIcon value="tb:pencil" size={16} />
         </button>
       </div>
 
@@ -684,7 +687,7 @@ function CategoriaCard({
                 aria-label={`Editar ${item.nombre}`}
                 title="Editar"
               >
-                <IonIcon icon={pencilOutline} />
+                <MealIcon value="tb:pencil" size={16} />
               </button>
             </li>
           ))}
@@ -696,7 +699,7 @@ function CategoriaCard({
         className="compra-add-item-btn"
         onClick={blurAndRun(onAddItem)}
       >
-        <IonIcon icon={addOutline} />
+        <MealIcon value="tb:plus" size={18} />
         Añadir producto
       </button>
     </div>
@@ -747,7 +750,7 @@ function SupProductoRow({
           onClick={blurAndRun(onEdit)}
           aria-label={`Editar ${displayName}`}
         >
-          <IonIcon icon={pencilOutline} />
+          <MealIcon value="tb:pencil" size={16} />
         </button>
       </div>
 
@@ -757,7 +760,7 @@ function SupProductoRow({
           className="compra-sup-row-empty-cta"
           onClick={blurAndRun(onEdit)}
         >
-          <IonIcon icon={flaskOutline} />
+          <MealIcon value="tb:flask" size={16} />
           Introduce los gramos comprados
         </button>
       ) : (

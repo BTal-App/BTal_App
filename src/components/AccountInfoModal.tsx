@@ -1,6 +1,6 @@
-import { IonIcon, IonModal } from '@ionic/react';
-import { checkmarkCircle, closeOutline } from 'ionicons/icons';
+import { IonModal } from '@ionic/react';
 import type { User } from 'firebase/auth';
+import { MealIcon } from './MealIcon';
 import { formatDate, providerLabel } from '../utils/userDisplay';
 import './SettingsModal.css';
 import './AccountManageModal.css';
@@ -20,19 +20,19 @@ export function AccountInfoModal({ isOpen, user, onClose }: Props) {
   return (
     <IonModal isOpen={isOpen} onDidDismiss={onClose} className="settings-modal">
       <div className="settings-modal-bg">
-        <button
-          type="button"
-          className="settings-modal-close"
-          onClick={(e) => {
-            e.currentTarget.blur();
-            onClose();
-          }}
-          aria-label="Cerrar"
-        >
-          <IonIcon icon={closeOutline} />
-        </button>
-
         <div className="settings-modal-card">
+          {/* Botón X DENTRO del card · ver nota en BatidoInfoModal. */}
+          <button
+            type="button"
+            className="settings-modal-close"
+            onClick={(e) => {
+              e.currentTarget.blur();
+              onClose();
+            }}
+            aria-label="Cerrar"
+          >
+            <MealIcon value="tb:x" size={22} />
+          </button>
           <h2 className="settings-modal-title">Información de la cuenta</h2>
           <p className="settings-modal-text">
             Datos de tu cuenta de BTal.
@@ -44,15 +44,20 @@ export function AccountInfoModal({ isOpen, user, onClose }: Props) {
               <span className="account-info-value">
                 {user.email ?? '—'}
                 {user.emailVerified && (
-                  <IonIcon
-                    icon={checkmarkCircle}
+                  <span
                     style={{
                       color: 'var(--btal-cyan)',
                       marginLeft: 6,
                       verticalAlign: 'middle',
+                      display: 'inline-flex',
                     }}
-                    aria-label="Verificado"
-                  />
+                  >
+                    <MealIcon
+                      value="tb:circle-check-filled"
+                      size={16}
+                      ariaLabel="Verificado"
+                    />
+                  </span>
                 )}
               </span>
             </div>
