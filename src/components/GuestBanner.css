@@ -7,19 +7,19 @@
    vivir en cualquier tab sin colisionar con estilos específicos. */
 
 .guest-banner {
-  margin: 8px 16px 0;
+  margin: 6px 16px 0;
   width: calc(100% - 32px);
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   background: linear-gradient(
     135deg,
     rgba(176, 122, 240, 0.16),
     rgba(55, 224, 168, 0.06)
   );
   border: 1px solid rgba(176, 122, 240, 0.32);
-  border-radius: 16px;
-  padding: 14px 16px;
+  border-radius: 12px;
+  padding: 8px 12px;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
@@ -47,34 +47,35 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .guest-banner-tag {
   font-family: 'Inter', sans-serif;
-  font-size: 0.62rem;
+  font-size: 0.56rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   font-weight: 700;
   color: var(--btal-violet);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
+  line-height: 1.2;
 }
 
 .guest-banner-countdown {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   color: var(--btal-t-2);
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: none;
 }
 
 .guest-banner-text {
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   color: var(--btal-t-2);
-  line-height: 1.5;
+  line-height: 1.35;
 }
 
 .guest-banner-text strong {

@@ -80,12 +80,10 @@ export function GuestBanner() {
             )}
           </span>
           <span className="guest-banner-text">
-            Crea una cuenta para <strong>guardar tus cambios</strong> antes de
-            que esta sesión expire. Mantendrás todo lo que has tocado en el
-            plan demo.
+            Crea una cuenta para <strong>guardar tus cambios</strong>.
           </span>
         </div>
-        <MealIcon value="tb:arrow-right" size={20} />
+        <MealIcon value="tb:arrow-right" size={16} />
       </button>
 
       {/* Modal montado solo cuando se abre · evita renders + listeners

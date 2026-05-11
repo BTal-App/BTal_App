@@ -1054,6 +1054,13 @@ export interface UserDocument {
   // momento, gracias a la TTL policy configurada en Firebase Console
   // sobre el campo `expiresAt` de la colección `/users`.
   //
+  // ⚠ TTL policy requiere plan Blaze (la consola devuelve 403
+  // "Project has billing disabled" en Spark). El campo se sigue
+  // sembrando en el doc sin coste · cuando se active Blaze en Fase
+  // 6 (para Cloud Functions + Gemini), la policy empieza a barrer
+  // los docs caducados que ya tienen el campo poblado, sin
+  // necesidad de tocar código.
+  //
   // Mantenemos el campo "vivo" mientras el invitado siga usando la
   // app · cada `touchLastActive(uid, true)` lo extiende a `now + 3
   // días`. Si para de visitar la app durante 3 días → el doc se
