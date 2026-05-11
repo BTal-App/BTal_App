@@ -1,17 +1,16 @@
 /* GuestBanner · CTA permanente para vincular cuenta antes de que la
-   TTL de Firestore borre el doc del invitado. Mismo look-and-feel
-   que tenía el banner inline de HoyPage · ahora reutilizable en las
-   5 tabs vía componente standalone.
+   TTL de Firestore borre el doc del invitado.
 
-   Selectores `.guest-banner` (sin prefijo `hoy-`) para que pueda
-   vivir en cualquier tab sin colisionar con estilos específicos. */
+   Dos estados: compacto (default) → solo pill con tag + countdown +
+   chevron. Expandido → añade mensaje completo + CTA "Vincular cuenta".
+
+   El contenedor es ahora un <div> en lugar de un <button> porque
+   internamente hay dos botones independientes (toggle expandir y CTA
+   vincular). HTML no permite buttons anidados. */
 
 .guest-banner {
   margin: 6px 16px 0;
   width: calc(100% - 32px);
-  display: flex;
-  align-items: center;
-  gap: 10px;
   background: linear-gradient(
     135deg,
     rgba(176, 122, 240, 0.16),
@@ -19,40 +18,39 @@
   );
   border: 1px solid rgba(176, 122, 240, 0.32);
   border-radius: 12px;
-  padding: 8px 12px;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
   color: var(--btal-t-1);
-  transition: all 0.18s;
+  font-family: inherit;
+  transition: border-color 0.18s, background 0.18s;
+  overflow: hidden;
 }
 
 .guest-banner:hover {
   border-color: rgba(176, 122, 240, 0.55);
-  background: linear-gradient(
-    135deg,
-    rgba(176, 122, 240, 0.22),
-    rgba(55, 224, 168, 0.08)
-  );
 }
 
-.guest-banner ion-icon,
-.guest-banner svg {
-  color: var(--btal-violet);
-  flex-shrink: 0;
-}
-
-.guest-banner-info {
-  flex: 1;
-  min-width: 0;
+/* ── Toggle row · siempre visible, click expande/contrae ─── */
+.guest-banner-toggle {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+}
+
+.guest-banner-toggle:hover {
+  background: rgba(176, 122, 240, 0.06);
 }
 
 .guest-banner-tag {
+  flex: 1;
   font-family: 'Inter', sans-serif;
-  font-size: 0.56rem;
+  font-size: 0.58rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 700;
@@ -62,30 +60,84 @@
   gap: 5px;
   flex-wrap: wrap;
   line-height: 1.2;
+  min-width: 0;
 }
 
 .guest-banner-countdown {
-  font-size: 0.55rem;
+  font-size: 0.56rem;
   color: var(--btal-t-2);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: none;
 }
 
+.guest-banner-toggle svg {
+  color: var(--btal-violet);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+/* ── Detail · solo visible cuando expanded ─── */
+.guest-banner-detail {
+  padding: 0 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: guest-banner-slide-down 0.22s ease-out;
+}
+
+@keyframes guest-banner-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .guest-banner-text {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: var(--btal-t-2);
-  line-height: 1.35;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .guest-banner-text strong {
-  color: var(--btal-t-1);
+  color: #ff6b6b;
   font-weight: 700;
 }
 
-/* Estado urgente · 0-1 días restantes. Fuerza el borde a coral, hace
-   el banner ligeramente "pulsar" y pone el contador en rojo. Es UN
-   solo modificador para que el cambio visual sea inequívoco. */
+/* CTA inline · botón secundario para abrir el modal de vinculación.
+   Diseño que llama la atención dentro del banner sin competir con
+   los botones principales de la app (lima/cyan). */
+.guest-banner-cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background: var(--btal-violet);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.guest-banner-cta:hover {
+  filter: brightness(1.1);
+}
+
+.guest-banner-cta svg {
+  color: #fff;
+}
+
+/* ── Estado urgente · ≤ 1 día restante ─── */
 .guest-banner--urgent {
   border-color: rgba(255, 107, 107, 0.55);
   background: linear-gradient(
@@ -98,11 +150,10 @@
 
 .guest-banner--urgent:hover {
   border-color: rgba(255, 107, 107, 0.75);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 107, 107, 0.22),
-    rgba(176, 122, 240, 0.1)
-  );
+}
+
+.guest-banner--urgent .guest-banner-toggle:hover {
+  background: rgba(255, 107, 107, 0.06);
 }
 
 .guest-banner--urgent .guest-banner-tag {
@@ -114,7 +165,16 @@
   font-weight: 700;
 }
 
-.guest-banner--urgent ion-icon,
-.guest-banner--urgent svg {
+.guest-banner--urgent .guest-banner-toggle svg {
   color: #ff6b6b;
+}
+
+.guest-banner--urgent .guest-banner-cta {
+  background: #ff6b6b;
+}
+
+/* En estado urgente apagamos la animación pulse cuando está
+   expandido para no marear al user leyendo el mensaje. */
+.guest-banner--urgent.guest-banner--expanded {
+  animation: none;
 }

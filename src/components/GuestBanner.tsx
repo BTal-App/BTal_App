@@ -50,23 +50,42 @@ export function GuestBanner() {
     () => null,
   );
 
+  // Estado de expansión · default colapsado (solo pill compacto).
+  // Al expandir aparece el mensaje completo + CTA "Vincular cuenta".
+  // Se resetea al desmontar el componente (al cambiar de tab volverá
+  // al estado compacto) · intencional, evita que el banner ocupe la
+  // pantalla entera en una tab donde el user solo quiere ver datos.
+  const [expanded, setExpanded] = useState(false);
+
   // Solo aplicable a invitados · devolvemos null para cuentas reales
   // para que los tab pages puedan montar <GuestBanner /> sin condicional.
   if (!user?.isAnonymous) return null;
 
+  const isUrgent = guestDaysLeft !== null && guestDaysLeft <= 1;
+
   return (
     <>
-      <button
-        type="button"
+      <div
         className={
           'guest-banner'
-          + (guestDaysLeft !== null && guestDaysLeft <= 1
-            ? ' guest-banner--urgent'
-            : '')
+          + (isUrgent ? ' guest-banner--urgent' : '')
+          + (expanded ? ' guest-banner--expanded' : '')
         }
-        onClick={blurAndRun(() => setLinkOpen(true))}
       >
-        <div className="guest-banner-info">
+        {/* Fila superior · siempre visible. Al click toggle el expand.
+            La chevron es parte visual del button entero · pulsar
+            cualquier parte de esta fila amplía o contrae. */}
+        <button
+          type="button"
+          className="guest-banner-toggle"
+          onClick={blurAndRun(() => setExpanded((e) => !e))}
+          aria-expanded={expanded}
+          aria-label={
+            expanded
+              ? 'Ocultar detalles del modo prueba'
+              : 'Ver detalles del modo prueba'
+          }
+        >
           <span className="guest-banner-tag">
             Modo prueba
             {guestDaysLeft !== null && (
@@ -79,12 +98,43 @@ export function GuestBanner() {
               </span>
             )}
           </span>
-          <span className="guest-banner-text">
-            Crea una cuenta para <strong>guardar tus cambios</strong>.
-          </span>
-        </div>
-        <MealIcon value="tb:arrow-right" size={16} />
-      </button>
+          <MealIcon
+            value={expanded ? 'tb:chevron-up' : 'tb:chevron-down'}
+            size={14}
+          />
+        </button>
+
+        {/* Detalle expandible · mensaje completo + CTA hacia el modal
+            de vinculación. Solo se renderiza cuando expanded=true ·
+            evita ocupar la altura del DOM aunque esté oculto. */}
+        {expanded && (
+          <div className="guest-banner-detail">
+            <p className="guest-banner-text">
+              Esta sesión de invitado caduca en{' '}
+              {guestDaysLeft === null
+                ? '3 días'
+                : guestDaysLeft === 0
+                ? 'menos de un día'
+                : guestDaysLeft === 1
+                ? '1 día'
+                : `${guestDaysLeft} días`}
+              . Si no creas una cuenta antes,{' '}
+              <strong>todos tus datos se borrarán permanentemente</strong>{' '}
+              (perfil, menú, entrenos, compra, suplementos y registro de
+              pesos). Al vincular cuenta mantendrás todo lo que has tocado
+              en el plan demo.
+            </p>
+            <button
+              type="button"
+              className="guest-banner-cta"
+              onClick={blurAndRun(() => setLinkOpen(true))}
+            >
+              Vincular cuenta
+              <MealIcon value="tb:arrow-right" size={14} />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Modal montado solo cuando se abre · evita renders + listeners
           cuando no se necesita. */}
