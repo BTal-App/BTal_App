@@ -1,4 +1,5 @@
 import { useState, useSyncExternalStore } from 'react';
+import { IonToast } from '@ionic/react';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { LinkGuestAccountModal } from './LinkGuestAccountModal';
@@ -56,6 +57,10 @@ export function GuestBanner({ dismissible = true, inSheet = false }: Props = {})
   // Estado de "ocultado por el user" · solo aplica si dismissible.
   // ProfileSheet pasa dismissible=false y este state queda inerte.
   const [hidden, setHidden] = useState(() => dismissible && isDismissed());
+  // Toast informativo tras dismiss · le recordamos al user que el
+  // aviso sigue siendo accesible desde el perfil para que no se le
+  // pase el plazo de los 3 días.
+  const [dismissedToast, setDismissedToast] = useState(false);
   // Estado de expansión · default colapsado en tabs · expandido en
   // ProfileSheet (no hay espacio para colapsar dentro del sheet y
   // queremos que el mensaje se lea de un vistazo cuando el user va
@@ -83,7 +88,6 @@ export function GuestBanner({ dismissible = true, inSheet = false }: Props = {})
   );
 
   if (!user?.isAnonymous) return null;
-  if (hidden) return null;
 
   const isUrgent = guestDaysLeft !== null && guestDaysLeft <= 1;
 
@@ -91,10 +95,15 @@ export function GuestBanner({ dismissible = true, inSheet = false }: Props = {})
     e.stopPropagation();
     markDismissed();
     setHidden(true);
+    setDismissedToast(true);
   };
 
   return (
     <>
+      {/* Render del banner solo si no está oculto. El IonToast vive
+          fuera del condicional para que pueda seguir mostrándose al
+          desaparecer el banner tras el dismiss. */}
+      {!hidden && (
       <div
         className={
           'guest-banner'
@@ -153,7 +162,7 @@ export function GuestBanner({ dismissible = true, inSheet = false }: Props = {})
         {expanded && (
           <div className="guest-banner-detail">
             <p className="guest-banner-text">
-              Esta sesión de invitado caduca en{' '}
+              Esta sesión de invitado caducará en{' '}
               {guestDaysLeft === null
                 ? '3 días'
                 : guestDaysLeft === 0
@@ -162,10 +171,9 @@ export function GuestBanner({ dismissible = true, inSheet = false }: Props = {})
                 ? '1 día'
                 : `${guestDaysLeft} días`}
               . Si no creas una cuenta antes,{' '}
-              <strong>todos tus datos se borrarán permanentemente</strong>{' '}
-              (perfil, menú, entrenos, compra, suplementos y registro de
-              pesos). Al vincular cuenta mantendrás todo lo que has tocado
-              en el plan demo.
+              <strong>todos tus datos se borrarán permanentemente</strong>.
+              Al vincular tu cuenta mantendrás todo lo que has tocado en
+              este plan demo.
             </p>
             <button
               type="button"
@@ -178,6 +186,7 @@ export function GuestBanner({ dismissible = true, inSheet = false }: Props = {})
           </div>
         )}
       </div>
+      )}
 
       {linkOpen && (
         <LinkGuestAccountModal
@@ -185,6 +194,19 @@ export function GuestBanner({ dismissible = true, inSheet = false }: Props = {})
           onClose={() => setLinkOpen(false)}
         />
       )}
+
+      {/* Toast informativo tras ocultar el banner · le recordamos al
+          user dónde puede volver a verlo (el avatar de cualquier tab
+          abre ProfileSheet, donde el aviso siempre está). Duración
+          6s para que dé tiempo de leerlo con calma. */}
+      <IonToast
+        isOpen={dismissedToast}
+        onDidDismiss={() => setDismissedToast(false)}
+        message="Aviso oculto. Sigue accesible en tu perfil (avatar arriba a la derecha → datos de Modo prueba)."
+        duration={6000}
+        position="bottom"
+        color="medium"
+      />
     </>
   );
 }
