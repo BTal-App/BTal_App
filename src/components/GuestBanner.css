@@ -1,12 +1,11 @@
 /* GuestBanner · CTA permanente para vincular cuenta antes de que la
    TTL de Firestore borre el doc del invitado.
 
-   Dos estados: compacto (default) → solo pill con tag + countdown +
-   chevron. Expandido → añade mensaje completo + CTA "Vincular cuenta".
+   Dos estados: compacto (default) → pill con tag + countdown + chevron
+   + × para ocultar. Expandido → añade mensaje completo + CTA.
 
-   El contenedor es ahora un <div> en lugar de un <button> porque
-   internamente hay dos botones independientes (toggle expandir y CTA
-   vincular). HTML no permite buttons anidados. */
+   El user puede ocultar el banner permanentemente (×) en las tabs,
+   pero sigue saliendo siempre en ProfileSheet como red de seguridad. */
 
 .guest-banner {
   margin: 6px 16px 0;
@@ -28,19 +27,33 @@
   border-color: rgba(176, 122, 240, 0.55);
 }
 
-/* ── Toggle row · siempre visible, click expande/contrae ─── */
+/* Variante in-sheet · banner dentro de ProfileSheet · quita los
+   márgenes horizontales porque el sheet ya tiene padding 20px. */
+.guest-banner--in-sheet {
+  margin: 0;
+  width: 100%;
+}
+
+/* ── Fila superior (toggle + dismiss) ─── */
+.guest-banner-toprow {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
 .guest-banner-toggle {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
-  padding: 7px 12px;
+  padding: 9px 12px;
   background: transparent;
   border: none;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
   color: inherit;
+  min-width: 0;
 }
 
 .guest-banner-toggle:hover {
@@ -50,21 +63,21 @@
 .guest-banner-tag {
   flex: 1;
   font-family: 'Inter', sans-serif;
-  font-size: 0.58rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 700;
   color: var(--btal-violet);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex-wrap: wrap;
-  line-height: 1.2;
+  line-height: 1.25;
   min-width: 0;
 }
 
 .guest-banner-countdown {
-  font-size: 0.56rem;
+  font-size: 0.67rem;
   color: var(--btal-t-2);
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -77,12 +90,34 @@
   transition: transform 0.2s;
 }
 
+/* Botón × dismiss · oculto el banner permanentemente (localStorage).
+   Pequeño y discreto para que el user lo vea pero no le moleste el
+   diseño. Hover hace su zona visible. */
+.guest-banner-dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  border-left: 1px solid rgba(176, 122, 240, 0.18);
+  color: var(--btal-t-3);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.guest-banner-dismiss:hover {
+  background: rgba(176, 122, 240, 0.1);
+  color: var(--btal-t-1);
+}
+
 /* ── Detail · solo visible cuando expanded ─── */
 .guest-banner-detail {
-  padding: 0 12px 10px;
+  padding: 0 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   animation: guest-banner-slide-down 0.22s ease-out;
 }
 
@@ -98,7 +133,7 @@
 }
 
 .guest-banner-text {
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   color: var(--btal-t-2);
   line-height: 1.5;
   margin: 0;
@@ -109,21 +144,18 @@
   font-weight: 700;
 }
 
-/* CTA inline · botón secundario para abrir el modal de vinculación.
-   Diseño que llama la atención dentro del banner sin competir con
-   los botones principales de la app (lima/cyan). */
 .guest-banner-cta {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 13px;
+  padding: 8px 14px;
   background: var(--btal-violet);
   border: none;
   border-radius: 8px;
   color: #fff;
   font-family: 'Inter', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: filter 0.15s, transform 0.1s;
@@ -167,6 +199,10 @@
 
 .guest-banner--urgent .guest-banner-toggle svg {
   color: #ff6b6b;
+}
+
+.guest-banner--urgent .guest-banner-dismiss {
+  border-left-color: rgba(255, 107, 107, 0.25);
 }
 
 .guest-banner--urgent .guest-banner-cta {

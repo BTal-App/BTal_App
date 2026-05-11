@@ -16,6 +16,7 @@ import {
 } from '../templates/defaultUser';
 import { EditFitnessProfileModal } from './EditFitnessProfileModal';
 import { GraphsModal } from './graphs/GraphsModal';
+import { GuestBanner } from './GuestBanner';
 import { blurAndRun } from '../utils/focus';
 import './ProfileSheet.css';
 
@@ -202,6 +203,14 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
                   </div>
                 </div>
               )}
+
+              {/* Aviso de caducidad para invitados · SIEMPRE visible aquí
+                  aunque el user haya ocultado el banner de las tabs. Red
+                  de seguridad para que no se le pase el deadline. Va
+                  entre el bloque meta y "Editar datos del perfil" como
+                  ubicación natural (el invitado abre su perfil → ve sus
+                  stats → ve el aviso → puede vincular cuenta). */}
+              <GuestBanner dismissible={false} inSheet />
 
               <IonButton
                 type="button"
