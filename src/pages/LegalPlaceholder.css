@@ -23,15 +23,99 @@
   background: var(--btal-surface);
   border: 1px solid var(--btal-border);
   border-radius: 16px;
-  padding: 22px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  padding: 22px;
   color: var(--btal-t-1);
   font-size: 0.92rem;
   line-height: 1.6;
 }
 
+/* Versión / fecha · arriba del documento, separada con divider. */
+.legal-version {
+  margin: 0 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--btal-border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* Encabezados de sección · h2 son las secciones numeradas. */
+.legal-body h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 22px 0 8px;
+  color: var(--btal-t-1);
+}
+
+.legal-body h2:first-of-type {
+  margin-top: 0;
+}
+
+/* Párrafos. */
+.legal-body p {
+  margin: 0 0 12px;
+  color: var(--btal-t-2);
+}
+
+.legal-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Listas · padding contenido y márgenes coherentes con párrafos. */
+.legal-body ul {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  color: var(--btal-t-2);
+}
+
+.legal-body ul li {
+  margin: 6px 0;
+  line-height: 1.55;
+}
+
+.legal-body ul li::marker {
+  color: var(--btal-lime);
+}
+
+/* Énfasis · strong en lima suave para que destaque sin ser agresivo. */
+.legal-body strong {
+  color: var(--btal-t-1);
+  font-weight: 700;
+}
+
+.legal-body em {
+  color: var(--btal-t-1);
+  font-style: italic;
+}
+
+/* Enlaces · cyan estándar con hover lima · subrayado solo en hover. */
+.legal-body a {
+  color: var(--btal-cyan);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.legal-body a:hover,
+.legal-body a:focus-visible {
+  color: var(--btal-lime);
+  border-bottom-color: var(--btal-lime);
+}
+
+/* Código inline · referencia a paths o términos técnicos. */
+.legal-body code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82em;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: var(--btal-lime);
+}
+
+/* Nota legacy (placeholder · documento no encontrado, etc). */
 .legal-note {
   margin-top: 8px;
   padding-top: 14px;

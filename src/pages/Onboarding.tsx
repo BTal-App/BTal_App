@@ -343,7 +343,12 @@ const Onboarding: React.FC = () => {
                     consejo de un profesional sanitario. Si tengo alguna
                     condición médica, lesión, embarazo, alergia o trastorno
                     alimentario, consultaré a un profesional antes de seguir
-                    el plan.
+                    el plan. (<a
+                      href="/legal/aviso-medico"
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                    >Leer el aviso completo</a>)
                   </span>
                 </label>
               </>
