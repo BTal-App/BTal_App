@@ -47,7 +47,45 @@ jobs:
       - name: Test
         run: npm run test:run
 
+      # Guardamos contra el bug de "deploy con .env vacío" que ya nos
+      # tiró producción una vez. Si falta cualquier secret, abortamos
+      # ANTES del build · producción intacta. Sin esto, Vite acepta
+      # vars vacías felizmente y publica un bundle que crashea en
+      # runtime con `auth/invalid-api-key`.
+      - name: Verify required env vars are set
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+        run: |
+          missing=0
+          for v in VITE_FIREBASE_API_KEY VITE_FIREBASE_AUTH_DOMAIN VITE_FIREBASE_PROJECT_ID VITE_FIREBASE_STORAGE_BUCKET VITE_FIREBASE_MESSAGING_SENDER_ID VITE_FIREBASE_APP_ID; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Secret $v is empty. Add it at Settings → Secrets and variables → Actions."
+              missing=1
+            fi
+          done
+          if [ "$missing" = "1" ]; then
+            exit 1
+          fi
+          echo "All required env vars present."
+
       - name: Build (typecheck + Vite + Workbox SW)
+        # Las VITE_FIREBASE_* las embebe Vite en el bundle en tiempo de
+        # build. Sin esto, el .env del CI está vacío y la app sale a
+        # producción con `auth/invalid-api-key` en runtime. Cada var
+        # vive como secret separado en GitHub (Repo → Settings →
+        # Secrets and variables → Actions).
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         run: npm run build
 
       # Action oficial de Firebase Hosting · maneja la auth con el

@@ -11,7 +11,33 @@ Dos workflows configurados en este directorio:
 
 ## Setup inicial (acción manual del owner · una sola vez)
 
-### 1 · Secret para el deploy
+### 1.A · Secrets de configuración de la app (VITE_FIREBASE_*)
+
+⚠️ **OBLIGATORIO** o el deploy publicará el bundle con `auth/invalid-api-key` y la app se queda en el splash.
+
+Vite embebe las variables `VITE_*` en el bundle **en tiempo de build**. Tu `.env` local nunca llega a GitHub (está en `.gitignore`), así que hay que recrear cada una como secret:
+
+| Secret name | De dónde sale |
+|---|---|
+| `VITE_FIREBASE_API_KEY` | Firebase Console → Project Settings → tu Web App → SDK setup |
+| `VITE_FIREBASE_AUTH_DOMAIN` | mismo sitio (suele ser `btal-app.firebaseapp.com`) |
+| `VITE_FIREBASE_PROJECT_ID` | mismo sitio (`btal-app`) |
+| `VITE_FIREBASE_STORAGE_BUCKET` | mismo sitio |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | mismo sitio |
+| `VITE_FIREBASE_APP_ID` | mismo sitio |
+
+**Atajo · copia desde tu `.env` local**:
+1. Abre tu `.env` con bloc de notas.
+2. Por cada línea `VITE_FIREBASE_<X>=<valor>`:
+   - GitHub → Settings → Secrets and variables → Actions → **"New repository secret"**
+   - Name: `VITE_FIREBASE_<X>` (exacto, mayúsculas)
+   - Value: pega solo el valor (sin el `=` ni comillas)
+   - Add secret
+3. Repite para las 6 variables.
+
+⚠️ La `VITE_FIREBASE_API_KEY` parece "secret" pero realmente NO lo es · va al bundle público de todas formas y Firebase lo identifica solo como proyecto. La seguridad real depende de `firestore.rules` + App Check (Fase 6). Aún así la guardamos en secrets para no tener el `.env` en el repo.
+
+### 1.B · Secret para el deploy
 
 El workflow `deploy.yml` necesita un secret `FIREBASE_SERVICE_ACCOUNT_BTAL_APP` con el JSON de una service account de Firebase.
 
