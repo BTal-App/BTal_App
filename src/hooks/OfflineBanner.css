@@ -1,0 +1,43 @@
+/* Banner global de sin-conexión · mismo patrón que AdblockBanner pero
+   en color warning (ámbar) en lugar de coral. Vive fixed-top con z-index
+   alto para que esté siempre visible aunque cambies de tab. */
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99998; /* uno menos que AdblockBanner por si conviven momentáneamente */
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  background: rgba(255, 167, 38, 0.95); /* ámbar warning */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #1a0e00;
+  font-family: 'Inter', sans-serif;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.offline-banner-content {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.offline-banner-content strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.offline-banner-content p {
+  margin: 0;
+  color: #1a0e00;
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import './AdblockBanner.css';
 
 // Banner persistente que avisa cuando el navegador del usuario está
@@ -22,8 +23,14 @@ const RETRY_AFTER_DISMISS_MS = 60 * 60 * 1000; // 1h tras descartar
 // Detecta si un error tiene la "firma" típica de bloqueo de Firestore
 // por adblocker. Cubre los códigos y mensajes que la SDK de Firebase
 // devuelve cuando la red está cortada por el cliente.
+//
+// Importante: si el navegador está offline (`navigator.onLine === false`),
+// estos mismos códigos aparecen porque NO hay red en absoluto · no es
+// el adblocker. En ese caso descartamos la detección · el OfflineBanner
+// ya está informando al user del estado real.
 function isFirestoreBlockedError(err: unknown): boolean {
   if (!err) return false;
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return false;
   const code = (err as { code?: string }).code;
   const message = String((err as { message?: string }).message ?? '');
   // 'unavailable' lo lanza Firestore tras N reintentos sin red.
@@ -36,12 +43,18 @@ function isFirestoreBlockedError(err: unknown): boolean {
   return false;
 }
 
+// En builds nativos (iOS/Android via Capacitor) el WebView no carga
+// extensiones del navegador, así que los adblockers no pueden cortar
+// Firestore. Saltamos el banner entero (sin listener, sin render).
+const IS_NATIVE = Capacitor.isNativePlatform();
+
 export function AdblockBanner() {
   // 'idle' = aún no hemos detectado nada (default).
   // 'blocked' = hubo al menos un error con firma de bloqueo.
   const [status, setStatus] = useState<'idle' | 'blocked'>('idle');
 
   useEffect(() => {
+    if (IS_NATIVE) return; // no aplica en Capacitor nativo
     // Si el user descartó el banner hace menos de 1h, ignoramos la
     // detección durante ese rato.
     try {
@@ -65,6 +78,8 @@ export function AdblockBanner() {
       window.removeEventListener('unhandledrejection', onUnhandledRejection);
     };
   }, []);
+
+  if (IS_NATIVE) return null;
 
   const dismiss = () => {
     try {

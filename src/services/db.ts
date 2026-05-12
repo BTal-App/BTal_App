@@ -1590,6 +1590,25 @@ export async function getRegistrosRecientes(
   return out;
 }
 
+// Lee TODOS los registros del user · devuelve map fecha → reg, sin
+// filtro de rango. Usado por el export GDPR (`services/exportData.ts`)
+// donde tenemos que entregar el historial completo del usuario, no una
+// ventana. Cada doc pesa ≤ 50 KB (regla Firestore) y un usuario realista
+// no supera unos cientos de docs, así que la query entera cabe en una
+// sola Promise sin paginar.
+export async function getAllRegistros(
+  uid: string,
+): Promise<Record<string, RegistroDia>> {
+  const { mod, db } = await getDb();
+  const col = mod.collection(db, 'users', uid, 'registros');
+  const snap = await mod.getDocs(col);
+  const out: Record<string, RegistroDia> = {};
+  snap.forEach((d) => {
+    out[d.id] = d.data() as RegistroDia;
+  });
+  return out;
+}
+
 // Guarda un registro · escribe el doc + actualiza `registroStats` del
 // user en una transacción atómica. Devuelve las nuevas stats para que
 // el provider sincronice estado local sin re-leer el doc del user.

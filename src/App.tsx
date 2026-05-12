@@ -14,6 +14,7 @@ import { ProfileProvider } from './hooks/ProfileProvider';
 import { PreferencesProvider } from './hooks/PreferencesProvider';
 import { ErrorProvider } from './hooks/ErrorProvider';
 import { AdblockBanner } from './hooks/AdblockBanner';
+import { OfflineBanner } from './hooks/OfflineBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 /* Ionic core CSS — obligatorio */
@@ -40,6 +41,7 @@ setupIonicReact();
 const App: React.FC = () => (
   <ErrorBoundary>
     <ErrorProvider>
+    <OfflineBanner />
     <AdblockBanner />
     <AuthProvider>
       <ProfileProvider>

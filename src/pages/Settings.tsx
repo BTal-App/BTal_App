@@ -5,14 +5,17 @@ import {
   IonContent,
   IonPage,
   IonSpinner,
+  IonToast,
 } from '@ionic/react';
 import { MealIcon } from '../components/MealIcon';
 import { useAuth } from '../hooks/useAuth';
+import { useError } from '../hooks/useError';
 import { AboutModal } from '../components/AboutModal';
 import { AccountManageModal } from '../components/AccountManageModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { PreferencesModal } from '../components/PreferencesModal';
+import { downloadUserDataExport } from '../services/exportData';
 import { blurAndRun } from '../utils/focus';
 import { initialsOf } from '../utils/userDisplay';
 import './Settings.css';
@@ -47,12 +50,34 @@ function buildSupportMailto(
 const Settings: React.FC = () => {
   const history = useHistory();
   const { user, loading, isAuthed } = useAuth();
+  const { showError } = useError();
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [accountManageOpen, setAccountManageOpen] = useState(false);
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+
+  // Export GDPR · loading bloquea el botón para evitar disparar dos
+  // descargas si el user da doble click, y el toast verde confirma
+  // éxito (errores van al canal global `useError`).
+  const [exporting, setExporting] = useState(false);
+  const [exportedToast, setExportedToast] = useState(false);
+
+  const handleExport = async () => {
+    if (!user) return;
+    if (exporting) return;
+    setExporting(true);
+    try {
+      await downloadUserDataExport(user, APP_VERSION);
+      setExportedToast(true);
+    } catch (err) {
+      console.error('[Settings] export GDPR', err);
+      showError('No hemos podido preparar tus datos. Inténtalo de nuevo.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Si no hay sesión, vuelve al landing
   useEffect(() => {
@@ -163,6 +188,31 @@ const Settings: React.FC = () => {
             </button>
           </section>
 
+          {/* Datos · export RGPD · disponible también para invitados
+              (sus datos demo también les pertenecen). */}
+          <section className="settings-section">
+            <h2 className="settings-section-title">Datos</h2>
+            <button
+              type="button"
+              className="settings-row settings-row--link"
+              onClick={blurAndRun(handleExport)}
+              disabled={exporting}
+              aria-busy={exporting}
+            >
+              <div className="settings-row-info">
+                <span className="settings-row-label">Descargar mis datos</span>
+                <span className="settings-row-value settings-row-sub">
+                  Una copia completa en formato JSON (RGPD).
+                </span>
+              </div>
+              {exporting ? (
+                <IonSpinner name="dots" className="settings-row-chevron" />
+              ) : (
+                <MealIcon value="tb:download" size={20} className="settings-row-chevron" />
+              )}
+            </button>
+          </section>
+
           <section className="settings-section">
             <h2 className="settings-section-title">Soporte</h2>
 
@@ -240,6 +290,15 @@ const Settings: React.FC = () => {
         <PreferencesModal
           isOpen={preferencesOpen}
           onClose={() => setPreferencesOpen(false)}
+        />
+
+        <IonToast
+          isOpen={exportedToast}
+          message="Datos exportados · revisa tus descargas"
+          duration={2500}
+          position="top"
+          color="success"
+          onDidDismiss={() => setExportedToast(false)}
         />
 
         {/* DeleteAccountModal aquí solo se usa para invitados (los registrados

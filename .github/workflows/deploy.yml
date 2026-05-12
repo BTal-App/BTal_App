@@ -1,0 +1,63 @@
+name: Deploy to Firebase Hosting
+
+# Solo dispara en pushes a `main` · los PRs no llegan aquí.
+# Combinado con branch protection (item 12-5), garantiza que cualquier
+# código que entre en producción ha pasado por CI verde en un PR.
+on:
+  push:
+    branches: [main]
+
+# Encolar deploys · NO cancelamos uno en curso. Si llegan dos pushes
+# seguidos, el segundo espera a que el primero termine para no dejar
+# producción en estado intermedio.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build · Deploy to Firebase Hosting
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Pre-deploy gates · si alguien empuja a main saltándose el PR
+      # (posible mientras branch protection no esté activo · ver 12-5),
+      # estos checks son la última red de seguridad antes de publicar.
+      # Si branch protection está activo, este código ya pasó CI en el
+      # PR y es prácticamente redundante (toma 60-90 s extra · vale la
+      # pena por la paz mental).
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test:run
+
+      - name: Build (typecheck + Vite + Workbox SW)
+        run: npm run build
+
+      # Action oficial de Firebase Hosting · maneja la auth con el
+      # service account, sube `dist/` y publica al canal `live`.
+      # Documenta el deploy como Check en el commit · si la action
+      # devuelve != 0, el workflow falla y producción no se toca.
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BTAL_APP }}
+          projectId: btal-app
+          channelId: live

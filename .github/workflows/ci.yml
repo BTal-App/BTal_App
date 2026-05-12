@@ -1,0 +1,59 @@
+name: CI
+
+# Corre en cada PR contra main y en cada push a main. Bloqueamos el
+# merge desde Branch Protection si este workflow falla (configuración
+# manual una vez · ver item 12-5 del roadmap).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancelar runs anteriores del mismo ref · si empujas dos commits
+# seguidos al mismo PR, solo el último se ejecuta.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Lint · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # Node 22 LTS · current stable. Si el proyecto sube a Node
+          # 24 en local algún día, actualizar aquí también.
+          node-version: '22'
+          # Cache de npm vía package-lock.json · acelera installs en
+          # ~20 s vs cold cache.
+          cache: 'npm'
+
+      - name: Install dependencies
+        # `npm ci` es la forma correcta en CI · respeta el lockfile
+        # exactamente y falla si hay drift entre package.json y
+        # package-lock.json (mejor pillarlo aquí que en prod).
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        # `test:run` corre Vitest una vez (sin watch) y sale con
+        # código != 0 si algún test falla.
+        run: npm run test:run
+
+      - name: Build
+        # `npm run build` ya incluye `tsc -b` (typecheck completo) +
+        # `vite build` (genera dist con Service Worker via VitePWA).
+        # Si compilara sin errores aquí, casi seguro que también en
+        # producción.
+        run: npm run build
