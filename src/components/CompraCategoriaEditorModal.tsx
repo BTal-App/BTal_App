@@ -162,14 +162,16 @@ export function CompraCategoriaEditorModal({
   const handleDelete = async () => {
     if (!categoria || isBuiltIn) return;
     setConfirmDeleteOpen(false);
-    try {
-      const removed = await removeCompraCategoria(categoria.id);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    // Usa el mismo ciclo saving → saved → idle que el guardado normal,
+    // así el chip "Guardando…" / "Guardado ✓" también aparece en delete.
+    const result = await runSave(() => removeCompraCategoria(categoria.id));
+    if (result === SAVE_FAILED) return;
+    // Esperar a que el chip "Guardado ✓" sea visible antes de cerrar.
+    closeTimer.current = setTimeout(() => {
       onClose();
-      if (!removed) return;
-      setUndoToast(removed);
-    } catch (err) {
-      console.error('[BTal] removeCompraCategoria error:', err);
-    }
+      if (result) setUndoToast(result);
+    }, SAVED_INDICATOR_MS);
   };
 
   const handleUndo = async () => {

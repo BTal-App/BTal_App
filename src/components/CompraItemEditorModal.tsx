@@ -226,19 +226,23 @@ export function CompraItemEditorModal({
   const handleDelete = async () => {
     if (!item) return;
     setConfirmDeleteOpen(false);
-    try {
-      const removed = await removeCompraItem(categoria.id, item.id);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    // Usa el mismo ciclo saving → saved → idle que el guardado normal,
+    // así el chip "Guardando…" / "Guardado ✓" también aparece en delete.
+    const result = await runSave(() => removeCompraItem(categoria.id, item.id));
+    if (result === SAVE_FAILED) return;
+    // Esperar a que el chip "Guardado ✓" sea visible antes de cerrar.
+    closeTimer.current = setTimeout(() => {
       onClose();
-      if (!removed) return;
-      // Toast con botón "Deshacer" 5s · réplica del v1.
-      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
-      setUndoToast(removed);
-      undoTimerRef.current = setTimeout(() => {
-        setUndoToast(null);
-      }, 5000);
-    } catch (err) {
-      console.error('[BTal] removeCompraItem error:', err);
-    }
+      if (result) {
+        // Toast con botón "Deshacer" 5s · réplica del v1.
+        if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+        setUndoToast(result);
+        undoTimerRef.current = setTimeout(() => {
+          setUndoToast(null);
+        }, 5000);
+      }
+    }, SAVED_INDICATOR_MS);
   };
 
   const handleUndo = async () => {

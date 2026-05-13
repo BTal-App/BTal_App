@@ -722,100 +722,196 @@ function _ej(kg: string, sets: number): EjercicioRegistrado {
 // no solo 3 cargados a mano. El usuario ve la app "viva" desde el
 // primer minuto.
 //
-// Pattern · 3 puntos por ejercicio, offsets típicos 18-20 / 11-13 / 4-6
-// días atrás. Diferencia de progreso 5-10% sesión a sesión. Ejercicios
-// con peso corporal (Dominadas) llevan formato '+10' = corporal + 10 kg.
+// Pattern · 8 puntos por ejercicio cubriendo las últimas ~8 semanas
+// (1 sesión semanal por ejercicio). Progresión 3-5% por sesión típica
+// curva de fuerza. Ejercicios con peso corporal (Dominadas) llevan
+// formato '+10' = corporal + 10 kg.
+//
+// El último punto coincide con el día que aparece en generateDemoRegistros
+// (sesiones recientes) · así PR + history quedan consistentes con los
+// registros del calendario y el RegDayPanel.
 const _DEMO_EXERCISE_HISTORY: Record<string, ExerciseHistoryEntry[]> = {
-  // Día A · Empuje
+  // Día A · Empuje · sesiones offset 6, 13, 20, 27, 34, 41, 48, 55
   'press banca con barra': [
-    { fecha: _offsetToFecha(20), maxKg: 80 },
-    { fecha: _offsetToFecha(13), maxKg: 85 },
+    { fecha: _offsetToFecha(55), maxKg: 70 },
+    { fecha: _offsetToFecha(48), maxKg: 72.5 },
+    { fecha: _offsetToFecha(41), maxKg: 75 },
+    { fecha: _offsetToFecha(34), maxKg: 80 },
+    { fecha: _offsetToFecha(27), maxKg: 82.5 },
+    { fecha: _offsetToFecha(20), maxKg: 85 },
+    { fecha: _offsetToFecha(13), maxKg: 90 },
     { fecha: _offsetToFecha(6), maxKg: 92.5 },
   ],
   'press inclinado mancuernas': [
-    { fecha: _offsetToFecha(20), maxKg: 28 },
+    { fecha: _offsetToFecha(55), maxKg: 22 },
+    { fecha: _offsetToFecha(48), maxKg: 24 },
+    { fecha: _offsetToFecha(41), maxKg: 26 },
+    { fecha: _offsetToFecha(34), maxKg: 28 },
+    { fecha: _offsetToFecha(27), maxKg: 28 },
+    { fecha: _offsetToFecha(20), maxKg: 30 },
     { fecha: _offsetToFecha(13), maxKg: 30 },
     { fecha: _offsetToFecha(6), maxKg: 32 },
   ],
   'aperturas en polea': [
-    { fecha: _offsetToFecha(20), maxKg: 14 },
+    { fecha: _offsetToFecha(55), maxKg: 10 },
+    { fecha: _offsetToFecha(48), maxKg: 12 },
+    { fecha: _offsetToFecha(41), maxKg: 12 },
+    { fecha: _offsetToFecha(34), maxKg: 14 },
+    { fecha: _offsetToFecha(27), maxKg: 14 },
+    { fecha: _offsetToFecha(20), maxKg: 16 },
     { fecha: _offsetToFecha(13), maxKg: 16 },
     { fecha: _offsetToFecha(6), maxKg: 18 },
   ],
   'press francés barra z': [
-    { fecha: _offsetToFecha(20), maxKg: 20 },
+    { fecha: _offsetToFecha(55), maxKg: 15 },
+    { fecha: _offsetToFecha(48), maxKg: 17.5 },
+    { fecha: _offsetToFecha(41), maxKg: 17.5 },
+    { fecha: _offsetToFecha(34), maxKg: 20 },
+    { fecha: _offsetToFecha(27), maxKg: 20 },
+    { fecha: _offsetToFecha(20), maxKg: 22.5 },
     { fecha: _offsetToFecha(13), maxKg: 22.5 },
     { fecha: _offsetToFecha(6), maxKg: 25 },
   ],
   'extensiones tríceps polea': [
-    { fecha: _offsetToFecha(20), maxKg: 18 },
+    { fecha: _offsetToFecha(55), maxKg: 14 },
+    { fecha: _offsetToFecha(48), maxKg: 16 },
+    { fecha: _offsetToFecha(41), maxKg: 16 },
+    { fecha: _offsetToFecha(34), maxKg: 18 },
+    { fecha: _offsetToFecha(27), maxKg: 18 },
+    { fecha: _offsetToFecha(20), maxKg: 20 },
     { fecha: _offsetToFecha(13), maxKg: 20 },
     { fecha: _offsetToFecha(6), maxKg: 22 },
   ],
-  // Día B · Tirón
+  // Día B · Tirón · sesiones offset 5, 12, 19, 26, 33, 40, 47, 54
   'dominadas': [
-    { fecha: _offsetToFecha(19), maxKg: 5 },
+    { fecha: _offsetToFecha(54), maxKg: 0 },
+    { fecha: _offsetToFecha(47), maxKg: 2.5 },
+    { fecha: _offsetToFecha(40), maxKg: 2.5 },
+    { fecha: _offsetToFecha(33), maxKg: 5 },
+    { fecha: _offsetToFecha(26), maxKg: 5 },
+    { fecha: _offsetToFecha(19), maxKg: 7.5 },
     { fecha: _offsetToFecha(12), maxKg: 7.5 },
     { fecha: _offsetToFecha(5), maxKg: 10 },
   ],
   'remo con barra': [
-    { fecha: _offsetToFecha(19), maxKg: 60 },
+    { fecha: _offsetToFecha(54), maxKg: 50 },
+    { fecha: _offsetToFecha(47), maxKg: 52.5 },
+    { fecha: _offsetToFecha(40), maxKg: 55 },
+    { fecha: _offsetToFecha(33), maxKg: 57.5 },
+    { fecha: _offsetToFecha(26), maxKg: 60 },
+    { fecha: _offsetToFecha(19), maxKg: 62.5 },
     { fecha: _offsetToFecha(12), maxKg: 65 },
     { fecha: _offsetToFecha(5), maxKg: 70 },
   ],
   'jalón al pecho': [
-    { fecha: _offsetToFecha(19), maxKg: 50 },
+    { fecha: _offsetToFecha(54), maxKg: 40 },
+    { fecha: _offsetToFecha(47), maxKg: 42.5 },
+    { fecha: _offsetToFecha(40), maxKg: 45 },
+    { fecha: _offsetToFecha(33), maxKg: 47.5 },
+    { fecha: _offsetToFecha(26), maxKg: 50 },
+    { fecha: _offsetToFecha(19), maxKg: 52.5 },
     { fecha: _offsetToFecha(12), maxKg: 55 },
     { fecha: _offsetToFecha(5), maxKg: 60 },
   ],
   'curl con barra z': [
+    { fecha: _offsetToFecha(54), maxKg: 15 },
+    { fecha: _offsetToFecha(47), maxKg: 15 },
+    { fecha: _offsetToFecha(40), maxKg: 17.5 },
+    { fecha: _offsetToFecha(33), maxKg: 17.5 },
+    { fecha: _offsetToFecha(26), maxKg: 20 },
     { fecha: _offsetToFecha(19), maxKg: 20 },
     { fecha: _offsetToFecha(12), maxKg: 22.5 },
     { fecha: _offsetToFecha(5), maxKg: 25 },
   ],
   'curl martillo': [
-    { fecha: _offsetToFecha(19), maxKg: 10 },
+    { fecha: _offsetToFecha(54), maxKg: 8 },
+    { fecha: _offsetToFecha(47), maxKg: 8 },
+    { fecha: _offsetToFecha(40), maxKg: 9 },
+    { fecha: _offsetToFecha(33), maxKg: 10 },
+    { fecha: _offsetToFecha(26), maxKg: 10 },
+    { fecha: _offsetToFecha(19), maxKg: 12 },
     { fecha: _offsetToFecha(12), maxKg: 12 },
     { fecha: _offsetToFecha(5), maxKg: 14 },
   ],
-  // Día C · Pierna
+  // Día C · Pierna · sesiones offset 4, 11, 18, 25, 32, 39, 46, 53
   'sentadilla con barra': [
+    { fecha: _offsetToFecha(53), maxKg: 70 },
+    { fecha: _offsetToFecha(46), maxKg: 75 },
+    { fecha: _offsetToFecha(39), maxKg: 80 },
+    { fecha: _offsetToFecha(32), maxKg: 85 },
+    { fecha: _offsetToFecha(25), maxKg: 90 },
     { fecha: _offsetToFecha(18), maxKg: 95 },
     { fecha: _offsetToFecha(11), maxKg: 105 },
     { fecha: _offsetToFecha(4), maxKg: 110 },
   ],
   'peso muerto rumano': [
+    { fecha: _offsetToFecha(53), maxKg: 60 },
+    { fecha: _offsetToFecha(46), maxKg: 65 },
+    { fecha: _offsetToFecha(39), maxKg: 70 },
+    { fecha: _offsetToFecha(32), maxKg: 75 },
+    { fecha: _offsetToFecha(25), maxKg: 75 },
     { fecha: _offsetToFecha(18), maxKg: 80 },
     { fecha: _offsetToFecha(11), maxKg: 90 },
     { fecha: _offsetToFecha(4), maxKg: 100 },
   ],
   'prensa 45°': [
-    { fecha: _offsetToFecha(18), maxKg: 140 },
+    { fecha: _offsetToFecha(53), maxKg: 100 },
+    { fecha: _offsetToFecha(46), maxKg: 110 },
+    { fecha: _offsetToFecha(39), maxKg: 120 },
+    { fecha: _offsetToFecha(32), maxKg: 130 },
+    { fecha: _offsetToFecha(25), maxKg: 140 },
+    { fecha: _offsetToFecha(18), maxKg: 150 },
     { fecha: _offsetToFecha(11), maxKg: 160 },
     { fecha: _offsetToFecha(4), maxKg: 180 },
   ],
   'curl femoral': [
-    { fecha: _offsetToFecha(18), maxKg: 35 },
+    { fecha: _offsetToFecha(53), maxKg: 25 },
+    { fecha: _offsetToFecha(46), maxKg: 27.5 },
+    { fecha: _offsetToFecha(39), maxKg: 30 },
+    { fecha: _offsetToFecha(32), maxKg: 32.5 },
+    { fecha: _offsetToFecha(25), maxKg: 35 },
+    { fecha: _offsetToFecha(18), maxKg: 37.5 },
     { fecha: _offsetToFecha(11), maxKg: 40 },
     { fecha: _offsetToFecha(4), maxKg: 45 },
   ],
   'gemelos de pie': [
-    { fecha: _offsetToFecha(18), maxKg: 60 },
+    { fecha: _offsetToFecha(53), maxKg: 40 },
+    { fecha: _offsetToFecha(46), maxKg: 45 },
+    { fecha: _offsetToFecha(39), maxKg: 50 },
+    { fecha: _offsetToFecha(32), maxKg: 55 },
+    { fecha: _offsetToFecha(25), maxKg: 60 },
+    { fecha: _offsetToFecha(18), maxKg: 65 },
     { fecha: _offsetToFecha(11), maxKg: 70 },
     { fecha: _offsetToFecha(4), maxKg: 80 },
   ],
-  // Día D · Hombro + Core (Plancha excluida · es tiempo, no peso)
+  // Día D · Hombro + Core · sesiones offset 2, 9, 16, 23, 30, 37, 44, 51
+  // (Plancha excluida · es tiempo, no peso)
   'press militar con barra': [
-    { fecha: _offsetToFecha(16), maxKg: 45 },
+    { fecha: _offsetToFecha(51), maxKg: 35 },
+    { fecha: _offsetToFecha(44), maxKg: 37.5 },
+    { fecha: _offsetToFecha(37), maxKg: 40 },
+    { fecha: _offsetToFecha(30), maxKg: 42.5 },
+    { fecha: _offsetToFecha(23), maxKg: 45 },
+    { fecha: _offsetToFecha(16), maxKg: 47.5 },
     { fecha: _offsetToFecha(9), maxKg: 50 },
     { fecha: _offsetToFecha(2), maxKg: 55 },
   ],
   'elevaciones laterales': [
+    { fecha: _offsetToFecha(51), maxKg: 6 },
+    { fecha: _offsetToFecha(44), maxKg: 6 },
+    { fecha: _offsetToFecha(37), maxKg: 7 },
+    { fecha: _offsetToFecha(30), maxKg: 7 },
+    { fecha: _offsetToFecha(23), maxKg: 8 },
     { fecha: _offsetToFecha(16), maxKg: 8 },
     { fecha: _offsetToFecha(9), maxKg: 10 },
     { fecha: _offsetToFecha(2), maxKg: 12 },
   ],
   'pájaro / reverse fly': [
+    { fecha: _offsetToFecha(51), maxKg: 5 },
+    { fecha: _offsetToFecha(44), maxKg: 5 },
+    { fecha: _offsetToFecha(37), maxKg: 6 },
+    { fecha: _offsetToFecha(30), maxKg: 6 },
+    { fecha: _offsetToFecha(23), maxKg: 7 },
     { fecha: _offsetToFecha(16), maxKg: 7 },
     { fecha: _offsetToFecha(9), maxKg: 8 },
     { fecha: _offsetToFecha(2), maxKg: 10 },
@@ -850,19 +946,32 @@ const _DEMO_PRS: Record<string, PRStat> = {
 };
 
 const DEMO_REGISTRO_STATS: RegistroStats = {
-  totalEntrenos: 6, // 4 entrenos + 2 descansos en últimas 2 semanas
+  totalEntrenos: 32, // ~28 con plan + 4 descansos seleccionados de las últimas 8 semanas
   prs: _DEMO_PRS,
   exerciseHistory: _DEMO_EXERCISE_HISTORY,
 };
 
 // Genera los registros sembrables en `/users/{uid}/registros/{fecha}`.
-// Pattern: 6 días recientes (offsets 1-6 desde hoy · 4 entrenos del
-// plan custom predeterminado + 2 descansos).
+// Pattern: 8 semanas hacia atrás con cadencia A→B→C→D semanal +
+// descansos intercalados. Total ~32 registros = ~28 entrenos + ~4
+// descansos · suficiente para que el calendario, los stats (racha,
+// este mes, total entrenos, PRs totales) y las gráficas se vean
+// densos y realistas desde el primer login.
 //
-// Coherencia con el plan · cada `exercises` incluye TODOS los
-// ejercicios del día correspondiente del `DEMO_PLAN_CUSTOM_PRED`,
-// con kg realistas. Si el user abre uno de estos registros en
-// RegDayPanel ve la lista completa del plan con sus pesos.
+// Cadencia base de cada semana (~7 días, indexed por offset · más
+// cercano primero):
+//   - Día A · Empuje · offsets 6, 13, 20, 27, 34, 41, 48, 55
+//   - Día B · Tirón  · offsets 5, 12, 19, 26, 33, 40, 47, 54
+//   - Día C · Pierna · offsets 4, 11, 18, 25, 32, 39, 46, 53
+//   - Día D · Hombro · offsets 2,  9, 16, 23, 30, 37, 44, 51
+//   - Descansos       · offsets 1,  3,  7,  8 (recientes para que la
+//     racha visible sea continua) + intercalados algunos antiguos.
+//
+// Cada entreno reciente lleva kgs altos (PR-cercanos). Los antiguos
+// progresivamente bajan · curva realista de fuerza. Pesos coherentes
+// con `_DEMO_EXERCISE_HISTORY` para que sparkline + PR + registro
+// abierto cuadren entre sí.
+//
 // Los nombres COINCIDEN exactamente con los de
 // `DEMO_PLAN_CUSTOM_PRED.dias[N].ejercicios[*].nombre` (sensible a
 // case · `normalizeExerciseName` lo iguala para PRs en stats).
@@ -871,71 +980,152 @@ const DEMO_REGISTRO_STATS: RegistroStats = {
 // se siembra el doc del invitado (idempotente).
 export function generateDemoRegistros(): RegistroDia[] {
   const now = Date.now();
+
+  // Helpers · construyen el set de ejercicios de cada día con kg
+  // variables (param para mostrar progresión semanal).
+  const _diaA = (kgPress: string, kgIncl: string, kgAp: string, kgPf: string, kgExt: string) => ({
+    'Press banca con barra': _ej(kgPress, 4),
+    'Press inclinado mancuernas': _ej(kgIncl, 3),
+    'Aperturas en polea': _ej(kgAp, 3),
+    'Press francés barra Z': _ej(kgPf, 3),
+    'Extensiones tríceps polea': _ej(kgExt, 3),
+  });
+  const _diaB = (kgDom: string, kgRemo: string, kgJalon: string, kgCurlZ: string, kgMart: string) => ({
+    'Dominadas': _ej(kgDom, 4),
+    'Remo con barra': _ej(kgRemo, 4),
+    'Jalón al pecho': _ej(kgJalon, 3),
+    'Curl con barra Z': _ej(kgCurlZ, 3),
+    'Curl martillo': _ej(kgMart, 3),
+  });
+  const _diaC = (kgSent: string, kgPm: string, kgPrensa: string, kgFem: string, kgGem: string) => ({
+    'Sentadilla con barra': _ej(kgSent, 4),
+    'Peso muerto rumano': _ej(kgPm, 4),
+    'Prensa 45°': _ej(kgPrensa, 3),
+    'Curl femoral': _ej(kgFem, 3),
+    'Gemelos de pie': _ej(kgGem, 4),
+  });
+  const _diaD = (kgMil: string, kgLat: string, kgPaj: string, secPla: string) => ({
+    'Press militar con barra': _ej(kgMil, 4),
+    'Elevaciones laterales': _ej(kgLat, 4),
+    'Pájaro / Reverse fly': _ej(kgPaj, 3),
+    'Plancha frontal': _ej(secPla, 3),
+  });
+
   const samples: Array<{
     offset: number;
     plan: string;
     exercises: Record<string, EjercicioRegistrado>;
     notes: string;
   }> = [
-    {
-      offset: 6,
-      plan: 'plan_demo_custom_pred|0', // Día A · Empuje (5 ejercicios)
-      exercises: {
-        'Press banca con barra': _ej('92,5', 4),
-        'Press inclinado mancuernas': _ej('32', 3),
-        'Aperturas en polea': _ej('18', 3),
-        'Press francés barra Z': _ej('25', 3),
-        'Extensiones tríceps polea': _ej('22', 3),
-      },
-      notes: '¡PR en press banca! Buena energía hoy.',
-    },
-    {
-      offset: 5,
-      plan: 'plan_demo_custom_pred|1', // Día B · Tirón (5 ejercicios)
-      exercises: {
-        'Dominadas': _ej('+10', 4),
-        'Remo con barra': _ej('70', 4),
-        'Jalón al pecho': _ej('60', 3),
-        'Curl con barra Z': _ej('25', 3),
-        'Curl martillo': _ej('14', 3),
-      },
-      notes: '',
-    },
-    {
-      offset: 4,
-      plan: 'plan_demo_custom_pred|2', // Día C · Pierna (5 ejercicios)
-      exercises: {
-        'Sentadilla con barra': _ej('110', 4),
-        'Peso muerto rumano': _ej('100', 4),
-        'Prensa 45°': _ej('180', 3),
-        'Curl femoral': _ej('45', 3),
-        'Gemelos de pie': _ej('80', 4),
-      },
-      notes: 'Doble PR · sentadilla y peso muerto rumano.',
-    },
-    {
-      offset: 3,
-      plan: 'rest',
-      exercises: {},
-      notes: 'Descanso · día de paseo y estiramientos.',
-    },
-    {
-      offset: 2,
-      plan: 'plan_demo_custom_pred|3', // Día D · Hombro + Core (4 ejercicios)
-      exercises: {
-        'Press militar con barra': _ej('55', 4),
-        'Elevaciones laterales': _ej('12', 4),
-        'Pájaro / Reverse fly': _ej('10', 3),
-        'Plancha frontal': _ej('60', 3),
-      },
-      notes: '',
-    },
-    {
-      offset: 1,
-      plan: 'rest',
-      exercises: {},
-      notes: '',
-    },
+    // ── Semana actual (offsets 1-7) ─────────────────────────────────
+    { offset: 1, plan: 'rest', exercises: {}, notes: '' },
+    { offset: 2, plan: 'plan_demo_custom_pred|3',
+      exercises: _diaD('55', '12', '10', '60'),
+      notes: '' },
+    { offset: 3, plan: 'rest', exercises: {}, notes: 'Descanso · día de paseo y estiramientos.' },
+    { offset: 4, plan: 'plan_demo_custom_pred|2',
+      exercises: _diaC('110', '100', '180', '45', '80'),
+      notes: 'Doble PR · sentadilla y peso muerto rumano.' },
+    { offset: 5, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('+10', '70', '60', '25', '14'),
+      notes: '' },
+    { offset: 6, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('92,5', '32', '18', '25', '22'),
+      notes: '¡PR en press banca! Buena energía hoy.' },
+    { offset: 7, plan: 'rest', exercises: {}, notes: '' },
+    // ── Semana -1 (offsets 8-14) ────────────────────────────────────
+    { offset: 8, plan: 'rest', exercises: {}, notes: '' },
+    { offset: 9, plan: 'plan_demo_custom_pred|3',
+      exercises: _diaD('50', '10', '8', '55'),
+      notes: '' },
+    { offset: 11, plan: 'plan_demo_custom_pred|2',
+      exercises: _diaC('105', '90', '160', '40', '70'),
+      notes: 'Sentadilla 105×4 limpia, buena profundidad.' },
+    { offset: 12, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('+7,5', '65', '55', '22,5', '12'),
+      notes: '' },
+    { offset: 13, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('90', '30', '16', '22,5', '20'),
+      notes: '' },
+    // ── Semana -2 (offsets 15-21) ───────────────────────────────────
+    { offset: 16, plan: 'plan_demo_custom_pred|3',
+      exercises: _diaD('47,5', '8', '7', '50'),
+      notes: '' },
+    { offset: 18, plan: 'plan_demo_custom_pred|2',
+      exercises: _diaC('95', '80', '150', '37,5', '65'),
+      notes: '' },
+    { offset: 19, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('+7,5', '62,5', '52,5', '20', '12'),
+      notes: '' },
+    { offset: 20, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('85', '30', '16', '22,5', '20'),
+      notes: '' },
+    { offset: 21, plan: 'rest', exercises: {}, notes: 'Día de partido de pádel.' },
+    // ── Semana -3 (offsets 22-28) ───────────────────────────────────
+    { offset: 23, plan: 'plan_demo_custom_pred|3',
+      exercises: _diaD('45', '8', '7', '50'),
+      notes: '' },
+    { offset: 25, plan: 'plan_demo_custom_pred|2',
+      exercises: _diaC('90', '75', '140', '35', '60'),
+      notes: '' },
+    { offset: 26, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('+5', '60', '50', '20', '10'),
+      notes: '' },
+    { offset: 27, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('82,5', '28', '14', '20', '18'),
+      notes: '' },
+    // ── Semana -4 (offsets 29-35) ───────────────────────────────────
+    { offset: 30, plan: 'plan_demo_custom_pred|3',
+      exercises: _diaD('42,5', '7', '6', '45'),
+      notes: '' },
+    { offset: 32, plan: 'plan_demo_custom_pred|2',
+      exercises: _diaC('85', '75', '130', '32,5', '55'),
+      notes: '' },
+    { offset: 33, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('+5', '57,5', '47,5', '17,5', '10'),
+      notes: '' },
+    { offset: 34, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('80', '28', '14', '20', '18'),
+      notes: 'Comienzo de la fase de fuerza.' },
+    // ── Semana -5 (offsets 36-42) ───────────────────────────────────
+    { offset: 37, plan: 'plan_demo_custom_pred|3',
+      exercises: _diaD('40', '7', '6', '45'),
+      notes: '' },
+    { offset: 39, plan: 'plan_demo_custom_pred|2',
+      exercises: _diaC('80', '70', '120', '30', '50'),
+      notes: '' },
+    { offset: 40, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('+2,5', '55', '45', '17,5', '9'),
+      notes: '' },
+    { offset: 41, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('75', '26', '12', '17,5', '16'),
+      notes: '' },
+    // ── Semana -6 (offsets 43-49) ───────────────────────────────────
+    { offset: 44, plan: 'plan_demo_custom_pred|3',
+      exercises: _diaD('37,5', '6', '5', '40'),
+      notes: '' },
+    { offset: 46, plan: 'plan_demo_custom_pred|2',
+      exercises: _diaC('75', '65', '110', '27,5', '45'),
+      notes: '' },
+    { offset: 47, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('+2,5', '52,5', '42,5', '15', '8'),
+      notes: '' },
+    { offset: 48, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('72,5', '24', '12', '17,5', '16'),
+      notes: '' },
+    // ── Semana -7 (offsets 50-56) ───────────────────────────────────
+    { offset: 51, plan: 'plan_demo_custom_pred|3',
+      exercises: _diaD('35', '6', '5', '40'),
+      notes: '' },
+    { offset: 53, plan: 'plan_demo_custom_pred|2',
+      exercises: _diaC('70', '60', '100', '25', '40'),
+      notes: 'Primera semana del nuevo programa.' },
+    { offset: 54, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('0', '50', '40', '15', '8'),
+      notes: '' },
+    { offset: 55, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('70', '22', '10', '15', '14'),
+      notes: 'Primer día con el plan custom completo.' },
   ];
 
   return samples.map((s) => ({

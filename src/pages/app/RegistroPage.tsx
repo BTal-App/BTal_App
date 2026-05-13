@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { IonContent, IonPage, IonToast } from '@ionic/react';
+import { IonContent, IonPage } from '@ionic/react';
 import { TabHeader } from '../../components/TabHeader';
 import { GuestBanner } from '../../components/GuestBanner';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
@@ -18,6 +18,8 @@ import {
 import { getEffectiveRecommendedPlanId, type RegistroDia } from '../../templates/defaultUser';
 import { todayDateStr } from '../../utils/dateKeys';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
+import { SaveStatusToast } from '../../components/SaveStatusToast';
+import { useSaveStatus, SAVE_FAILED } from '../../hooks/useSaveStatus';
 import './RegistroPage.css';
 
 // Tab Registro · Sub-fase 2E.
@@ -55,7 +57,9 @@ const RegistroPage: React.FC = () => {
 
   // Día seleccionado · null = nada abierto debajo del calendar.
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  // Feedback "Guardando… / Guardado" para save + delete del registro
+  // del día. Compartido · solo uno corre a la vez.
+  const saveRegistro = useSaveStatus();
 
   // Datos
   const { byDate } = useRegistroMes(pos.year, pos.month0);
@@ -114,8 +118,10 @@ const RegistroPage: React.FC = () => {
 
   async function handleSave(next: RegistroDia) {
     if (!user || !selectedDate) return;
-    await setRegistroDiaDb(user.uid, selectedDate, next);
-    setToastMsg('✓ Registro guardado');
+    const result = await saveRegistro.runSave(() =>
+      setRegistroDiaDb(user.uid, selectedDate, next),
+    );
+    if (result === SAVE_FAILED) return;
     // Refrescamos los recientes para que la racha se recalcule
     // inmediatamente (sin esperar a re-mount).
     void stats.refresh();
@@ -123,8 +129,10 @@ const RegistroPage: React.FC = () => {
 
   async function handleDelete() {
     if (!user || !selectedDate) return;
-    await deleteRegistroDiaDb(user.uid, selectedDate);
-    setToastMsg('🗑 Registro eliminado');
+    const result = await saveRegistro.runSave(() =>
+      deleteRegistroDiaDb(user.uid, selectedDate),
+    );
+    if (result === SAVE_FAILED) return;
     void stats.refresh();
     setSelectedDate(null);
   }
@@ -196,13 +204,7 @@ const RegistroPage: React.FC = () => {
         </div>
       </IonContent>
 
-      <IonToast
-        isOpen={toastMsg !== null}
-        message={toastMsg ?? ''}
-        duration={1800}
-        position="bottom"
-        onDidDismiss={() => setToastMsg(null)}
-      />
+      <SaveStatusToast status={saveRegistro.status} />
     </IonPage>
   );
 };
