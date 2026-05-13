@@ -79,8 +79,15 @@ const HoyPage: React.FC = () => {
   useScrollTopOnEnter(contentRef);
 
   // Router para navegar al tab Menú desde el botón "Ver menú →".
+  // Acepta `day` opcional para que cuando venga del flujo MealSheet/
+  // openExtra "Editar" salte directamente al día de hoy en Menú · sin
+  // esto, si el user había navegado a Sábado en Menú y desde Hoy
+  // (miércoles) pulsa "Editar" en una comida, Menú aparece todavía
+  // en Sábado. MenuPage lee `?day=` en useIonViewWillEnter y resetea
+  // su `selectedDay` antes del render visible.
   const router = useIonRouter();
-  const goToMenu = () => router.push('/app/menu', 'forward');
+  const goToMenu = (day?: import('../../templates/defaultUser').DayKey) =>
+    router.push(day ? `/app/menu?day=${day}` : '/app/menu', 'forward');
 
   // Comidas del día de hoy · si el doc aún no se cargó, undefined.
   const todayDay = todayKey();
@@ -510,7 +517,10 @@ const HoyPage: React.FC = () => {
             comida={comidasHoy[openMeal]}
             onEdit={() => {
               setOpenMeal(null);
-              goToMenu();
+              // Pasamos `todayDay` para que MenuPage abra en el día de
+              // HOY (no en el último día que el user estuviera mirando
+              // en Menú). MenuPage lo lee de ?day= y reemplaza la URL.
+              goToMenu(todayDay);
             }}
           />
         )}
@@ -530,7 +540,7 @@ const HoyPage: React.FC = () => {
             isExtra={openExtra.esExtra ?? true}
             onEdit={() => {
               setOpenExtra(null);
-              goToMenu();
+              goToMenu(todayDay);
             }}
           />
         )}

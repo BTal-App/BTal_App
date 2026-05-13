@@ -267,6 +267,11 @@ const MenuPage: React.FC = () => {
   const { profile: userDoc } = useProfile();
   const [aiGenOpen, setAiGenOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<DayKey>(todayKey);
+  // location / router · necesarios para los efectos ionViewWillEnter /
+  // ionViewDidEnter que leen query params (`?day=...`, `?openSup=...`).
+  // Declaramos arriba porque el primer effect los consume.
+  const location = useLocation();
+  const menuRouter = useIonRouter();
   // `viewKey` se incrementa cada vez que la tab Menú se vuelve activa
   // (`ionViewWillEnter` de Ionic). Combinado con `selectedDay`, sirve
   // como `key` del WeeklyAverageCard para que React lo desmonte y
@@ -274,8 +279,46 @@ const MenuPage: React.FC = () => {
   // vez desde 0. Sin esto, el count-up solo se vería la primera vez
   // (después interpolaría del valor actual al nuevo).
   const [viewKey, setViewKey] = useState(0);
+  // Snapshot del `todayKey` cuando entramos en la tab · combinado con
+  // ionViewWillEnter detecta dos casos:
+  //   1. Deep-link desde HoyPage con `?day=lun` (al pulsar "Editar" en
+  //      MealSheet) · saltamos al día concreto que indica la URL.
+  //   2. Cross-midnight · si entre dos vistas de la tab el día real ha
+  //      cambiado Y el user estaba mirando el "hoy" anterior (no había
+  //      navegado a otro día), saltamos al nuevo hoy. Si el user había
+  //      elegido manualmente otro día (Domingo, Sábado…), respetamos
+  //      esa elección.
+  const lastTodayRef = useRef<DayKey>(todayKey());
   useIonViewWillEnter(() => {
     setViewKey((k) => k + 1);
+    // Deep-link desde HoyPage · `?day=miercoles` salta al día concreto.
+    // Sobrescribe cualquier selección previa y reinicia el snapshot. Tras
+    // leerlo limpiamos la URL para que un reload no reaplique el salto.
+    const params = new URLSearchParams(location.search);
+    const dayParam = params.get('day');
+    if (
+      dayParam
+      && (DAY_KEYS as readonly string[]).includes(dayParam)
+    ) {
+      setSelectedDay(dayParam as DayKey);
+      lastTodayRef.current = todayKey();
+      // Replace en lugar de push · no quema una entrada extra en la pila.
+      // El otro deep-link (?openSup) ya hace lo mismo en useIonViewDidEnter.
+      // Si el day param convive con openSup, dejamos que el segundo limpie.
+      if (!params.get('openSup')) {
+        menuRouter.push('/app/menu', 'none', 'replace');
+      }
+      return;
+    }
+    // Cross-midnight · si el día real cambió desde la última entrada,
+    // actualizamos selectedDay SOLO si el user estaba en el viejo "hoy"
+    // (no en un día elegido a mano).
+    const freshToday = todayKey();
+    if (freshToday !== lastTodayRef.current) {
+      const prevToday = lastTodayRef.current;
+      setSelectedDay((prev) => (prev === prevToday ? freshToday : prev));
+      lastTodayRef.current = freshToday;
+    }
   });
   // Reset del scroll al top al volver a la tab Menú · evita que
   // vuelvas a la mitad de la lista de comidas si la dejaste así.
@@ -316,8 +359,8 @@ const MenuPage: React.FC = () => {
   // DESPUÉS de que la animación de transición de tabs haya terminado
   // · de lo contrario el modal aparece encima del slide a medio camino
   // y se siente como si la transición no existiera.
-  const location = useLocation();
-  const menuRouter = useIonRouter();
+  // (`location` y `menuRouter` se declaran arriba, justo antes del
+  //  primer useIonViewWillEnter · evita declarar useLocation dos veces.)
   useIonViewDidEnter(() => {
     const params = new URLSearchParams(location.search);
     const openSup = params.get('openSup');
