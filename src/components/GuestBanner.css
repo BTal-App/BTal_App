@@ -8,7 +8,11 @@
    pero sigue saliendo siempre en ProfileSheet como red de seguridad. */
 
 .guest-banner {
-  margin: 6px 16px 0;
+  /* Margen vertical generoso para que no quede pegado al título del
+     TabHeader (arriba) ni a la primera card / row de chips de días
+     (abajo). 16px arriba y 18px abajo equilibran el peso visual del
+     banner respecto a los demás elementos. */
+  margin: 16px 16px 18px;
   width: calc(100% - 32px);
   background: linear-gradient(
     135deg,
