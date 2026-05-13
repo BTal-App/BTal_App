@@ -26,6 +26,7 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth } from './firebase';
+import { clearGuestExpiration } from './db';
 
 export const isStandalone = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -77,7 +78,6 @@ export const signOut = () => fbSignOut(auth);
 export const consumePendingRedirect = async () => {
   const result = await getRedirectResult(auth);
   if (result?.user && !result.user.isAnonymous) {
-    const { clearGuestExpiration } = await import('./db');
     clearGuestExpiration(result.user.uid).catch((err) => {
       console.warn('[BTal] clearGuestExpiration error (redirect):', err);
     });
@@ -202,7 +202,6 @@ export async function linkAnonymousAccount(
   // peor caso es que la cuenta nueva se borre en 3 días, raro pero el
   // user puede volver a vincular o `touchLastActive` lo seguirá
   // renovando si pasa por el path de "anonymous" (que ya no será su caso).
-  const { clearGuestExpiration } = await import('./db');
   clearGuestExpiration(result.user.uid).catch((err) => {
     console.warn('[BTal] clearGuestExpiration error:', err);
   });
@@ -230,7 +229,6 @@ export async function linkAnonymousGoogle(): Promise<User | null> {
   const result = await linkWithPopup(current, provider);
   // Limpiamos `expiresAt` para que el doc deje de caducar (ver nota
   // idéntica en linkAnonymousAccount arriba).
-  const { clearGuestExpiration } = await import('./db');
   clearGuestExpiration(result.user.uid).catch((err) => {
     console.warn('[BTal] clearGuestExpiration error:', err);
   });
