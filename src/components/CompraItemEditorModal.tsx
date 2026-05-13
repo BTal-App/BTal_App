@@ -19,6 +19,7 @@ import {
 import { blurAndRun } from '../utils/focus';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { SaveIndicator } from './SaveIndicator';
+import { DeleteIndicator } from './DeleteIndicator';
 import { MealIcon } from './MealIcon';
 import {
   COMPRA_CATEGORIA_ICON_DEFAULT,
@@ -100,6 +101,9 @@ export function CompraItemEditorModal({
   }, []);
 
   const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
+  // Ciclo separado para delete · label "Eliminando… / Eliminado correctamente"
+  // distinto del save genérico.
+  const { status: deleteStatus, runSave: runDelete } = useSaveStatus();
   const submitting = saveStatus === 'saving';
 
   // Cuando el modal se vuelve a abrir, sincronizamos el form con el
@@ -227,11 +231,11 @@ export function CompraItemEditorModal({
     if (!item) return;
     setConfirmDeleteOpen(false);
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    // Usa el mismo ciclo saving → saved → idle que el guardado normal,
-    // así el chip "Guardando…" / "Guardado ✓" también aparece en delete.
-    const result = await runSave(() => removeCompraItem(categoria.id, item.id));
+    // Ciclo dedicado al delete → chip "Eliminando… / Eliminado correctamente"
+    // vía DeleteIndicator (semántica distinta del save).
+    const result = await runDelete(() => removeCompraItem(categoria.id, item.id));
     if (result === SAVE_FAILED) return;
-    // Esperar a que el chip "Guardado ✓" sea visible antes de cerrar.
+    // Esperar a que el chip sea visible antes de cerrar.
     closeTimer.current = setTimeout(() => {
       onClose();
       if (result) {
@@ -351,6 +355,7 @@ export function CompraItemEditorModal({
 
               <div className="save-indicator-wrap">
                 <SaveIndicator status={saveStatus} />
+                <DeleteIndicator status={deleteStatus} />
               </div>
 
               <div className="sup-actions">

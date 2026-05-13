@@ -28,7 +28,7 @@ import { CreatinaInfoModal } from '../../components/CreatinaInfoModal';
 import { SupCardEditor } from '../../components/SupCardEditor';
 import { MealExtraEditorModal } from '../../components/MealExtraEditorModal';
 import { DuplicateMealExtraModal } from '../../components/DuplicateMealExtraModal';
-import { SaveStatusToast } from '../../components/SaveStatusToast';
+import { DeleteStatusToast } from '../../components/DeleteStatusToast';
 import { useSaveStatus, SAVE_FAILED } from '../../hooks/useSaveStatus';
 import { blurAndRun } from '../../utils/focus';
 import { todayDateStr, todayKey } from '../../utils/dateKeys';
@@ -367,17 +367,17 @@ const MenuPage: React.FC = () => {
     };
   }, []);
 
-  // Feedback "Guardando… → Guardado" para deletes inline (vaciar comida
-  // fija y eliminar comida extra). Compartido entre ambos flujos: solo
-  // uno está activo en cada momento (no se pueden encadenar deletes
-  // simultáneos desde la UI).
-  const deleteMealSave = useSaveStatus();
+  // Feedback "Eliminando… → Eliminado correctamente" para deletes inline
+  // (vaciar comida fija y eliminar comida extra). Compartido entre ambos
+  // flujos: solo uno está activo en cada momento (no se pueden encadenar
+  // deletes simultáneos desde la UI).
+  const deleteMealStatus = useSaveStatus();
 
   const handleConfirmExtraDelete = async () => {
     if (!pendingExtraDelete) return;
     const { day, extra } = pendingExtraDelete;
     setPendingExtraDelete(null);
-    const result = await deleteMealSave.runSave(() =>
+    const result = await deleteMealStatus.runSave(() =>
       removeMealExtra(day, extra.id),
     );
     if (result === SAVE_FAILED || !result) return;
@@ -461,7 +461,7 @@ const MenuPage: React.FC = () => {
     const meal = pendingDelete;
     setPendingDelete(null);
     setDeleteAlertOpen(false);
-    const snapshot = await deleteMealSave.runSave(() => clearMeal(day, meal));
+    const snapshot = await deleteMealStatus.runSave(() => clearMeal(day, meal));
     if (snapshot === SAVE_FAILED || !snapshot) return;
     // Cancelamos cualquier undo previo · el último delete gana.
     if (undoTimer.current) clearTimeout(undoTimer.current);
@@ -921,10 +921,10 @@ const MenuPage: React.FC = () => {
           ]}
         />
 
-        {/* Chip "Guardando… / Guardado" durante vaciar comida + eliminar
-            extra · aparece arriba en position="top" sin colisionar con los
-            undo toasts de abajo. */}
-        <SaveStatusToast status={deleteMealSave.status} />
+        {/* Chip "Eliminando… / Eliminado correctamente" durante vaciar
+            comida + eliminar extra · aparece arriba en position="top" sin
+            colisionar con los undo toasts de abajo. */}
+        <DeleteStatusToast status={deleteMealStatus.status} />
 
         {/* Toast con "Deshacer" · solo abierto mientras undoSnapshot existe.
             Botón nativo del IonToast con role 'cancel' para que cierre el

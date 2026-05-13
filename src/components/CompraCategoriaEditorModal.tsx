@@ -16,6 +16,7 @@ import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { blurAndRun } from '../utils/focus';
 import { SaveIndicator } from './SaveIndicator';
+import { DeleteIndicator } from './DeleteIndicator';
 import { IconPicker } from './IconPicker';
 import { MealIcon } from './MealIcon';
 import {
@@ -83,6 +84,10 @@ export function CompraCategoriaEditorModal({
     items: typeof categoria extends undefined ? never : import('../templates/defaultUser').ItemCompra[];
   } | null>(null);
   const { status: saveStatus, runSave, reset: resetSave } = useSaveStatus();
+  // Ciclo separado para delete · label "Eliminando… / Eliminado correctamente"
+  // en lugar del save genérico. Solo uno está activo a la vez (el user no
+  // puede pulsar Guardar y Eliminar simultáneamente).
+  const { status: deleteStatus, runSave: runDelete } = useSaveStatus();
   const submitting = saveStatus === 'saving';
 
   const resetState = () => {
@@ -163,11 +168,11 @@ export function CompraCategoriaEditorModal({
     if (!categoria || isBuiltIn) return;
     setConfirmDeleteOpen(false);
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    // Usa el mismo ciclo saving → saved → idle que el guardado normal,
-    // así el chip "Guardando…" / "Guardado ✓" también aparece en delete.
-    const result = await runSave(() => removeCompraCategoria(categoria.id));
+    // Ciclo dedicado al delete → chip "Eliminando… / Eliminado correctamente"
+    // vía DeleteIndicator (semántica clara distinta del save).
+    const result = await runDelete(() => removeCompraCategoria(categoria.id));
     if (result === SAVE_FAILED) return;
-    // Esperar a que el chip "Guardado ✓" sea visible antes de cerrar.
+    // Esperar a que el chip sea visible antes de cerrar.
     closeTimer.current = setTimeout(() => {
       onClose();
       if (result) setUndoToast(result);
@@ -285,6 +290,7 @@ export function CompraCategoriaEditorModal({
 
               <div className="save-indicator-wrap">
                 <SaveIndicator status={saveStatus} />
+                <DeleteIndicator status={deleteStatus} />
               </div>
 
               <div className="sup-actions">

@@ -16,7 +16,7 @@ import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { TrainSheet } from '../../components/TrainSheet';
 import { DiaEditorModal } from '../../components/DiaEditorModal';
 import { PlanEditorModal } from '../../components/PlanEditorModal';
-import { SaveStatusToast } from '../../components/SaveStatusToast';
+import { DeleteStatusToast } from '../../components/DeleteStatusToast';
 import { useSaveStatus, SAVE_FAILED } from '../../hooks/useSaveStatus';
 import {
   BUILTIN_PLAN_IDS,
@@ -69,10 +69,10 @@ const EntrenoPage: React.FC = () => {
   );
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Feedback "Guardando… / Guardado" para deletes inline (eliminar plan).
-  // Reusable via SaveStatusToast en la propia página · misma semántica
-  // que el chip SaveIndicator de los modales.
-  const deletePlanSave = useSaveStatus();
+  // Feedback "Eliminando… / Eliminado correctamente" para delete inline
+  // (eliminar plan custom). Reusable via DeleteStatusToast en la propia
+  // página · misma semántica que el DeleteIndicator de los modales.
+  const deletePlanStatus = useSaveStatus();
 
   const contentRef = useRef<HTMLIonContentElement>(null);
   useScrollTopOnEnter(contentRef);
@@ -213,7 +213,7 @@ const EntrenoPage: React.FC = () => {
   const handleDeletePlan = async () => {
     if (!activePlan || activePlan.builtIn) return;
     setConfirmDeletePlan(false);
-    const result = await deletePlanSave.runSave(() =>
+    const result = await deletePlanStatus.runSave(() =>
       removePlanEntreno(activePlan.id),
     );
     if (result === SAVE_FAILED) {
@@ -221,7 +221,7 @@ const EntrenoPage: React.FC = () => {
       return;
     }
     if (!result) return;
-    // Toast undo aparece tras el chip "Guardado ✓" del SaveStatusToast.
+    // Toast undo aparece tras el chip "Eliminado correctamente" del DeleteStatusToast.
     if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
     setUndoToast({ plan: result });
     undoTimerRef.current = setTimeout(() => setUndoToast(null), 5000);
@@ -623,7 +623,7 @@ const EntrenoPage: React.FC = () => {
           />
         )}
 
-        <SaveStatusToast status={deletePlanSave.status} />
+        <DeleteStatusToast status={deletePlanStatus.status} />
 
         <IonToast
           isOpen={undoToast !== null}

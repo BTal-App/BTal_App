@@ -19,6 +19,7 @@ import { getEffectiveRecommendedPlanId, type RegistroDia } from '../../templates
 import { todayDateStr } from '../../utils/dateKeys';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
 import { SaveStatusToast } from '../../components/SaveStatusToast';
+import { DeleteStatusToast } from '../../components/DeleteStatusToast';
 import { useSaveStatus, SAVE_FAILED } from '../../hooks/useSaveStatus';
 import './RegistroPage.css';
 
@@ -57,9 +58,11 @@ const RegistroPage: React.FC = () => {
 
   // Día seleccionado · null = nada abierto debajo del calendar.
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  // Feedback "Guardando… / Guardado" para save + delete del registro
-  // del día. Compartido · solo uno corre a la vez.
+  // Feedback separado para save vs delete · cada uno con su label propia
+  // ("Guardando…/Guardado" vs "Eliminando…/Eliminado correctamente"). Solo
+  // uno corre a la vez (UI no permite encadenarlos).
   const saveRegistro = useSaveStatus();
+  const deleteRegistro = useSaveStatus();
 
   // Datos
   const { byDate } = useRegistroMes(pos.year, pos.month0);
@@ -129,7 +132,7 @@ const RegistroPage: React.FC = () => {
 
   async function handleDelete() {
     if (!user || !selectedDate) return;
-    const result = await saveRegistro.runSave(() =>
+    const result = await deleteRegistro.runSave(() =>
       deleteRegistroDiaDb(user.uid, selectedDate),
     );
     if (result === SAVE_FAILED) return;
@@ -205,6 +208,7 @@ const RegistroPage: React.FC = () => {
       </IonContent>
 
       <SaveStatusToast status={saveRegistro.status} />
+      <DeleteStatusToast status={deleteRegistro.status} />
     </IonPage>
   );
 };
