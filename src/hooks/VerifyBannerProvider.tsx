@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useAuth } from './useAuth';
 import { VerifyBannerContext, type VerifyBannerState } from './verify-banner-context';
 
@@ -21,11 +21,18 @@ export function VerifyBannerProvider({ children }: { children: ReactNode }) {
     setSent(false);
   }
 
-  const value: VerifyBannerState = {
-    sent,
-    markSent: () => setSent(true),
-    reset: () => setSent(false),
-  };
+  // Memoizamos las acciones y el value · sin esto el Provider re-renderiza
+  // arrastra a todos los consumidores aunque `sent` no haya cambiado (el
+  // árbol vive bajo AuthProvider, que se re-renderiza cada vez que cambia
+  // cualquier campo del user · sin estabilizar referencias propagamos
+  // re-renders por cascada).
+  const markSent = useCallback(() => setSent(true), []);
+  const reset = useCallback(() => setSent(false), []);
+
+  const value = useMemo<VerifyBannerState>(
+    () => ({ sent, markSent, reset }),
+    [sent, markSent, reset],
+  );
 
   return <VerifyBannerContext.Provider value={value}>{children}</VerifyBannerContext.Provider>;
 }

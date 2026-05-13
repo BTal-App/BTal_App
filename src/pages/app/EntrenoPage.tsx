@@ -69,6 +69,16 @@ const EntrenoPage: React.FC = () => {
   );
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Cleanup del setTimeout al desmontar · si el user borra un plan custom
+  // (toast undo 5s) y cambia de tab antes de que pasen los 5s, el callback
+  // del setTimeout dispararía setUndoToast(null) sobre un componente
+  // desmontado · React 19 emite warning. Mismo patrón que MenuPage para
+  // sus undoTimer / undoExtraTimer.
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    };
+  }, []);
   // Feedback "Eliminando… / Eliminado correctamente" para delete inline
   // (eliminar plan custom). Reusable via DeleteStatusToast en la propia
   // página · misma semántica que el DeleteIndicator de los modales.

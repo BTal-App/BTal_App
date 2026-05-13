@@ -13,7 +13,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // `version` solo existe para forzar re-renders cuando los consumidores
   // llaman a refreshUser tras una mutación que Firebase no nos notifica
   // (ej. applyActionCode cambia user.email pero no dispara onAuthStateChanged).
-  const [, setVersion] = useState(0);
+  //
+  // ⚠ DEBE estar en las deps del useMemo de `value` (más abajo). Sin él,
+  // bumpear `version` re-renderiza este Provider pero el `useMemo` devuelve
+  // la referencia anterior — `user` es el mismo objeto Firebase mutado in-
+  // place por `reload()`, `loading` no cambió, `refreshUser` es estable —
+  // y los consumidores no se enteran del cambio. Síntoma: tras
+  // `applyActionCode` (verificación email) el banner sigue visible hasta
+  // navegar a otra ruta; tras link/unlink Google los chips no se refrescan.
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     // Recoge resultado pendiente de signInWithRedirect (Google en PWA standalone).
@@ -54,10 +62,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Memoizamos el value para que el árbol consumidor no re-renderice
   // al recrearse el objeto en cada render del Provider · solo cuando
-  // cambien los datos reales (user, loading, refreshUser).
+  // cambien los datos reales (user, loading, refreshUser) o tras un
+  // bump explícito de `version` (refreshUser tras Firebase Auth muta el
+  // user in-place sin notificar onAuthStateChanged · ver comment arriba).
   const value = useMemo<AuthState>(
     () => ({ user, loading, isAuthed: !!user, refreshUser }),
-    [user, loading, refreshUser],
+    // version es necesario aquí · es la única forma de que refreshUser
+    // propague tras un user.reload() que muta sin cambiar la referencia.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user, loading, refreshUser, version],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
