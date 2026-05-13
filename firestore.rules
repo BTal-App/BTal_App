@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Rules version: 2026-05-11-T-final · forzamos propagación.
+// Rules version: 2026-05-13-T-registros-fix · sin size check en /registros.
 // Reglas Firestore — Fase 2A endurecimiento + Fase 11-1 validación.
 //
 // Filosofía:
@@ -87,15 +87,33 @@ service cloud.firestore {
       // Subcolección /registros/{YYYY-MM-DD} · Sub-fase 2E.
       // Cada doc representa el registro de pesos (o descanso) de un
       // día concreto. Solo el dueño accede · valida formato fecha
-      // en el id para evitar paths arbitrarios. Tamaño limitado a
-      // 50 KB · un registro con N ejercicios × M series + notas
-      // entra cómodamente.
+      // en el id para evitar paths arbitrarios.
+      //
+      // ⚠ NOTA · sin `request.resource.size < 50 KB` aquí adrede.
+      // Mismo descubrimiento que en `allow create` del user doc:
+      // `request.resource.size` NO mide el JSON · cuenta cada campo
+      // anidado con su overhead. Un registro con 5 ejercicios × 4
+      // series ocupa ~2 KB JSON pero su tamaño "Firestore" supera
+      // los 50 KB por el overhead de las claves anidadas, y la rule
+      // rechazaba todas las writes del seed del invitado. Síntoma:
+      // los dots aparecían un instante en el calendario (optimistic
+      // update del SDK) y desaparecían en cuanto el servidor
+      // rechazaba (rollback). El techo real lo pone Firestore como
+      // hard-limit de 1 MiB · suficiente defensa contra docs gigantes.
+      //
+      // ⚠ NOTA · separamos `create, update` de `delete`. En un delete
+      // `request.resource` es null, por lo que cualquier predicado
+      // sobre `request.resource.X` evalúa false y bloquearía también
+      // los deletes legítimos del botón "Eliminar registro" del
+      // RegDayPanel. Por eso el delete tiene solo el check de
+      // ownership · el `fecha.matches(...)` solo aplica a writes que
+      // crean/modifican.
       match /registros/{fecha} {
         allow read: if request.auth != null && request.auth.uid == userId;
-        allow write: if request.auth != null
-                     && request.auth.uid == userId
-                     && fecha.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-                     && request.resource.size < 50 * 1024;
+        allow create, update: if request.auth != null
+                              && request.auth.uid == userId
+                              && fecha.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+        allow delete: if request.auth != null && request.auth.uid == userId;
       }
     }
 
