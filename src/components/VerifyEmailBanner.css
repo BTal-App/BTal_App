@@ -79,6 +79,17 @@
   margin: 8px 0 0;
 }
 
+/* Mensaje cuando el user pulsa "Confirmar verificación" pero el server
+ * sigue diciendo emailVerified=false (no ha clickeado el enlace del
+ * email aún). Color gold/ambar para diferenciarlo del error rojo · es
+ * informativo, no un fallo. */
+.verify-banner-pending {
+  font-size: 0.82rem;
+  color: var(--btal-gold);
+  margin: 8px 0 0;
+  line-height: 1.45;
+}
+
 .verify-banner-action {
   margin-top: 12px;
   background: var(--btal-gold);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { IonSpinner } from '@ionic/react';
 import { MealIcon } from './MealIcon';
+import { auth } from '../services/firebase';
 import type { User } from 'firebase/auth';
 import { sendVerificationEmail } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
@@ -49,6 +50,11 @@ export function VerifyEmailBanner({ user, place }: Props) {
   const [stage, setStage] = useState<LocalStage>('idle');
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  // Feedback cuando el user pulsa "Confirmar verificación" PERO el server
+  // sigue diciendo emailVerified=false (no ha clickeado el enlace del
+  // email aún). Sin esto el botón parecía "no hacer nada". El mensaje se
+  // limpia automáticamente al disparar otra acción (reenviar, refresh).
+  const [notVerifiedYet, setNotVerifiedYet] = useState(false);
 
   // Si ya está cerrado o el email ya está verificado, no renderizamos nada.
   if (dismissed || user.emailVerified) return null;
@@ -64,6 +70,7 @@ export function VerifyEmailBanner({ user, place }: Props) {
 
   const handleSend = async () => {
     setError('');
+    setNotVerifiedYet(false);
     setStage('sending');
     try {
       await sendVerificationEmail(user);
@@ -77,10 +84,19 @@ export function VerifyEmailBanner({ user, place }: Props) {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    setNotVerifiedYet(false);
     try {
       // refreshUser propaga el cambio (emailVerified) al AuthContext;
-      // el banner desaparece automáticamente si user.emailVerified pasa a true.
+      // el banner desaparece automáticamente si user.emailVerified pasa a
+      // true. Si tras el reload Firebase sigue diciendo NO verificado,
+      // damos feedback visual al user para que sepa qué hacer (el banner
+      // sigue ahí porque la verificación del server NO ha ocurrido aún).
       await refreshUser();
+      // Comprobamos contra auth.currentUser (no contra `user` prop, que
+      // viene del Provider y aún no se ha re-renderizado en este tick).
+      if (!auth.currentUser?.emailVerified) {
+        setNotVerifiedYet(true);
+      }
     } finally {
       setRefreshing(false);
     }
@@ -130,6 +146,11 @@ export function VerifyEmailBanner({ user, place }: Props) {
                 )}
               </button>
             </div>
+            {notVerifiedYet && (
+              <p className="verify-banner-pending">
+                Aún no detectamos la verificación. ¿Has hecho click en el enlace del email?
+              </p>
+            )}
             {error && <p className="verify-banner-error">{error}</p>}
           </>
         ) : (
