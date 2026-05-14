@@ -34,12 +34,11 @@
   margin: 0;
   line-height: 1.1;
   color: var(--btal-t-1);
-  /* En todas las tabs queremos UNA línea para que el avatar/IA button
-     queden alineados con el centro del título. Si el viewport es
-     muy estrecho y aun así no entra, hacemos shrink controlado con
-     las media queries de abajo (font-size más pequeño · NO ellipsis
-     porque los títulos son cortos y previsibles). */
-  white-space: nowrap;
+  /* Permitimos wrap (default) · a 1.45rem en breakpoint phone los
+     titulos largos ("PLAN NUTRICIONAL", "REGISTRO DE PESOS") rompen
+     a 2 lineas solo en iPhone SE/Mini (~375 px). En el resto cabe
+     en una. El layout con `align-items: flex-start` aguanta bien el
+     wrap sin descolocar el avatar. */
   min-width: 0;
 }
 
@@ -127,12 +126,13 @@
  *     "PLAN DE ENTRENO") · disponible ~220 px de ancho de título */
 @media (max-width: 520px) {
   .tab-header-title {
-    /* 1.4 rem · máximo seguro para que "PLAN NUTRICIONAL" (16 chars
-     * uppercase) entre con avatar + IA button en iPhone ~390 px. Si
-     * subes esto se rompe a 2 líneas. Si tras pruebas en iPhone Pro
-     * Max parece pequeño, la solución es subir el breakpoint de 520
-     * a 430 px · NO subir el font (rompería en SE/Mini). */
-    font-size: 1.4rem;
+    /* 1.45 rem · ligeramente por encima del max-seguro (1.4) ·
+     * "PLAN NUTRICIONAL"/"PLAN DE ENTRENO" + IA button + avatar
+     * caben en iPhone 14/15/Pro/Max pero pueden romper a 2 lineas
+     * en iPhone SE/Mini (~375 px). Compromiso aceptado · titulo
+     * mas legible en la mayoria de devices, wrap controlado en
+     * los mas pequenos. */
+    font-size: 1.45rem;
   }
   .tab-header-ia-btn {
     padding: 8px 10px;
@@ -143,14 +143,11 @@
 }
 
 @media (max-width: 400px) {
-  .tab-header-title {
-    /* iPhone SE / Mini · margen más apretado. 1.25 rem deja respirar
-     * sin overflow incluso con el slot derecho cargado. */
-    font-size: 1.25rem;
-  }
-  /* En pantallas muy estrechas (iPhone SE 375 px) compactamos el IA
-   * button al mínimo · icono de 18 px con padding ajustado para que
-   * el touch target siga siendo cómodo (~36 px de diámetro). */
+  /* iPhone SE / Mini · mantenemos el mismo 1.45 rem para consistencia
+   * visual entre devices · si en SE "PLAN NUTRICIONAL" rompe a 2
+   * lineas, el flex layout lo aguanta con el avatar arriba. Si esto
+   * resulta molesto en pruebas, alternativa es bajar a 1.3 rem AQUI
+   * y aceptar que SE se vea distinto al resto. */
   .tab-header-ia-btn {
     padding: 7px 8px;
   }
