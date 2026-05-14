@@ -102,6 +102,11 @@ jobs:
           VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          # App Check site key · opcional · si falta, App Check no
+          # se inicializa y los e2e tests pasan (las páginas pre-auth
+          # no necesitan tokens válidos). Cuando esté en enforcement
+          # en Firebase Console, los tests autenticados sí lo necesitarán.
+          VITE_RECAPTCHA_V3_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_V3_SITE_KEY }}
         run: npm run build
 
       - name: Run E2E tests

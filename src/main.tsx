@@ -1,3 +1,10 @@
+// ⚠ IMPORTANTE: `./debug-appcheck` PRIMER import del fichero (incluso
+// antes de react/react-dom/index.css) · setea `self.FIREBASE_APPCHECK_
+// DEBUG_TOKEN = true` en DEV antes de que firebase.ts cargue. Sin esto,
+// el primer import que toque firebase.ts inicializa AppCheck pidiendo
+// token real a reCAPTCHA → falla en dev local.
+import './debug-appcheck'
+
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
