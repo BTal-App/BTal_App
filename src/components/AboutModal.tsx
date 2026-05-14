@@ -1,4 +1,5 @@
 import { IonModal } from '@ionic/react';
+import { LegalLink } from './LegalLink';
 import { MealIcon } from './MealIcon';
 import './SettingsModal.css';
 import './AboutModal.css';
@@ -42,33 +43,18 @@ export function AboutModal({ isOpen, onClose }: Props) {
           <div className="about-version">v{APP_VERSION}</div>
 
           <div className="about-links">
-            <a
-              href="/legal/privacidad"
-              className="about-link"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <LegalLink slug="privacidad" className="about-link">
               <MealIcon value="tb:shield-check" size={20} />
               <span>Política de privacidad</span>
-            </a>
-            <a
-              href="/legal/terminos"
-              className="about-link"
-              target="_blank"
-              rel="noreferrer"
-            >
+            </LegalLink>
+            <LegalLink slug="terminos" className="about-link">
               <MealIcon value="tb:file-text" size={20} />
               <span>Términos de uso</span>
-            </a>
-            <a
-              href="/legal/aviso-medico"
-              className="about-link"
-              target="_blank"
-              rel="noreferrer"
-            >
+            </LegalLink>
+            <LegalLink slug="aviso-medico" className="about-link">
               <MealIcon value="tb:first-aid-kit" size={20} />
               <span>Aviso médico</span>
-            </a>
+            </LegalLink>
           </div>
 
           <p className="about-credits">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { IonButton, IonModal } from '@ionic/react';
+import { IonAlert, IonButton, IonModal } from '@ionic/react';
 import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { useProfile } from '../hooks/useProfile';
@@ -68,14 +68,22 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
     .map((r) => RESTRICCIONES.find((x) => x.value === r)?.label)
     .filter((x): x is string => Boolean(x));
 
-  // Mismo fallback que HoyPage: Auth.displayName → profile.nombre →
-  // email → 'Perfil'. Cubre invitados (Auth anónimo, profile.nombre del
-  // demoUser) y cuentas reales sin displayName en Auth.
-  const profileFirstName = p?.nombre?.trim().split(/\s+/)[0] || null;
+  // Prioridad de nombre: profile.nombre (lo que el user escribió en el
+  // formulario) > Auth.displayName (de Google/Apple) > email > 'Perfil'.
+  // Si el user puso "Pablo" en onboarding queremos que se muestre así
+  // aunque Google diga "Pablo Castillo Sogorb".
+  const profileFullName = p?.nombre?.trim() || null;
+  const profileFirstName = profileFullName?.split(/\s+/)[0] ?? null;
   const greetName =
-    greetingName(user) ?? profileFirstName ?? user.email ?? 'Perfil';
+    profileFirstName ?? greetingName(user) ?? user.email ?? 'Perfil';
 
+  // Confirmación intermedia · evita el clic accidental sobre "Cerrar
+  // sesión" especialmente en móvil donde el ProfileSheet usa todo el alto
+  // y el botón cae justo encima de la zona habitual del gesto pulgar.
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const askLogout = () => setLogoutConfirmOpen(true);
   const handleLogout = async () => {
+    setLogoutConfirmOpen(false);
     await signOut();
     onClose();
     // useAuth detectará el cambio y App.tsx redirigirá a /
@@ -104,9 +112,10 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
                 <img src={user.photoURL} alt="" />
               ) : (
                 <span>
-                  {user.displayName?.trim() || user.email
-                    ? initialsOf(user.displayName, user.email)
-                    : initialsOf(profileFirstName ?? null, null)}
+                  {initialsOf(
+                    profileFullName ?? user.displayName,
+                    user.email,
+                  )}
                 </span>
               )}
             </div>
@@ -257,13 +266,34 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
             expand="block"
             fill="clear"
             className="profile-sheet-logout"
-            onClick={handleLogout}
+            onClick={askLogout}
           >
             <MealIcon value="tb:logout" size={18} slot="start" />
             Cerrar sesión
           </IonButton>
         </div>
       </IonModal>
+
+      <IonAlert
+        isOpen={logoutConfirmOpen}
+        header="¿Cerrar sesión?"
+        message={
+          user.isAnonymous
+            ? 'Tu sesión de invitado caducará en su plazo habitual (3 días). Si la cierras ahora perderás el acceso desde este dispositivo aunque la cuenta siga viva.'
+            : 'Tendrás que volver a iniciar sesión para acceder a tus datos.'
+        }
+        buttons={[
+          { text: 'Cancelar', role: 'cancel' },
+          {
+            text: 'Cerrar sesión',
+            role: 'destructive',
+            handler: () => {
+              void handleLogout();
+            },
+          },
+        ]}
+        onDidDismiss={() => setLogoutConfirmOpen(false)}
+      />
 
       {completed && (
         <EditFitnessProfileModal

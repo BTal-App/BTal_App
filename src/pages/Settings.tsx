@@ -11,11 +11,13 @@ import {
 import { MealIcon } from '../components/MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useError } from '../hooks/useError';
+import { useProfile } from '../hooks/useProfile';
 import { AboutModal } from '../components/AboutModal';
 import { AccountManageModal } from '../components/AccountManageModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { PreferencesModal } from '../components/PreferencesModal';
+import { CONTACT_EMAIL } from '../config/contact';
 import { downloadUserDataExport } from '../services/exportData';
 import { blurAndRun } from '../utils/focus';
 import { initialsOf } from '../utils/userDisplay';
@@ -43,7 +45,7 @@ function buildSupportMailto(
     `Plataforma: ${navigator.userAgent}`,
     `Fecha: ${new Date().toISOString()}`,
   ].join('\n');
-  return `mailto:soporte@btal.app?subject=${encodeURIComponent(
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
     subject,
   )}&body=${encodeURIComponent(body)}`;
 }
@@ -51,6 +53,7 @@ function buildSupportMailto(
 const Settings: React.FC = () => {
   const history = useHistory();
   const { user, loading, isAuthed } = useAuth();
+  const { profile: userDoc } = useProfile();
   const { showError } = useError();
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -149,12 +152,19 @@ const Settings: React.FC = () => {
                 {user.photoURL ? (
                   <img src={user.photoURL} alt="" />
                 ) : (
-                  <span>{initialsOf(user.displayName, user.email)}</span>
+                  <span>
+                    {initialsOf(
+                      userDoc?.profile?.nombre?.trim() || user.displayName,
+                      user.email,
+                    )}
+                  </span>
                 )}
               </div>
               <div className="settings-profile-info">
                 <span className="settings-profile-name">
-                  {user.displayName?.trim() || 'Sin nombre'}
+                  {userDoc?.profile?.nombre?.trim()
+                    || user.displayName?.trim()
+                    || 'Sin nombre'}
                 </span>
                 <span className="settings-profile-edit">
                   <MealIcon value="tb:pencil" size={16} />

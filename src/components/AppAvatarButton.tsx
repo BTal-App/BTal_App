@@ -22,14 +22,16 @@ export function AppAvatarButton() {
 
   if (!user) return null;
 
-  // Iniciales · misma regla que HoyPage: priorizamos displayName/email de
-  // Auth, caemos al `profile.nombre` de Firestore (caso invitado anónimo).
-  const profileFirstName =
-    userDoc?.profile?.nombre?.trim().split(/\s+/)[0] || null;
-  const initials =
-    user.displayName?.trim() || user.email
-      ? initialsOf(user.displayName, user.email)
-      : initialsOf(profileFirstName ?? null, null);
+  // Iniciales · prioridad: profile.nombre (lo que el user escribió en el
+  // onboarding · su forma preferida de llamarse) > user.displayName (viene
+  // de Google/Apple sign-in · puede ser legalmente largo o no preferido) >
+  // email (último fallback). Antes priorizábamos displayName primero, lo
+  // que ignoraba el nombre que el user había escrito explícitamente.
+  const profileName = userDoc?.profile?.nombre?.trim() || null;
+  const initials = initialsOf(
+    profileName ?? user.displayName,
+    user.email,
+  );
 
   const open = () => {
     setHasOpened(true);

@@ -1,0 +1,98 @@
+/* ─────────────────────────────────────────────────────────────────
+ * LegalLink · estilos para el botón inline + modal con scroll.
+ * ───────────────────────────────────────────────────────────────── */
+
+/* Trigger inline · imita un <a> dentro de un párrafo. */
+.legal-inline-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--btal-cyan);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  display: inline;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.legal-inline-link:hover,
+.legal-inline-link:focus-visible {
+  color: var(--btal-lime);
+}
+
+/* Cuando el botón se usa en lugar de .about-link en AboutModal, hay que
+ * neutralizar los defaults de <button> para que el card siga siendo
+ * indistinguible del anchor original. La .about-link ya define el resto del
+ * estilo (background, padding, gap, etc.). */
+button.about-link {
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+}
+
+/* ── Modal layout ───────────────────────────────────────────────── */
+.legal-modal-card {
+  /* Limita altura · el body es largo, hay que scrollear dentro del card. */
+  max-height: 85vh;
+  width: min(640px, 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.legal-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--btal-border);
+  flex-shrink: 0;
+}
+
+.legal-modal-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--btal-t-1);
+}
+
+/* El contenedor con scroll · `.legal-body` mantiene su look (background,
+ * border, padding) gracias a los estilos de LegalPlaceholder.css. */
+.legal-modal-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Los links internos del documento (CrossLink) se renderizan como <button>
+ * cuando estamos en modal · necesitan parecer un anchor cyan-lima como en
+ * page mode. */
+.legal-cross-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--btal-cyan);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 120ms ease, border-color 120ms ease;
+  cursor: pointer;
+  display: inline;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.legal-cross-link:hover,
+.legal-cross-link:focus-visible {
+  color: var(--btal-lime);
+  border-bottom-color: var(--btal-lime);
+}

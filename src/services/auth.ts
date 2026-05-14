@@ -27,6 +27,7 @@ import {
 } from 'firebase/auth';
 import { auth } from './firebase';
 import { clearGuestExpiration } from './db';
+import { toTitleCase } from '../utils/userDisplay';
 
 export const isStandalone = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -240,6 +241,27 @@ export const updateUserProfile = (
   user: User,
   data: { displayName?: string | null; photoURL?: string | null },
 ) => updateProfile(user, data);
+
+// Sync helper · mantiene `auth.currentUser.displayName` alineado con el
+// `profile.nombre` de Firestore. Idempotente: si el valor ya coincide, no
+// dispara la escritura a Auth. Aplica también Title Case (vía `toTitleCase`)
+// para que la forma persistida sea siempre la canónica · si el caller pasa
+// "pablo rodriguez", queda "Pablo Rodriguez" en Auth. Llamado desde:
+//   - `saveOnboardingProfile` (al completar onboarding)
+//   - `updateUserProfileFields` (al editar perfil con cambio de nombre)
+// para que el avatar/saludo/UI nunca quede mostrando un displayName
+// distinto al nombre que el user escribió en el formulario.
+export async function syncAuthDisplayName(name: string | null | undefined): Promise<void> {
+  if (!auth.currentUser) return;
+  const titled = toTitleCase(name);
+  const cleaned = titled || null;
+  if ((auth.currentUser.displayName || null) === cleaned) return; // no-op
+  try {
+    await updateProfile(auth.currentUser, { displayName: cleaned });
+  } catch (err) {
+    console.warn('[BTal] syncAuthDisplayName error:', err);
+  }
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Eliminación de cuenta

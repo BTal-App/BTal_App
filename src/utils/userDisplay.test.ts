@@ -5,6 +5,7 @@ import {
   greetingName,
   formatDate,
   providerLabel,
+  toTitleCase,
 } from './userDisplay';
 
 // Tests inaugurales del banco de Vitest · cubren las 4 funciones puras
@@ -74,5 +75,45 @@ describe('providerLabel', () => {
 
   it('devuelve el id tal cual para providers desconocidos', () => {
     expect(providerLabel('saml.weird-provider')).toBe('saml.weird-provider');
+  });
+});
+
+describe('toTitleCase', () => {
+  it('capitaliza la primera letra de cada palabra en minúsculas', () => {
+    expect(toTitleCase('pablo rodriguez')).toBe('Pablo Rodriguez');
+  });
+
+  it('baja a minúscula los textos enteros en mayúscula antes de subir las iniciales', () => {
+    expect(toTitleCase('PABLO RODRIGUEZ')).toBe('Pablo Rodriguez');
+  });
+
+  it('es idempotente para nombres ya en Title Case', () => {
+    expect(toTitleCase('Pablo Rodriguez')).toBe('Pablo Rodriguez');
+  });
+
+  it('preserva acentos españoles y la ñ', () => {
+    expect(toTitleCase('maría josé')).toBe('María José');
+    expect(toTitleCase('iñaki muñoz')).toBe('Iñaki Muñoz');
+  });
+
+  it('aplica trim y colapsa espacios múltiples', () => {
+    expect(toTitleCase('  pablo   pérez  ')).toBe('Pablo Pérez');
+  });
+
+  it('capitaliza tras guion y apóstrofe (nombres compuestos)', () => {
+    expect(toTitleCase('jean-pierre')).toBe('Jean-Pierre');
+    expect(toTitleCase("o'connor")).toBe("O'Connor");
+  });
+
+  it('devuelve "" para entradas vacías o null/undefined', () => {
+    expect(toTitleCase('')).toBe('');
+    expect(toTitleCase('   ')).toBe('');
+    expect(toTitleCase(null)).toBe('');
+    expect(toTitleCase(undefined)).toBe('');
+  });
+
+  it('funciona con un solo nombre', () => {
+    expect(toTitleCase('pablo')).toBe('Pablo');
+    expect(toTitleCase('PABLO')).toBe('Pablo');
   });
 });

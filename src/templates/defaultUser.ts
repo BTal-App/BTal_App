@@ -1251,117 +1251,23 @@ function emptyPlan(n: number): PlanEntreno {
   };
 }
 
-// Plan 4 días con ejemplo Push/Pull/Legs · réplica del v1. Sembrado
-// por defecto para que el user vea cómo se estructura un plan típico.
-// Si modo IA, la Cloud Function lo regenera; si manual, el user edita.
-function sample4DiasPlan(): PlanEntreno {
-  return {
-    id: '4dias',
-    nombre: 'Plan 4 Días',
-    estructura: '4 días/semana',
-    estructura2: 'Upper/Lower Split',
-    dias: [
-      {
-        titulo: 'Día A · Empuje',
-        descripcion: 'Pecho · Tríceps · Hombros',
-        tiempoEstimadoMin: 65,
-        diaSemana: 'lun',
-        badge: 'pecho',
-        badgeCustom: '',
-        badge2: 'triceps',
-        badgeCustom2: '',
-        badge3: 'empuje',
-        badgeCustom3: '',
-        ejercicios: [
-          { nombre: 'Press banca con barra', desc: 'Calentamiento progresivo', series: '4×6-8', source: 'default' },
-          { nombre: 'Press inclinado mancuernas', desc: 'Inclinación 30°', series: '3×8-10', source: 'default' },
-          { nombre: 'Aperturas en polea', desc: 'Contracción controlada', series: '3×12', source: 'default' },
-          { nombre: 'Fondos en paralelas', desc: 'Lastrado si puedes', series: '3×8-10', source: 'default' },
-          { nombre: 'Press francés barra Z', desc: '', series: '3×10', source: 'default' },
-          { nombre: 'Extensiones tríceps polea', desc: 'Cuerda', series: '3×12', source: 'default' },
-        ],
-        comentario: 'Descanso: 90-120s en compuestos · 60s en aislamiento',
-        source: 'default',
-      },
-      {
-        titulo: 'Día B · Tirón',
-        descripcion: 'Espalda · Bíceps',
-        tiempoEstimadoMin: 60,
-        diaSemana: 'mar',
-        badge: 'espalda',
-        badgeCustom: '',
-        badge2: 'biceps',
-        badgeCustom2: '',
-        badge3: 'tiron',
-        badgeCustom3: '',
-        ejercicios: [
-          { nombre: 'Dominadas', desc: 'Lastradas si puedes', series: '4×6-8', source: 'default' },
-          { nombre: 'Remo con barra', desc: '', series: '4×8', source: 'default' },
-          { nombre: 'Jalón al pecho', desc: '', series: '3×10', source: 'default' },
-          { nombre: 'Curl con barra Z', desc: '', series: '3×8-10', source: 'default' },
-          { nombre: 'Curl martillo', desc: 'Alternando', series: '3×12', source: 'default' },
-        ],
-        comentario: '',
-        source: 'default',
-      },
-      {
-        titulo: 'Día C · Pierna',
-        descripcion: 'Tren inferior',
-        tiempoEstimadoMin: 75,
-        diaSemana: 'jue',
-        badge: 'piernas',
-        badgeCustom: '',
-        badge2: 'fuerza',
-        badgeCustom2: '',
-        badge3: '',
-        badgeCustom3: '',
-        ejercicios: [
-          { nombre: 'Sentadilla con barra', desc: 'Bajo paralelo', series: '4×6-8', source: 'default' },
-          { nombre: 'Peso muerto rumano', desc: '', series: '4×8', source: 'default' },
-          { nombre: 'Prensa 45°', desc: '', series: '3×10', source: 'default' },
-          { nombre: 'Zancadas mancuernas', desc: '', series: '3×10', source: 'default' },
-          { nombre: 'Curl femoral', desc: '', series: '3×12', source: 'default' },
-          { nombre: 'Gemelos de pie', desc: 'Pausa arriba', series: '4×15', source: 'default' },
-        ],
-        comentario: '',
-        source: 'default',
-      },
-      {
-        titulo: 'Día D · Hombro + Core',
-        descripcion: 'Hombros · Core',
-        tiempoEstimadoMin: 55,
-        diaSemana: 'vie',
-        badge: 'hombros',
-        badgeCustom: '',
-        badge2: 'core',
-        badgeCustom2: '',
-        badge3: '',
-        badgeCustom3: '',
-        ejercicios: [
-          { nombre: 'Press militar con barra', desc: 'De pie', series: '4×6-8', source: 'default' },
-          { nombre: 'Elevaciones laterales', desc: 'Mancuernas', series: '4×12', source: 'default' },
-          { nombre: 'Pájaro / Reverse fly', desc: '', series: '3×12', source: 'default' },
-          { nombre: 'Encogimientos', desc: 'Trapecios', series: '3×15', source: 'default' },
-          { nombre: 'Plancha frontal', desc: '60s', series: '3×60s', source: 'default' },
-          { nombre: 'Crunch en polea', desc: 'Cuerda', series: '3×15', source: 'default' },
-        ],
-        comentario: '',
-        source: 'default',
-      },
-    ],
-    builtIn: true,
-  };
-}
-
+// Devuelve los 7 planes builtIn (1..7 días) TODOS vacíos. La función
+// `sample4DiasPlan` con un Push/Pull/Legs hardcoded vivía aquí (legacy v1)
+// para que el user "viera cómo se estructura un plan típico" — pero ese
+// contenido demo se filtraba en cuentas reales (un user nuevo que pedía 5
+// días recibía '4dias' poblado con ejercicios random). El demo real vive en
+// `demoUser.ts` (DEMO_PLAN_CUSTOM_PRED) y solo se siembra en modo invitado.
+//
+// `activePlan` se selecciona en `saveOnboardingProfile` via
+// `getRecommendedPlanId(profile.diasEntreno)`. El default '4dias' aquí es
+// solo un placeholder semántico — cualquier consumidor que cree el doc real
+// debería sobrescribirlo con el plan recomendado del user.
 export function defaultEntrenos(): Entrenos {
   const planes: Record<string, PlanEntreno> = {};
   for (const id of BUILTIN_PLAN_IDS) {
     const n = parseInt(id, 10); // '4dias' → 4
     planes[id] = emptyPlan(n);
   }
-  // Sobrescribimos el 4dias con el ejemplo Push/Pull/Legs · sirve de
-  // demo para que el user vea cómo se estructura un plan completo.
-  planes['4dias'] = sample4DiasPlan();
   return {
     activePlan: '4dias',
     planes,

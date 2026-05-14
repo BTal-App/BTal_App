@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { PUBLIC_HOSTNAME } from '../config/contact';
 import './AdblockBanner.css';
 
 // Banner persistente que avisa cuando el navegador del usuario está
@@ -103,7 +104,7 @@ export function AdblockBanner() {
         <p>
           Algunos cambios no se están guardando. Si tienes un
           bloqueador de anuncios activo, desactívalo para{' '}
-          <code>btal-app.web.app</code> y recarga.
+          <code>{PUBLIC_HOSTNAME}</code> y recarga.
         </p>
       </div>
       <button

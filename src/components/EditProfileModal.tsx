@@ -4,10 +4,11 @@ import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { updateUserProfile } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
+import { useProfile } from '../hooks/useProfile';
 import { resizeImageToDataUrl } from '../utils/resizeImage';
 import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
-import { initialsOf } from '../utils/userDisplay';
+import { initialsOf, toTitleCase } from '../utils/userDisplay';
 import './SettingsModal.css';
 import './EditProfileModal.css';
 
@@ -30,7 +31,14 @@ function translateError(code: string): string {
 
 export function EditProfileModal({ isOpen, user, onClose }: Props) {
   const { refreshUser } = useAuth();
-  const [name, setName] = useState(user.displayName ?? '');
+  const { profile: userDoc, updateProfile: updateProfileDoc } = useProfile();
+  // Prioridad inicial: `profile.nombre` (lo que escribió en onboarding · su
+  // forma preferida de llamarse) > Auth.displayName (de Google/Apple) > ''.
+  // Antes solo leíamos Auth.displayName, lo que daba input vacío a users de
+  // email/password aunque tuvieran nombre en perfil.
+  const initialName =
+    userDoc?.profile?.nombre?.trim() || user.displayName?.trim() || '';
+  const [name, setName] = useState(initialName);
   const [photoUrl, setPhotoUrl] = useState<string | null>(user.photoURL ?? null);
   const [busy, setBusy] = useState(false);
   const [imgBusy, setImgBusy] = useState(false);
@@ -47,7 +55,9 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
   const cameraRef = useRef<HTMLInputElement>(null);
 
   const resetState = () => {
-    setName(user.displayName ?? '');
+    setName(
+      userDoc?.profile?.nombre?.trim() || user.displayName?.trim() || '',
+    );
     setPhotoUrl(user.photoURL ?? null);
     setBusy(false);
     setImgBusy(false);
@@ -88,20 +98,24 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
     setPhotoUrl(null);
   };
 
+  // Base canónica del nombre para comparar (lo que ya está en perfil ·
+  // misma fuente que el input inicial · evita falso "dirty" cuando solo
+  // Auth.displayName diverge del perfil).
+  const baseName =
+    userDoc?.profile?.nombre?.trim() || user.displayName?.trim() || null;
+
   const handleSave = () => {
     setError('');
+    // Normalizamos el nombre a Title Case ANTES del diff y del save · así
+    // el `ConfirmDiffAlert` ya muestra cómo va a quedar persistido (no
+    // como el user lo tipeó). Coherente con `saveOnboardingProfile` y
+    // `updateUserProfileFields`, que también canonicalizan al guardar.
     const cleaned = {
-      name: name.trim() || null,
+      name: toTitleCase(name) || null,
       photoUrl: photoUrl ?? null,
     };
-    // Siempre es edit · comparamos con los valores actuales del user.
     const changes: ChangeEntry[] = [];
-    pushDiff(
-      changes,
-      'Nombre',
-      user.displayName?.trim() || null,
-      cleaned.name,
-    );
+    pushDiff(changes, 'Nombre', baseName, cleaned.name);
     const beforePhoto = user.photoURL ?? null;
     if (beforePhoto !== cleaned.photoUrl) {
       changes.push({
@@ -119,10 +133,19 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
     setConfirmChanges(null);
     setBusy(true);
     try {
+      // 1) Auth · displayName + photoURL (sigue siendo la fuente para Google
+      // OAuth scopes y servicios externos).
       await updateUserProfile(user, {
         displayName: cleaned.name,
         photoURL: cleaned.photoUrl,
       });
+      // 2) Firestore · sincroniza `profile.nombre` con el mismo valor para
+      // que la UI interna (avatar/saludo/Settings) tenga una sola fuente.
+      // `updateUserProfileFields` además vuelve a llamar a syncAuthDisplayName,
+      // que es idempotente (no-op si ya coincide tras paso 1).
+      if (cleaned.name !== (userDoc?.profile?.nombre?.trim() || null)) {
+        await updateProfileDoc({ nombre: cleaned.name ?? '' });
+      }
       // refreshUser propaga el cambio (avatar/nombre) al Dashboard, Settings,
       // AccountInfoModal — todos los consumidores de AuthContext.
       await refreshUser();
@@ -134,9 +157,10 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
     }
   };
 
-  // Cambios sin guardar (compara con valores actuales del user)
+  // Cambios sin guardar · comparamos con la base canónica (no con Auth a
+  // pelo) para no marcar dirty cuando solo había drift Auth vs profile.
   const dirty =
-    (name.trim() || null) !== (user.displayName?.trim() || null) ||
+    (name.trim() || null) !== baseName ||
     (photoUrl ?? null) !== (user.photoURL ?? null);
 
   return (

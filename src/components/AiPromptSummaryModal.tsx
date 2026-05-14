@@ -100,9 +100,17 @@ export function AiPromptSummaryModal({
     : userDoc?.registroStats;
 
   // Elegibilidad — en el onboarding aún no hay generaciones consumidas
-  // (consumidas_ciclo=0), así que siempre allowed=true. En botones IA
-  // ya generados, esto puede bloquear.
-  const eligibility = canGenerateAi(userDoc, isAnonymous);
+  // (consumidas_ciclo=0) Y `userDoc.profile.modo` sigue siendo el default
+  // 'manual' porque el user todavía no ha llegado a guardar. Si llamáramos
+  // a `canGenerateAi(userDoc, ...)` sin más, devolvería `allowed:false` por
+  // `manual_mode` aunque el user acaba de elegir IA en el StepMode previo.
+  // Detectamos onboarding por la presencia de `profileOverride` (única vía
+  // de uso que pasa profile prefab no guardado) y forzamos allowed=true ·
+  // la generación real se hace ya con el doc persistido en Fase 6.
+  const isOnboarding = !!profileOverride;
+  const eligibility = isOnboarding
+    ? { allowed: true, reason: 'ok_free' as const }
+    : canGenerateAi(userDoc, isAnonymous);
   const scopeOption = AI_SCOPE_OPTIONS.find((s) => s.value === scope);
 
   if (!profile) {
@@ -282,13 +290,17 @@ export function AiPromptSummaryModal({
               </SummaryBlock>
             )}
 
-            {/* ── Personalización IA · solo si hay algo ── */}
-            {(profile.notas.trim()
-              || profile.alergias.length
-              || profile.intolerancias.length
-              || profile.alimentosProhibidos.length
-              || profile.alimentosObligatorios.length
-              || profile.ingredientesFavoritos.length) && (
+            {/* ── Personalización IA · solo si hay algo ──
+                Condición wrap en boolean: `array.length` con `&&` JSX
+                cuando el length es 0 hace que React renderice el literal "0"
+                (porque `0 && X` → `0`). Cualquier `.length` aquí necesita
+                comparación explícita > 0. */}
+            {(profile.notas.trim() !== ''
+              || profile.alergias.length > 0
+              || profile.intolerancias.length > 0
+              || profile.alimentosProhibidos.length > 0
+              || profile.alimentosObligatorios.length > 0
+              || profile.ingredientesFavoritos.length > 0) && (
               <SummaryBlock title="Personalización para la IA">
                 {profile.notas.trim() && (
                   <SummaryNote label="Notas" text={profile.notas.trim()} />

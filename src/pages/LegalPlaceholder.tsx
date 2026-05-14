@@ -1,6 +1,9 @@
+import { createContext, useContext, type ReactNode } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { IonContent, IonPage } from '@ionic/react';
 import { MealIcon } from '../components/MealIcon';
+import { CONTACT_EMAIL, PUBLIC_HOSTNAME, PUBLIC_URL } from '../config/contact';
+import { getLegalTitle, type LegalSlug } from './legalTypes';
 import './LegalPlaceholder.css';
 
 // Documentos legales de BTal · servidos en `/legal/:slug`. Texto en
@@ -18,11 +21,29 @@ const LEGAL_VERSION = {
   'aviso-medico': '2026-05-12',
 } as const;
 
-const TITLES: Record<string, string> = {
-  privacidad: 'Política de privacidad',
-  terminos: 'Términos de uso',
-  'aviso-medico': 'Aviso médico',
-};
+// Context para swap de slug dentro de modales. En page mode (ruta /legal/:slug
+// directa) el context es null → CrossLink renderiza `<a href>` normal y la
+// navegación funciona como siempre. En modal mode (LegalLink en Onboarding /
+// AboutModal) el context recibe un setter que cambia el slug del modal in-place
+// sin cerrar nada · evita el bug de target=_blank y funciona idéntico en
+// Capacitor nativo donde abrir tabs externas saca al user de la app.
+const LegalCrossLinkContext = createContext<((slug: LegalSlug) => void) | null>(null);
+
+function CrossLink({ slug, children }: { slug: LegalSlug; children: ReactNode }) {
+  const swap = useContext(LegalCrossLinkContext);
+  if (swap) {
+    return (
+      <button
+        type="button"
+        className="legal-cross-link"
+        onClick={() => swap(slug)}
+      >
+        {children}
+      </button>
+    );
+  }
+  return <a href={`/legal/${slug}`}>{children}</a>;
+}
 
 // ─────────────────────────────────────────────────────────────────
 // Política de privacidad (14-0)
@@ -36,7 +57,7 @@ function PrivacyPolicy() {
       <p>
         El responsable del tratamiento de tus datos personales es <strong>Pablo Castillo Sogorb</strong>,
         persona física con residencia en España. Para cualquier cuestión relacionada con esta política,
-        puedes contactarnos en <a href="mailto:soporte@btal.app">soporte@btal.app</a>.
+        puedes contactarnos en <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
 
       <h2>2. Qué datos recopilamos</h2>
@@ -96,7 +117,7 @@ function PrivacyPolicy() {
         <li><strong>Oposición y limitación</strong>: oponerte al tratamiento concreto o pedir que se limite a ciertos usos.</li>
         <li><strong>Reclamación ante autoridad</strong>: si crees que no estamos respetando tus derechos, puedes reclamar ante la <strong>AEPD</strong> (Agencia Española de Protección de Datos), <a href="https://www.aepd.es" target="_blank" rel="noreferrer">aepd.es</a>.</li>
       </ul>
-      <p>Para ejercer cualquiera de estos derechos, escríbenos a <a href="mailto:soporte@btal.app">soporte@btal.app</a>.</p>
+      <p>Para ejercer cualquiera de estos derechos, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</p>
 
       <h2>7. Edad mínima</h2>
       <p>
@@ -124,7 +145,7 @@ function PrivacyPolicy() {
         cabeceras HTTP de seguridad (CSP, HSTS, X-Frame-Options, Permissions-Policy).
       </p>
       <p>
-        Si descubres una vulnerabilidad de seguridad, escríbenos a <a href="mailto:soporte@btal.app">soporte@btal.app</a> antes
+        Si descubres una vulnerabilidad de seguridad, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> antes
         de divulgarla públicamente. Agradeceremos la comunicación responsable.
       </p>
 
@@ -143,7 +164,7 @@ function PrivacyPolicy() {
 
       <h2>12. Contacto</h2>
       <p>
-        Cualquier pregunta o solicitud sobre tus datos, escríbenos a <a href="mailto:soporte@btal.app">soporte@btal.app</a>.
+        Cualquier pregunta o solicitud sobre tus datos, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
     </>
   );
@@ -161,14 +182,14 @@ function TermsOfService() {
       <p>
         BTal es una aplicación web y móvil que te ayuda a organizar tu plan de nutrición, entrenamientos,
         suplementación y lista de la compra. Está disponible como aplicación web (PWA) en{' '}
-        <a href="https://btal-app.web.app" target="_blank" rel="noreferrer">btal-app.web.app</a> y, próximamente,
+        <a href={PUBLIC_URL} target="_blank" rel="noreferrer">{PUBLIC_HOSTNAME}</a> y, próximamente,
         como aplicación nativa para iOS y Android.
       </p>
 
       <h2>2. Aceptación de los términos</h2>
       <p>
         Al crear una cuenta, iniciar el modo prueba o utilizar BTal de cualquier otra forma, aceptas estos
-        términos y la <a href="/legal/privacidad">política de privacidad</a>. Si no estás de acuerdo, no uses la app.
+        términos y la <CrossLink slug="privacidad">política de privacidad</CrossLink>. Si no estás de acuerdo, no uses la app.
       </p>
 
       <h2>3. Edad mínima</h2>
@@ -182,7 +203,7 @@ function TermsOfService() {
       <ul>
         <li>Una cuenta por persona. No compartas tu contraseña.</li>
         <li>Eres responsable de mantener la seguridad de tu sesión, especialmente en dispositivos compartidos.</li>
-        <li>Si sospechas que alguien ha accedido a tu cuenta sin autorización, escríbenos a <a href="mailto:soporte@btal.app">soporte@btal.app</a>.</li>
+        <li>Si sospechas que alguien ha accedido a tu cuenta sin autorización, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.</li>
         <li>Nos reservamos el derecho de pedir verificación adicional (email, segundo factor) si detectamos actividad sospechosa.</li>
       </ul>
 
@@ -210,7 +231,7 @@ function TermsOfService() {
 
       <h2>7. Limitaciones del servicio</h2>
       <ul>
-        <li>BTal es una herramienta de organización. <strong>NO sustituye consejo médico, dietético, deportivo ni psicológico profesional.</strong> Consulta el <a href="/legal/aviso-medico">aviso médico</a> para más detalle.</li>
+        <li>BTal es una herramienta de organización. <strong>NO sustituye consejo médico, dietético, deportivo ni psicológico profesional.</strong> Consulta el <CrossLink slug="aviso-medico">aviso médico</CrossLink> para más detalle.</li>
         <li>Cualquier recomendación generada por la inteligencia artificial (cuando esté activa) tiene carácter orientativo y debe revisarse críticamente. Consulta con un profesional antes de seguir cualquier plan.</li>
         <li>La app puede contener errores. Hacemos lo posible por mantenerla operativa pero no garantizamos disponibilidad ininterrumpida ni ausencia total de bugs.</li>
         <li>Eres responsable de tu salud y tus decisiones.</li>
@@ -271,7 +292,7 @@ function TermsOfService() {
 
       <h2>14. Contacto</h2>
       <p>
-        Para cualquier duda sobre estos términos, escríbenos a <a href="mailto:soporte@btal.app">soporte@btal.app</a>.
+        Para cualquier duda sobre estos términos, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
     </>
   );
@@ -335,8 +356,8 @@ function MedicalDisclaimer() {
 
       <h2>Documentos relacionados</h2>
       <p>
-        Consulta también nuestra <a href="/legal/privacidad">Política de privacidad</a> y los{' '}
-        <a href="/legal/terminos">Términos de uso</a>.
+        Consulta también nuestra <CrossLink slug="privacidad">Política de privacidad</CrossLink> y los{' '}
+        <CrossLink slug="terminos">Términos de uso</CrossLink>.
       </p>
     </>
   );
@@ -359,17 +380,39 @@ function renderBody(slug: string) {
           <p>Documento no encontrado.</p>
           <p className="legal-note">
             Si crees que es un error, escribe a{' '}
-            <a href="mailto:soporte@btal.app">soporte@btal.app</a>.
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
           </p>
         </>
       );
   }
 }
 
+// Componente reutilizable que renderiza SOLO el cuerpo legal de un slug (sin
+// header/título · de eso se encarga el wrapper). Lo consume LegalPlaceholder
+// (page mode · ruta /legal/:slug) y LegalLink (modal mode · usado en
+// Onboarding y AboutModal). En modal mode, pasar onCrossLinkClick para que
+// los links internos a otros docs legales swappeen el slug del modal en
+// lugar de navegar (mismo UX web + native sin abrir tabs externas).
+export interface LegalContentProps {
+  slug: string;
+  onCrossLinkClick?: (slug: LegalSlug) => void;
+}
+
+export function LegalContent({ slug, onCrossLinkClick }: LegalContentProps) {
+  const body = <div className="legal-body">{renderBody(slug)}</div>;
+  if (onCrossLinkClick) {
+    return (
+      <LegalCrossLinkContext.Provider value={onCrossLinkClick}>
+        {body}
+      </LegalCrossLinkContext.Provider>
+    );
+  }
+  return body;
+}
+
 const LegalPlaceholder: React.FC = () => {
   const history = useHistory();
   const { slug = '' } = useParams<{ slug: string }>();
-  const title = TITLES[slug] ?? 'Documento legal';
 
   return (
     <IonPage>
@@ -388,12 +431,10 @@ const LegalPlaceholder: React.FC = () => {
             >
               <MealIcon value="tb:arrow-left" size={22} />
             </button>
-            <h1 className="legal-title">{title}</h1>
+            <h1 className="legal-title">{getLegalTitle(slug)}</h1>
           </div>
 
-          <div className="legal-body">
-            {renderBody(slug)}
-          </div>
+          <LegalContent slug={slug} />
         </div>
       </IonContent>
     </IonPage>

@@ -1,5 +1,7 @@
 import type { Firestore } from 'firebase/firestore';
 import { app } from './firebase';
+import { syncAuthDisplayName } from './auth';
+import { toTitleCase } from '../utils/userDisplay';
 import {
   COMPRA_BUILTIN_IDS,
   DAY_KEYS,
@@ -12,6 +14,7 @@ import {
   defaultCreatinaConfig,
   defaultEntrenos,
   defaultGeneraciones,
+  getRecommendedPlanId,
   defaultMenu,
   defaultMenuFlags,
   defaultPlan,
@@ -101,7 +104,14 @@ export async function saveOnboardingProfile(
   const ref = mod.doc(db, 'users', uid);
   const existing = await mod.getDoc(ref);
   const now = Date.now();
-  const completedProfile: UserProfile = { ...profile, completed: true };
+  // Normalizamos `nombre` a Title Case ANTES de persistir · cualquier
+  // variación de mayúsculas del input ("pablo", "PABLO", "Pablo") queda
+  // canonicalizada como "Pablo". Idempotente: si ya viene bien, no cambia.
+  const completedProfile: UserProfile = {
+    ...profile,
+    nombre: toTitleCase(profile.nombre),
+    completed: true,
+  };
 
   if (existing.exists()) {
     const data = existing.data() as Partial<UserDocument>;
@@ -126,7 +136,18 @@ export async function saveOnboardingProfile(
     // pisar datos del usuario. Cubre el caso de cuentas viejas creadas
     // antes de Fase 2A que no tenían estos campos en su schema.
     if (data.menu === undefined) updates.menu = defaultMenu();
-    if (data.entrenos === undefined) updates.entrenos = defaultEntrenos();
+    if (data.entrenos === undefined) {
+      // El activePlan default de defaultEntrenos() es '4dias' (hardcode
+      // demo). Cuando se siembra a un user real durante onboarding, ese
+      // valor debe respetar los `diasEntreno` que el user acaba de elegir:
+      // si dijo 5 días → activePlan='5dias'. Sin esto, el banner muestra
+      // el plan recomendado pero la selección por defecto es '4dias',
+      // generando una desincronía visual.
+      updates.entrenos = {
+        ...defaultEntrenos(),
+        activePlan: getRecommendedPlanId(profile.diasEntreno),
+      };
+    }
     if (data.compra === undefined) updates.compra = defaultCompra();
     if (data.suplementos === undefined) updates.suplementos = defaultSuplementos();
     // Plan + generaciones granulares (Fase 2A · prep IA Fase 6).
@@ -138,14 +159,27 @@ export async function saveOnboardingProfile(
     // El disclaimer se da por aceptado en este momento (el usuario solo
     // llega aquí desde el paso 1 del onboarding tras marcar el checkbox).
     // `defaultUserDocument()` ya incluye menu/entrenos/compra/suplementos
-    // vacíos — punto de partida idéntico para modos IA y manual.
+    // vacíos — punto de partida idéntico para modos IA y manual. El
+    // activePlan se ajusta a los diasEntreno del perfil (ver comentario
+    // arriba en el path existing.exists()).
     const initial: UserDocument = {
       ...defaultUserDocument(),
       profile: completedProfile,
       medicalDisclaimerAcceptedAt: now,
+      entrenos: {
+        ...defaultEntrenos(),
+        activePlan: getRecommendedPlanId(profile.diasEntreno),
+      },
     };
     await mod.setDoc(ref, initial);
   }
+  // Sync con Firebase Auth · si el user firma con email/password no tiene
+  // displayName · al guardar el perfil del onboarding lo seteamos a
+  // `profile.nombre` para que el avatar (greet, iniciales, etc.) lo lea
+  // del lugar canónico. Idempotente: si ya coincide, no escribe.
+  // (Usamos `completedProfile.nombre` que YA está en Title Case · evita que
+  // el sync escriba la versión sin normalizar.)
+  await syncAuthDisplayName(completedProfile.nombre);
 }
 
 // Migra un documento de usuario al schema actual añadiendo cualquier campo
@@ -955,13 +989,26 @@ export async function updateUserProfileFields(
   const { mod, db } = await getDb();
   const ref = mod.doc(db, 'users', uid);
   const updates: Record<string, unknown> = { lastActive: Date.now() };
+  // Si el patch trae `nombre`, lo normalizamos a Title Case antes de
+  // persistir · misma regla que en `saveOnboardingProfile`. Calculamos el
+  // titled aquí para reusarlo en el sync de Auth y evitar normalizar dos
+  // veces (la versión sin normalizar nunca llega al storage).
+  const titledNombre = Object.prototype.hasOwnProperty.call(partial, 'nombre')
+    ? toTitleCase(partial.nombre)
+    : undefined;
   for (const [key, value] of Object.entries(partial)) {
     // Salvaguarda: nunca permitimos "descompletar" el perfil ni cambiar
     // el modo de generación desde este helper (ese flujo va por otra ruta).
     if (key === 'completed') continue;
-    updates[`profile.${key}`] = value;
+    updates[`profile.${key}`] = key === 'nombre' ? titledNombre : value;
   }
   await mod.updateDoc(ref, updates);
+  // Si el patch toca `nombre`, sincronizamos también el displayName de Auth
+  // para que ambos campos queden alineados. Solo cuando el campo está
+  // explícitamente en el partial (no propagamos cambios fantasma).
+  if (titledNombre !== undefined) {
+    await syncAuthDisplayName(titledNombre);
+  }
 }
 
 // Actualiza solo algunos campos de una comida concreta del menú

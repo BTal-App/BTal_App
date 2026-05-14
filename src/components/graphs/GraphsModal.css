@@ -68,36 +68,51 @@
   border-color: var(--btal-border-2);
 }
 
-/* ── Tabs ─────────────────────────────────────────────────────── */
+/* ── Tabs ─────────────────────────────────────────────────────────
+ * 4 tabs siempre visibles · grid en 4 columnas iguales. Antes usábamos
+ * `display: flex` + `overflow-x: auto`: en iOS Safari ese layout cortaba
+ * las tabs de los extremos al activar las del medio (auto-scroll no
+ * recoloca bien dentro de IonModal). El layout grid garantiza que las
+ * 4 entren sin scroll, independiente del ancho del viewport.
+ *
+ * `min-width: 0` en `.graphs-modal-tab` permite a los hijos del grid
+ * encogerse por debajo de su `min-content` para que las labels usen
+ * `text-overflow: ellipsis` antes de desbordar. */
 .graphs-modal-tabs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.4rem;
-  overflow-x: auto;
   padding-bottom: 0.5rem;
   margin-bottom: 0.85rem;
   border-bottom: 1px solid var(--btal-border);
-  scrollbar-width: none;
-}
-
-.graphs-modal-tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .graphs-modal-tab {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.3rem;
   background: var(--btal-surface-2);
   border: 1px solid var(--btal-border);
   color: var(--btal-t-2);
   border-radius: 999px;
-  padding: 0.4rem 0.85rem;
+  padding: 0.4rem 0.6rem;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
-  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* La label dentro de la tab puede truncar con ellipsis si la pantalla
+ * es muy estrecha · evita que el icono se vea sin label. */
+.graphs-modal-tab > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .graphs-modal-tab:hover {
@@ -246,25 +261,39 @@
   white-space: nowrap;
 }
 
-/* ── Period selector (tab Suplementación) · 4 chips ─────────── */
+/* ── Period selector (tab Suplementación) · 4 chips ─────────────
+ * Alineado visualmente con `.graphs-modal-tab` (mismo grosor + pill
+ * shape + padding) para que el user no perciba "encogidos" al cambiar
+ * de la barra de tabs principal a este selector dentro del tab Supl.
+ * Antes: chips cuadrados (border-radius 8px) + flex 1 1 auto + flex-wrap
+ * que podían quedar pequeños o saltar de línea. Ahora: pills iguales en
+ * altura a las tabs, distribuidas con grid 4 columnas equivalentes y
+ * gap consistente · nunca wrap (el contenedor no permite scroll
+ * horizontal porque el padre del modal sí scrollea vertical). */
 .graphs-period-selector {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.4rem;
-  flex-wrap: wrap;
 }
 
 .graphs-period-btn {
-  flex: 1 1 auto;
-  min-width: 64px;
+  /* Mismo `padding` + `font-size` + `font-weight` que .graphs-modal-tab
+   * para que la altura visual coincida con las tabs de arriba. */
   background: var(--btal-surface-2);
   border: 1px solid var(--btal-border);
   color: var(--btal-t-2);
-  border-radius: 8px;
-  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  padding: 0.4rem 0.6rem;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+  white-space: nowrap;
+  text-align: center;
+  /* Reset defaults de <button> que en algunos browsers añaden line-height
+   * extra y descuadran la alineación vertical respecto a las tabs. */
+  line-height: 1.2;
+  min-width: 0;
 }
 
 .graphs-period-btn:hover {
