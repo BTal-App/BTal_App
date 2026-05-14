@@ -141,22 +141,27 @@
   }
 }
 
+/* En pantallas estrechas (iPhone 15 Pro/Air 393 px, Galaxy S24 384 px,
+ * iPhone SE 375 px...) compactamos el padding lateral del header y el
+ * IA button para ganar ~8-12 px de ancho disponible. Esto permite que
+ * el title siga en 1.45 rem en iPhone 15 Pro / Galaxy S24 (390-393 px)
+ * sin necesidad de bajar el font. */
 @media (max-width: 400px) {
-  /* iPhone SE / Mini (~375 px) · Para que "PLAN NUTRICIONAL" no
-   * desborde el slot derecho cargado (IA button + avatar), bajamos
-   * a 1.3 rem · entra cómodo con margen ~10 px. Inconsistente con
-   * los iPhones modernos (1.45) pero garantiza una línea siempre. */
-  .tab-header-title {
-    font-size: 1.3rem;
-  }
-  /* En pantallas muy estrechas (iPhone SE 375 px) compactamos el IA
-   * button al mínimo · icono de 18 px con padding ajustado para que
-   * el touch target siga siendo cómodo (~36 px de diámetro). */
   .tab-header-ia-btn {
     padding: 7px 8px;
   }
   .tab-header {
     padding-left: 16px;
     padding-right: 16px;
+  }
+}
+
+/* iPhone SE / Mini (≤380 px) · única franja donde realmente no entra
+ * "PLAN NUTRICIONAL" a 1.45 rem incluso con padding compacto. Bajamos
+ * a 1.3 rem. iPhone 15 Pro (393 px) y Galaxy S24 (384 px) NO caen
+ * aquí, se quedan en 1.45 rem · matches Pro Max y resto de moderns. */
+@media (max-width: 380px) {
+  .tab-header-title {
+    font-size: 1.3rem;
   }
 }
