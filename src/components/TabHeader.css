@@ -34,11 +34,10 @@
   margin: 0;
   line-height: 1.1;
   color: var(--btal-t-1);
-  /* Permitimos wrap (default) · a 1.45rem en breakpoint phone los
-     titulos largos ("PLAN NUTRICIONAL", "REGISTRO DE PESOS") rompen
-     a 2 lineas solo en iPhone SE/Mini (~375 px). En el resto cabe
-     en una. El layout con `align-items: flex-start` aguanta bien el
-     wrap sin descolocar el avatar. */
+  /* NUNCA permitir wrap · el avatar/IA button se queda al lado del
+     título en una línea. Cada breakpoint ajusta el font-size al
+     máximo que entra sin romper. */
+  white-space: nowrap;
   min-width: 0;
 }
 
@@ -143,11 +142,16 @@
 }
 
 @media (max-width: 400px) {
-  /* iPhone SE / Mini · mantenemos el mismo 1.45 rem para consistencia
-   * visual entre devices · si en SE "PLAN NUTRICIONAL" rompe a 2
-   * lineas, el flex layout lo aguanta con el avatar arriba. Si esto
-   * resulta molesto en pruebas, alternativa es bajar a 1.3 rem AQUI
-   * y aceptar que SE se vea distinto al resto. */
+  /* iPhone SE / Mini (~375 px) · Para que "PLAN NUTRICIONAL" no
+   * desborde el slot derecho cargado (IA button + avatar), bajamos
+   * a 1.3 rem · entra cómodo con margen ~10 px. Inconsistente con
+   * los iPhones modernos (1.45) pero garantiza una línea siempre. */
+  .tab-header-title {
+    font-size: 1.3rem;
+  }
+  /* En pantallas muy estrechas (iPhone SE 375 px) compactamos el IA
+   * button al mínimo · icono de 18 px con padding ajustado para que
+   * el touch target siga siendo cómodo (~36 px de diámetro). */
   .tab-header-ia-btn {
     padding: 7px 8px;
   }
