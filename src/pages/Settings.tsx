@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import {
+  IonAlert,
   IonButton,
   IonContent,
   IonPage,
@@ -61,12 +62,23 @@ const Settings: React.FC = () => {
   // Export GDPR · loading bloquea el botón para evitar disparar dos
   // descargas si el user da doble click, y el toast verde confirma
   // éxito (errores van al canal global `useError`).
+  //
+  // Flow: click → IonAlert de confirmación que explica QUÉ se descarga
+  // (auth + user doc + registros + localStorage local) → "Descargar" o
+  // "Cancelar". Sin el alert antes era una descarga sorpresa al primer
+  // click — algunos navegadores incluso bloquean popups de descarga sin
+  // gesto explícito reciente · ahora hay un opt-in claro del user.
   const [exporting, setExporting] = useState(false);
   const [exportedToast, setExportedToast] = useState(false);
+  const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
 
-  const handleExport = async () => {
-    if (!user) return;
-    if (exporting) return;
+  const handleExportRequest = () => {
+    if (!user || exporting) return;
+    setExportConfirmOpen(true);
+  };
+
+  const handleExportConfirmed = async () => {
+    if (!user || exporting) return;
     setExporting(true);
     try {
       await downloadUserDataExport(user, APP_VERSION);
@@ -195,7 +207,7 @@ const Settings: React.FC = () => {
             <button
               type="button"
               className="settings-row settings-row--link"
-              onClick={blurAndRun(handleExport)}
+              onClick={blurAndRun(handleExportRequest)}
               disabled={exporting}
               aria-busy={exporting}
             >
@@ -290,6 +302,44 @@ const Settings: React.FC = () => {
         <PreferencesModal
           isOpen={preferencesOpen}
           onClose={() => setPreferencesOpen(false)}
+        />
+
+        {/*
+          Confirmación previa al export GDPR · explicamos al user EXACTAMENTE
+          qué contiene el archivo antes de bajarlo. El JSON descargado puede
+          incluir email, perfil físico (peso, altura, etc.), historial
+          completo de registros, notas, etc. · no es un archivo trivial y el
+          user debe saber qué se está llevando para decidir si quiere
+          compartirlo o no. Mensaje espejo del que ya describe la política
+          de privacidad (apartado 6 · derecho de portabilidad RGPD art. 20).
+        */}
+        <IonAlert
+          isOpen={exportConfirmOpen}
+          onDidDismiss={() => setExportConfirmOpen(false)}
+          header="Descargar mis datos"
+          subHeader="¿Qué se va a descargar?"
+          message={
+            'Un archivo JSON con TODOS tus datos de BTal:\n\n'
+            + '• Datos de tu cuenta (email, nombre, proveedores de login, fechas de creación y último acceso).\n'
+            + '• Tu perfil físico (peso, altura, edad, objetivo, intolerancias, etc.).\n'
+            + '• Tus menús de las 7 días, lista de la compra, plan de entreno y suplementación.\n'
+            + '• Historial completo de registros de pesos.\n'
+            + '• Tus preferencias guardadas (unidades, inicio de semana, etc.).\n\n'
+            + 'El archivo viaja solo a tu dispositivo · no se envía a ningún servidor. '
+            + 'Trátalo con cuidado: contiene información personal.'
+          }
+          buttons={[
+            { text: 'Cancelar', role: 'cancel' },
+            {
+              text: 'Descargar',
+              role: 'confirm',
+              handler: () => {
+                handleExportConfirmed().catch((err) =>
+                  console.error('[Settings] handleExportConfirmed:', err),
+                );
+              },
+            },
+          ]}
         />
 
         <IonToast

@@ -44,3 +44,9 @@ firestore-debug.log
 # Archivos temporales de mensajes de commit (passados a `git commit -F`)
 COMMIT_MSG.tmp
 *.commit-msg.tmp
+
+# Playwright (artefactos de E2E · los tests fuente sí entran en git)
+test-results/
+playwright-report/
+playwright/.cache/
+playwright/.auth/

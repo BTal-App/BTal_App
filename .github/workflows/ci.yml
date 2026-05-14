@@ -57,3 +57,51 @@ jobs:
         # Si compilara sin errores aquí, casi seguro que también en
         # producción.
         run: npm run build
+
+  e2e:
+    name: E2E · Playwright (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Independiente del job `ci` · corren en paralelo. Si el lint/test/
+    # build falla el bloque ci da feedback antes; este verifica que la
+    # app arranca y los flujos pre-auth (landing, legal, routing) no
+    # han regresionado. Sin secrets de Firebase · los tests no llegan
+    # a hacer auth real ni a tocar Firestore.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        # Cache estaría bien pero el browser pesa ~150 MB · por ahora
+        # bajamos cada run. Si las E2E se vuelven más pesadas, mover
+        # a `actions/cache` con key basada en `npx playwright --version`.
+        run: npx playwright install --with-deps chromium
+
+      - name: Build (sin secrets de Firebase · suficiente para flujos pre-auth)
+        # Sin VITE_FIREBASE_* el bundle se genera con strings vacíos.
+        # La Landing y las páginas legales no necesitan Firebase activo
+        # para renderizar · onAuthStateChanged falla en background pero
+        # no rompe el render. Si en el futuro añadimos tests que SÍ
+        # requieran Firebase real (guest signup, etc.), tendremos que
+        # pasar los secrets aquí también.
+        run: npm run build
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
