@@ -254,6 +254,11 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  /* Permite que las dos tarjetas se encojan en igual medida cuando el
+     viewport es estrecho · sin esto, la segunda tarjeta ("se
+     mantendrán" con icono de candado un pelín más ancho que el alert
+     de la izquierda) podía sobresalir por la derecha. */
+  min-width: 0;
 }
 
 .ai-items-stat {
@@ -264,8 +269,17 @@
   border: 1px solid var(--btal-border);
   border-radius: 14px;
   padding: 12px 14px;
+  /* Hardening contra overflow: contiene el contenido al border del
+     card. min-width:0 indispensable en flex children que pueden
+     querer empujar (el span del label uppercase con letter-spacing
+     es lo más ancho aquí). */
+  overflow: hidden;
+  min-width: 0;
 }
 
+/* Los iconos del stat son <svg> de Tabler (vía MealIcon), no <ion-icon>.
+   Apuntamos al elemento real para garantizar tamaño y que no se encojan. */
+.ai-items-stat svg,
 .ai-items-stat ion-icon {
   font-size: 1.4rem;
   flex-shrink: 0;
@@ -276,6 +290,9 @@
   flex-direction: column;
   gap: 1px;
   min-width: 0;
+  /* Permite ellipsis en labels si el ancho es ridículamente estrecho.
+     En phones normales (iPhone 14+) hay sobra; este es seguro extra. */
+  overflow: hidden;
 }
 
 .ai-items-stat-num {
@@ -293,6 +310,12 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  /* Sin esto, el `letter-spacing: 0.06em` sobre uppercase hace que el
+     último carácter se solape con el borde derecho del card en viewports
+     estrechos. text-overflow:ellipsis + nowrap evita el "se sale". */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ai-items-stat--overwrite ion-icon,

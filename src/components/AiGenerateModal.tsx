@@ -232,26 +232,31 @@ export function AiGenerateModal({
               >
                 <MealIcon value="tb:x" size={22} />
               </button>
-              {/* Header · icono + título + paso actual del wizard */}
+              {/* Header · icono + título + paso actual del wizard
+                  El pill "Paso X de 3" vive AHORA dentro de la columna
+                  de texto (debajo de título/descripción) para no quitar
+                  ancho horizontal al título (provocaba wrap a 2-3 líneas)
+                  y para no chocar con la X absolute top-right del card.
+                  El head tiene padding-right que reserva espacio para la X. */}
               <div className="ai-gen-head">
                 <div className="ai-gen-icon">
                   <MealIcon value="tb:sparkles" size={28} />
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="ai-gen-head-text">
                   <h2 className="settings-modal-title">{title}</h2>
                   {description && step === 'scope' && (
-                    <p className="settings-modal-text" style={{ margin: '6px 0 0' }}>
+                    <p className="settings-modal-text ai-gen-head-desc">
                       {description}
                     </p>
                   )}
+                  <span
+                    className="ai-gen-step-pill"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    Paso {step === 'scope' ? '1' : '2'} de 3
+                  </span>
                 </div>
-                <span
-                  className="ai-gen-step-pill"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  Paso {step === 'scope' ? '1' : '2'} de 3
-                </span>
               </div>
 
               {/* Estado del plan / contador (lo lee canGenerateAi) */}

@@ -1,10 +1,46 @@
 /* AiGenerateModal · pregunta scope antes de generar con IA. */
 
+/* Padding-right: 48px reserva 48 px del lado derecho del head para que
+   el botón X absolute (top:12, right:12, 40×40) NO pise el contenido.
+   X ocupa de right:12 a right:52. Con padding-right:48 el contenido
+   termina antes de right:48, dejando ~4 px de aire entre texto y X.
+   Sin esto, en títulos largos como "Generar el plan de entreno con IA"
+   el texto pasaba por debajo de la X y se veía recortado. */
 .ai-gen-head {
   display: flex;
   gap: 14px;
   align-items: flex-start;
   margin-bottom: 4px;
+  padding-right: 48px;
+}
+
+/* Columna de texto del head · contiene título, descripción opcional y
+   la pill "Paso X de 3" en flujo vertical. min-width:0 permite que el
+   título use ellipsis o wrap controlado si el viewport es muy estrecho.
+   gap:6px da aire entre los 3 elementos sin que parezcan apelmazados. */
+.ai-gen-head-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.ai-gen-head-desc {
+  margin: 0;
+}
+
+/* El título h2 dentro de .ai-gen-head-text NO debe heredar el
+ * padding-right: 56px de `.settings-modal-title` (que reserva espacio
+ * para la X). Aquí el padre `.ai-gen-head` ya tiene padding-right: 48px
+ * con ese propósito · si sumamos ambos quedan 104 px de "tabulación"
+ * derecha, que provocaba que "Generar el plan de entreno con IA" (33
+ * chars) rompiera a 3 líneas en iPhone. Anulamos el padding-right del
+ * título cuando vive dentro del head para que aproveche el ancho
+ * completo de la columna `.ai-gen-head-text`. */
+.ai-gen-head-text .settings-modal-title {
+  padding-right: 0;
 }
 
 .ai-gen-icon {
@@ -147,7 +183,9 @@
   max-width: 540px;
 }
 
-/* Pill "Paso X de 3" en la esquina superior derecha del header */
+/* Pill "Paso X de 3" · vive dentro de .ai-gen-head-text como tercer
+   elemento de la columna (debajo de descripción). Ya no necesita
+   flex-shrink:0 porque no compite por horizontal con el título. */
 .ai-gen-step-pill {
   font-family: 'Inter', sans-serif;
   font-size: 0.66rem;
@@ -159,8 +197,8 @@
   border: 1px solid var(--btal-border);
   padding: 4px 9px;
   border-radius: 999px;
-  flex-shrink: 0;
   white-space: nowrap;
+  align-self: flex-start;
 }
 
 /* Navegación entre pasos · botón Atrás + Continuar */
