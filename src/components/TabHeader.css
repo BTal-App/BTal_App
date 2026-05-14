@@ -127,7 +127,11 @@
  *     "PLAN DE ENTRENO") · disponible ~220 px de ancho de título */
 @media (max-width: 520px) {
   .tab-header-title {
-    font-size: 1.3rem;
+    /* 1.4 rem · medido para que "PLAN NUTRICIONAL" (16 chars en
+     * uppercase · caso peor con avatar+IA button) quepa en 222 px
+     * disponibles en iPhone ~390 px. Margen ~0 px · si subes esto
+     * arriba se rompe a 2 líneas otra vez. */
+    font-size: 1.4rem;
   }
   .tab-header-ia-btn {
     padding: 8px 10px;
@@ -139,7 +143,9 @@
 
 @media (max-width: 400px) {
   .tab-header-title {
-    font-size: 1.15rem;
+    /* iPhone SE / Mini · margen más apretado. 1.25 rem deja respirar
+     * sin overflow incluso con el slot derecho cargado. */
+    font-size: 1.25rem;
   }
   /* En pantallas muy estrechas (iPhone SE 375 px) compactamos el IA
    * button al mínimo · icono de 18 px con padding ajustado para que
