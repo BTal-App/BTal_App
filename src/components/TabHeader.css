@@ -127,10 +127,12 @@
  *     "PLAN DE ENTRENO") · disponible ~220 px de ancho de título */
 @media (max-width: 520px) {
   .tab-header-title {
-    /* 1.35 rem · sweet spot entre legible y seguro. A 1.4 rem rozaba
-     * el borde con "PLAN NUTRICIONAL" + IA button en iPhone 390 px ·
-     * 1.35 rem deja ~5-7 px de respiro · más cómodo visualmente. */
-    font-size: 1.35rem;
+    /* 1.4 rem · máximo seguro para que "PLAN NUTRICIONAL" (16 chars
+     * uppercase) entre con avatar + IA button en iPhone ~390 px. Si
+     * subes esto se rompe a 2 líneas. Si tras pruebas en iPhone Pro
+     * Max parece pequeño, la solución es subir el breakpoint de 520
+     * a 430 px · NO subir el font (rompería en SE/Mini). */
+    font-size: 1.4rem;
   }
   .tab-header-ia-btn {
     padding: 8px 10px;
