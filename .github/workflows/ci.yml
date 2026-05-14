@@ -18,6 +18,14 @@ concurrency:
 permissions:
   contents: read
 
+# Forzamos Node 24 para JavaScript actions que aún declaran `using: node20`.
+# Afecta a `actions/upload-artifact@v4` (job e2e) que está en node20 ·
+# v7 ya usa node24 pero el bump v4→v7 puede ser breaking, preferimos el
+# env para que el código de la action corra en Node 24 sin cambiar API.
+# Ver workflows/deploy.yml para el contexto completo de la transición.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   ci:
     name: Lint · Test · Build

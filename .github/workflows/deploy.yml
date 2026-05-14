@@ -17,6 +17,21 @@ concurrency:
 permissions:
   contents: read
 
+# Forzamos el runtime Node 24 para las JavaScript actions que aún declaran
+# `using: node20` en su action.yml. Necesario porque
+# `FirebaseExtended/action-hosting-deploy@v0` (= v0.10.0, publicada
+# 2025-08-18) todavía está en node20 aunque su HEAD ya está migrada a
+# node24. Sin esta env GitHub avisa con warning a partir del 2026-06-02
+# fuerza Node 24 unilateralmente · mejor opt-in NOSOTROS y comprobar que
+# funciona, que esperar a que GitHub lo imponga.
+#
+# Cuando Firebase publique v0.11.0+ (action.yml con `using: node24`),
+# este env será no-op y puede retirarse · sin urgencia.
+#
+# Referencia: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   deploy:
     name: Build · Deploy to Firebase Hosting
