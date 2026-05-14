@@ -34,6 +34,13 @@
   margin: 0;
   line-height: 1.1;
   color: var(--btal-t-1);
+  /* En todas las tabs queremos UNA línea para que el avatar/IA button
+     queden alineados con el centro del título. Si el viewport es
+     muy estrecho y aun así no entra, hacemos shrink controlado con
+     las media queries de abajo (font-size más pequeño · NO ellipsis
+     porque los títulos son cortos y previsibles). */
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .tab-header-title--natural {
@@ -105,11 +112,43 @@
   font-size: 1rem;
 }
 
-@media (max-width: 480px) {
+/* Responsive · escala el título para que entre en UNA línea con los
+ * elementos del slot derecho (badge IA + botón Generar IA icon-only +
+ * avatar 40 px). Sin estas reducciones, "REGISTRO DE PESOS",
+ * "PLAN NUTRICIONAL" y "PLAN DE ENTRENO" rompían a 2 líneas en
+ * iPhone ~390 px ancho · el slot derecho cargado (badge + IA button +
+ * avatar) consume ~120 px y los títulos en uppercase a 1.75 rem
+ * pedían ~270 px.
+ *
+ * Breakpoints calibrados para el caso peor de cada par:
+ *   - Tabs con avatar SOLO ("REGISTRO DE PESOS" / "LISTA DE COMPRA")
+ *     · disponible ~300 px de ancho de título
+ *   - Tabs con badge + IA button + avatar ("PLAN NUTRICIONAL" /
+ *     "PLAN DE ENTRENO") · disponible ~220 px de ancho de título */
+@media (max-width: 520px) {
+  .tab-header-title {
+    font-size: 1.3rem;
+  }
   .tab-header-ia-btn {
     padding: 8px 10px;
   }
   .tab-header-ia-btn span {
     display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .tab-header-title {
+    font-size: 1.15rem;
+  }
+  /* En pantallas muy estrechas (iPhone SE 375 px) compactamos el IA
+   * button al mínimo · icono de 18 px con padding ajustado para que
+   * el touch target siga siendo cómodo (~36 px de diámetro). */
+  .tab-header-ia-btn {
+    padding: 7px 8px;
+  }
+  .tab-header {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }
