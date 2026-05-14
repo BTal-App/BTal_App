@@ -20,10 +20,19 @@ import { previousDayKey, todayDateStr } from '../utils/dateKeys';
 //
 // `totalEntrenos`, `prs` y `exerciseHistory` salen del UserDocument
 // (mantenidos por la transacción en setRegistroDia/deleteRegistroDia).
-// La racha se calcula en este hook leyendo los últimos 60 días de
-// /registros · una sola query al montar · refrescada manualmente
-// (`refresh()`) tras guardar/borrar para reflejar la nueva racha
-// sin esperar al re-mount del componente.
+// La racha se calcula en este hook leyendo los últimos `RACHA_FETCH_LIMIT`
+// días de /registros · una sola query al montar · refrescada manualmente
+// (`refresh()`) tras guardar/borrar para reflejar la nueva racha sin
+// esperar al re-mount del componente.
+
+// Tope práctico de docs a leer para el cálculo de racha. Subido de 60 a
+// 999 · cubre rachas de hasta ~2.7 años consecutivos · poco probable que
+// nadie llegue, pero el cap a 60 limitaba el número visible a 60 incluso
+// si el user tenía más días seguidos. Firestore `limit()` es un máximo ·
+// users con menos registros no consumen reads extra (solo lee los que
+// existen). Cost · gratis hasta 50K reads/día en free tier, irrelevante
+// para Blaze con budgets bajos.
+const RACHA_FETCH_LIMIT = 999;
 
 export interface UseRegistroStatsResult {
   totalEntrenos: number;
@@ -94,7 +103,7 @@ export function useRegistroStats(): UseRegistroStatsResult {
     }
     setLoading(true);
     try {
-      const arr = await getRegistrosRecientes(uid, 60);
+      const arr = await getRegistrosRecientes(uid, RACHA_FETCH_LIMIT);
       setRecientes(arr);
     } catch (err) {
       console.warn('[useRegistroStats] fetch failed', err);
@@ -117,7 +126,7 @@ export function useRegistroStats(): UseRegistroStatsResult {
     }
     setLoading(true);
     /* eslint-enable react-hooks/set-state-in-effect */
-    getRegistrosRecientes(uid, 60)
+    getRegistrosRecientes(uid, RACHA_FETCH_LIMIT)
       .then((arr) => {
         if (mounted) setRecientes(arr);
       })
