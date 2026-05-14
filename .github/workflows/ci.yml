@@ -86,13 +86,22 @@ jobs:
         # a `actions/cache` con key basada en `npx playwright --version`.
         run: npx playwright install --with-deps chromium
 
-      - name: Build (sin secrets de Firebase · suficiente para flujos pre-auth)
-        # Sin VITE_FIREBASE_* el bundle se genera con strings vacíos.
-        # La Landing y las páginas legales no necesitan Firebase activo
-        # para renderizar · onAuthStateChanged falla en background pero
-        # no rompe el render. Si en el futuro añadimos tests que SÍ
-        # requieran Firebase real (guest signup, etc.), tendremos que
-        # pasar los secrets aquí también.
+      - name: Build (con secrets de Firebase · `initializeAuth` los necesita)
+        # Sin `VITE_FIREBASE_*` la llamada a `initializeAuth(app, ...)` en
+        # services/firebase.ts (que se ejecuta a module-load time como
+        # consecuencia del primer import) falla al crearse el Auth, el
+        # error sube y React no llega a montar Landing · los tests veían
+        # una página en blanco y todo el suite se caía con "elemento no
+        # encontrado". Reusamos los mismos secrets del workflow de deploy
+        # · son keys públicas que identifican el proyecto Firebase web,
+        # no credenciales sensibles.
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
         run: npm run build
 
       - name: Run E2E tests

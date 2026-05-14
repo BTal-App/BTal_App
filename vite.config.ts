@@ -17,8 +17,18 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     // Excluimos node_modules y dist por defecto · añadimos el dir de
-    // build de Firebase Functions cuando exista.
-    exclude: ['node_modules', 'dist', '.idea', '.git', 'cypress'],
+    // build de Firebase Functions cuando exista. `tests/e2e/**` también
+    // queda fuera · esos specs son de Playwright (Playwright tiene su
+    // propia runtime, `test.describe` no es compatible con Vitest y
+    // revienta con "Playwright Test did not expect test.describe()").
+    exclude: [
+      'node_modules',
+      'dist',
+      '.idea',
+      '.git',
+      'cypress',
+      'tests/e2e/**',
+    ],
     css: false, // no procesamos CSS en tests · acelera y evita
                 // problemas con @import de Ionic.
   },
