@@ -37,6 +37,24 @@
   transform: translateY(1px) scale(0.97);
 }
 
+/* Racha = 0 · estado atenuado en gris · no parece un error/fuego
+   apagado sino un "aún sin racha · empieza hoy". Mantiene clickable
+   (abre el mismo IonAlert que explica cómo empezar). */
+.streak-badge--zero {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--btal-border);
+  color: var(--btal-t-3);
+}
+
+.streak-badge--zero:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--btal-border-2);
+}
+
+.streak-badge--zero svg {
+  color: var(--btal-t-3);
+}
+
 .streak-badge svg {
   color: var(--btal-coral);
   flex-shrink: 0;

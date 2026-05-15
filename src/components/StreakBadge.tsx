@@ -31,26 +31,30 @@ const RACHA_INFO =
 // qué cuenta y qué rompe la racha (mismo texto que el ⓘ del stat del
 // Registro · una sola fuente de verdad).
 //
-// No se renderiza si racha = 0 · evita ruido visual cuando el user
-// nunca ha entrenado o cuando su racha se acaba de romper. El header
-// queda limpio (solo avatar) hasta que hay racha que presumir.
+// Se muestra SIEMPRE en HoyPage, incluso con racha = 0 (decisión de
+// producto · sirve de recordatorio constante y CTA implícito a
+// entrenar). Cuando está a 0 aplica la clase `streak-badge--zero`
+// (atenuado · no parece un error sino un "empieza tu racha").
 export function StreakBadge() {
   const { racha } = useRegistroStats();
   const [infoOpen, setInfoOpen] = useState(false);
   const dias = racha?.actual ?? 0;
-
-  if (dias === 0) return null;
+  const isZero = dias === 0;
 
   return (
     <>
       <button
         type="button"
-        className="streak-badge"
+        className={'streak-badge' + (isZero ? ' streak-badge--zero' : '')}
         onClick={(e) => {
           e.currentTarget.blur();
           setInfoOpen(true);
         }}
-        aria-label={`Racha: ${dias} ${dias === 1 ? 'día' : 'días'} entrenando · pulsa para ver cómo funciona`}
+        aria-label={
+          isZero
+            ? 'Sin racha · pulsa para ver cómo empezar tu racha de entrenos'
+            : `Racha: ${dias} ${dias === 1 ? 'día' : 'días'} entrenando · pulsa para ver cómo funciona`
+        }
       >
         <MealIcon value="tb:flame" size={14} />
         <span className="streak-badge-num">{dias}</span>
