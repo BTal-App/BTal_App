@@ -1656,9 +1656,59 @@ export async function getAllRegistros(
   return out;
 }
 
+// Ventana deslizante de la subcolección /registros · máximo de docs
+// que conservamos por usuario. Al añadir un día NUEVO que haría pasar
+// de este tope, borramos los más antiguos (FIFO) para que la colección
+// nunca crezca sin límite (~2,7 años de histórico · de sobra para la
+// racha, los gráficos y "Total registrado"). Coincide con
+// `RACHA_FETCH_LIMIT` de useRegistroStats y el fetch de GraphsModal,
+// así lo que se ve = lo que existe.
+export const REGISTROS_MAX = 999;
+
+// Poda FIFO best-effort · se llama tras (no dentro de) la transacción
+// de setRegistroDia, solo cuando se creó un día NUEVO. NO recalcula
+// `registroStats`: "Total registrado", PRs e historial son agregados
+// de por vida en el user doc · borrar docs antiguos de /registros es
+// solo limpieza de almacenamiento, no debe bajar el contador total.
+// Si falla (red), no es crítico · el siguiente save lo reintenta.
+async function pruneOldRegistros(uid: string): Promise<void> {
+  try {
+    const { mod, db } = await getDb();
+    const col = mod.collection(db, 'users', uid, 'registros');
+    // count() agregado · 1 lectura sea cual sea el tamaño.
+    const countSnap = await mod.getCountFromServer(col);
+    const total = countSnap.data().count;
+    if (total <= REGISTROS_MAX) return;
+
+    const excess = total - REGISTROS_MAX;
+    // Los más antiguos · `fecha` (= doc id YYYY-MM-DD) asc.
+    const q = mod.query(col, mod.orderBy('fecha', 'asc'), mod.limit(excess));
+    const snap = await mod.getDocs(q);
+
+    // writeBatch · máx 500 ops/commit. `excess` normalmente es 1
+    // (un día nuevo desborda de 999→1000) · troceamos por robustez.
+    let batch = mod.writeBatch(db);
+    let n = 0;
+    for (const d of snap.docs) {
+      batch.delete(d.ref);
+      n += 1;
+      if (n % 450 === 0) {
+        await batch.commit();
+        batch = mod.writeBatch(db);
+      }
+    }
+    if (n % 450 !== 0) await batch.commit();
+  } catch (err) {
+    console.warn('[BTal] pruneOldRegistros (no crítico):', err);
+  }
+}
+
 // Guarda un registro · escribe el doc + actualiza `registroStats` del
 // user en una transacción atómica. Devuelve las nuevas stats para que
 // el provider sincronice estado local sin re-leer el doc del user.
+//
+// Tras la tx, si se creó un día NUEVO, dispara pruneOldRegistros
+// (fire-and-forget) para mantener la ventana de REGISTROS_MAX días.
 //
 // Lanza si:
 //   - `next.plan === ''` (no hay registro real que persistir; usar
@@ -1676,27 +1726,38 @@ export async function setRegistroDia(
   const userRef = mod.doc(db, 'users', uid);
   const regRef = mod.doc(db, ...registroDocPath(uid, fecha));
 
-  return mod.runTransaction(db, async (tx) => {
+  let createdNew = false;
+  const newStats = await mod.runTransaction(db, async (tx) => {
     const userSnap = await tx.get(userRef);
     if (!userSnap.exists()) {
       throw new Error('setRegistroDia: user document no existe');
     }
     const regSnap = await tx.get(regRef);
+    createdNew = !regSnap.exists();
     const userData = userSnap.data() as UserDocument;
     const prevReg = regSnap.exists() ? (regSnap.data() as RegistroDia) : null;
     const prevStats = userData.registroStats ?? defaultRegistroStats();
 
     const nextWithTimestamp: RegistroDia = { ...next, fecha, updatedAt: Date.now() };
-    const newStats = applyRegistroDelta(prevStats, prevReg, nextWithTimestamp);
+    const stats = applyRegistroDelta(prevStats, prevReg, nextWithTimestamp);
 
     tx.set(regRef, nextWithTimestamp);
     tx.update(userRef, {
-      registroStats: newStats,
+      registroStats: stats,
       lastActive: Date.now(),
     });
 
-    return newStats;
+    return stats;
   });
+
+  // Solo poda si añadimos un día NUEVO (editar uno existente no crece
+  // la colección). Fire-and-forget · no bloquea el guardado ni propaga
+  // errores al caller (el save ya fue exitoso).
+  if (createdNew) {
+    void pruneOldRegistros(uid);
+  }
+
+  return newStats;
 }
 
 // Borra el registro de un día · idem con tx + recalc stats. Devuelve

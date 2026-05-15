@@ -115,7 +115,7 @@ export function RegistroStatsGrid({
             <MealIcon value="tb:info-circle" size={14} />
           </div>
           <div className="reg-stat-lbl">
-            <MealIcon value="tb:dumbbell" size={16} className="reg-stat-lbl-icon" />
+            <MealIcon value="tb:bolt" size={16} className="reg-stat-lbl-icon" />
             Racha actual
           </div>
           <div className="reg-stat-val">{rachaActual}</div>

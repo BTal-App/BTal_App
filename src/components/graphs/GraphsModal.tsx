@@ -52,7 +52,7 @@ const TAB_LABELS: Record<TabKey, { iconId: string; label: string }> = {
   entrenos:    { iconId: 'tb:chart-bar',  label: 'Entrenos' },
   pesos:       { iconId: 'tb:barbell',    label: 'Pesos' },
   prs:         { iconId: 'tb:trophy',     label: "PR's" },
-  rachas:      { iconId: 'tb:dumbbell',   label: 'Rachas' },
+  rachas:      { iconId: 'tb:bolt',       label: 'Rachas' },
   suplementos: { iconId: 'tb:flask',      label: 'Supl.' },
 };
 
