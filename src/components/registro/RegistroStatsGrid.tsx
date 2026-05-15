@@ -178,7 +178,7 @@ export function RegistroStatsGrid({
             <MealIcon value="tb:info-circle" size={14} />
           </div>
           <div className="reg-stat-lbl">
-            <MealIcon value="tb:bolt" size={16} className="reg-stat-lbl-icon" />
+            <MealIcon value="tb:notebook" size={16} className="reg-stat-lbl-icon" />
             Total
           </div>
           <div className="reg-stat-val">{totalEntrenos}</div>
