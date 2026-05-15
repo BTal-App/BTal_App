@@ -23,13 +23,19 @@ export interface BarChartProps {
   height?: number;
   // Texto a mostrar cuando data.length === 0.
   emptyMessage?: string;
+  // Modo scroll horizontal · para charts con labels largas (PR's con
+  // nombres de ejercicio · Rachas con rangos de fecha "05-01–05-30").
+  // El SVG crece a un ancho intrínseco generoso (slot fijo por barra)
+  // y el contenedor permite scroll-x · cada label tiene sitio para
+  // verse completa sin solaparse ni cortarse. Default false (charts
+  // cortos tipo "entrenos/semana" siguen escalando a 100% del ancho).
+  scrollable?: boolean;
 }
 
 const DEFAULT_COLOR = 'var(--btal-lime)';
-// PAD.top más generoso para acomodar el texto del valor con halo
-// oscuro · si el valor está cerca del borde superior, el halo (stroke)
-// no debe quedar cortado.
-const PAD = { top: 24, right: 8, bottom: 28, left: 8 };
+// Px por barra en modo scrollable · ancho cómodo para que una label
+// rotada de ~12 chars no se solape con la vecina.
+const SLOT_PX = 60;
 
 export function BarChart({
   data,
@@ -38,13 +44,26 @@ export function BarChart({
   color = DEFAULT_COLOR,
   height = 160,
   emptyMessage = 'Sin datos para mostrar.',
+  scrollable = false,
 }: BarChartProps) {
   if (!data.length) {
     return <div className="bt-chart-empty">{emptyMessage}</div>;
   }
 
-  // ViewBox fijo · el contenedor le da el width real responsive.
-  const W = 320;
+  // PAD.top generoso para el halo del valor. En modo scrollable
+  // ampliamos bottom porque las labels rotadas largas (rangos de
+  // fecha) sobresalen más hacia abajo y se cortaban con bottom=28.
+  const PAD = {
+    top: 24,
+    right: 8,
+    bottom: scrollable ? 44 : 28,
+    left: 8,
+  };
+
+  // ViewBox: 320 fijo en modo normal (escala a 100% del contenedor).
+  // En scrollable, ancho intrínseco = nº barras × SLOT_PX (mín 320) ·
+  // el contenedor le da scroll-x si excede el ancho visible.
+  const W = scrollable ? Math.max(320, data.length * SLOT_PX) : 320;
   const H = height;
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
@@ -55,16 +74,21 @@ export function BarChart({
   const barW = slot * 0.65;
   const offset = slot * 0.175;
 
-  // Etiqueta X rotada si hay >= 8 entries (no caben rectas).
-  const rotateLabels = data.length >= 8;
+  // Etiqueta X rotada si hay >= 8 entries (no caben rectas) o si el
+  // chart es scrollable (labels largas tipo fecha/ejercicio).
+  const rotateLabels = data.length >= 8 || scrollable;
 
-  return (
+  const svg = (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      className="bt-bar-chart"
+      className={'bt-bar-chart' + (scrollable ? ' bt-bar-chart--scroll' : '')}
       role="img"
       aria-label={`Gráfico de barras · ${data.length} valores`}
       preserveAspectRatio="xMidYMid meet"
+      // En scrollable damos width/height intrínsecos en px para que el
+      // contenedor (overflow-x:auto) pueda scrollear · sin esto el CSS
+      // width:100% lo aplastaría al ancho visible y volverían a cortarse.
+      {...(scrollable ? { width: W, height: H } : {})}
     >
       {/* Línea base */}
       <line
@@ -144,4 +168,9 @@ export function BarChart({
       })}
     </svg>
   );
+
+  if (scrollable) {
+    return <div className="bt-bar-chart-scroll">{svg}</div>;
+  }
+  return svg;
 }

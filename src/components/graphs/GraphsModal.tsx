@@ -315,6 +315,7 @@ function TabRachas({
             unit={top[0].length === 1 ? 'día' : 'días'}
             color="var(--btal-coral)"
             height={180}
+            scrollable
             emptyMessage="Aún no tienes rachas registradas."
           />
           <div className="graphs-summary">
@@ -362,9 +363,11 @@ function TabPRs({ rows }: { rows: { exercise: string; kg: number; fecha: string 
           {top.length >= 2 && (
             <BarChart
               data={top.slice(0, 8).map((r) => ({
+                // En scrollable hay más ancho por barra · permitimos
+                // labels más largas antes de truncar (18 vs 13).
                 label:
-                  r.exercise.length > 14
-                    ? r.exercise.slice(0, 13) + '…'
+                  r.exercise.length > 18
+                    ? r.exercise.slice(0, 17) + '…'
                     : r.exercise,
                 value: r.kg,
                 highlight: 'gold',
@@ -372,6 +375,7 @@ function TabPRs({ rows }: { rows: { exercise: string; kg: number; fecha: string 
               unit="kg"
               color="var(--btal-gold)"
               height={170}
+              scrollable
             />
           )}
           <ul className="graphs-pr-list">

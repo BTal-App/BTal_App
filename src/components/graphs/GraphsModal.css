@@ -99,6 +99,11 @@
   padding: 0.4rem 0.6rem;
   font-size: 0.82rem;
   font-weight: 600;
+  /* line-height:1 iguala la caja de línea del texto a la del icono ·
+     sin esto el line-height heredado (~1.4) hace una caja más alta
+     que el SVG y la label se ve un pelín por encima del centro del
+     icono pese al align-items:center. */
+  line-height: 1;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
@@ -131,6 +136,11 @@
 .graphs-modal-tab-icon {
   font-size: 0.95rem;
   flex-shrink: 0;
+  /* display:block elimina el hueco de baseline que los SVG inline
+     dejan debajo · es lo que descentraba verticalmente el icono
+     respecto a la label. Con esto + line-height:1 + align-items:center
+     el icono y el texto quedan centrados exactos. */
+  display: block;
 }
 
 /* ── Body · contenedor del contenido de cada tab ──────────────── */
@@ -199,6 +209,43 @@
   border-radius: 12px;
   padding: 0.75rem 0.5rem;
   box-sizing: border-box;
+}
+
+/* Modo scrollable (PR's · Rachas) · el "marco" visual (bg + borde +
+   radio) pasa al contenedor que scrollea; el SVG interior conserva
+   solo su padding y crece a su ancho intrínseco en px. Así las labels
+   largas (fechas/ejercicios) se ven completas y el user desliza
+   horizontalmente si no caben de una. */
+.bt-bar-chart-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--btal-surface);
+  border: 1px solid var(--btal-border);
+  border-radius: 12px;
+  /* Scrollbar fina y discreta · no rompe el look oscuro del modal. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--btal-border-2) transparent;
+}
+
+.bt-bar-chart-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.bt-bar-chart-scroll::-webkit-scrollbar-thumb {
+  background: var(--btal-border-2);
+  border-radius: 999px;
+}
+
+.bt-bar-chart--scroll {
+  /* Anula el width:100% y el marco del base · el contenedor ya los
+     pone · aquí solo el padding interno para que las barras no queden
+     pegadas a los bordes del scroll. */
+  width: auto;
+  max-width: none;
+  display: block;
+  background: none;
+  border: 0;
+  border-radius: 0;
 }
 
 /* ── Selector ejercicio (Pesos tab) ──────────────────────────── */
