@@ -34,7 +34,8 @@ import './GraphsModal.css';
 //   5. Suplementación · counters semana/mes/año/total para batido y creatina
 //
 // Los datos salen de:
-//   - tab 1 / 4: query a /registros (últimos 90 días) al montar
+//   - tab 1 / 4: query a /registros (últimos 999 días · histórico
+//     completo realista) al montar
 //   - tab 2 / 3: registroStats del UserDocument (vía useProfile)
 //   - tab 5: suplementos counters del UserDocument
 //
@@ -51,8 +52,8 @@ const TAB_LABELS: Record<TabKey, { iconId: string; label: string }> = {
   entrenos:    { iconId: 'tb:chart-bar',  label: 'Entrenos' },
   pesos:       { iconId: 'tb:barbell',    label: 'Pesos' },
   prs:         { iconId: 'tb:trophy',     label: "PR's" },
-  rachas:      { iconId: 'tb:flame',      label: 'Rachas' },
-  suplementos: { iconId: 'tb:bolt',       label: 'Supl.' },
+  rachas:      { iconId: 'tb:dumbbell',   label: 'Rachas' },
+  suplementos: { iconId: 'tb:flask',      label: 'Supl.' },
 };
 
 export interface GraphsModalProps {
@@ -77,7 +78,12 @@ export function GraphsModal({ isOpen, onClose }: GraphsModalProps) {
     /* eslint-disable react-hooks/set-state-in-effect */
     setLoadingReg(true);
     /* eslint-enable react-hooks/set-state-in-effect */
-    getRegistrosRecientes(user.uid, 90)
+    // 999 días (no 90) · consistente con RACHA_FETCH_LIMIT de
+    // useRegistroStats · así la tab Rachas refleja el MISMO histórico
+    // que el badge de HoyPage (antes Rachas se capaba a 90d y no
+    // coincidía). Entrenos sigue mostrando solo 12 semanas (lo recorta
+    // entrenosPorSemana) · PR's salen de registroStats (no afectado).
+    getRegistrosRecientes(user.uid, 999)
       .then((arr) => {
         if (mounted) setRegistros(arr);
       })
@@ -284,6 +290,18 @@ function TabRachas({
 
   // "MM-DD" desde "YYYY-MM-DD" para labels compactos del eje X.
   const md = (iso: string) => iso.slice(5);
+  // "YYYY-MM-DD" → "DD/MM/AAAA" para el rango del histórico.
+  const dmy = (iso: string) => {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+  // Span real cubierto por el histórico · del primer entreno de la
+  // racha más antigua al último de la más reciente. Responde a "hasta
+  // cuándo duran / qué periodo cubren los gráficos".
+  const allStarts = history.map((s) => s.start).sort();
+  const allEnds = history.map((s) => s.end).sort();
+  const spanFrom = allStarts[0];
+  const spanTo = allEnds[allEnds.length - 1];
 
   return (
     <div className="graphs-tab">
@@ -337,6 +355,18 @@ function TabRachas({
               </>
             )}
           </div>
+          {spanFrom && spanTo && (
+            <p className="graphs-note">
+              <MealIcon
+                value="tb:info-circle"
+                size={14}
+                className="graphs-note-icon"
+              />
+              Histórico desde el <strong>{dmy(spanFrom)}</strong> hasta el{' '}
+              <strong>{dmy(spanTo)}</strong> · se conservan los últimos
+              999 días de registros.
+            </p>
+          )}
         </>
       )}
     </div>
