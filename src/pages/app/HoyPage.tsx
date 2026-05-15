@@ -29,6 +29,7 @@ import { todayDateStr, todayKey } from '../../utils/dateKeys';
 import { TabHeader } from '../../components/TabHeader';
 import { VerifyEmailBanner } from '../../components/VerifyEmailBanner';
 import { AppAvatarButton } from '../../components/AppAvatarButton';
+import { StreakBadge } from '../../components/StreakBadge';
 import { MealSheet } from '../../components/MealSheet';
 import { TrainSheet } from '../../components/TrainSheet';
 import { GuestBanner } from '../../components/GuestBanner';
@@ -158,11 +159,6 @@ const HoyPage: React.FC = () => {
   // (las iniciales del avatar las gestiona <AppAvatarButton /> internamente.)
   const today = formatToday(new Date());
 
-  // Streak (racha de días consecutivos): aún no implementado en Firestore.
-  // Se calculará en una iteración futura a partir de los logs de entreno.
-  // Mientras tanto el pill no se muestra para no inventar datos.
-  const streak: number | null = null;
-
   // El plan generado por IA aún no existe (Cloud Functions / Gemini en
   // Fase 6). Para todas las cuentas reales actuales, hasPlan = false.
   const hasPlan = false;
@@ -185,12 +181,7 @@ const HoyPage: React.FC = () => {
             uppercase={false}
             right={
               <>
-                {streak !== null && (
-                  <div className="app-streak-pill">
-                    <MealIcon value="tb:bolt" size={14} />
-                    {streak} días
-                  </div>
-                )}
+                <StreakBadge />
                 <AppAvatarButton />
               </>
             }

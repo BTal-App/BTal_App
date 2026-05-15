@@ -13,7 +13,8 @@ import { previousDayKey, todayDateStr } from '../utils/dateKeys';
 // Stats agregados que muestra el StatsGrid de RegistroPage:
 //   - totalEntrenos · cuenta de días con registro (entreno + descanso).
 //   - prsTotal · número de ejercicios distintos con un PR.
-//   - racha · días consecutivos hasta hoy/ayer (calculada on-the-fly).
+//   - racha · días consecutivos ENTRENANDO hasta hoy/ayer · solo entrenos
+//     (descansos y vacíos rompen) · calculada on-the-fly.
 //   - prs · map ejercicio normalizado → { kg, fecha }.
 //   - exerciseHistory · map ejercicio normalizado → últimos N puntos
 //     para el sparkline del RegDayPanel.
@@ -47,36 +48,68 @@ export interface UseRegistroStatsResult {
   refresh: () => Promise<void>;
 }
 
-// Calcula la racha de días consecutivos contando desde hoy hacia
-// atrás. Cuenta cualquier día con `plan != ''` (entrenamiento o
-// descanso explícito · ambos son adherencia al plan).
+// Calcula la racha de días consecutivos ENTRENANDO contando desde hoy
+// hacia atrás. SOLO cuentan días con entreno · los descansos y los días
+// vacíos rompen la racha (decisión de producto · la racha es un challenge
+// de entrenamiento continuo, no un tracker de adherencia al plan).
+//
+// Formato de `RegistroDia.plan`:
+//   - 'PLANID|DAYINDEX' (ej '4dias|0')  → ENTRENO  · cuenta
+//   - 'rest'                            → DESCANSO · rompe
+//   - ''                                → VACÍO    · rompe
 //
 // Reglas:
-//  - Si hoy tiene registro · racha empieza en hoy.
-//  - Si hoy NO tiene pero ayer SÍ · racha empieza en ayer.
-//  - Si ni hoy ni ayer tienen · racha = 0.
-//  - Iteramos hacia atrás mientras haya registros consecutivos · al
-//    primer hueco paramos.
+//  - Día con entreno         → cuenta · suma +1 · sigue hacia atrás.
+//  - Día con descanso        → ROMPE (incluso si es HOY · sin grace ·
+//    es una decisión activa del user de no entrenar).
+//  - Día vacío               → ROMPE, EXCEPTO si es HOY: grace period ·
+//    si ayer entrenó, la racha refleja el valor de ayer hasta medianoche
+//    (el user aún puede entrenar hoy más tarde).
+//  - Inicio: el primer entreno registrado da racha = 1.
 function calcRacha(
   registros: RegistroDia[],
 ): { actual: number; ultimaFecha: string | null } {
-  const fechaSet = new Set<string>();
+  const trainingSet = new Set<string>();
+  const restSet = new Set<string>();
   for (const r of registros) {
-    if (r.plan !== '') fechaSet.add(r.fecha);
+    if (r.plan === '') continue;
+    if (r.plan === 'rest') restSet.add(r.fecha);
+    else trainingSet.add(r.fecha);
   }
-  if (fechaSet.size === 0) return { actual: 0, ultimaFecha: null };
+  if (trainingSet.size === 0) return { actual: 0, ultimaFecha: null };
 
   const today = todayDateStr();
   const yesterday = previousDayKey(today);
 
+  // Estado de un día: 'training' cuenta · 'rest'/'empty' rompen.
+  type DayStatus = 'training' | 'rest' | 'empty';
+  const statusOf = (d: string): DayStatus => {
+    if (trainingSet.has(d)) return 'training';
+    if (restSet.has(d)) return 'rest';
+    return 'empty';
+  };
+
+  // Punto de partida con grace period limitado a HOY vacío:
+  //  - Hoy entreno          → empezamos hoy.
+  //  - Hoy descanso         → break inmediato (sin grace · racha 0).
+  //  - Hoy vacío + ayer ent → grace · empezamos en ayer.
+  //  - Resto                → racha 0.
   let cursor: string;
-  if (fechaSet.has(today)) cursor = today;
-  else if (fechaSet.has(yesterday)) cursor = yesterday;
-  else return { actual: 0, ultimaFecha: null };
+  const todaySt = statusOf(today);
+  if (todaySt === 'training') {
+    cursor = today;
+  } else if (todaySt === 'rest') {
+    return { actual: 0, ultimaFecha: null };
+  } else if (statusOf(yesterday) === 'training') {
+    cursor = yesterday;
+  } else {
+    return { actual: 0, ultimaFecha: null };
+  }
 
   const ultimaFecha = cursor;
   let actual = 0;
-  while (fechaSet.has(cursor)) {
+  // Hacia atrás · solo 'training' continúa · 'rest'/'empty' rompen igual.
+  while (statusOf(cursor) === 'training') {
     actual++;
     cursor = previousDayKey(cursor);
   }

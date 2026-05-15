@@ -31,6 +31,19 @@ body {
   font-feature-settings: 'tnum' 1, 'cv11' 1;
 }
 
+/* ── IonAlert multilínea ───────────────────────────────────────────
+   IonAlert renderiza `message` como innerHTML y por defecto colapsa
+   los `\n` (white-space: normal). `pre-line` los respeta como saltos
+   de línea reales SIN necesitar HTML/<br> (evita el sanitizer). Los
+   espacios múltiples siguen colapsando · ideal para texto explicativo
+   con viñetas y secciones (ej. tooltip "Racha actual"). El selector
+   apunta al ::part oficial de Ionic 8 y al fallback de clase interna. */
+.alert-multiline::part(message),
+.alert-multiline .alert-message {
+  white-space: pre-line;
+  text-align: left;
+}
+
 /* ── Anti iOS auto-zoom · inputs en touch devices ──────────────────
    iOS Safari hace auto-zoom cuando un input recibe focus y su
    font-size es < 16px · el viewport se rompe y el user tiene que

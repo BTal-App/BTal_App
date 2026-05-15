@@ -11,12 +11,14 @@ import {
 } from '../../templates/defaultUser';
 import {
   aggregateSupHistory,
+  calcRachaHistory,
   entrenosPorSemana,
   exerciseHistoryAsPoints,
   exerciseOptions,
   prsTable,
   sumSupHistory,
   SUP_PERIOD_LABEL,
+  type StreakInterval,
   type SupPeriod,
 } from '../../utils/graphsAggregation';
 import { BarChart } from './BarChart';
@@ -24,22 +26,21 @@ import { LineChart } from './LineChart';
 import './GraphsModal.css';
 
 // Modal de gráficos · accesible desde ProfileSheet → "Gráficos".
-// 4 tabs:
+// 5 tabs:
 //   1. Entrenos       · bar chart de entrenamientos por ISO week (últimas 12)
-//   2. PR's           · tabla ordenada por kg desc
-//   3. Pesos          · selector de ejercicio + line chart del exerciseHistory
-//   4. Suplementación · counters semana/mes/año/total para batido y creatina
+//   2. Pesos          · selector de ejercicio + line chart del exerciseHistory
+//   3. PR's           · tabla ordenada por kg desc
+//   4. Rachas         · bar chart de mejores rachas de entrenos consecutivos
+//   5. Suplementación · counters semana/mes/año/total para batido y creatina
 //
 // Los datos salen de:
-//   - tab 1: query a /registros (últimos 90 días) al montar
+//   - tab 1 / 4: query a /registros (últimos 90 días) al montar
 //   - tab 2 / 3: registroStats del UserDocument (vía useProfile)
-//   - tab 4: suplementos counters del UserDocument
+//   - tab 5: suplementos counters del UserDocument
 //
-// Iconografía · Ionicons outline para coherencia con el resto de la app
-// (sustituye emojis 📊 💪 🏆 ⚡ 🥤 💊 que rendereaban con la fuente
-// emoji del sistema y rompían la línea visual con la nav y HoyCard).
+// Iconografía · Tabler outline para coherencia con el resto de la app.
 
-type TabKey = 'entrenos' | 'prs' | 'pesos' | 'suplementos';
+type TabKey = 'entrenos' | 'prs' | 'pesos' | 'rachas' | 'suplementos';
 
 // Orden de tabs · el render usa `Object.keys(TAB_LABELS)` así que el
 // orden de inserción aquí es el orden visual. JS preserva el orden de
@@ -50,6 +51,7 @@ const TAB_LABELS: Record<TabKey, { iconId: string; label: string }> = {
   entrenos:    { iconId: 'tb:chart-bar',  label: 'Entrenos' },
   pesos:       { iconId: 'tb:barbell',    label: 'Pesos' },
   prs:         { iconId: 'tb:trophy',     label: "PR's" },
+  rachas:      { iconId: 'tb:flame',      label: 'Rachas' },
   suplementos: { iconId: 'tb:bolt',       label: 'Supl.' },
 };
 
@@ -116,6 +118,10 @@ export function GraphsModal({ isOpen, onClose }: GraphsModalProps) {
 
   const entrenosData = useMemo(
     () => entrenosPorSemana(registros, 12),
+    [registros],
+  );
+  const rachaHistory = useMemo(
+    () => calcRachaHistory(registros),
     [registros],
   );
   const prRows = useMemo(() => prsTable(stats.prs), [stats.prs]);
@@ -214,6 +220,9 @@ export function GraphsModal({ isOpen, onClose }: GraphsModalProps) {
               points={exHistoryPoints}
             />
           )}
+          {tab === 'rachas' && (
+            <TabRachas history={rachaHistory} loading={loadingReg} />
+          )}
           {tab === 'suplementos' && (
             <TabSuplementos
               batidoHistory={sup?.batidoHistory}
@@ -253,6 +262,79 @@ function TabEntrenos({
           <div className="graphs-summary">
             Total en este periodo: <strong>{total}</strong>{' '}
             {total === 1 ? 'entrenamiento' : 'entrenamientos'}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TabRachas({
+  history,
+  loading,
+}: {
+  history: StreakInterval[];
+  loading: boolean;
+}) {
+  // Top 10 por longitud (ya viene ordenado desc de calcRachaHistory).
+  const top = history.slice(0, 10);
+  const longest = history[0]?.length ?? 0;
+  const active = history.find((s) => s.endedBy === 'active');
+  const current = active?.length ?? 0;
+
+  // "MM-DD" desde "YYYY-MM-DD" para labels compactos del eje X.
+  const md = (iso: string) => iso.slice(5);
+
+  return (
+    <div className="graphs-tab">
+      <div className="graphs-tab-head">
+        <h3>Historial de rachas</h3>
+        <p>
+          Tus mejores rachas de entrenamientos consecutivos. Una racha se
+          rompe con un día de descanso o un día sin registrar nada. La racha
+          en curso aparece resaltada.
+        </p>
+      </div>
+      {loading && <div className="graphs-loading">Cargando datos…</div>}
+      {!loading && history.length === 0 && (
+        <div className="graphs-empty">
+          Aún no tienes rachas. Cuando entrenes días seguidos, tus mejores
+          rachas aparecerán aquí.
+        </div>
+      )}
+      {!loading && history.length > 0 && (
+        <>
+          <BarChart
+            data={top.map((s) => ({
+              label: s.start === s.end
+                ? md(s.start)
+                : `${md(s.start)}–${md(s.end)}`,
+              value: s.length,
+              highlight: s.endedBy === 'active' ? 'gold' : null,
+            }))}
+            unit={top[0].length === 1 ? 'día' : 'días'}
+            color="var(--btal-coral)"
+            height={180}
+            emptyMessage="Aún no tienes rachas registradas."
+          />
+          <div className="graphs-summary">
+            Mejor racha:{' '}
+            <strong>
+              {longest} {longest === 1 ? 'día' : 'días'}
+            </strong>
+            {current > 0 && (
+              <>
+                {' · '}Racha actual:{' '}
+                <strong>
+                  {current} {current === 1 ? 'día' : 'días'}
+                </strong>
+              </>
+            )}
+            {history.length > 10 && (
+              <>
+                {' · '}+{history.length - 10} rachas más
+              </>
+            )}
           </div>
         </>
       )}

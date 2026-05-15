@@ -1,0 +1,64 @@
+/* ─────────────────────────────────────────────────────────────────
+ * StreakBadge · chip "🔥 N días" en el slot right del TabHeader (Hoy).
+ * Coral cálido para el "fuego" · coherente con el icono flame de
+ * Tabler y el lenguaje visual de las stat pills del Registro.
+ * ───────────────────────────────────────────────────────────────── */
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 140, 60, 0.12);
+  border: 1px solid rgba(255, 140, 60, 0.35);
+  color: var(--btal-coral);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  letter-spacing: -0.01em;
+  /* El TabHeader-right ya centra verticalmente con margin-top:-5px ·
+     aquí solo aseguramos que el chip no se estire de alto. */
+  line-height: 1.2;
+  white-space: nowrap;
+  /* Reset de <button> · el chip es clickable (abre el IonAlert info)
+     pero debe verse idéntico a un pill estático. */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.streak-badge:hover {
+  background: rgba(255, 140, 60, 0.18);
+  border-color: rgba(255, 140, 60, 0.5);
+}
+
+.streak-badge:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+.streak-badge svg {
+  color: var(--btal-coral);
+  flex-shrink: 0;
+}
+
+.streak-badge-num {
+  font-feature-settings: 'tnum';
+}
+
+.streak-badge-label {
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+/* iPhone SE / Mini · el slot right ya va apretado con avatar + badge
+ * IA · ocultamos el label, dejando "🔥 12" · sigue siendo legible y
+ * gana ~30 px de ancho para que el título de HoyPage no rompa. */
+@media (max-width: 400px) {
+  .streak-badge-label {
+    display: none;
+  }
+  .streak-badge {
+    padding: 4px 8px;
+  }
+}

@@ -3,7 +3,7 @@
 // `GraphsModal`.
 
 import type { RegistroDia, SupHistoryEntry } from '../templates/defaultUser';
-import { isoWeekKey, todayDateStr } from './dateKeys';
+import { addDaysKey, isoWeekKey, todayDateStr } from './dateKeys';
 
 // Devuelve el lunes de la ISO week en la que cae `d` (en local time).
 function mondayOfISOWeek(d: Date): Date {
@@ -64,6 +64,82 @@ export function entrenosPorSemana(
     });
   }
   return out;
+}
+
+// ── Historial de rachas ────────────────────────────────────────────
+//
+// Recorre los registros cronológicamente identificando cada tramo de
+// entrenos consecutivos (una "racha"). Misma regla que
+// `useRegistroStats.calcRacha`: solo entrenos cuentan · descanso o
+// vacío rompen · grace period solo para HOY vacío (la racha actual
+// sigue abierta si hoy aún no se ha registrado nada pero ayer entrenó).
+//
+// Usado por la tab "Rachas" del GraphsModal · bar chart con las
+// mejores rachas + racha actual destacada.
+
+export interface StreakInterval {
+  start: string;   // 'YYYY-MM-DD' · primer entreno de la racha
+  end: string;     // 'YYYY-MM-DD' · último entreno de la racha
+  length: number;  // días consecutivos entrenando
+  endedBy: 'rest' | 'empty' | 'active'; // qué la cerró ('active' = sigue viva)
+}
+
+export function calcRachaHistory(registros: RegistroDia[]): StreakInterval[] {
+  const trainingSet = new Set<string>();
+  const restSet = new Set<string>();
+  for (const r of registros) {
+    if (!r.fecha || r.plan === '') continue;
+    if (r.plan === 'rest') restSet.add(r.fecha);
+    else trainingSet.add(r.fecha);
+  }
+  if (trainingSet.size === 0) return [];
+
+  const today = todayDateStr();
+  // El primer entreno (más antiguo) marca el inicio del barrido.
+  const firstDay = [...trainingSet].sort()[0];
+
+  const streaks: StreakInterval[] = [];
+  let runStart: string | null = null;
+  let runEnd: string | null = null;
+  let runLen = 0;
+
+  const closeRun = (endedBy: 'rest' | 'empty' | 'active') => {
+    if (runStart !== null && runEnd !== null) {
+      streaks.push({ start: runStart, end: runEnd, length: runLen, endedBy });
+    }
+    runStart = null;
+    runEnd = null;
+    runLen = 0;
+  };
+
+  // Iteración día a día desde el primer entreno hasta hoy (inclusive).
+  // Comparación de strings 'YYYY-MM-DD' es lexicográfica = cronológica.
+  let cursor = firstDay;
+  while (cursor <= today) {
+    if (trainingSet.has(cursor)) {
+      if (runStart === null) runStart = cursor;
+      runEnd = cursor;
+      runLen++;
+    } else if (cursor === today && !restSet.has(cursor)) {
+      // HOY vacío → grace · NO cerramos · la racha sigue abierta para
+      // marcarse 'active' al salir del bucle (el user puede entrenar
+      // más tarde hoy). No-op intencional.
+    } else {
+      // Día pasado con rest/empty · o HOY con descanso explícito →
+      // cierra la racha en curso (si la hay).
+      if (runStart !== null) {
+        closeRun(restSet.has(cursor) ? 'rest' : 'empty');
+      }
+    }
+    cursor = addDaysKey(cursor, 1);
+  }
+
+  // Racha que sigue abierta al llegar a hoy → activa.
+  if (runStart !== null) closeRun('active');
+
+  // Mejor racha primero · empate → la más reciente arriba (end desc).
+  streaks.sort((a, b) => b.length - a.length || b.end.localeCompare(a.end));
+  return streaks;
 }
 
 // Tabla plana de PRs ordenada por kg desc · cada entry tiene el

@@ -80,8 +80,8 @@
  * `text-overflow: ellipsis` antes de desbordar. */
 .graphs-modal-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.4rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.35rem;
   padding-bottom: 0.5rem;
   margin-bottom: 0.85rem;
   border-bottom: 1px solid var(--btal-border);
@@ -364,10 +364,31 @@
 }
 
 /* ── Responsive ───────────────────────────────────────────── */
-@media (max-width: 380px) {
+
+/* Con 5 tabs (Entrenos·Pesos·PR's·Rachas·Supl.) en pantallas medias
+ * el texto ya va apretado · reducimos font + padding + gap del icono
+ * para que las 5 quepan sin ellipsis hasta ~414 px. */
+@media (max-width: 520px) {
   .graphs-modal-tab {
-    font-size: 0.76rem;
-    padding: 0.35rem 0.7rem;
+    font-size: 0.74rem;
+    padding: 0.38rem 0.35rem;
+    gap: 0.2rem;
+  }
+  .graphs-modal-tab-icon {
+    font-size: 0.85rem;
+  }
+}
+
+/* iPhone SE / Mini (~375 px) · 5 tabs no caben con icono + label.
+ * Ocultamos el icono · solo label · "Entrenos"/"Rachas" entran a
+ * 0.7 rem. El icono es decorativo · la label comunica igual. */
+@media (max-width: 400px) {
+  .graphs-modal-tab {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.2rem;
+  }
+  .graphs-modal-tab-icon {
+    display: none;
   }
   .graphs-pr-row {
     grid-template-columns: 1fr auto;

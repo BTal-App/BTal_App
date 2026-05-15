@@ -35,7 +35,17 @@ const STAT_INFO: Record<StatKey, { title: string; message: string }> = {
   racha: {
     title: 'Racha actual',
     message:
-      'Días consecutivos hasta hoy con un registro guardado · cuenta tanto entrenos como descansos (un descanso registrado mantiene la racha). Si hoy aún no has registrado pero ayer sí, la racha se cuenta desde ayer hacia atrás. Al primer día sin registro, la racha vuelve a 0.',
+      'Días consecutivos entrenando. Solo cuentan los días con entrenamiento '
+      + 'registrado · los descansos NO suman y rompen la racha.\n\n'
+      + 'Cuándo se rompe:\n'
+      + '• Si registras un día como DESCANSO · rompe al instante (incluso hoy)\n'
+      + '• Si pasa un día completo sin registrar nada · rompe al día siguiente\n\n'
+      + 'Excepción (margen de hoy): si HOY aún no has registrado nada pero ayer '
+      + 'sí entrenaste, la racha sigue mostrando el valor de ayer hasta que pase '
+      + 'el día · te da margen para entrenar más tarde.\n\n'
+      + 'Para empezar racha: registra un entrenamiento y verás «1 día». Cada '
+      + 'entrenamiento consecutivo posterior suma +1.\n\n'
+      + 'Mira tu historial completo y mejores rachas en «Gráficos» → pestaña «Rachas».',
   },
   esteMes: {
     title: 'Este mes',
@@ -180,6 +190,7 @@ export function RegistroStatsGrid({
         isOpen={infoKey !== null}
         header={infoKey ? STAT_INFO[infoKey].title : ''}
         message={infoKey ? STAT_INFO[infoKey].message : ''}
+        cssClass="alert-multiline"
         buttons={['Entendido']}
         onDidDismiss={() => setInfoKey(null)}
       />
