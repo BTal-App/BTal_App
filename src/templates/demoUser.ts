@@ -1017,12 +1017,19 @@ export function generateDemoRegistros(): RegistroDia[] {
     exercises: Record<string, EjercicioRegistrado>;
     notes: string;
   }> = [
-    // ── Semana actual (offsets 1-7) ─────────────────────────────────
-    { offset: 1, plan: 'rest', exercises: {}, notes: '' },
+    // ── Semana actual (offsets 1-7) · bloque de 6 entrenos seguidos
+    //    (offset 1-6) que rompe en el descanso de offset 7 · da una
+    //    racha actual = 6 en el demo para que se vea el StreakBadge
+    //    "🔥 6 días" en HoyPage y la racha activa en la tab Rachas. ──
+    { offset: 1, plan: 'plan_demo_custom_pred|1',
+      exercises: _diaB('+12,5', '72,5', '62,5', '27,5', '15'),
+      notes: '6º día seguido entrenando · racha 🔥 a tope.' },
     { offset: 2, plan: 'plan_demo_custom_pred|3',
       exercises: _diaD('55', '12', '10', '60'),
       notes: '' },
-    { offset: 3, plan: 'rest', exercises: {}, notes: 'Descanso · día de paseo y estiramientos.' },
+    { offset: 3, plan: 'plan_demo_custom_pred|0',
+      exercises: _diaA('95', '32,5', '18', '25', '22'),
+      notes: 'Sin descanso esta semana · sensaciones buenas.' },
     { offset: 4, plan: 'plan_demo_custom_pred|2',
       exercises: _diaC('110', '100', '180', '45', '80'),
       notes: 'Doble PR · sentadilla y peso muerto rumano.' },
