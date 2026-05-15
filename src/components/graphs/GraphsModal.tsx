@@ -288,10 +288,17 @@ function TabRachas({
   const active = history.find((s) => s.endedBy === 'active');
   const current = active?.length ?? 0;
 
-  // "YYYY-MM-DD" → "DD/MM/AAAA" para las labels del eje X y el rango.
+  // "YYYY-MM-DD" → "DD/MM/AAAA" · texto en prosa del rango histórico.
   const dmy = (iso: string) => {
     const [y, m, d] = iso.split('-');
     return `${d}/${m}/${y}`;
+  };
+  // "YYYY-MM-DD" → "DD/MM/AA" · labels del eje X (más cortas → el chart
+  // queda centrado en vez de empujado por fechas largas · el detalle
+  // completo sigue en el tooltip <title> de cada barra).
+  const dmys = (iso: string) => {
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y.slice(2)}`;
   };
   // Span real cubierto por el histórico · del primer entreno de la
   // racha más antigua al último de la más reciente. Responde a "hasta
@@ -323,8 +330,8 @@ function TabRachas({
           <BarChart
             data={top.map((s) => ({
               label: s.start === s.end
-                ? dmy(s.start)
-                : `${dmy(s.start)}–${dmy(s.end)}`,
+                ? dmys(s.start)
+                : `${dmys(s.start)}–${dmys(s.end)}`,
               value: s.length,
               highlight: s.endedBy === 'active' ? 'gold' : null,
             }))}

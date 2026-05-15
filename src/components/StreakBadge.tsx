@@ -56,7 +56,7 @@ export function StreakBadge() {
             : `Racha: ${dias} ${dias === 1 ? 'día' : 'días'} entrenando · pulsa para ver cómo funciona`
         }
       >
-        <MealIcon value="tb:bolt" size={14} />
+        <MealIcon value="tb:bolt" size={16} />
         <span className="streak-badge-num">{dias}</span>
         <span className="streak-badge-label">{dias === 1 ? 'día' : 'días'}</span>
       </button>

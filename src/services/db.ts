@@ -911,7 +911,27 @@ function guestExpiresAt(mod: typeof import('firebase/firestore')) {
   return mod.Timestamp.fromMillis(Date.now() + GUEST_TTL_DAYS * 86400 * 1000);
 }
 
-export async function seedGuestDocument(uid: string): Promise<void> {
+// Dedup de seeds concurrentes. `Landing.proceedAsGuest` siembra justo
+// tras `signInAnonymously`, y ese mismo sign-in dispara el `load()` de
+// ProfileProvider, que también siembra si ve el doc vacío. Sin dedup,
+// son DOS escrituras del doc demo completo + DOS tandas de /registros
+// pisándose a la vez · en WebView móvil (lento + token App Check aún
+// propagando) eso es lo que dejaba al invitado en "cargando…" hasta un
+// refresh manual. Compartiendo la promesa in-flight por uid, ambos
+// llamantes esperan la MISMA siembra · una sola tanda de writes.
+const inflightGuestSeeds = new Map<string, Promise<void>>();
+
+export function seedGuestDocument(uid: string): Promise<void> {
+  const inflight = inflightGuestSeeds.get(uid);
+  if (inflight) return inflight;
+  const p = seedGuestDocumentImpl(uid).finally(() => {
+    inflightGuestSeeds.delete(uid);
+  });
+  inflightGuestSeeds.set(uid, p);
+  return p;
+}
+
+async function seedGuestDocumentImpl(uid: string): Promise<void> {
   const { mod, db } = await getDb();
   const ref = mod.doc(db, 'users', uid);
   const existing = await mod.getDoc(ref);

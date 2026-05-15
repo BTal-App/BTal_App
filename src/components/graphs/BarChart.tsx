@@ -60,7 +60,6 @@ export function BarChart({
   // y el SVG las recortaba. Derivamos el padding del largo real.
   const ROT_DEG = 35;
   const sinA = Math.sin((ROT_DEG * Math.PI) / 180);
-  const cosA = Math.cos((ROT_DEG * Math.PI) / 180);
   // Ancho aprox de la label más larga a fontSize 9. Estimamos generoso
   // (~6.2 px/char) porque la fuente del sistema en iOS (San Francisco)
   // es más ancha que el sans por defecto · subestimar = recorte.
@@ -70,26 +69,24 @@ export function BarChart({
   // (+14 del offset del texto, +14 de descendente + margen de holgura
   // para que ni la más larga roce el borde inferior del viewBox).
   const labelDrop = rotateLabels ? Math.ceil(labelPx * sinA) + 28 : 18;
-  // La primera label (anchor=end, rotada) se extiende hacia la
-  // izquierda · hueco para que no la corte el borde del SVG. El -24 es
-  // el inset natural del centro de la 1ª barra respecto al pad izq.
-  const labelReach = rotateLabels ? Math.ceil(labelPx * cosA) - 24 : 0;
 
   const baseBottom = scrollable ? 44 : 28;
-  // PAD.top generoso para el halo del valor.
+  // PAD.top generoso para el halo del valor. NO reservamos hueco extra
+  // a la izquierda para la 1ª label rotada: eso desplazaba el chart a
+  // la derecha dejando un gran vacío. Ahora la gráfica queda centrada
+  // y, si una fecha/nombre largo no se ve entero, el usuario hace
+  // scroll interno (la label va centrada bajo su barra, anchor=middle).
   const PAD = {
     top: 24,
     right: 8,
     bottom: Math.max(baseBottom, labelDrop),
-    left: Math.max(8, labelReach),
+    left: 8,
   };
 
   // ViewBox: 320 fijo en modo normal (escala a 100% del contenedor).
   // En scrollable, ancho intrínseco = nº barras × SLOT_PX (mín 320) ·
   // el contenedor le da scroll-x si excede el ancho visible.
-  const W =
-    (scrollable ? Math.max(320, data.length * SLOT_PX) : 320) +
-    Math.max(0, PAD.left - 8);
+  const W = scrollable ? Math.max(320, data.length * SLOT_PX) : 320;
   // Crecemos el alto total por el extra de bottom · así las barras
   // conservan su tamaño en vez de encogerse para dejar sitio a labels.
   const H = height + Math.max(0, PAD.bottom - baseBottom);
@@ -176,7 +173,7 @@ export function BarChart({
             <text
               x={cx}
               y={H - PAD.bottom + 14}
-              textAnchor={rotateLabels ? 'end' : 'middle'}
+              textAnchor="middle"
               fontSize="9"
               fill="var(--btal-t-3)"
               transform={

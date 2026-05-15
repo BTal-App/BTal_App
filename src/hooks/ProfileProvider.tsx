@@ -172,6 +172,31 @@ async function maybeResetSupCounters(
   };
 }
 
+const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+// Rechaza si la promesa no resuelve en `ms`. Necesario porque el primer
+// getDoc tras signInAnonymously puede QUEDARSE COLGADO (no rechaza) en
+// WebView móvil mientras el token de App Check se propaga · sin esto el
+// invitado se quedaba en "cargando…" hasta refrescar la página a mano.
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(
+      () => reject(new Error(`timeout tras ${ms}ms`)),
+      ms,
+    );
+    p.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+}
+
 // Carga el documento /users/{uid} cuando hay sesión y lo expone al árbol.
 // Componentes consumidores: AppShell (decide si redirige a /onboarding),
 // HoyPage/MenuPage/etc (leen menú, entrenos, compra), Onboarding (escribe
@@ -216,16 +241,40 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
     setError(null);
     setLoading(true);
-    try {
-      let doc = await getUserDocument(uid);
+
+    // Lee el doc (sembrándolo si es invitado nuevo). Con timeout para que
+    // un getDoc colgado no deje "cargando…" eterno.
+    const fetchDoc = async (): Promise<UserDocument | null> => {
+      let d = await withTimeout(getUserDocument(uid), 8000);
       // Edge case: invitado que vuelve con sesión persistente (sin pasar
       // por Landing.handleGuest) → su doc no se sembró. Lo sembramos aquí.
       // Para users reales, doc=null significa "pre-onboarding" — NO
       // sembramos nada, dejamos que el user pase por el onboarding.
-      if (!doc && isAnonymous) {
-        await seedGuestDocument(uid);
-        doc = await getUserDocument(uid);
+      if (!d && isAnonymous) {
+        await withTimeout(seedGuestDocument(uid), 8000);
+        d = await withTimeout(getUserDocument(uid), 8000);
       }
+      return d;
+    };
+
+    try {
+      // Reintentos con backoff: el primer acceso a Firestore justo tras
+      // signInAnonymously puede fallar/colgarse mientras App Check
+      // propaga el token (sobre todo WebView móvil). Antes esto dejaba
+      // al invitado atascado en "cargando…" hasta refrescar a mano.
+      let doc: UserDocument | null = null;
+      let lastErr: unknown = null;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+          doc = await fetchDoc();
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e;
+          await delay(500 * (attempt + 1));
+        }
+      }
+      if (lastErr) throw lastErr;
       // Migración automática: si el doc existe pero le faltan campos del
       // schema actual (cuentas creadas antes de Fase 2A), los añade. Si
       // ya está al día es no-op y no dispara escritura.
