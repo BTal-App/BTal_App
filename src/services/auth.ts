@@ -36,6 +36,51 @@ export const isStandalone = (): boolean => {
   return iosLegacy || window.matchMedia?.('(display-mode: standalone)').matches === true;
 };
 
+// ── Flag de redirect OAuth pendiente ───────────────────────────────────
+//
+// PROBLEMA: `getRedirectResult(auth)` inicializa el redirect resolver de
+// Firebase Auth, que carga un iframe oculto apuntando al authDomain
+// (btal-app.firebaseapp.com) y hace un handshake postMessage de 3-5 s.
+// Lo crítico · `onAuthStateChanged` NO emite su primer evento hasta que
+// ese resolver termina · Firebase lo serializa. Si llamamos a
+// getRedirectResult en CADA arranque (aunque no haya redirect pendiente),
+// la restauración de sesión tarda ~5 s SIEMPRE (incógnito, móvil, PWA).
+//
+// SOLUCIÓN: marcar un flag justo antes de `signInWithRedirect` /
+// `linkWithRedirect`. Solo si el flag está presente al arrancar llamamos
+// a `getRedirectResult` (estamos volviendo del OAuth de Google). En el
+// 99 % de arranques no hay flag → saltamos el iframe → la sesión se
+// restaura de persistencia en <500 ms.
+//
+// localStorage (no sessionStorage) para sobrevivir al round-trip del
+// redirect en cualquier contexto. La conocida limitación de iOS PWA
+// standalone (storage aislado en Google redirect · ver memoria
+// project_btal_google_pwa_pending) es un bug PRE-EXISTENTE distinto ·
+// este fix no lo empeora y arregla el 99 % de casos restantes.
+const PENDING_OAUTH_KEY = 'btal_pending_oauth_redirect';
+
+function markPendingOAuthRedirect(): void {
+  try {
+    localStorage.setItem(PENDING_OAUTH_KEY, '1');
+  } catch {
+    /* storage no disponible · getRedirectResult se llamará igual como
+       fallback seguro (ver consumePendingRedirect) */
+  }
+}
+
+function readAndClearPendingOAuthRedirect(): boolean {
+  try {
+    const had = localStorage.getItem(PENDING_OAUTH_KEY) === '1';
+    if (had) localStorage.removeItem(PENDING_OAUTH_KEY);
+    return had;
+  } catch {
+    // Si no podemos leer storage, devolvemos true para no romper el
+    // flujo de Google redirect (mejor un arranque lento que un login
+    // que no completa).
+    return true;
+  }
+}
+
 export const signUpEmail = (email: string, password: string) =>
   createUserWithEmailAndPassword(auth, email, password);
 
@@ -54,6 +99,7 @@ export const signInEmail = (email: string, password: string) =>
 export const signInGoogle = async () => {
   const provider = new GoogleAuthProvider();
   if (isStandalone()) {
+    markPendingOAuthRedirect();
     await signInWithRedirect(auth, provider);
     return null;
   }
@@ -77,6 +123,14 @@ export const signOut = () => fbSignOut(auth);
 // en su rama popup. Sin esto, un user que vincula vía redirect mantiene
 // el TTL del invitado y su cuenta nueva se borraría a los 3 días.
 export const consumePendingRedirect = async () => {
+  // Gate · si NO marcamos un redirect OAuth antes de salir, no estamos
+  // volviendo de Google · saltamos getRedirectResult entero (evita el
+  // iframe handshake de 3-5 s que bloquea onAuthStateChanged). Este es
+  // el 99 % de los arranques · la sesión se restaura de persistencia
+  // en <500 ms.
+  if (!readAndClearPendingOAuthRedirect()) {
+    return null;
+  }
   const result = await getRedirectResult(auth);
   if (result?.user && !result.user.isAnonymous) {
     clearGuestExpiration(result.user.uid).catch((err) => {
@@ -158,6 +212,7 @@ export const changePassword = (user: User, newPassword: string) =>
 export const linkGoogle = async (user: User) => {
   const provider = new GoogleAuthProvider();
   if (isStandalone()) {
+    markPendingOAuthRedirect();
     await linkWithRedirect(user, provider);
     return null;
   }
@@ -221,6 +276,7 @@ export async function linkAnonymousGoogle(): Promise<User | null> {
   }
   const provider = new GoogleAuthProvider();
   if (isStandalone()) {
+    markPendingOAuthRedirect();
     await linkWithRedirect(current, provider);
     // En redirect el resultado se recoge tras volver, vía getRedirectResult.
     // Nota: el limpiado de expiresAt en el caso redirect se hace en
