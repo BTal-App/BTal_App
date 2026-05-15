@@ -181,6 +181,28 @@ const Landing: React.FC = () => {
     clearMessages();
   };
 
+  // Mientras Firebase restaura la sesión persistida (cold start de PWA ·
+  // puede tardar varios segundos en standalone iOS leyendo IndexedDB)
+  // mostramos un splash con el logo en vez del formulario de login. Sin
+  // esto, el user veía la pantalla de "Iniciar sesión" ~5s y luego saltaba
+  // al dashboard de golpe (parecía que se había deslogueado). También
+  // cubrimos `isAuthed` ya resuelto pero con el redirect del useEffect aún
+  // pendiente · evita el flash del form en ese tick intermedio.
+  if (authLoading || isAuthed) {
+    return (
+      <IonPage>
+        <IonContent fullscreen>
+          <div className="landing-bg landing-bg--loading">
+            <div className="landing-logo-wrap">
+              <img src="/logo.png" alt="BTal" className="landing-logo" />
+            </div>
+            <IonSpinner name="dots" className="landing-loading-spinner" />
+          </div>
+        </IonContent>
+      </IonPage>
+    );
+  }
+
   return (
     <IonPage>
       <IonContent fullscreen>

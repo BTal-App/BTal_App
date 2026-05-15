@@ -13,6 +13,20 @@
   padding: max(env(safe-area-inset-top), 32px) 24px max(env(safe-area-inset-bottom), 32px);
 }
 
+/* Splash de restauración de sesión (PWA cold start) · mismo fondo que
+   el Landing normal pero centrado logo + spinner · sustituye al form
+   mientras Firebase Auth resuelve la sesión persistida (~varios s en
+   standalone iOS). Sin el form para que no parezca un logout. */
+.landing-bg--loading {
+  gap: 28px;
+}
+
+.landing-loading-spinner {
+  --color: var(--btal-lime);
+  transform: scale(1.4);
+  opacity: 0.85;
+}
+
 .landing-hero {
   text-align: center;
   /* Logo pegado al form (sin tagline en medio) */
