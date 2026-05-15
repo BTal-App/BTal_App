@@ -50,21 +50,47 @@ export function BarChart({
     return <div className="bt-chart-empty">{emptyMessage}</div>;
   }
 
-  // PAD.top generoso para el halo del valor. En modo scrollable
-  // ampliamos bottom porque las labels rotadas largas (rangos de
-  // fecha) sobresalen más hacia abajo y se cortaban con bottom=28.
+  // Etiqueta X rotada si hay >= 8 entries (no caben rectas) o si el
+  // chart es scrollable (labels largas tipo fecha/ejercicio).
+  const rotateLabels = data.length >= 8 || scrollable;
+
+  // Geometría de la label rotada: con bottom fijo las labels largas
+  // (PR's = nombre de ejercicio ~18 chars · Rachas = rango de fecha)
+  // sobresalían por debajo del viewBox y la primera por la izquierda,
+  // y el SVG las recortaba. Derivamos el padding del largo real.
+  const ROT_DEG = 35;
+  const sinA = Math.sin((ROT_DEG * Math.PI) / 180);
+  const cosA = Math.cos((ROT_DEG * Math.PI) / 180);
+  // Ancho aprox de la label más larga a fontSize 9 (~5.2 px/char).
+  const labelPx =
+    data.reduce((m, d) => Math.max(m, d.label.length), 0) * 5.2;
+  // Caída vertical bajo la línea base que ocupa la label rotada
+  // (+14 del offset del texto, +10 de descendente + margen de holgura
+  // para que ni la más larga roce el borde inferior del viewBox).
+  const labelDrop = rotateLabels ? Math.ceil(labelPx * sinA) + 24 : 18;
+  // La primera label (anchor=end, rotada) se extiende hacia la
+  // izquierda · hueco para que no la corte el borde del SVG. El -24 es
+  // el inset natural del centro de la 1ª barra respecto al pad izq.
+  const labelReach = rotateLabels ? Math.ceil(labelPx * cosA) - 24 : 0;
+
+  const baseBottom = scrollable ? 44 : 28;
+  // PAD.top generoso para el halo del valor.
   const PAD = {
     top: 24,
     right: 8,
-    bottom: scrollable ? 44 : 28,
-    left: 8,
+    bottom: Math.max(baseBottom, labelDrop),
+    left: Math.max(8, labelReach),
   };
 
   // ViewBox: 320 fijo en modo normal (escala a 100% del contenedor).
   // En scrollable, ancho intrínseco = nº barras × SLOT_PX (mín 320) ·
   // el contenedor le da scroll-x si excede el ancho visible.
-  const W = scrollable ? Math.max(320, data.length * SLOT_PX) : 320;
-  const H = height;
+  const W =
+    (scrollable ? Math.max(320, data.length * SLOT_PX) : 320) +
+    Math.max(0, PAD.left - 8);
+  // Crecemos el alto total por el extra de bottom · así las barras
+  // conservan su tamaño en vez de encogerse para dejar sitio a labels.
+  const H = height + Math.max(0, PAD.bottom - baseBottom);
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
@@ -73,10 +99,6 @@ export function BarChart({
   const slot = innerW / data.length;
   const barW = slot * 0.65;
   const offset = slot * 0.175;
-
-  // Etiqueta X rotada si hay >= 8 entries (no caben rectas) o si el
-  // chart es scrollable (labels largas tipo fecha/ejercicio).
-  const rotateLabels = data.length >= 8 || scrollable;
 
   const svg = (
     <svg
