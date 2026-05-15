@@ -61,13 +61,15 @@ export function BarChart({
   const ROT_DEG = 35;
   const sinA = Math.sin((ROT_DEG * Math.PI) / 180);
   const cosA = Math.cos((ROT_DEG * Math.PI) / 180);
-  // Ancho aprox de la label más larga a fontSize 9 (~5.2 px/char).
+  // Ancho aprox de la label más larga a fontSize 9. Estimamos generoso
+  // (~6.2 px/char) porque la fuente del sistema en iOS (San Francisco)
+  // es más ancha que el sans por defecto · subestimar = recorte.
   const labelPx =
-    data.reduce((m, d) => Math.max(m, d.label.length), 0) * 5.2;
+    data.reduce((m, d) => Math.max(m, d.label.length), 0) * 6.2;
   // Caída vertical bajo la línea base que ocupa la label rotada
-  // (+14 del offset del texto, +10 de descendente + margen de holgura
+  // (+14 del offset del texto, +14 de descendente + margen de holgura
   // para que ni la más larga roce el borde inferior del viewBox).
-  const labelDrop = rotateLabels ? Math.ceil(labelPx * sinA) + 24 : 18;
+  const labelDrop = rotateLabels ? Math.ceil(labelPx * sinA) + 28 : 18;
   // La primera label (anchor=end, rotada) se extiende hacia la
   // izquierda · hueco para que no la corte el borde del SVG. El -24 es
   // el inset natural del centro de la 1ª barra respecto al pad izq.

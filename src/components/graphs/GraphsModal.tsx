@@ -46,14 +46,15 @@ type TabKey = 'entrenos' | 'prs' | 'pesos' | 'rachas' | 'suplementos';
 // Orden de tabs · el render usa `Object.keys(TAB_LABELS)` así que el
 // orden de inserción aquí es el orden visual. JS preserva el orden de
 // keys string en objetos.
-// Iconos referenciados por id Tabler · `<MealIcon>` los resuelve con
-// lazy load del barrel.
-const TAB_LABELS: Record<TabKey, { iconId: string; label: string }> = {
-  entrenos:    { iconId: 'tb:chart-bar',  label: 'Entrenos' },
-  pesos:       { iconId: 'tb:barbell',    label: 'Pesos' },
-  prs:         { iconId: 'tb:trophy',     label: "PR's" },
-  rachas:      { iconId: 'tb:bolt',       label: 'Rachas' },
-  suplementos: { iconId: 'tb:flask',      label: 'Supl.' },
+// Solo label · las tabs de categorías van sin icono (en móvil estrecho
+// se ocultaban igualmente y en web descentraban respecto al texto · más
+// limpio y consistente sin ellos).
+const TAB_LABELS: Record<TabKey, { label: string }> = {
+  entrenos:    { label: 'Entrenos' },
+  pesos:       { label: 'Pesos' },
+  prs:         { label: "PR's" },
+  rachas:      { label: 'Rachas' },
+  suplementos: { label: 'Supl.' },
 };
 
 export interface GraphsModalProps {
@@ -201,7 +202,6 @@ export function GraphsModal({ isOpen, onClose }: GraphsModalProps) {
                 className={`graphs-modal-tab${active ? ' is-active' : ''}`}
                 onClick={() => setTab(k)}
               >
-                <MealIcon value={meta.iconId} size={16} className="graphs-modal-tab-icon" />
                 <span>{meta.label}</span>
               </button>
             );
@@ -288,9 +288,7 @@ function TabRachas({
   const active = history.find((s) => s.endedBy === 'active');
   const current = active?.length ?? 0;
 
-  // "MM-DD" desde "YYYY-MM-DD" para labels compactos del eje X.
-  const md = (iso: string) => iso.slice(5);
-  // "YYYY-MM-DD" → "DD/MM/AAAA" para el rango del histórico.
+  // "YYYY-MM-DD" → "DD/MM/AAAA" para las labels del eje X y el rango.
   const dmy = (iso: string) => {
     const [y, m, d] = iso.split('-');
     return `${d}/${m}/${y}`;
@@ -325,8 +323,8 @@ function TabRachas({
           <BarChart
             data={top.map((s) => ({
               label: s.start === s.end
-                ? md(s.start)
-                : `${md(s.start)}–${md(s.end)}`,
+                ? dmy(s.start)
+                : `${dmy(s.start)}–${dmy(s.end)}`,
               value: s.length,
               highlight: s.endedBy === 'active' ? 'gold' : null,
             }))}

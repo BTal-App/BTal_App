@@ -1607,7 +1607,7 @@ function MealCard({ meal, comida, onClick }: MealCardProps) {
             )}
             {comida.prot > 0 && (
               <span className="menu-macro-pill menu-macro-pill--prot">
-                <MealIcon value="tb:barbell" size={14} />
+                <MealIcon value="tb:dumbbell" size={14} />
                 {comida.prot}g P
               </span>
             )}
@@ -1710,7 +1710,7 @@ function SupCard({
             )}
             {prot !== undefined && prot > 0 && (
               <span className="menu-macro-pill menu-macro-pill--prot">
-                <MealIcon value="tb:barbell" size={14} />
+                <MealIcon value="tb:dumbbell" size={14} />
                 {prot}g P
               </span>
             )}
@@ -1802,7 +1802,7 @@ function ExtraMealCard({ extra, onClick }: ExtraMealCardProps) {
             )}
             {extra.prot > 0 && (
               <span className="menu-macro-pill menu-macro-pill--prot">
-                <MealIcon value="tb:barbell" size={14} />
+                <MealIcon value="tb:dumbbell" size={14} />
                 {extra.prot}g P
               </span>
             )}

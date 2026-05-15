@@ -291,7 +291,7 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                       {config.kcal} kcal
                     </span>
                     <span className="menu-macro-pill menu-macro-pill--prot">
-                      <MealIcon value="tb:barbell" size={14} />
+                      <MealIcon value="tb:dumbbell" size={14} />
                       {config.prot}g P
                     </span>
                     <span className="menu-macro-pill menu-macro-pill--carb">

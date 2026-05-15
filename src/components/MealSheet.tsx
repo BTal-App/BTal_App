@@ -227,7 +227,7 @@ export function MealSheet({
                   </div>
                   <div className="meal-sheet-bento-cell meal-sheet-bento-cell--prot">
                     <span className="meal-sheet-bento-top">
-                      <MealIcon value="tb:barbell" size={20} />
+                      <MealIcon value="tb:dumbbell" size={20} />
                       <span className="meal-sheet-bento-num">{comida.prot}g</span>
                     </span>
                     <span className="meal-sheet-bento-label">proteína</span>

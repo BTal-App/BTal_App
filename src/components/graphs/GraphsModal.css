@@ -138,9 +138,16 @@
   flex-shrink: 0;
   /* display:block elimina el hueco de baseline que los SVG inline
      dejan debajo · es lo que descentraba verticalmente el icono
-     respecto a la label. Con esto + line-height:1 + align-items:center
-     el icono y el texto quedan centrados exactos. */
+     respecto a la label. */
   display: block;
+  /* Corrección óptica · aun con line-height:1 + align-items:center la
+     tinta del texto (métricas de fuente asimétricas: más ascendente
+     que descendente) queda un pelín por ENCIMA del centro de su caja,
+     así que el icono se veía un pelín bajo. Subimos el icono ~1px.
+     En `em` para que escale con los font-size de los media queries
+     (0.82 → 0.74 → 0.7 rem). Ajusta el valor si aún no cuadra:
+     más negativo = icono más arriba. */
+  transform: translateY(-0.07em);
 }
 
 /* ── Body · contenedor del contenido de cada tab ──────────────── */
@@ -217,7 +224,15 @@
    largas (fechas/ejercicios) se ven completas y el user desliza
    horizontalmente si no caben de una. */
 .bt-bar-chart-scroll {
-  overflow-x: auto;
+  /* Scroll en AMBOS ejes · X para charts con muchas barras, Y para que
+     las labels rotadas largas (nombres de ejercicio en PR's · rangos
+     de fecha en Rachas) se puedan leer enteras desplazando el chart
+     dentro de su marco en vez de quedar cortadas contra el borde. */
+  overflow: auto;
+  /* Viewport acotado · si el SVG (barras + labels rotadas) excede esta
+     altura aparece scroll vertical. min() para que en pantallas bajas
+     siga siendo usable sin comerse todo el modal. */
+  max-height: min(58vh, 340px);
   -webkit-overflow-scrolling: touch;
   background: var(--btal-surface);
   border: 1px solid var(--btal-border);
@@ -228,6 +243,7 @@
 }
 
 .bt-bar-chart-scroll::-webkit-scrollbar {
+  width: 6px;
   height: 6px;
 }
 
