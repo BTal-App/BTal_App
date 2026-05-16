@@ -50,3 +50,7 @@ test-results/
 playwright-report/
 playwright/.cache/
 playwright/.auth/
+
+# Revisión de copy · solo local (no se sube al repo)
+TEXTOS_APP.md
+scripts/extract-texts.mjs
