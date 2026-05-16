@@ -30,6 +30,12 @@ export interface BarChartProps {
   // verse completa sin solaparse ni cortarse. Default false (charts
   // cortos tipo "entrenos/semana" siguen escalando a 100% del ancho).
   scrollable?: boolean;
+  // Fuerza el comportamiento de rotación de las labels del eje X.
+  // - undefined (default): auto · rota si hay >=8 barras o es scrollable.
+  // - false: nunca rota (para labels cortas tipo ranking "1","2"… que
+  //   caben rectas · evita el aspecto "descuadrado" de nombres/fechas
+  //   largos rotados en un chart no scrollable).
+  rotateXLabels?: boolean;
 }
 
 const DEFAULT_COLOR = 'var(--btal-lime)';
@@ -45,14 +51,16 @@ export function BarChart({
   height = 160,
   emptyMessage = 'Sin datos para mostrar.',
   scrollable = false,
+  rotateXLabels,
 }: BarChartProps) {
   if (!data.length) {
     return <div className="bt-chart-empty">{emptyMessage}</div>;
   }
 
   // Etiqueta X rotada si hay >= 8 entries (no caben rectas) o si el
-  // chart es scrollable (labels largas tipo fecha/ejercicio).
-  const rotateLabels = data.length >= 8 || scrollable;
+  // chart es scrollable. `rotateXLabels` permite forzarlo (false para
+  // labels cortas tipo ranking que caben rectas y centradas).
+  const rotateLabels = rotateXLabels ?? (data.length >= 8 || scrollable);
 
   // Geometría de la label rotada: con bottom fijo las labels largas
   // (PR's = nombre de ejercicio ~18 chars · Rachas = rango de fecha)

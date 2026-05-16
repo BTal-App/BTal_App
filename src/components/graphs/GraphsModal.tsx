@@ -327,19 +327,49 @@ function TabRachas({
       )}
       {!loading && history.length > 0 && (
         <>
+          {/* Eje X = nº de ranking (1,2,3…) · el rango de fechas iba
+              rotado y se veía descuadrado. La lista de abajo, con el
+              mismo nº, hace de leyenda (rango + duración). */}
           <BarChart
-            data={top.map((s) => ({
-              label: s.start === s.end
-                ? dmys(s.start)
-                : `${dmys(s.start)}–${dmys(s.end)}`,
+            data={top.map((s, i) => ({
+              label: String(i + 1),
               value: s.length,
               highlight: s.endedBy === 'active' ? 'gold' : null,
             }))}
             unit={top[0].length === 1 ? 'día' : 'días'}
             color="var(--btal-coral)"
             height={180}
+            rotateXLabels={false}
             emptyMessage="Aún no tienes rachas registradas."
           />
+          <ul className="graphs-pr-list">
+            {top.map((s, i) => {
+              const staggerCls = i < 8 ? `btal-stagger-${i + 1}` : '';
+              const isActive = s.endedBy === 'active';
+              return (
+                <li
+                  key={`${s.start}-${s.end}-${i}`}
+                  className={
+                    `graphs-pr-row btal-anim-fade-up ${staggerCls}` +
+                    (isActive ? ' graphs-pr-row--active' : '')
+                  }
+                >
+                  <span className="graphs-pr-rank">{i + 1}</span>
+                  <span className="graphs-pr-name">
+                    {s.start === s.end
+                      ? dmys(s.start)
+                      : `${dmys(s.start)}–${dmys(s.end)}`}
+                    {isActive && (
+                      <span className="graphs-pr-tag"> · en curso</span>
+                    )}
+                  </span>
+                  <span className="graphs-pr-kg graphs-pr-kg--racha">
+                    {s.length} {s.length === 1 ? 'día' : 'días'}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
           <div className="graphs-summary">
             Mejor racha:{' '}
             <strong>
@@ -391,25 +421,21 @@ function TabPRs({ rows }: { rows: { exercise: string; kg: number; fecha: string 
         </div>
       ) : (
         <>
-          {/* Bar chart horizontal de los top 8 · usa BarChart con los
-              kg como value. Los nombres son largos así que el chart
-              auto-rota labels (>=8 entries). */}
+          {/* Bar chart de los top 8 · el eje X usa el nº de ranking
+              (1,2,3…) en vez del nombre del ejercicio (largo → se veía
+              descuadrado rotado). El nombre completo está en la lista
+              de abajo, con el mismo nº, que hace de leyenda. */}
           {top.length >= 2 && (
             <BarChart
-              data={top.slice(0, 8).map((r) => ({
-                // Chart a 100% del ancho (no scrollable, igual que los
-                // demás) · truncamos a 13 para que las labels rotadas no
-                // se solapen al no haber scroll-x.
-                label:
-                  r.exercise.length > 13
-                    ? r.exercise.slice(0, 12) + '…'
-                    : r.exercise,
+              data={top.slice(0, 8).map((r, i) => ({
+                label: String(i + 1),
                 value: r.kg,
                 highlight: 'gold',
               }))}
               unit="kg"
               color="var(--btal-gold)"
               height={170}
+              rotateXLabels={false}
             />
           )}
           <ul className="graphs-pr-list">
@@ -422,6 +448,7 @@ function TabPRs({ rows }: { rows: { exercise: string; kg: number; fecha: string 
                   key={r.exercise}
                   className={`graphs-pr-row btal-anim-fade-up ${staggerCls}`}
                 >
+                  <span className="graphs-pr-rank">{i + 1}</span>
                   <span className="graphs-pr-name">{r.exercise}</span>
                   <span className="graphs-pr-kg">
                     {r.kg.toLocaleString('es-ES', { maximumFractionDigits: 1 })} kg

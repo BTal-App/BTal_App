@@ -294,7 +294,9 @@
 
 .graphs-pr-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  /* rank | nombre/rango | valor | fecha(opcional, solo PR's) · el nº
+     de rank conecta cada fila con su barra del chart de arriba. */
+  grid-template-columns: auto 1fr auto auto;
   gap: 0.6rem;
   align-items: center;
   background: var(--btal-surface);
@@ -302,6 +304,33 @@
   border-radius: 8px;
   padding: 0.55rem 0.7rem;
   font-size: 0.85rem;
+}
+
+/* Badge del nº de ranking · misma cifra que la label del eje X de la
+   barra correspondiente · hace de leyenda chart ↔ lista. */
+.graphs-pr-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--btal-t-3);
+  min-width: 1.4em;
+  text-align: center;
+}
+
+/* Racha en curso · acento coral (igual que la barra resaltada). */
+.graphs-pr-row--active {
+  border-color: color-mix(in srgb, var(--btal-coral) 55%, var(--btal-border));
+}
+
+.graphs-pr-tag {
+  color: var(--btal-coral);
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+
+/* Valor "N días" en la lista de Rachas · coral en vez del oro de PR's. */
+.graphs-pr-kg--racha {
+  color: var(--btal-coral);
 }
 
 .graphs-pr-name {
@@ -454,8 +483,9 @@
     display: none;
   }
   .graphs-pr-row {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
+    /* rank | nombre | valor en fila 1 · la fecha (solo PR's) cae a una
+       2ª fila a todo el ancho. Rachas (3 hijos) ocupa solo la fila 1. */
+    grid-template-columns: auto 1fr auto;
   }
   .graphs-pr-fecha {
     grid-column: 1 / -1;
