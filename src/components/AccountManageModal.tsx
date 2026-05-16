@@ -139,8 +139,8 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                       <span className="settings-row-label">Modo de generación</span>
                       <span className="settings-row-value settings-row-sub">
                         {userDoc?.profile?.modo === 'ai'
-                          ? 'La IA genera mi plan · pulsa para cambiar a manual'
-                          : 'Lo relleno yo mismo · pulsa para activar la IA'}
+                          ? 'Generar plan con IA · Pulsar para cambiar a Generación manual'
+                          : 'Generar manualmente · Pulsar para generar plan con IA'}
                       </span>
                     </div>
                     <MealIcon
