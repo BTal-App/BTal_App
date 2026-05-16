@@ -55,12 +55,29 @@ const AppShell: React.FC = () => {
     }
   }, [loading, profileLoading, user, userDoc, history]);
 
-  if (loading || !user) {
+  // Splash de marca mientras carga auth O el perfil. Cubrir también
+  // `profileLoading` evita que el invitado (o cualquier cold start) vea
+  // el shell con tabs vacías durante los ~2-4 s de auth→AppCheck→seed→
+  // read · enseña el mismo logo+spinner que el splash de Landing para
+  // que el paso Landing → /app sea una transición continua, sin salto.
+  // Seguro de gatear aquí: `profileLoading` solo se activa en la carga
+  // inicial / cambio de uid y tras completar onboarding (load()); las
+  // mutaciones in-app son optimistas (setProfile) y NO lo tocan, así
+  // que esto nunca tapa la app mientras el usuario edita.
+  if (loading || !user || profileLoading) {
     return (
       <IonPage>
         <IonContent fullscreen>
           <div className="app-shell-loading">
-            <IonSpinner name="dots" />
+            <div className="app-shell-loading-logo-wrap">
+              <img
+                src="/logo.png"
+                alt="BTal"
+                className="app-shell-loading-logo"
+              />
+            </div>
+            <IonSpinner name="dots" className="app-shell-loading-spinner" />
+            <p className="app-shell-loading-msg">Preparando tu plan…</p>
           </div>
         </IonContent>
       </IonPage>
