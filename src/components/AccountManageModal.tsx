@@ -72,11 +72,11 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
         return;
       }
       if (code === 'auth/credential-already-in-use') {
-        setLinkGoogleError('Esa cuenta de Google ya está vinculada a otra cuenta de BTal.');
+        setLinkGoogleError('Esta cuenta de Google ya está vinculada a otra cuenta de BTal.');
       } else if (code === 'auth/provider-already-linked') {
         setLinkGoogleError('Google ya está vinculado a esta cuenta.');
       } else {
-        setLinkGoogleError('No hemos podido vincular Google. Inténtalo de nuevo.');
+        setLinkGoogleError('No se ha podido vincular tu cuenta con Google. Inténtalo de nuevo.');
       }
     }
   };
