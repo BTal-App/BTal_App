@@ -77,7 +77,11 @@ const AppShell: React.FC = () => {
               />
             </div>
             <IonSpinner name="dots" className="app-shell-loading-spinner" />
-            <p className="app-shell-loading-msg">Generando el plan de invitado…</p>
+            <p className="app-shell-loading-msg">
+              {user?.isAnonymous
+                ? 'Preparando perfil de invitado…'
+                : 'Preparando tu perfil…'}
+            </p>
           </div>
         </IonContent>
       </IonPage>
