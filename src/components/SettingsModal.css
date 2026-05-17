@@ -104,6 +104,23 @@ ion-modal.settings-modal {
   font-weight: 600;
 }
 
+/* Lista de requisitos (p. ej. reglas de contraseña nueva) · atenuada,
+   discreta, viñetas dentro del card del modal. */
+.settings-modal-reqs {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--btal-t-3);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-modal-reqs li {
+  list-style: disc;
+}
+
 .settings-modal-primary {
   --background: var(--btal-lime);
   --background-hover: var(--btal-lime-d);

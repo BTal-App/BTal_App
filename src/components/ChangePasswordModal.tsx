@@ -226,9 +226,12 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                   />
                 </div>
 
-                <p className="landing-hint">
-                  Mínimo 8 caracteres · 1 mayúscula · 1 número · 1 carácter especial
-                </p>
+                <ul className="settings-modal-reqs">
+                  <li>La contraseña debe tener al menos 8 caracteres.</li>
+                  <li>Debe incluir al menos una letra mayúscula.</li>
+                  <li>Debe incluir al menos un número.</li>
+                  <li>Debe incluir al menos un carácter especial.</li>
+                </ul>
 
                 {error && <div className="landing-msg error">{error}</div>}
 
