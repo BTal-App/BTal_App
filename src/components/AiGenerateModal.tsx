@@ -434,7 +434,7 @@ async function callGenerateAiPlaceholder(payload: {
 function summaryToSubtitle(scope: AiScopeChoice): string {
   switch (scope) {
     case 'all':
-      return 'Generando tu menú semanal, tu plan de entreno y tu lista de la compra. No cierres la app — esto puede tardar unos segundos.';
+      return 'Generando tu menú semanal, tu lista de la compra y tu plan de entreno. No cierres la app — esto puede tardar unos segundos.';
     case 'menu_compra':
       return 'Generando tu menú semanal y la lista de la compra. No cierres la app — esto puede tardar unos segundos.';
     case 'menu_only':
