@@ -239,7 +239,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                   <span className="settings-row-value settings-row-sub">
                     {enrolledTotp
                       ? 'Cuenta activada · Se solicitará el código al iniciar sesión'
-                      : 'Añade una capa extra de seguridad con tu app authenticator'}
+                      : 'Protege tu cuenta con tu app de autenticación'}
                   </span>
                 </div>
                 {enrolledTotp ? (
