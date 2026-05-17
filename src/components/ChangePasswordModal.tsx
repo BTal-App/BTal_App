@@ -19,14 +19,14 @@ const errorCode = (err: unknown): string =>
 
 function translateError(code: string): string {
   const map: Record<string, string> = {
-    'auth/wrong-password': 'Contraseña actual incorrecta.',
-    'auth/invalid-credential': 'Contraseña actual incorrecta.',
-    'auth/weak-password': 'Contraseña nueva débil.',
+    'auth/wrong-password': 'La contraseña introducida es incorrecta.',
+    'auth/invalid-credential': 'La contraseña introducida es incorrecta.',
+    'auth/weak-password': 'La contraseña introducida no cumple los requisitos mínimos de seguridad.',
     'auth/too-many-requests':
       'Se ha superado el número máximo de intentos. Por favor, espere unos minutos.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
   };
-  return map[code] ?? 'No hemos podido cambiar la contraseña. Inténtalo de nuevo.';
+  return map[code] ?? 'No se ha podido cambiar la contraseña. Inténtalo de nuevo.';
 }
 
 // Reglas de la contraseña nueva · fuente única: alimenta tanto la
