@@ -84,7 +84,7 @@ const AuthAction: React.FC = () => {
             const restored = actionInfo.data.email;
             setSuccessMsg(
               restored
-                ? `Hemos restaurado tu email a ${restored}. Cambia tu contraseña por seguridad.`
+                ? `Se ha restaurado tu email a ${restored}. Cambia tu contraseña por seguridad.`
                 : 'Cambio de email revertido. Cambia tu contraseña por seguridad.',
             );
           }
@@ -104,7 +104,7 @@ const AuthAction: React.FC = () => {
           await refreshUser();
           if (!cancelled) {
             setSuccessMsg(
-              'Hemos eliminado el segundo factor de autenticación que se añadió. Cambia tu contraseña por seguridad.',
+              'Se ha eliminado el segundo factor de autenticación que se añadió. Cambia tu contraseña por seguridad.',
             );
           }
         }

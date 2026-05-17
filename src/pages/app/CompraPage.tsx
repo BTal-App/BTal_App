@@ -488,7 +488,7 @@ const CompraPage: React.FC = () => {
           onDidDismiss={() => setConfirmShareOpen(false)}
           header="📤 Compartir lista de compra"
           message={
-            'Vamos a generar un texto con todos los productos pendientes '
+            'Se generará un texto con todos los productos pendientes '
             + 'de comprar (los NO marcados) agrupados por categoría, con '
             + 'precios. En el móvil intentará abrir el menú nativo de '
             + 'compartir (WhatsApp, Telegram, email…). Si no, lo copiará '

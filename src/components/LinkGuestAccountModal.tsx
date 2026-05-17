@@ -144,7 +144,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
               </button>
               <h2 className="settings-modal-title">Crea tu cuenta</h2>
               <p className="settings-modal-text">
-                Vamos a registrarte sin perder nada.{' '}
+                Se creará tu cuenta sin perder nada.{' '}
                 <strong>Todos los cambios que has hecho como invitado se conservarán</strong> en
                 tu nueva cuenta — el menú, el plan de entreno, la lista de la
                 compra y cualquier ajuste que hayas tocado.

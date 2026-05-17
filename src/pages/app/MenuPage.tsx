@@ -1151,7 +1151,7 @@ const MenuPage: React.FC = () => {
           header="¿Resetear día?"
           message={
             confirmResetDay
-              ? `Vamos a restaurar las 4 comidas del ${DAY_LABEL_FULL[confirmResetDay].toLowerCase()} al menú original. Se perderán los cambios que hayas hecho ese día. Esta acción no se puede deshacer.`
+              ? `Se restaurarán las 4 comidas del ${DAY_LABEL_FULL[confirmResetDay].toLowerCase()} al menú original. Se perderán los cambios que hayas hecho ese día. Esta acción no se puede deshacer.`
               : ''
           }
           buttons={[

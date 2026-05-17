@@ -183,7 +183,7 @@ export function DuplicateMealModal({
                 Duplicar {MEAL_LABEL[meal].toLowerCase()}
               </h2>
               <p className="settings-modal-text">
-                Vamos a copiar tu {MEAL_LABEL[meal].toLowerCase()} del{' '}
+                Se copiará tu {MEAL_LABEL[meal].toLowerCase()} del{' '}
                 {DAY_LABEL_FULL[srcDay].toLowerCase()} al mismo slot de los
                 días que marques. Los macros y los alimentos se copian
                 exactamente.

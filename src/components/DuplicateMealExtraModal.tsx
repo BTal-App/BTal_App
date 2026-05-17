@@ -161,7 +161,7 @@ export function DuplicateMealExtraModal({
                 Duplicar {nombre.toLowerCase()}
               </h2>
               <p className="settings-modal-text">
-                Vamos a añadir una copia de tu {nombre.toLowerCase()} del{' '}
+                Se añadirá una copia de tu {nombre.toLowerCase()} del{' '}
                 {DAY_LABEL_FULL[srcDay].toLowerCase()} en los días que
                 marques. Cada copia se guarda como una comida nueva
                 independiente — editar o borrar una no afecta al resto.

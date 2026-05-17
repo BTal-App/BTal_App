@@ -89,7 +89,7 @@ export function ChangeEmailModal({ isOpen, user, onClose }: Props) {
             {sent ? (
               <>
                 <p className="settings-modal-text">
-                  Te hemos enviado un email a <strong>{newEmail.trim()}</strong> con un
+                  Se ha enviado un email a <strong>{newEmail.trim()}</strong> con un
                   enlace de verificación.
                 </p>
                 <p className="settings-modal-text">

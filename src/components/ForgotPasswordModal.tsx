@@ -76,7 +76,7 @@ export function ForgotPasswordModal({ isOpen, initialEmail = '', onClose }: Prop
           {sent ? (
             <>
               <p className="forgot-text">
-                Te hemos enviado un email a <strong>{email.trim()}</strong> con un
+                Se ha enviado un email a <strong>{email.trim()}</strong> con un
                 enlace para crear una nueva contraseña.
               </p>
               <p className="forgot-text forgot-text--muted">

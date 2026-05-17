@@ -183,7 +183,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                 <div className="settings-row-info">
                   <span className="settings-row-label">Cambiar email</span>
                   <span className="settings-row-value settings-row-sub">
-                    Te enviamos verificación a la nueva dirección antes del cambio.
+                    Se enviará verificación a la nueva dirección antes del cambio.
                   </span>
                 </div>
                 <MealIcon value="tb:mail" size={20} className="settings-row-chevron" />
@@ -290,7 +290,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                   <div className="settings-row-info">
                     <span className="settings-row-label">Restablecer contraseña</span>
                     <span className="settings-row-value settings-row-sub">
-                      Te enviamos un enlace al email para crear una nueva sin necesitar la actual.
+                      Se enviará un enlace al email para crear una nueva sin necesitar la actual.
                     </span>
                   </div>
                   <MealIcon value="tb:key" size={20} className="settings-row-chevron" />
