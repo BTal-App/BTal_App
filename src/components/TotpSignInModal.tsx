@@ -86,7 +86,7 @@ export function TotpSignInModal({ isOpen, resolver, onClose, onSuccess }: Props)
 
           {!totpHint ? (
             <div className="landing-msg error">
-              No tienes un factor TOTP enrolado. Inicia sesión sin MFA o contacta con soporte.
+              No tienes un factor 2FA configurado. Inicia sesión sin 2FA o contacta con soporte.
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
