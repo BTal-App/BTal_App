@@ -82,7 +82,7 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
     );
     if (!mounted.current) return;
     if (result === SAVE_FAILED) {
-      setErrorToast('No hemos podido guardar. Inténtalo de nuevo.');
+      setErrorToast('No se ha podido guardar. Inténtalo de nuevo.');
       return;
     }
     // Éxito · mostramos el toast verde Y cerramos el modal al instante.

@@ -8,7 +8,7 @@ import { ErrorContext, type ErrorState } from './error-context';
 //     await someFirestoreOp();
 //   } catch (err) {
 //     console.error('[Mi flujo]', err);
-//     showError('No hemos podido guardar. Inténtalo de nuevo.');
+//     showError('No se ha podido guardar. Inténtalo de nuevo.');
 //   }
 //
 // Si el hook se llama fuera del Provider devuelve una versión no-op para

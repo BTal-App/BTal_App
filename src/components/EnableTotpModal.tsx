@@ -41,7 +41,7 @@ function translateError(code: string): string {
   //     auth/requires-recent-login
   //   Si aparece uno nuevo recurrente, añadirlo al `map` con su copy.
   console.warn('[BTal][2FA] código de error no mapeado:', code || '(vacío)');
-  return 'No hemos podido activar la verificación en dos pasos. Inténtalo de nuevo.';
+  return 'No se ha podido activar la verificación en dos pasos. Inténtalo de nuevo.';
 }
 
 export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {

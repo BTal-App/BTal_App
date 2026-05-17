@@ -88,7 +88,7 @@ const Settings: React.FC = () => {
       setExportedToast(true);
     } catch (err) {
       console.error('[Settings] export GDPR', err);
-      showError('No hemos podido preparar tus datos. Inténtalo de nuevo.');
+      showError('No se ha podido preparar tus datos. Inténtalo de nuevo.');
     } finally {
       setExporting(false);
     }

@@ -26,7 +26,7 @@ function translateError(code: string): string {
     'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': '',
   };
-  return map[code] ?? 'No hemos podido confirmar tu identidad. Inténtalo de nuevo.';
+  return map[code] ?? 'No se ha podido confirmar tu identidad. Inténtalo de nuevo.';
 }
 
 // Detecta si el usuario se autenticó con password o con Google.

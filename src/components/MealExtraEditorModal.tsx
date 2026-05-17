@@ -266,7 +266,7 @@ export function MealExtraEditorModal({
     });
     if (result === SAVE_FAILED) {
       setErrorMsg(
-        'No hemos podido guardar. Comprueba tu conexión y vuelve a intentarlo.',
+        'No se ha podido guardar. Comprueba tu conexión y vuelve a intentarlo.',
       );
       return;
     }

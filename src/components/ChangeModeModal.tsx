@@ -112,7 +112,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
       }),
     );
     if (result === SAVE_FAILED) {
-      setError('No hemos podido cambiar el modo. Inténtalo de nuevo.');
+      setError('No se ha podido cambiar el modo. Inténtalo de nuevo.');
       return;
     }
     // Tras éxito esperamos a que el chip "Guardado" se vea antes de cerrar.

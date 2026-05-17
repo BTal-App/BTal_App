@@ -315,7 +315,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
     );
     if (result === SAVE_FAILED) {
       // Falló · el SaveIndicator ya muestra "Error" 3s.
-      setError('No hemos podido guardar los cambios. Inténtalo de nuevo.');
+      setError('No se ha podido guardar los cambios. Inténtalo de nuevo.');
       return;
     }
     setOriginal(nextData);

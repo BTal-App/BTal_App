@@ -149,7 +149,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         // primer load no se sincronizan con otros dispositivos hasta
         // que `setUnits`/`setWeekStart`/etc dispare otro write.
         showError(
-          'No hemos podido sincronizar tus preferencias con la nube. '
+          'No se ha podido sincronizar tus preferencias con la nube. '
           + 'Siguen funcionando en este dispositivo.',
         );
       });
@@ -223,7 +223,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         // dispositivos hasta el siguiente save exitoso).
         persist(next).catch((err) => {
           console.warn('[BTal] save preferences error:', err);
-          showError('No hemos podido guardar tus preferencias. Comprueba tu conexión.');
+          showError('No se ha podido guardar tus preferencias. Comprueba tu conexión.');
         });
         return next;
       });
@@ -238,7 +238,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         const next = { ...p, weekStart };
         persist(next).catch((err) => {
           console.warn('[BTal] save preferences error:', err);
-          showError('No hemos podido guardar tus preferencias. Comprueba tu conexión.');
+          showError('No se ha podido guardar tus preferencias. Comprueba tu conexión.');
         });
         return next;
       });
@@ -271,7 +271,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         const next: Preferences = { ...p, navStyle };
         persist(next).catch((err) => {
           console.warn('[BTal] save preferences (navStyle) error:', err);
-          showError('No hemos podido guardar el estilo del menú. Comprueba tu conexión.');
+          showError('No se ha podido guardar el estilo del menú. Comprueba tu conexión.');
         });
         return next;
       });

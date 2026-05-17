@@ -197,7 +197,7 @@ const Onboarding: React.FC = () => {
       history.replace('/app');
     } catch (err) {
       console.error('[BTal] saveOnboarding error:', err);
-      setError('No hemos podido guardar tu perfil. Inténtalo de nuevo.');
+      setError('No se ha podido guardar tu perfil. Inténtalo de nuevo.');
       setAiSummaryOpen(false);
     } finally {
       setSubmitting(false);

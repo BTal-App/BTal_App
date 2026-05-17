@@ -40,7 +40,7 @@ function translateLinkError(code: string): string {
     'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': '',
   };
-  return map[code] ?? 'No hemos podido crear tu cuenta. Inténtalo de nuevo.';
+  return map[code] ?? 'No se ha podido crear tu cuenta. Inténtalo de nuevo.';
 }
 
 // Misma política de password que en signup · ver src/utils/passwordRules.ts

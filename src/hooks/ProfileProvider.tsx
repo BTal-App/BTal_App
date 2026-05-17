@@ -301,7 +301,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       console.error('[BTal] getUserDocument error:', err);
-      setError('No hemos podido cargar tu perfil.');
+      setError('No se ha podido cargar tu perfil.');
       setProfile(null);
     } finally {
       setLoading(false);

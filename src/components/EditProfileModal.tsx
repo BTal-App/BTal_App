@@ -26,7 +26,7 @@ function translateError(code: string): string {
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
     'auth/requires-recent-login': 'Tu sesión es vieja. Cierra sesión y vuelve a entrar.',
   };
-  return map[code] ?? 'No hemos podido guardar el perfil. Inténtalo de nuevo.';
+  return map[code] ?? 'No se ha podido guardar el perfil. Inténtalo de nuevo.';
 }
 
 export function EditProfileModal({ isOpen, user, onClose }: Props) {
@@ -88,7 +88,7 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
       setPhotoUrl(final);
     } catch (err) {
       console.error('[BTal] resize image error:', err);
-      setError('No hemos podido procesar la imagen.');
+      setError('No se ha podido procesar la imagen.');
     } finally {
       setImgBusy(false);
     }

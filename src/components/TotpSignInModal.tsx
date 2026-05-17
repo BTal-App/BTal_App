@@ -20,7 +20,7 @@ function translateError(code: string): string {
     'auth/code-expired': 'Código caducado. Pide uno nuevo en tu app.',
     'auth/totp-challenge-timeout': 'Se ha agotado el tiempo. Vuelve a iniciar sesión.',
   };
-  return map[code] ?? 'No hemos podido verificar el código.';
+  return map[code] ?? 'No se ha podido verificar el código.';
 }
 
 export function TotpSignInModal({ isOpen, resolver, onClose, onSuccess }: Props) {
