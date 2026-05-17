@@ -135,7 +135,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                   <input
                     className="landing-input landing-input--password"
                     type={showPwd ? 'text' : 'password'}
-                    placeholder="Tu contraseña actual"
+                    placeholder="Contraseña actual"
                     autoComplete="current-password"
                     value={currentPwd}
                     onChange={(e) => setCurrentPwd(e.target.value)}
@@ -186,7 +186,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                   <input
                     className="landing-input landing-input--password"
                     type={showPwd ? 'text' : 'password'}
-                    placeholder="Contraseña nueva"
+                    placeholder="Nueva contraseña"
                     autoComplete="new-password"
                     value={newPwd}
                     onChange={(e) => setNewPwd(e.target.value)}
@@ -210,7 +210,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                   <input
                     className="landing-input"
                     type={showPwd ? 'text' : 'password'}
-                    placeholder="Confirmar nueva"
+                    placeholder="Confirmar nueva contraseña"
                     autoComplete="new-password"
                     value={newPwd2}
                     onChange={(e) => setNewPwd2(e.target.value)}
