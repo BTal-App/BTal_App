@@ -618,7 +618,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
               })()}
 
               {/* ════════ PERSONALIZACIÓN PARA LA IA ════════ */}
-              <h3 className="edit-fp-section-title">Personalización para la IA</h3>
+              <h3 className="edit-fp-section-title">Datos extra para la IA</h3>
               <p className="settings-modal-text" style={{ margin: '0 0 4px' }}>
                 Datos que la IA usará al generar tu plan. Todo opcional.
               </p>

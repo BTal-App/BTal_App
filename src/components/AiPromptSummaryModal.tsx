@@ -301,7 +301,7 @@ export function AiPromptSummaryModal({
               || profile.alimentosProhibidos.length > 0
               || profile.alimentosObligatorios.length > 0
               || profile.ingredientesFavoritos.length > 0) && (
-              <SummaryBlock title="Personalización para la IA">
+              <SummaryBlock title="Datos extra para la IA">
                 {profile.notas.trim() && (
                   <SummaryNote label="Notas" text={profile.notas.trim()} />
                 )}
