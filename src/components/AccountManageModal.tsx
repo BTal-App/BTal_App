@@ -382,7 +382,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
       <IonAlert
         isOpen={confirmDisableTotpOpen}
         onDidDismiss={() => setConfirmDisableTotpOpen(false)}
-        header="¿Desactivar 2FA?"
+        header="¿Desactivar la verificación en dos pasos (2FA)?"
         message="Tu cuenta volverá a usar solo email y contraseña para iniciar sesión. Podrás reactivarla en cualquier momento."
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
