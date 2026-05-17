@@ -98,7 +98,7 @@ export function AiAffectedItemsStep({
           <div className="ai-items-allow-info">
             <span className="ai-items-allow-title">
               <MealIcon value="tb:lock" size={16} />
-              Permitir que la IA toque mis cambios
+              Permitir que la IA modifique mis cambios
             </span>
             <span className="ai-items-allow-sub">
               Por defecto la IA <strong>nunca toca lo que has creado o
@@ -109,7 +109,7 @@ export function AiAffectedItemsStep({
           <IonToggle
             checked={allowUserItems}
             onIonChange={(e) => onToggleAllowUserItems(e.detail.checked)}
-            aria-label="Permitir que la IA toque mis cambios"
+            aria-label="Permitir que la IA modifique mis cambios"
           />
         </div>
       )}
