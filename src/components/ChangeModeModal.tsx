@@ -187,7 +187,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
         message={
           'El botón «Generar con IA» estará disponible en los menús Hoy, Menú y Entreno. ' +
           'Podrás generar tu plan en cualquier momento sin perder los datos que ya tengas. ' +
-          'Recuerda: en plan Free tienes 1 generación al mes (sea total o parcial).'
+          'Recuerda: en el plan Free tienes 1 generación al mes, ya sea completa (Menú, Compra y Entreno) o parcial (solo una o dos de ellas).'
         }
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
