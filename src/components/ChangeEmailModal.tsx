@@ -18,7 +18,7 @@ function translateError(code: string): string {
   const map: Record<string, string> = {
     'auth/invalid-email': 'Email no válido.',
     'auth/email-already-in-use': 'Este email ya está en uso.',
-    'auth/operation-not-allowed': 'Operación no permitida. Revisa la configuración de Auth.',
+    'auth/operation-not-allowed': 'No se ha podido completar la operación. Si vuelve a ocurrir, contacta con soporte.',
   };
   return map[code] ?? 'No se ha podido enviar el email de verificación. Inténtalo de nuevo.';
 }
