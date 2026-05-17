@@ -42,9 +42,10 @@ test.describe('Landing page', () => {
 
     // Aparece el segundo input "Confirmar contraseña".
     await expect(page.getByPlaceholder(/Confirmar contraseña/i)).toBeVisible();
-    // Y el hint de fortaleza de contraseña.
+    // Y el checklist reactivo de requisitos (PasswordChecklist · 4 reglas
+    // en <li>, rojas por defecto). Basta comprobar una regla concreta.
     await expect(
-      page.getByText(/Mínimo 8 caracteres.*mayúscula.*número.*especial/i),
+      page.getByText('La contraseña debe tener al menos 8 caracteres.'),
     ).toBeVisible();
   });
 
@@ -64,8 +65,11 @@ test.describe('Landing page', () => {
 
     // Validación cliente · debe aparecer mensaje sin llegar a Firebase.
     // El primer fallo en orden es "letra mayúscula" (las 8 chars ya
-    // pasan, pero no hay ninguna mayúscula).
-    await expect(page.getByText(/letra mayúscula/i)).toBeVisible();
+    // pasan, pero no hay ninguna mayúscula). Scope al div de error
+    // porque el checklist también muestra esa misma regla en un <li>.
+    await expect(page.locator('.landing-msg.error')).toContainText(
+      /letra mayúscula/i,
+    );
   });
 
   test('signup con contraseñas que no coinciden muestra error', async ({

@@ -178,8 +178,8 @@ export function AiPromptSummaryModal({
               <div>
                 <h2 className="settings-modal-title">Confirma los datos que usará la IA para la generación</h2>
                 <p className="settings-modal-text" style={{ margin: '6px 0 0' }}>
-                  Revisa los datos. Si es necesario cambiar algo, pulsa
-                  «Modificar»; si los datos están correctos, pulsa
+                  Revisa los datos introducidos. Si necesitas modificar
+                  alguno, pulsa «Modificar»; si son correctos, pulsa
                   «{confirmLabel}».
                 </p>
               </div>
