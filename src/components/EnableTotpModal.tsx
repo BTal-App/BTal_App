@@ -29,7 +29,19 @@ function translateError(code: string): string {
     'auth/admin-restricted-operation': 'No se ha podido completar la operación. Si vuelve a ocurrir, contacta con soporte.',
     'auth/requires-recent-login': 'Tu sesión es vieja. Cierra sesión y vuelve a entrar.',
   };
-  return map[code] ?? `No hemos podido activar 2FA (${code || 'error desconocido'}).`;
+  if (map[code]) return map[code];
+  // Fallback para códigos NO mapeados. Antes se mostraba el código
+  // técnico entre paréntesis al usuario (ruido); ahora se omite del
+  // texto visible y se conserva para diagnóstico:
+  //   ADMIN/DEV: el código Firebase real va a consola con prefijo
+  //   [BTal][2FA]. Códigos ya contemplados (ver `map` arriba):
+  //     auth/invalid-verification-code · auth/code-expired ·
+  //     auth/totp-challenge-timeout · auth/operation-not-allowed ·
+  //     auth/unverified-email · auth/admin-restricted-operation ·
+  //     auth/requires-recent-login
+  //   Si aparece uno nuevo recurrente, añadirlo al `map` con su copy.
+  console.warn('[BTal][2FA] código de error no mapeado:', code || '(vacío)');
+  return 'No hemos podido activar la verificación en dos pasos. Inténtalo de nuevo.';
 }
 
 export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {
