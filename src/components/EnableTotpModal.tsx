@@ -22,9 +22,11 @@ function translateError(code: string): string {
     'auth/invalid-verification-code': 'Código incorrecto. Mira la app authenticator y vuelve a intentarlo.',
     'auth/code-expired': 'Código caducado. Pide uno nuevo en tu app.',
     'auth/totp-challenge-timeout': 'Se ha agotado el tiempo. Vuelve a empezar.',
-    'auth/operation-not-allowed': '2FA no está habilitado. Actívalo en Firebase Console → Authentication → Sign-in method → Verificación en dos pasos.',
+    // ADMIN: 2FA no habilitado · activarlo en Firebase Console → Authentication → Sign-in method → Verificación en dos pasos.
+    'auth/operation-not-allowed': 'La verificación en dos pasos no está disponible ahora mismo. Si vuelve a ocurrir, contacta con soporte.',
     'auth/unverified-email': 'Necesitas verificar tu email antes de activar 2FA. Mira tu bandeja (y spam) y haz click en el enlace.',
-    'auth/admin-restricted-operation': 'Operación bloqueada por configuración del proyecto. Revisa Identity Platform.',
+    // ADMIN: operación bloqueada por configuración del proyecto · revisar Identity Platform.
+    'auth/admin-restricted-operation': 'No se ha podido completar la operación. Si vuelve a ocurrir, contacta con soporte.',
     'auth/requires-recent-login': 'Tu sesión es vieja. Cierra sesión y vuelve a entrar.',
   };
   return map[code] ?? `No hemos podido activar 2FA (${code || 'error desconocido'}).`;

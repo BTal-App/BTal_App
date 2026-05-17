@@ -423,9 +423,10 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
         isOpen={signOutAlertOpen}
         onDidDismiss={() => setSignOutAlertOpen(false)}
         header="Cerrar sesión en otros dispositivos"
+        // ADMIN: requiere activar las Cloud Functions del backend (Fase 6 del roadmap) · hasta entonces solo está el workaround del cambio de contraseña.
         message={
-          'Esta función necesita que activemos las Cloud Functions del backend (Fase 6 del roadmap). ' +
-          'Mientras tanto: si cambias tu contraseña, todas las demás sesiones se cerrarán automáticamente.'
+          'Esta función estará disponible próximamente. ' +
+          'Mientras tanto, si cambias tu contraseña se cerrarán automáticamente todas las demás sesiones.'
         }
         buttons={[{ text: 'Entendido', role: 'cancel' }]}
       />
