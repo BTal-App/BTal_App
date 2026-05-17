@@ -196,7 +196,7 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
                     <p className="sup-warning-soft">
                       <MealIcon value="tb:info-circle" size={16} className="sup-inline-icon" />
                       El batido de hoy ya incluye creatina. Añadir una dosis
-                      suelta sería duplicar.
+                      suelta lo duplicaría.
                     </p>
                   )}
 
