@@ -185,7 +185,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
         onDidDismiss={() => setConfirmEnableAiOpen(false)}
         header="¿Activar la generación con IA?"
         message={
-          'A partir de ahora aparecerán botones "Generar con IA" en las pestañas Hoy, Menú y Entreno. ' +
+          'El botón «Generar con IA» ya está disponible en los menús Hoy, Menú y Entreno. ' +
           'Podrás generar tu plan en cualquier momento sin perder los datos que ya tengas. ' +
           'Recuerda: en plan Free tienes 1 generación al mes (sea total o parcial).'
         }
