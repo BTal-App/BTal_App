@@ -38,8 +38,8 @@ const SECTION_ICON: Record<AffectedSection, string> = {
 
 const SOURCE_LABEL: Record<AffectedItem['source'], string> = {
   default: 'Por defecto',
-  ai: 'IA anterior',
-  user: 'Tuyo',
+  ai: 'Generado previamente por IA',
+  user: 'Generado por ti',
 };
 
 // Paso 2 del wizard de Generar IA · lista de items afectables agrupados
@@ -75,10 +75,10 @@ export function AiAffectedItemsStep({
       <div className="ai-items-step ai-items-empty">
         <MealIcon value="tb:alert-circle" size={18} />
         <p>
-          No hay nada que la IA pueda generar con esta combinación. Si elegiste
-          "Solo entrenos", revisa que tu perfil tenga al menos 1 día de entreno
-          a la semana. Pulsa <strong>Atrás</strong> para cambiar de scope o
-          actualiza tu perfil desde Ajustes.
+          La IA no puede generar contenido con esta combinación. Si
+          seleccionaste «Solo entrenos», revisa que tu perfil tenga al menos
+          1 día de entrenamiento por semana. Pulsa <strong>Atrás</strong> para
+          cambiar de scope o actualiza tu perfil desde Ajustes.
         </p>
       </div>
     );
@@ -103,7 +103,8 @@ export function AiAffectedItemsStep({
             <span className="ai-items-allow-sub">
               Por defecto la IA <strong>nunca modifica lo que has creado o
               editado tú</strong>. Activa esta opción si quieres que también
-              pueda modificar tus cambios manuales (los marcados como "Tuyo").
+              pueda modificar tus cambios manuales (los marcados como
+              «Generado por ti»).
             </span>
           </div>
           <IonToggle
