@@ -434,12 +434,12 @@ async function callGenerateAiPlaceholder(payload: {
 function summaryToSubtitle(scope: AiScopeChoice): string {
   switch (scope) {
     case 'all':
-      return 'Estamos creando tu menú semanal, tu plan de entreno y tu lista de la compra. No cierres la app — esto puede tardar unos segundos.';
+      return 'Generando tu menú semanal, tu plan de entreno y tu lista de la compra. No cierres la app — esto puede tardar unos segundos.';
     case 'menu_compra':
-      return 'Estamos creando tu menú semanal y la lista de la compra. No cierres la app — esto puede tardar unos segundos.';
+      return 'Generando tu menú semanal y la lista de la compra. No cierres la app — esto puede tardar unos segundos.';
     case 'menu_only':
-      return 'Estamos creando tu menú semanal. No cierres la app — esto puede tardar unos segundos.';
+      return 'Generando tu menú semanal. No cierres la app — esto puede tardar unos segundos.';
     case 'entrenos_only':
-      return 'Estamos creando tu plan de entreno. No cierres la app — esto puede tardar unos segundos.';
+      return 'Generando tu plan de entreno. No cierres la app — esto puede tardar unos segundos.';
   }
 }
