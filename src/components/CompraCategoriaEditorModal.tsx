@@ -227,7 +227,7 @@ export function CompraCategoriaEditorModal({
               {isBuiltIn && (
                 <p className="settings-modal-text">
                   Esta categoría es predeterminada · Puedes renombrarla y
-                  cambiar el emoji/color, pero no eliminarla.
+                  cambiar el icono/color, pero no eliminarla.
                 </p>
               )}
 
@@ -260,7 +260,7 @@ export function CompraCategoriaEditorModal({
                     />
                   </span>
                   <span className="cat-editor-emoji-hint">
-                    Pulsa para elegir otro
+                    Pulsa para elegir otro icono
                   </span>
                 </button>
               </div>
