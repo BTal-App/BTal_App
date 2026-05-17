@@ -101,9 +101,9 @@ export function AiAffectedItemsStep({
               Permitir que la IA modifique mis cambios
             </span>
             <span className="ai-items-allow-sub">
-              Por defecto la IA <strong>nunca toca lo que has creado o
+              Por defecto la IA <strong>nunca modifica lo que has creado o
               editado tú</strong>. Activa esta opción si quieres que también
-              pueda regenerar tus cambios manuales (los marcados como "Tuyo").
+              pueda modificar tus cambios manuales (los marcados como "Tuyo").
             </span>
           </div>
           <IonToggle
