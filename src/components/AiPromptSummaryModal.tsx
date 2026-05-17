@@ -184,8 +184,8 @@ export function AiPromptSummaryModal({
                 <h2 className="settings-modal-title">Confirma los datos que usará la IA para la generación</h2>
                 <p className="settings-modal-text" style={{ margin: '6px 0 0' }}>
                   Revisa los datos introducidos. Si necesitas modificar
-                  alguno, pulsa «Modificar»; si son correctos, pulsa
-                  «{confirmLabel}».
+                  alguno, pulsa «Editar perfil»{onBack ? ' o «Atrás»' : ''};
+                  si son correctos, pulsa «{confirmLabel}».
                 </p>
               </div>
             </div>
@@ -372,7 +372,7 @@ export function AiPromptSummaryModal({
                   disabled={submitting}
                 >
                   <MealIcon value="tb:edit" size={18} slot="start" />
-                  Modificar
+                  Editar perfil
                 </IonButton>
               )}
               <IonButton
