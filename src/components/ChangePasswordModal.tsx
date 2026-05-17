@@ -29,12 +29,19 @@ function translateError(code: string): string {
   return map[code] ?? 'No hemos podido cambiar la contraseña. Inténtalo de nuevo.';
 }
 
+// Reglas de la contraseña nueva · fuente única: alimenta tanto la
+// validación de envío como el checklist en vivo (rojo→verde según se
+// van cumpliendo al escribir).
+const PWD_RULES: { test: (p: string) => boolean; label: string }[] = [
+  { test: (p) => p.length >= 8, label: 'La contraseña debe tener al menos 8 caracteres.' },
+  { test: (p) => /[A-Z]/.test(p), label: 'Debe incluir al menos una letra mayúscula.' },
+  { test: (p) => /[0-9]/.test(p), label: 'Debe incluir al menos un número.' },
+  { test: (p) => /[^A-Za-z0-9]/.test(p), label: 'Debe incluir al menos un carácter especial.' },
+];
+
 function validatePasswordStrength(pwd: string): string | null {
-  if (pwd.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
-  if (!/[A-Z]/.test(pwd)) return 'Debe incluir al menos una letra mayúscula.';
-  if (!/[0-9]/.test(pwd)) return 'Debe incluir al menos un número.';
-  if (!/[^A-Za-z0-9]/.test(pwd)) return 'Debe incluir al menos un carácter especial.';
-  return null;
+  const failing = PWD_RULES.find((r) => !r.test(pwd));
+  return failing ? failing.label : null;
 }
 
 // Flujo en 2 pasos al estilo Instagram (sin el envío de código por email,
@@ -227,10 +234,21 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                 </div>
 
                 <ul className="settings-modal-reqs">
-                  <li>La contraseña debe tener al menos 8 caracteres.</li>
-                  <li>Debe incluir al menos una letra mayúscula.</li>
-                  <li>Debe incluir al menos un número.</li>
-                  <li>Debe incluir al menos un carácter especial.</li>
+                  {PWD_RULES.map((r) => {
+                    const ok = r.test(newPwd);
+                    return (
+                      <li
+                        key={r.label}
+                        className={ok ? 'is-ok' : 'is-pending'}
+                      >
+                        <MealIcon
+                          value={ok ? 'tb:circle-check' : 'tb:circle-x'}
+                          size={15}
+                        />
+                        {r.label}
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 {error && <div className="landing-msg error">{error}</div>}
