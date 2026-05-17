@@ -194,8 +194,8 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                   <span className="settings-row-label">Cuenta de Google</span>
                   <span className="settings-row-value settings-row-sub">
                     {hasGoogle
-                      ? 'Vinculada · puedes iniciar sesión con Google'
-                      : 'Vincúlala para iniciar sesión también con Google'}
+                      ? 'Cuenta vinculada · Puedes iniciar sesión con Google'
+                      : 'Vincula tu cuenta para iniciar sesión con Google'}
                   </span>
                   {!hasGoogle && isStandalone() && (
                     <span className="settings-row-warn">
@@ -235,7 +235,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
 
               <div className="settings-row">
                 <div className="settings-row-info">
-                  <span className="settings-row-label">Verificación en dos pasos (TOTP)</span>
+                  <span className="settings-row-label">Verificación en dos pasos (2FA)</span>
                   <span className="settings-row-value settings-row-sub">
                     {enrolledTotp
                       ? 'Activada · te pediremos el código al iniciar sesión'
