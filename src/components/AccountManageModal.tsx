@@ -183,7 +183,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                 <div className="settings-row-info">
                   <span className="settings-row-label">Cambiar email</span>
                   <span className="settings-row-value settings-row-sub">
-                    Se enviará verificación a la nueva dirección antes del cambio.
+                    Se enviará un email de verificación a la nueva dirección antes del cambio.
                   </span>
                 </div>
                 <MealIcon value="tb:mail" size={20} className="settings-row-chevron" />
