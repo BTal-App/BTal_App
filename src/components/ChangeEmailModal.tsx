@@ -20,7 +20,7 @@ function translateError(code: string): string {
     'auth/email-already-in-use': 'Este email ya está en uso.',
     'auth/operation-not-allowed': 'Operación no permitida. Revisa la configuración de Auth.',
   };
-  return map[code] ?? 'No hemos podido enviar el email. Inténtalo de nuevo.';
+  return map[code] ?? 'No se ha podido enviar el email de verificación. Inténtalo de nuevo.';
 }
 
 export function ChangeEmailModal({ isOpen, user, onClose }: Props) {
