@@ -21,7 +21,7 @@ function translateError(code: string): string {
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
     'auth/user-not-found': 'La cuenta ya no existe.',
   };
-  return map[code] ?? 'No hemos podido eliminar la cuenta. Inténtalo de nuevo.';
+  return map[code] ?? 'No se ha podido eliminar la cuenta. Inténtalo de nuevo.';
 }
 
 // Texto-trampa que el usuario debe escribir para habilitar el botón.
