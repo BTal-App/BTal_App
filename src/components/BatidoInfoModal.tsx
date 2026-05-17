@@ -533,8 +533,8 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
         }
         message={
           dayHasIt
-            ? 'Se eliminará del listado de comidas de ese día. Podrás volver a añadirlo cuando quieras.'
-            : 'Se añadirá como comida extra del día con la receta que tengas configurada arriba.'
+            ? 'Se eliminará del listado de comidas de este día. Podrás volver a añadirlo cuando quieras.'
+            : 'Se añadirá como comida extra del día con la receta que tengas configurada en el menú "BATIDO".'
         }
         buttons={[
           { text: 'Cancelar', role: 'cancel' },

@@ -359,8 +359,8 @@ export function CreatinaInfoModal({ isOpen, onClose, day }: Props) {
         }
         message={
           dayHasIt
-            ? 'Se eliminará del listado de comidas de ese día. Podrás volver a añadirla cuando quieras.'
-            : 'Se añadirá como dosis suelta del día con los gramos que tengas configurados arriba.'
+            ? 'Se eliminará del listado de comidas de este día. Podrás volver a añadirla cuando quieras.'
+            : 'Se añadirá como dosis suelta del día con los gramos que tengas configurados en el menú "CREATINA".'
         }
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
