@@ -402,7 +402,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
         message={
           hasPassword
             ? 'Tu cuenta seguirá funcionando con email y contraseña. Podrás volver a vincularla con Google cuando quieras.'
-            : 'Si desvinculas tu cuenta con Google y no tienes contraseña configurada, te quedarás sin método de inicio de sesión. Configura tu contraseña: (Restablecer contraseña).'
+            : 'Antes de desvincular tu cuenta de Google, configura una contraseña en «Restablecer contraseña» para no perder el acceso a tu cuenta.'
         }
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
