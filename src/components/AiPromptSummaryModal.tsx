@@ -176,7 +176,7 @@ export function AiPromptSummaryModal({
                 <MealIcon value="tb:sparkles" size={28} />
               </div>
               <div>
-                <h2 className="settings-modal-title">Confirma los datos que usará la IA para generar tu contenido personalizado</h2>
+                <h2 className="settings-modal-title">Confirma los datos que usará la IA</h2>
                 <p className="settings-modal-text" style={{ margin: '6px 0 0' }}>
                   Revisa los datos. Si hay que cambiar algo pulsa Modificar;
                   si está bien, generamos.
