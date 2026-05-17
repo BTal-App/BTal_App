@@ -226,8 +226,8 @@ export function CompraCategoriaEditorModal({
               </h2>
               {isBuiltIn && (
                 <p className="settings-modal-text">
-                  Esta categoría es de las predeterminadas · puedes
-                  renombrarla y cambiar emoji/color, pero no eliminarla.
+                  Esta categoría es predeterminada · Puedes renombrarla y
+                  cambiar el emoji/color, pero no eliminarla.
                 </p>
               )}
 
