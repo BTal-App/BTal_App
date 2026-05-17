@@ -266,7 +266,7 @@ export function CompraCategoriaEditorModal({
               </div>
 
               <div className="sup-form-group">
-                <label className="sup-label">Color de acento</label>
+                <label className="sup-label">Color de la categoría</label>
                 <div className="cat-editor-colors">
                   {COLORES.map((c) => (
                     <button
