@@ -237,24 +237,24 @@ export function SupCountersInline({ kind }: Props) {
       kind: 'semanal',
       header: '¿Reiniciar contador semanal?',
       message:
-        'Vamos a poner a 0 el contador de "Total esta semana". '
-        + 'Tendrás 5 segundos para deshacer la acción.',
+        'Se pondrá a 0 el contador de "Total esta semana". '
+        + 'Podrás deshacer la acción durante 5 segundos.',
     });
   const askResetMensual = () =>
     setConfirmReset({
       kind: 'mensual',
       header: '¿Reiniciar contador mensual?',
       message:
-        'Vamos a poner a 0 el contador de "Total este mes". '
-        + 'Tendrás 5 segundos para deshacer la acción.',
+        'Se pondrá a 0 el contador de "Total este mes". '
+        + 'Podrás deshacer la acción durante 5 segundos.',
     });
   const askResetAnual = () =>
     setConfirmReset({
       kind: 'anual',
       header: '¿Reiniciar contador anual?',
       message:
-        'Vamos a poner a 0 el contador de "Total este año". '
-        + 'Tendrás 5 segundos para deshacer la acción.',
+        'Se pondrá a 0 el contador de "Total este año". '
+        + 'Podrás deshacer la acción durante 5 segundos.',
     });
   const askResetTotal = () =>
     setConfirmReset({

@@ -609,7 +609,7 @@ const EntrenoPage: React.FC = () => {
           header="¿Eliminar plan?"
           message={
             `Se eliminará "${activePlan?.nombre ?? ''}" y todos sus días. `
-            + `Tendrás 5 segundos para deshacer.`
+            + `Podrás deshacer la acción durante 5 segundos.`
           }
           buttons={[
             { text: 'Cancelar', role: 'cancel' },

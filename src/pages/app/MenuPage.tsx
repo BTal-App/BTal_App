@@ -943,7 +943,7 @@ const MenuPage: React.FC = () => {
           header="¿Eliminar la comida?"
           message={
             pendingDelete
-              ? `Vamos a vaciar ${MEAL_LABEL[pendingDelete].toLowerCase()} del ${DAY_LABEL_FULL[selectedDay].toLowerCase()}. Tendrás 5 segundos para deshacer.`
+              ? `Se vaciará ${MEAL_LABEL[pendingDelete].toLowerCase()} del ${DAY_LABEL_FULL[selectedDay].toLowerCase()}. Podrás deshacer la acción durante 5 segundos.`
               : ''
           }
           buttons={[
@@ -1086,7 +1086,7 @@ const MenuPage: React.FC = () => {
           header="¿Eliminar la comida?"
           message={
             pendingExtraDelete
-              ? `Vamos a eliminar "${pendingExtraDelete.extra.nombre}" del ${DAY_LABEL_FULL[pendingExtraDelete.day].toLowerCase()}. Tendrás 5 segundos para deshacer.`
+              ? `Se eliminará "${pendingExtraDelete.extra.nombre}" del ${DAY_LABEL_FULL[pendingExtraDelete.day].toLowerCase()}. Podrás deshacer la acción durante 5 segundos.`
               : ''
           }
           buttons={[
