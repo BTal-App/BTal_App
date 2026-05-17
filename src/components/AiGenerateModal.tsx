@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { useHistory } from 'react-router-dom';
 import {
   IonButton,
   IonContent,
@@ -18,6 +17,7 @@ import {
 } from '../utils/aiAffectedItems';
 import { AiAffectedItemsStep } from './AiAffectedItemsStep';
 import { AiPromptSummaryModal } from './AiPromptSummaryModal';
+import { EditFitnessProfileModal } from './EditFitnessProfileModal';
 import { GeneratingScreen } from './GeneratingScreen';
 import {
   AI_SCOPE_OPTIONS,
@@ -80,7 +80,6 @@ export function AiGenerateModal({
   const { user } = useAuth();
   const { profile: userDoc } = useProfile();
   const isAnonymous = user?.isAnonymous ?? false;
-  const history = useHistory();
 
   // Calcula el scope inicial defensivamente:
   //   - si defaultScope viene y está disponible → úsalo
@@ -96,6 +95,11 @@ export function AiGenerateModal({
   const [step, setStep] = useState<WizardStep>('scope');
   const [selected, setSelected] = useState<AiScopeChoice>(pickInitialScope);
   const [showSummary, setShowSummary] = useState(false);
+  // "Editar perfil" desde el resumen abre el MISMO modal que el avatar
+  // (EditFitnessProfileModal · "Editar datos del perfil"), en cascada
+  // sobre el wizard. Al cerrarlo se vuelve al resumen con los datos ya
+  // actualizados, sin salir del flujo.
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [pendingToast, setPendingToast] = useState(false);
   // GeneratingScreen overlay · activo mientras la IA está "trabajando".
   // Por ahora simulamos 2s con setTimeout (Fase 6 reemplazará con el
@@ -141,6 +145,7 @@ export function AiGenerateModal({
     setStep('scope');
     setSelected(pickInitialScope());
     setShowSummary(false);
+    setEditProfileOpen(false);
     setAllowUserItems(false);
     // excludedIds lo recalculará el useEffect de selected.
   };
@@ -203,13 +208,17 @@ export function AiGenerateModal({
     }
   };
 
-  // "Modificar" desde el summary · cierra todo el wizard y lleva al user
-  // a Settings → Editar datos del perfil para que pueda cambiar lo que
-  // necesite antes de relanzar el flujo.
+  // "Editar perfil" desde el summary · abre EditFitnessProfileModal (la
+  // misma pantalla "Editar datos del perfil" del avatar) SIN salir del
+  // wizard. Al cerrarla volvemos al resumen con los datos ya guardados,
+  // para que el user pueda revisar y Generar directamente.
   const handleModify = () => {
     setShowSummary(false);
-    onClose();
-    history.push('/settings');
+    setEditProfileOpen(true);
+  };
+  const handleEditProfileClose = () => {
+    setEditProfileOpen(false);
+    setShowSummary(true);
   };
 
   return (
@@ -380,6 +389,14 @@ export function AiGenerateModal({
           confirmLabel="Generar con IA"
         />
       )}
+
+      {/* "Editar perfil" del resumen · mismo modal que abre el avatar
+          (ProfileSheet → "Editar datos del perfil"). En cascada sobre el
+          wizard · al cerrar vuelve al resumen con los datos guardados. */}
+      <EditFitnessProfileModal
+        isOpen={editProfileOpen}
+        onClose={handleEditProfileClose}
+      />
 
       {/* GeneratingScreen full-screen · se muestra mientras "trabaja" la IA.
           En Fase 6 lo controlará el await de la Cloud Function. Por ahora
