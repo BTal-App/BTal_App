@@ -373,6 +373,10 @@ export function AiGenerateModal({
           scope={selected}
           onConfirm={handleConfirmGenerate}
           onModify={handleModify}
+          // "Atrás" · cierra solo el resumen y deja al user en el paso 2
+          // (items) del wizard, que sigue montado debajo · puede ajustar
+          // exclusiones/scope y volver a Continuar sin salir del flujo.
+          onBack={() => setShowSummary(false)}
           confirmLabel="Generar con IA"
         />
       )}

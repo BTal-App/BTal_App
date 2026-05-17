@@ -50,6 +50,10 @@ interface Props {
   // Callback cuando el user pulsa "Modificar". Si NO se pasa, no se
   // muestra el botón (caso edge poco probable).
   onModify?: () => void;
+  // Callback "Atrás" · vuelve al paso ANTERIOR del wizard (items/scope)
+  // sin salir del flujo. Si no se pasa, no se muestra el botón (p. ej.
+  // en Onboarding, donde no hay un paso previo al que volver así).
+  onBack?: () => void;
   // Texto del botón confirmar — varía por contexto:
   //   - Onboarding: "Confirmar y generar mi plan"
   //   - Botones IA en tabs: "Generar con IA"
@@ -78,6 +82,7 @@ export function AiPromptSummaryModal({
   profileOverride,
   onConfirm,
   onModify,
+  onBack,
   confirmLabel = 'Confirmar y generar',
   submitting = false,
 }: Props) {
@@ -346,6 +351,18 @@ export function AiPromptSummaryModal({
 
             {/* Botones */}
             <div className="ai-summary-actions">
+              {onBack && (
+                <IonButton
+                  type="button"
+                  fill="outline"
+                  className="ai-summary-modify ai-summary-back"
+                  onClick={blurAndRun(onBack)}
+                  disabled={submitting}
+                >
+                  <MealIcon value="tb:arrow-left" size={18} slot="start" />
+                  Atrás
+                </IonButton>
+              )}
               {onModify && (
                 <IonButton
                   type="button"
