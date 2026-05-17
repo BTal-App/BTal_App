@@ -38,7 +38,7 @@ const SECTION_ICON: Record<AffectedSection, string> = {
 
 const SOURCE_LABEL: Record<AffectedItem['source'], string> = {
   default: 'Por defecto',
-  ai: 'Generado previamente por IA',
+  ai: 'Generado por IA',
   user: 'Generado por ti',
 };
 
@@ -88,21 +88,21 @@ export function AiAffectedItemsStep({
     <div className="ai-items-step">
       <p className="settings-modal-text">
         Estos son los <strong>{stats.total}</strong> elementos que la IA puede
-        tocar al generar. Marca los que quieras conservar tal cual están — la
-        IA <strong>no los modificará</strong>.
+        modificar al generar contenido. Marca los que quieras conservar tal y
+        como están.
       </p>
 
-      {/* Toggle "permitir tocar lo mío" · solo aparece si hay items 'user' */}
+      {/* Toggle "Permitir que la IA modifique mi contenido" · solo aparece si hay items 'user' */}
       {userCount > 0 && (
         <div className="ai-items-allow-row">
           <div className="ai-items-allow-info">
             <span className="ai-items-allow-title">
               <MealIcon value="tb:lock" size={16} />
-              Permitir que la IA modifique mis cambios
+              Permitir que la IA modifique mi contenido
             </span>
             <span className="ai-items-allow-sub">
               Por defecto la IA <strong>nunca modifica lo que has creado o
-              editado tú</strong>. Activa esta opción si quieres que también
+              editado</strong>. Activa esta opción si quieres que también
               pueda modificar tus cambios manuales (los marcados como
               «Generado por ti»).
             </span>
@@ -110,7 +110,7 @@ export function AiAffectedItemsStep({
           <IonToggle
             checked={allowUserItems}
             onIonChange={(e) => onToggleAllowUserItems(e.detail.checked)}
-            aria-label="Permitir que la IA modifique mis cambios"
+            aria-label="Permitir que la IA modifique mi contenido"
           />
         </div>
       )}
