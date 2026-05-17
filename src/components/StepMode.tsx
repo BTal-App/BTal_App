@@ -68,7 +68,7 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
             <span className="step-mode-tag step-mode-tag--rec">Recomendado</span>
           </div>
           <div className="step-mode-sub">
-            Generamos tu plan a partir de tus datos. Puedes editar cualquier
+            Se generará el plan a partir de tus datos. Puedes editar cualquier
             cosa después y elegir qué secciones genera.
           </div>
           <div className="step-mode-meta">1 generación gratis al mes · ilimitado en Pro</div>

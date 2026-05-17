@@ -628,7 +628,7 @@ const EntrenoPage: React.FC = () => {
             isOpen={aiGenOpen}
             onClose={() => setAiGenOpen(false)}
             title="Generar el plan de entreno con IA"
-            description="Crearemos un plan adaptado a tus días disponibles, equipamiento y objetivo."
+            description="Se creará un plan adaptado a tus días disponibles, equipamiento y objetivo."
             availableScopes={['entrenos_only']}
           />
         )}

@@ -280,7 +280,7 @@ const AuthAction: React.FC = () => {
         <h2 className="auth-action-title">Cuenta recuperada</h2>
         <div className="landing-msg info">{successMsg}</div>
         <p className="auth-action-text">
-          Te recomendamos cambiar la contraseña ahora desde "¿Has olvidado tu contraseña?".
+          Se recomienda cambiar la contraseña ahora desde "¿Has olvidado tu contraseña?".
         </p>
         <IonButton expand="block" className="auth-action-primary" onClick={goHome}>
           Ir a la landing

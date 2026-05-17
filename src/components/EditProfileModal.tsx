@@ -81,7 +81,7 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
       }
       if (final.length > 2000) {
         setError(
-          'La imagen es demasiado grande. Prueba con otra más simple — todavía no tenemos almacenamiento para fotos en alta resolución.',
+          'La imagen es demasiado grande. Prueba con otra más simple — todavía no hay almacenamiento para fotos en alta resolución.',
         );
         return;
       }

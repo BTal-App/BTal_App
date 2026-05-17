@@ -28,7 +28,7 @@ interface Props {
 export function GeneratingScreen({
   isOpen,
   title = 'Generando con IA',
-  subtitle = 'Estamos creando tu plan personalizado. No cierres la app — esto puede tardar unos segundos.',
+  subtitle = 'Se está generando tu plan personalizado. No cierres la app — esto puede tardar unos segundos.',
 }: Props) {
   return (
     <IonModal

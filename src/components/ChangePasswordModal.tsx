@@ -242,7 +242,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                 Contraseña actualizada correctamente.
               </p>
               <p className="settings-modal-text" style={{ color: 'var(--btal-t-3)', fontSize: '0.82rem' }}>
-                Por seguridad, recomendamos cerrar sesión en otros dispositivos desde el siguiente
+                Por seguridad, se recomienda cerrar sesión en otros dispositivos desde el siguiente
                 paso o iniciar sesión de nuevo en ellos.
               </p>
               <IonButton expand="block" className="settings-modal-primary" onClick={onClose}>
