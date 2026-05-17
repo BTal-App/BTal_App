@@ -305,7 +305,7 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                 <div className="settings-row-info">
                   <span className="settings-row-label">
                     Cerrar sesión en otros dispositivos
-                    <span className="account-manage-soon">próximamente</span>
+                    <span className="account-manage-soon">Próximamente</span>
                   </span>
                   <span className="settings-row-value settings-row-sub">
                     Mantiene esta sesión y cierra el resto.
