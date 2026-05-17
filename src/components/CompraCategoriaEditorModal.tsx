@@ -382,7 +382,7 @@ export function CompraCategoriaEditorModal({
         isOpen={confirmDeleteOpen}
         onDidDismiss={() => setConfirmDeleteOpen(false)}
         header="¿Eliminar categoría?"
-        message={`Se eliminará "${categoria?.nombre ?? ''}" y los productos que tenga dentro. Tendrás 5 segundos para deshacer.`}
+        message={`Se eliminará la categoría "${categoria?.nombre ?? ''}" y los productos que contenga. Podrás deshacer la acción durante 5 segundos.`}
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
           {
