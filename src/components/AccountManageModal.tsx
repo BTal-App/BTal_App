@@ -401,8 +401,8 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
         header="¿Desvincular Google?"
         message={
           hasPassword
-            ? 'Tu cuenta seguirá funcionando con email y contraseña. Podrás volver a vincular Google cuando quieras.'
-            : 'Si desvinculas Google y no tienes contraseña configurada, te quedarás sin método de inicio de sesión. Configura una contraseña primero (Restablecer contraseña).'
+            ? 'Tu cuenta seguirá funcionando con email y contraseña. Podrás volver a vincularla con Google cuando quieras.'
+            : 'Si desvinculas tu cuenta con Google y no tienes contraseña configurada, te quedarás sin método de inicio de sesión. Configura tu contraseña: (Restablecer contraseña).'
         }
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
