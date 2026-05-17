@@ -17,6 +17,8 @@ import {
   linkAnonymousGoogle,
 } from '../services/auth';
 import { blurAndRun } from '../utils/focus';
+import { validatePasswordStrength } from '../utils/passwordRules';
+import { PasswordChecklist } from './PasswordChecklist';
 import './SettingsModal.css';
 import './LinkGuestAccountModal.css';
 
@@ -41,14 +43,7 @@ function translateLinkError(code: string): string {
   return map[code] ?? 'No hemos podido crear tu cuenta. Inténtalo de nuevo.';
 }
 
-// Misma política de password que en Landing/signup.
-function validatePasswordStrength(pwd: string): string | null {
-  if (pwd.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
-  if (!/[A-Z]/.test(pwd)) return 'Debe incluir al menos una letra mayúscula.';
-  if (!/[0-9]/.test(pwd)) return 'Debe incluir al menos un número.';
-  if (!/[^A-Za-z0-9]/.test(pwd)) return 'Debe incluir al menos un carácter especial.';
-  return null;
-}
+// Misma política de password que en signup · ver src/utils/passwordRules.ts
 
 // Modal "Crea tu cuenta para guardar tus cambios" desde el banner del invitado.
 // Bajo el capó usa Firebase Auth `linkWithCredential` / `linkWithPopup` para
@@ -207,9 +202,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
                 />
               </div>
 
-              <p className="link-guest-hint">
-                Mínimo 8 caracteres · 1 mayúscula · 1 número · 1 carácter especial
-              </p>
+              <PasswordChecklist value={password} />
 
               {error && <div className="landing-msg error">{error}</div>}
 

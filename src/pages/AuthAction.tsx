@@ -10,6 +10,8 @@ import {
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useAuth } from '../hooks/useAuth';
+import { validatePasswordStrength } from '../utils/passwordRules';
+import { PasswordChecklist } from '../components/PasswordChecklist';
 import './AuthAction.css';
 
 const errorCode = (err: unknown): string =>
@@ -26,13 +28,7 @@ function translateError(code: string): string {
   return map[code] ?? 'Algo ha salido mal. Vuelve a empezar.';
 }
 
-function validatePasswordStrength(pwd: string): string | null {
-  if (pwd.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
-  if (!/[A-Z]/.test(pwd)) return 'Debe incluir al menos una letra mayúscula.';
-  if (!/[0-9]/.test(pwd)) return 'Debe incluir al menos un número.';
-  if (!/[^A-Za-z0-9]/.test(pwd)) return 'Debe incluir al menos un carácter especial.';
-  return null;
-}
+// Reglas de contraseña · ver src/utils/passwordRules.ts
 
 const AuthAction: React.FC = () => {
   const history = useHistory();
@@ -229,9 +225,7 @@ const AuthAction: React.FC = () => {
             />
           </div>
 
-          <p className="landing-hint">
-            Mínimo 8 caracteres · 1 mayúscula · 1 número · 1 carácter especial
-          </p>
+          <PasswordChecklist value={password} />
 
           {error && <div className="landing-msg error">{error}</div>}
 

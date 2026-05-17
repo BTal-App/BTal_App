@@ -104,38 +104,8 @@ ion-modal.settings-modal {
   font-weight: 600;
 }
 
-/* Checklist de requisitos (reglas de contraseña nueva) · cada regla
-   en ROJO por defecto (sin cumplir) y pasa a VERDE al cumplirse
-   mientras el usuario escribe. */
-.settings-modal-reqs {
-  margin: 0;
-  padding-left: 0;
-  list-style: none;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.settings-modal-reqs li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: color 0.15s ease;
-}
-
-.settings-modal-reqs li svg {
-  flex-shrink: 0;
-}
-
-.settings-modal-reqs li.is-pending {
-  color: var(--btal-coral);
-}
-
-.settings-modal-reqs li.is-ok {
-  color: var(--btal-lime);
-}
+/* (El checklist de requisitos de contraseña vive ahora en el
+   componente reutilizable PasswordChecklist · PasswordChecklist.css) */
 
 .settings-modal-primary {
   --background: var(--btal-lime);

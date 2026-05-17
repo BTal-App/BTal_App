@@ -3,6 +3,8 @@ import { IonButton, IonModal, IonSpinner } from '@ionic/react';
 import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
 import { changePassword, reauthEmail } from '../services/auth';
+import { validatePasswordStrength } from '../utils/passwordRules';
+import { PasswordChecklist } from './PasswordChecklist';
 import './SettingsModal.css';
 
 interface Props {
@@ -27,21 +29,6 @@ function translateError(code: string): string {
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
   };
   return map[code] ?? 'No se ha podido cambiar la contraseña. Inténtalo de nuevo.';
-}
-
-// Reglas de la contraseña nueva · fuente única: alimenta tanto la
-// validación de envío como el checklist en vivo (rojo→verde según se
-// van cumpliendo al escribir).
-const PWD_RULES: { test: (p: string) => boolean; label: string }[] = [
-  { test: (p) => p.length >= 8, label: 'La contraseña debe tener al menos 8 caracteres.' },
-  { test: (p) => /[A-Z]/.test(p), label: 'Debe incluir al menos una letra mayúscula.' },
-  { test: (p) => /[0-9]/.test(p), label: 'Debe incluir al menos un número.' },
-  { test: (p) => /[^A-Za-z0-9]/.test(p), label: 'Debe incluir al menos un carácter especial.' },
-];
-
-function validatePasswordStrength(pwd: string): string | null {
-  const failing = PWD_RULES.find((r) => !r.test(pwd));
-  return failing ? failing.label : null;
 }
 
 // Flujo en 2 pasos al estilo Instagram (sin el envío de código por email,
@@ -233,23 +220,7 @@ export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) 
                   />
                 </div>
 
-                <ul className="settings-modal-reqs">
-                  {PWD_RULES.map((r) => {
-                    const ok = r.test(newPwd);
-                    return (
-                      <li
-                        key={r.label}
-                        className={ok ? 'is-ok' : 'is-pending'}
-                      >
-                        <MealIcon
-                          value={ok ? 'tb:circle-check' : 'tb:circle-x'}
-                          size={15}
-                        />
-                        {r.label}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <PasswordChecklist value={newPwd} />
 
                 {error && <div className="landing-msg error">{error}</div>}
 

@@ -22,6 +22,8 @@ import {
 import { seedGuestDocument } from '../services/db';
 import { ForgotPasswordModal } from '../components/ForgotPasswordModal';
 import { TotpSignInModal } from '../components/TotpSignInModal';
+import { PasswordChecklist } from '../components/PasswordChecklist';
+import { validatePasswordStrength } from '../utils/passwordRules';
 import './Landing.css';
 
 declare const __APP_VERSION__: string;
@@ -47,14 +49,8 @@ function translateAuthError(code: string): string {
 const errorCode = (err: unknown): string =>
   (err as { code?: string })?.code ?? '';
 
-// Reglas de contraseña para signup (signin acepta cualquier password existente).
-function validatePasswordStrength(pwd: string): string | null {
-  if (pwd.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
-  if (!/[A-Z]/.test(pwd)) return 'Debe incluir al menos una letra mayúscula.';
-  if (!/[0-9]/.test(pwd)) return 'Debe incluir al menos un número.';
-  if (!/[^A-Za-z0-9]/.test(pwd)) return 'Debe incluir al menos un carácter especial.';
-  return null;
-}
+// Reglas de contraseña para signup · ver src/utils/passwordRules.ts
+// (signin acepta cualquier password existente, no se valida fuerza).
 
 const Landing: React.FC = () => {
   const history = useHistory();
@@ -267,9 +263,7 @@ const Landing: React.FC = () => {
                     maxLength={128}
                   />
                 </div>
-                <p className="landing-hint">
-                  Mínimo 8 caracteres · 1 mayúscula · 1 número · 1 carácter especial
-                </p>
+                <PasswordChecklist value={password} />
               </>
             )}
 
