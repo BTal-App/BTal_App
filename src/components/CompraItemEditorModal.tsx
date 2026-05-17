@@ -407,7 +407,7 @@ export function CompraItemEditorModal({
         isOpen={confirmDeleteOpen}
         onDidDismiss={() => setConfirmDeleteOpen(false)}
         header="¿Quitar de la lista?"
-        message={`Eliminaremos "${item?.nombre ?? ''}" de ${categoria.nombre.toLowerCase()}. Tendrás 5 segundos para deshacer.`}
+        message={`Se eliminará "${item?.nombre ?? ''}" de la categoría ${categoria.nombre.toLowerCase()}. Podrás deshacer la acción durante 5 segundos.`}
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
           {
