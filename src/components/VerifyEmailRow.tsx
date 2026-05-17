@@ -20,7 +20,7 @@ function translateError(code: string): string {
       'Se ha superado el número máximo de intentos. Por favor, espere unos minutos antes de solicitar un nuevo correo electrónico.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
   };
-  return map[code] ?? 'No hemos podido enviar el email. Inténtalo de nuevo.';
+  return map[code] ?? 'No se ha podido enviar el email de verificación. Inténtalo de nuevo.';
 }
 
 type Stage = 'idle' | 'sending' | 'error';

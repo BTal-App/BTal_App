@@ -20,7 +20,7 @@ function translateError(code: string): string {
     'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
   };
-  return map[code] ?? 'No hemos podido enviar el email. Inténtalo de nuevo.';
+  return map[code] ?? 'No se ha podido enviar el email para restablecer la contraseña. Inténtalo de nuevo.';
 }
 
 export function ForgotPasswordModal({ isOpen, initialEmail = '', onClose }: Props) {
