@@ -40,10 +40,10 @@ const STAT_INFO: Record<StatKey, { title: string; message: string }> = {
       + 'Cuándo se rompe:\n'
       + '• Si registras un día como DESCANSO · rompe al instante (incluso hoy)\n'
       + '• Si pasa un día completo sin registrar nada · rompe al día siguiente\n\n'
-      + 'Excepción (margen de hoy): si HOY aún no has registrado nada pero ayer '
-      + 'sí entrenaste, la racha sigue mostrando el valor de ayer hasta que pase '
-      + 'el día · te da margen para entrenar más tarde.\n\n'
-      + 'Para empezar racha: registra un entrenamiento y verás «1 día». Cada '
+      + 'Excepción (margen de hoy): si hoy aún no has registrado actividad pero '
+      + 'ayer sí entrenaste, la racha mantiene el valor de ayer hasta que '
+      + 'termine el día. Te da margen para entrenar más tarde.\n\n'
+      + 'Para empezar la racha: registra un entrenamiento y verás «1 día». Cada '
       + 'entrenamiento consecutivo posterior suma +1.\n\n'
       + 'Mira tu historial completo y mejores rachas en «Gráficos» → pestaña «Rachas».',
   },
