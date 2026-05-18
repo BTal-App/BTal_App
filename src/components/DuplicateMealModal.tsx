@@ -267,7 +267,7 @@ export function DuplicateMealModal({
         message={
           overwriteCount === 1
             ? 'Uno de los días seleccionados ya tiene una comida en este slot. Si continúas, se reemplazará por la copia.'
-            : `${overwriteCount} de los días seleccionados ya tienen comida en este slot. Si continúas, las reemplazaremos por la copia.`
+            : `${overwriteCount} de los días seleccionados ya tienen comida en este slot. Si continúas, se reemplazarán por la copia.`
         }
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
