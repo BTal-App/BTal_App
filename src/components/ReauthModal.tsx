@@ -21,7 +21,7 @@ function translateError(code: string): string {
   const map: Record<string, string> = {
     'auth/wrong-password': 'Contraseña incorrecta.',
     'auth/invalid-credential': 'Credenciales no válidas.',
-    'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
+    'auth/too-many-requests': 'Se han producido demasiados intentos. Espera un momento para volver a probar.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
     'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': '',

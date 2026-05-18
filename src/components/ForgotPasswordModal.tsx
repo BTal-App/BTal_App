@@ -17,7 +17,7 @@ function translateError(code: string): string {
   const map: Record<string, string> = {
     'auth/invalid-email': 'Email no válido.',
     'auth/user-not-found': 'No existe una cuenta con este email.',
-    'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
+    'auth/too-many-requests': 'Se han producido demasiados intentos. Espera un momento para volver a probar.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
   };
   return map[code] ?? 'No se ha podido enviar el email para restablecer la contraseña. Inténtalo de nuevo.';

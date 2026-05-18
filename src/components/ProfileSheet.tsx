@@ -279,8 +279,8 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
         header="¿Cerrar sesión?"
         message={
           user.isAnonymous
-            ? 'Tu sesión de invitado caducará en su plazo habitual (3 días). Si la cierras ahora perderás el acceso desde este dispositivo aunque la cuenta siga viva.'
-            : 'Tendrás que volver a iniciar sesión para acceder a tus datos.'
+            ? 'Tu sesión de invitado caducará en 3 días. Si la cierras ahora, perderás el acceso desde este dispositivo, aunque la sesión siga activa.'
+            : 'Deberás volver a iniciar sesión para acceder a tus datos.'
         }
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
