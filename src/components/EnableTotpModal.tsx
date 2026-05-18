@@ -24,7 +24,7 @@ function translateError(code: string): string {
     'auth/totp-challenge-timeout': 'Se ha agotado el tiempo. Vuelve a empezar.',
     // ADMIN: 2FA no habilitado · activarlo en Firebase Console → Authentication → Sign-in method → Verificación en dos pasos.
     'auth/operation-not-allowed': 'La verificación en dos pasos no está disponible ahora mismo. Si vuelve a ocurrir, contacta con soporte.',
-    'auth/unverified-email': 'Necesitas verificar tu email antes de activar 2FA. Mira tu bandeja (y spam) y haz click en el enlace.',
+    'auth/unverified-email': 'Es necesario verificar tu email antes de activar 2FA. Revisa tu bandeja de entrada (y spam) y haz click en el enlace.',
     // ADMIN: operación bloqueada por configuración del proyecto · revisar Identity Platform.
     'auth/admin-restricted-operation': 'No se ha podido completar la operación. Si vuelve a ocurrir, contacta con soporte.',
     'auth/requires-recent-login': 'Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.',
