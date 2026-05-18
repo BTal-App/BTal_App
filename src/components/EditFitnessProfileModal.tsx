@@ -596,7 +596,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                       max={6000}
                       step={10}
                       maxLength={5}
-                      placeholder={sugerido ? `Sugerido: ${sugerido} kcal` : 'Necesitas rellenar tu perfil'}
+                      placeholder={sugerido ? `Sugerido: ${sugerido} kcal` : 'Introduce tu edad, peso y altura para obtener una sugerencia.'}
                       value={data.objetivoKcal ?? ''}
                       onChange={(e) =>
                         setField(
