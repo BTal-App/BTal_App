@@ -87,9 +87,9 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
         <div className="step-mode-info">
           <div className="step-mode-title">Rellenar manualmente</div>
           <div className="step-mode-sub">
-            Empiezas con la estructura vacía (7 días, 4 comidas, planes de
-            entreno, lista por categorías) y la rellenas a tu ritmo. Podrás
-            activar la IA en cualquier momento desde Ajustes.
+            Empiezas con una estructura vacía (7 días, 4 comidas, 7 planes de
+            entrenamiento y la lista de compra por categorías) y la rellenas a
+            tu ritmo. Puedes activar la IA en cualquier momento desde Ajustes.
           </div>
           <div className="step-mode-meta">Sin coste · sin límites de uso</div>
         </div>
@@ -99,7 +99,7 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
       {value.modo === 'ai' && (
         <div className="step-mode-scope">
           <span className="step-mode-scope-label">
-            ¿Qué quieres que la IA genere?
+            ¿Qué quieres generar con la IA?
           </span>
           <div className="step-mode-scope-grid">
             {AI_SCOPE_OPTIONS.map((opt) => {
