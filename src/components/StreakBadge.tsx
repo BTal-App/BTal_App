@@ -10,10 +10,10 @@ import './StreakBadge.css';
 // RegistroStatsGrid.tsx (STAT_INFO.racha.message).
 const RACHA_INFO =
   'Días consecutivos entrenando. Solo cuentan los días con entrenamiento '
-  + 'registrado · los descansos NO suman y rompen la racha.\n\n'
+  + 'registrado.\n\n'
   + 'Cuándo se rompe:\n'
-  + '• Si registras un día como DESCANSO · rompe al instante (incluso hoy)\n'
-  + '• Si pasa un día completo sin registrar nada · rompe al día siguiente\n\n'
+  + '• Si registras un día como DESCANSO\n'
+  + '• Si no registras actividad durante un día completo\n\n'
   + 'Excepción (margen de hoy): si hoy aún no has registrado actividad pero '
   + 'ayer sí entrenaste, la racha mantiene el valor de ayer hasta que '
   + 'termine el día. Te da margen para entrenar más tarde.\n\n'
