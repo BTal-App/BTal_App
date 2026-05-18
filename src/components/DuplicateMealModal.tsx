@@ -266,7 +266,7 @@ export function DuplicateMealModal({
         header="¿Sobrescribir comidas existentes?"
         message={
           overwriteCount === 1
-            ? 'Uno de los días seleccionados ya tiene una comida en este slot. Si continúas, la reemplazaremos por la copia.'
+            ? 'Uno de los días seleccionados ya tiene una comida en este slot. Si continúas, se reemplazará por la copia.'
             : `${overwriteCount} de los días seleccionados ya tienen comida en este slot. Si continúas, las reemplazaremos por la copia.`
         }
         buttons={[

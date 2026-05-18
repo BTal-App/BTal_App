@@ -247,7 +247,7 @@ const Settings: React.FC = () => {
               <div className="settings-row-info">
                 <span className="settings-row-label">Contactar soporte</span>
                 <span className="settings-row-value settings-row-sub">
-                  Te abrimos tu email con asunto y datos pre-rellenados.
+                  Se abrirá tu email con asunto y datos pre-rellenados.
                 </span>
               </div>
               <MealIcon value="tb:help-circle" size={20} className="settings-row-chevron" />

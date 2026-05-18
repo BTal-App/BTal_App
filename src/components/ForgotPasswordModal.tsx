@@ -93,7 +93,7 @@ export function ForgotPasswordModal({ isOpen, initialEmail = '', onClose }: Prop
           ) : (
             <>
               <p className="forgot-text">
-                Escribe tu email y te enviaremos un enlace para crear una contraseña
+                Escribe tu email y se enviará un enlace para crear una contraseña
                 nueva.
               </p>
 

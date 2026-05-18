@@ -99,7 +99,7 @@ export function DeleteAccountModal({ isOpen, user, onClose }: Props) {
               Esta acción es <strong>permanente y no se puede deshacer</strong>.
               {!user.isAnonymous && user.email && (
                 <>
-                  {' '}Borraremos la cuenta asociada a <strong>{user.email}</strong> y todos sus datos.
+                  {' '}Se borrará la cuenta asociada a <strong>{user.email}</strong> y todos sus datos.
                 </>
               )}
             </p>

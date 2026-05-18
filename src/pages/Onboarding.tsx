@@ -250,7 +250,7 @@ const Onboarding: React.FC = () => {
               <>
                 <h1 className="onboarding-title">Cuéntanos sobre ti</h1>
                 <p className="onboarding-text">
-                  Necesitamos algunos datos para ajustar tu plan a tu cuerpo y objetivo.
+                  Se necesitan algunos datos para ajustar tu plan a tu cuerpo y objetivo.
                 </p>
 
                 <label className="onboarding-field">

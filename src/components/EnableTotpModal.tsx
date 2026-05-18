@@ -196,8 +196,8 @@ export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {
               <>
                 <h2 className="settings-modal-title">¡Activado!</h2>
                 <p className="settings-modal-text">
-                  La verificación en dos pasos ya está activa. La próxima vez que inicies sesión, te
-                  pediremos el código de tu app.
+                  La verificación en dos pasos ya está activa. La próxima vez que inicies sesión, se
+                  te pedirá el código de tu app.
                 </p>
                 <IonButton expand="block" className="settings-modal-primary" onClick={onClose}>
                   Hecho

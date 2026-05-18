@@ -113,7 +113,7 @@ export function ChangeEmailModal({ isOpen, user, onClose }: Props) {
                   Email actual: <strong>{user.email}</strong>
                 </p>
                 <p className="settings-modal-text">
-                  Te enviaremos un enlace de verificación a la nueva dirección.
+                  Se enviará un enlace de verificación a la nueva dirección.
                 </p>
 
                 <form onSubmit={handleSubmit}>

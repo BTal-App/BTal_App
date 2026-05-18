@@ -157,7 +157,7 @@ export function VerifyEmailBanner({ user, place }: Props) {
           <>
             <p className="verify-banner-title">Verifica tu cuenta de email</p>
             <p className="verify-banner-text">
-              Te enviaremos un enlace a <strong>{user.email}</strong> para confirmar que es tuyo.
+              Se enviará un enlace a <strong>{user.email}</strong> para confirmar que es tuyo.
             </p>
             {error && <p className="verify-banner-error">{error}</p>}
             <button

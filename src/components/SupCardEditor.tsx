@@ -208,7 +208,7 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
               <p className="settings-modal-text">
                 Ajusta la hora y el título solo para el{' '}
                 {DAY_LABEL_FULL[day].toLowerCase()}. Si los dejas en blanco
-                usaremos los valores por defecto.
+                se usarán los valores por defecto.
               </p>
 
               <div className="sup-form-group">
