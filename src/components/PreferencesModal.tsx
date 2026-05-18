@@ -121,7 +121,7 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
             </button>
             <h2 className="settings-modal-title">Preferencias</h2>
             <p className="settings-modal-text">
-              Ajusta cómo te mostramos los datos en la app.
+              Ajusta cómo se mostrarán los datos en la app.
             </p>
 
             {/* ── Sistema de unidades ─────────────────────── */}
