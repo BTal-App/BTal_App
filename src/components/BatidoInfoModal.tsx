@@ -306,9 +306,8 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
 
                   <p className="sup-footnote">
                     <MealIcon value="tb:cup" size={14} />
-                    Estos macros son los del batido entero (proteína suplementaria
-                    + creatina + extras). Edítalos en Configurar para que cuadren con
-                    tu producto exacto.
+                    Estos macros corresponden al batido completo (proteína,
+                    creatina y extras). Puedes ajustarlos en «Configurar».
                   </p>
 
                   {/* Contadores inline · igual que v1 modal-batido-info.
