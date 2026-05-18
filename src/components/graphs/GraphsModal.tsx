@@ -567,9 +567,9 @@ function TabSuplementos({
       <div className="graphs-tab-head">
         <h3>Suplementación tomada</h3>
         <p>
-          Histórico fechado de tus tomas (batido protéico y creatina suelta).
-          Cada vez que pulsas "Tomar" o ajustas manualmente desde HoyPage, se
-          registra con la fecha. Cambia el periodo para ver detalle distinto.
+          Historial de tus tomas (batido proteico y dosis de creatina).
+          Cada vez que pulsas «Tomar» o ajustas manualmente desde HoyPage, se
+          registra con la fecha. Cambia el periodo para ver un detalle distinto.
         </p>
       </div>
 
