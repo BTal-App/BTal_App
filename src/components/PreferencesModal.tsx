@@ -214,8 +214,8 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
               className="settings-modal-text"
               style={{ color: 'var(--btal-t-3)', fontSize: '0.78rem' }}
             >
-              Para usuarios con cuenta, las preferencias también se guardan en
-              Firestore y se sincronizan entre dispositivos.
+              Para usuarios con cuenta, las preferencias se sincronizan
+              entre dispositivos.
             </p>
 
             <IonButton
