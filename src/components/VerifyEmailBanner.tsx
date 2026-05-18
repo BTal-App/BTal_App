@@ -148,7 +148,7 @@ export function VerifyEmailBanner({ user, place }: Props) {
             </div>
             {notVerifiedYet && (
               <p className="verify-banner-pending">
-                Aún no detectamos la verificación. ¿Has hecho click en el enlace del email?
+                No se ha detectado la verificación del email. ¿Has hecho clic en el enlace del email enviado?
               </p>
             )}
             {error && <p className="verify-banner-error">{error}</p>}
