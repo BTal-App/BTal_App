@@ -397,7 +397,7 @@ function TabRachas({
                 className="graphs-note-icon"
               />
               Histórico desde el <strong>{dmy(spanFrom)}</strong> hasta el{' '}
-              <strong>{dmy(spanTo)}</strong> · se conservan los últimos
+              <strong>{dmy(spanTo)}</strong> · Se conservan los últimos
               999 días de registros.
             </p>
           )}
