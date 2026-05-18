@@ -84,7 +84,7 @@ export function VerifyEmailRow({ user }: Props) {
         <span className="settings-row-value settings-row-sub">
           {sent
             ? `Email enviado a ${user.email}. Revisa tu bandeja (y la carpeta de spam).`
-            : 'Confirma que este email es tuyo para activar tu cuenta.'}
+            : 'Confirma que este email es tuyo para activar la cuenta.'}
         </span>
         {error && <span className="verify-row-error">{error}</span>}
       </div>
