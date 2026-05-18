@@ -267,8 +267,7 @@ export function EditProfileModal({ isOpen, user, onClose }: Props) {
           </div>
 
           <p className="landing-hint">
-            La foto se guardará comprimida en tu cuenta de Firebase Auth (96×96 px). Cuando
-            activemos Storage podrás subir imágenes en alta resolución.
+            La foto se guarda en baja resolución por ahora. Pronto podrás subirla en alta calidad.
           </p>
 
           {error && <div className="landing-msg error">{error}</div>}
