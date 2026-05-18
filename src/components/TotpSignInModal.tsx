@@ -17,7 +17,7 @@ const errorCode = (err: unknown): string =>
 function translateError(code: string): string {
   const map: Record<string, string> = {
     'auth/invalid-verification-code': 'Código incorrecto. Inténtalo de nuevo.',
-    'auth/code-expired': 'Código caducado. Pide uno nuevo en tu app.',
+    'auth/code-expired': 'Código caducado. Solicita uno nuevo en la app authenticator.',
     'auth/totp-challenge-timeout': 'Se ha agotado el tiempo. Vuelve a iniciar sesión.',
   };
   return map[code] ?? 'No se ha podido verificar el código.';

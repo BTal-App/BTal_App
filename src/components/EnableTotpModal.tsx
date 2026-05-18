@@ -19,8 +19,8 @@ const errorCode = (err: unknown): string =>
 
 function translateError(code: string): string {
   const map: Record<string, string> = {
-    'auth/invalid-verification-code': 'Código incorrecto. Mira la app authenticator y vuelve a intentarlo.',
-    'auth/code-expired': 'Código caducado. Pide uno nuevo en tu app.',
+    'auth/invalid-verification-code': 'Código incorrecto. Revisa la app authenticator y vuelve a intentarlo.',
+    'auth/code-expired': 'Código caducado. Solicita uno nuevo en la app authenticator.',
     'auth/totp-challenge-timeout': 'Se ha agotado el tiempo. Vuelve a empezar.',
     // ADMIN: 2FA no habilitado · activarlo en Firebase Console → Authentication → Sign-in method → Verificación en dos pasos.
     'auth/operation-not-allowed': 'La verificación en dos pasos no está disponible ahora mismo. Si vuelve a ocurrir, contacta con soporte.',
