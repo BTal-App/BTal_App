@@ -201,10 +201,9 @@ export function EditSupStockModal({ isOpen, onClose, kind }: Props) {
                 {titleTxt}
               </h2>
               <p className="settings-modal-text">
-                Datos del bote comprado · alimentan el bloque de
-                suplementación de la lista de la compra y el cálculo de
-                cuántos {kind === 'batido' ? 'batidos' : 'dosis'} puedes
-                hacer. Para ver/editar contadores, ve a{' '}
+                Datos del bote comprado · Alimentan el bloque de
+                suplementación de la lista de la compra y el cálculo del
+                total. Para ver/editar contadores, ve a{' '}
                 <strong>
                   Menú →{' '}
                   <MealIcon value={titleIconId} size={14} className="sup-inline-icon-sm" />
