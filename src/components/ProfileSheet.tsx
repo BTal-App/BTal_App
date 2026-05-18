@@ -140,7 +140,7 @@ export function ProfileSheet({ isOpen, user, onClose }: Props) {
             <div className="profile-sheet-empty">
               {user.isAnonymous
                 ? 'Como invitado no tienes datos de perfil guardados. Crea una cuenta para personalizar tu plan.'
-                : 'Aún no has completado tu perfil. Cuéntanos sobre ti para que podamos generar tu plan.'}
+                : 'Aún no has completado tu perfil. Cuéntanos sobre ti para generar tu plan.'}
             </div>
           )}
 
