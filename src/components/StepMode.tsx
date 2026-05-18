@@ -68,8 +68,8 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
             <span className="step-mode-tag step-mode-tag--rec">Recomendado</span>
           </div>
           <div className="step-mode-sub">
-            Se generará el plan a partir de tus datos. Puedes editar cualquier
-            cosa después y elegir qué secciones genera.
+            El plan se generará a partir de tus datos. Podrás editarlo
+            después y elegir qué secciones generar.
           </div>
           <div className="step-mode-meta">1 generación gratis al mes · ilimitado en Pro</div>
         </div>
@@ -85,7 +85,7 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
           <MealIcon value="tb:edit" size={26} />
         </div>
         <div className="step-mode-info">
-          <div className="step-mode-title">Lo relleno yo mismo</div>
+          <div className="step-mode-title">Rellenar manualmente</div>
           <div className="step-mode-sub">
             Empiezas con la estructura vacía (7 días, 4 comidas, planes de
             entreno, lista por categorías) y la rellenas a tu ritmo. Podrás
