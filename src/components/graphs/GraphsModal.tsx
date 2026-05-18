@@ -508,7 +508,7 @@ function TabPesos({
           <LineChart
             data={points}
             unit="kg"
-            emptyMessage="Solo hay 1 sesión · necesitas al menos 2 puntos para dibujar la evolución."
+            emptyMessage="Solo hay 1 sesión · Necesitas al menos 2 puntos para dibujar la evolución."
           />
 
           {points.length > 0 && (
