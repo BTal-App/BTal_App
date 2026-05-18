@@ -99,7 +99,7 @@ export function ReauthModal({ isOpen, user, reason, onClose, onSuccess }: Props)
           </button>
           <h2 className="settings-modal-title">Confirma tu identidad</h2>
           <p className="settings-modal-text">
-            {reason ?? 'Por seguridad, te pedimos confirmar tu identidad antes de continuar.'}
+            {reason ?? 'Por seguridad, se solicita confirmar tu identidad antes de continuar.'}
           </p>
 
           {usedPassword(user) && (
