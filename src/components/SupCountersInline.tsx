@@ -228,8 +228,6 @@ export function SupCountersInline({ kind }: Props) {
     }
   };
 
-  const productoLabel = kind === 'batido' ? 'batido' : 'creatina';
-
   // Helpers para abrir la confirmación con el texto correcto. Cada stat
   // periódica tiene su propio botón ⟳ a la derecha que dispara esto.
   const askResetSemanal = () =>
@@ -261,10 +259,7 @@ export function SupCountersInline({ kind }: Props) {
       kind: 'total',
       header: '¿Reiniciar todos los contadores?',
       message:
-        `Esta acción es IRREVERSIBLE. Va a poner a 0 los 4 `
-        + `contadores de ${productoLabel}: total, total esta `
-        + `semana, total este mes y total este año. `
-        + `No se podrá deshacer.`,
+        'Esta acción es IRREVERSIBLE. Se restablecerán a 0 los 4 valores.',
     });
 
   return (

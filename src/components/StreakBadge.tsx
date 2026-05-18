@@ -52,8 +52,8 @@ export function StreakBadge() {
         }}
         aria-label={
           isZero
-            ? 'Sin racha · pulsa para ver cómo empezar tu racha de entrenos'
-            : `Racha: ${dias} ${dias === 1 ? 'día' : 'días'} entrenando · pulsa para ver cómo funciona`
+            ? 'Sin racha · Pulsa para ver cómo empezar tu racha de entrenos'
+            : `Racha: ${dias} ${dias === 1 ? 'día' : 'días'} entrenando · Pulsa para ver cómo funciona`
         }
       >
         <MealIcon value="tb:bolt" size={16} />
