@@ -596,7 +596,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                       max={6000}
                       step={10}
                       maxLength={5}
-                      placeholder={sugerido ? `Sugerido: ${sugerido} kcal` : 'Introduce edad, peso, altura, sexo, actividad y objetivo para obtener una sugerencia.'}
+                      placeholder={sugerido ? `Sugerido: ${sugerido} kcal` : 'Completa tus datos para obtener una sugerencia.'}
                       value={data.objetivoKcal ?? ''}
                       onChange={(e) =>
                         setField(
@@ -744,7 +744,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
 
               <CollapsibleSection
                 title="Alimentos obligatorios"
-                subtitle="Quiero que aparezcan sí o sí"
+                subtitle="Incluir siempre"
                 badge={data.alimentosObligatorios.length > 0 ? data.alimentosObligatorios.length : undefined}
               >
                 <ChipsInput

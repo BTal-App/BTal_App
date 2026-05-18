@@ -588,7 +588,7 @@ const Onboarding: React.FC = () => {
 
                 <CollapsibleSection
                   title="Alimentos obligatorios"
-                  subtitle="Quiero que aparezcan sí o sí"
+                  subtitle="Incluir siempre"
                   badge={data.alimentosObligatorios.length > 0 ? data.alimentosObligatorios.length : undefined}
                 >
                   <ChipsInput
