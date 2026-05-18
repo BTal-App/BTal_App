@@ -81,12 +81,12 @@ export function TotpSignInModal({ isOpen, resolver, onClose, onSuccess }: Props)
           </button>
           <h2 className="settings-modal-title">Verificación en dos pasos</h2>
           <p className="settings-modal-text">
-            Escribe el código de 6 dígitos que muestra tu app authenticator.
+            Introduce el código que muestra tu app authenticator.
           </p>
 
           {!totpHint ? (
             <div className="landing-msg error">
-              No tienes un factor 2FA configurado. Inicia sesión sin 2FA o contacta con soporte.
+              Verificación en dos pasos (2FA) no configurada. Inicia sesión sin 2FA o contacta con soporte.
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
