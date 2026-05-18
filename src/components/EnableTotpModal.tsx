@@ -27,7 +27,7 @@ function translateError(code: string): string {
     'auth/unverified-email': 'Necesitas verificar tu email antes de activar 2FA. Mira tu bandeja (y spam) y haz click en el enlace.',
     // ADMIN: operación bloqueada por configuración del proyecto · revisar Identity Platform.
     'auth/admin-restricted-operation': 'No se ha podido completar la operación. Si vuelve a ocurrir, contacta con soporte.',
-    'auth/requires-recent-login': 'Tu sesión es vieja. Cierra sesión y vuelve a entrar.',
+    'auth/requires-recent-login': 'Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.',
   };
   if (map[code]) return map[code];
   // Fallback para códigos NO mapeados. Antes se mostraba el código

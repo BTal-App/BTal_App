@@ -24,7 +24,7 @@ const errorCode = (err: unknown): string =>
 function translateError(code: string): string {
   const map: Record<string, string> = {
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
-    'auth/requires-recent-login': 'Tu sesión es vieja. Cierra sesión y vuelve a entrar.',
+    'auth/requires-recent-login': 'Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.',
   };
   return map[code] ?? 'No se ha podido guardar el perfil. Inténtalo de nuevo.';
 }
