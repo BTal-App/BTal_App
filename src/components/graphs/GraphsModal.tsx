@@ -632,10 +632,10 @@ function TabSuplementos({
 
       <p className="graphs-note">
         <MealIcon value="tb:info-circle" size={14} className="graphs-note-icon" />
-        El histórico se conserva los últimos 366 días · entries más
-        antiguas se descartan automáticamente para mantener tu doc
-        ligero. El gráfico siempre muestra el rango del periodo
-        seleccionado, aunque haya buckets a 0.
+        El histórico se conserva durante los últimos 366 días. Las
+        entradas más antiguas se eliminan automáticamente para
+        mantener la app ligera. El gráfico siempre muestra el rango
+        del periodo seleccionado, incluso si hay valores a 0.
       </p>
     </div>
   );
