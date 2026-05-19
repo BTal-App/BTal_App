@@ -131,25 +131,6 @@
   border-color: var(--btal-lime);
 }
 
-/* Icono de cada tab · hereda color del padre (verde lima en activo,
-   gris en inactivo) para mantener legibilidad sobre ambos fondos. */
-.graphs-modal-tab-icon {
-  font-size: 0.95rem;
-  flex-shrink: 0;
-  /* display:block elimina el hueco de baseline que los SVG inline
-     dejan debajo · es lo que descentraba verticalmente el icono
-     respecto a la label. */
-  display: block;
-  /* Corrección óptica · aun con line-height:1 + align-items:center la
-     tinta del texto (métricas de fuente asimétricas: más ascendente
-     que descendente) queda un pelín por ENCIMA del centro de su caja,
-     así que el icono se veía un pelín bajo. Subimos el icono ~1px.
-     En `em` para que escale con los font-size de los media queries
-     (0.82 → 0.74 → 0.7 rem). Ajusta el valor si aún no cuadra:
-     más negativo = icono más arriba. */
-  transform: translateY(-0.07em);
-}
-
 /* ── Body · contenedor del contenido de cada tab ──────────────── */
 .graphs-modal-body {
   flex: 1 1 auto;
@@ -466,21 +447,14 @@
     padding: 0.38rem 0.35rem;
     gap: 0.2rem;
   }
-  .graphs-modal-tab-icon {
-    font-size: 0.85rem;
-  }
 }
 
-/* iPhone SE / Mini (~375 px) · 5 tabs no caben con icono + label.
- * Ocultamos el icono · solo label · "Entrenos"/"Rachas" entran a
- * 0.7 rem. El icono es decorativo · la label comunica igual. */
+/* iPhone SE / Mini (~375 px) · 5 tabs (solo label) a 0.7 rem para que
+ * "Entrenos"/"Rachas" entren sin ellipsis. */
 @media (max-width: 400px) {
   .graphs-modal-tab {
     font-size: 0.7rem;
     padding: 0.4rem 0.2rem;
-  }
-  .graphs-modal-tab-icon {
-    display: none;
   }
   .graphs-pr-row {
     /* rank | nombre | valor en fila 1 · la fecha (solo PR's) cae a una

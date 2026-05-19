@@ -65,13 +65,6 @@
   color: var(--btal-t-1);
 }
 
-.link-guest-hint {
-  font-size: 0.74rem;
-  color: var(--btal-t-3);
-  margin: -4px 0 4px;
-  font-family: 'Inter', sans-serif;
-  line-height: 1.4;
-}
 
 .link-guest-divider {
   text-align: center;
