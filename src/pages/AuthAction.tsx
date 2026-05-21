@@ -20,7 +20,7 @@ const errorCode = (err: unknown): string =>
 function translateError(code: string): string {
   const map: Record<string, string> = {
     'auth/expired-action-code': 'El enlace ha caducado. Solicita uno nuevo.',
-    'auth/invalid-action-code': 'Enlace no válido o ya usado.',
+    'auth/invalid-action-code': 'El enlace no es válido o ya ha sido utilizado.',
     'auth/user-disabled': 'Esta cuenta está deshabilitada.',
     'auth/user-not-found': 'No existe la cuenta asociada a este enlace.',
     'auth/weak-password': 'Contraseña débil. Mínimo 8 caracteres.',
