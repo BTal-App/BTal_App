@@ -855,7 +855,7 @@ const MenuPage: React.FC = () => {
             isOpen={aiGenOpen}
             onClose={() => setAiGenOpen(false)}
             title="Generar el menú con IA"
-            description="¿Quieres también la lista de la compra?"
+            description="¿Añadir también la lista de la compra?"
             availableScopes={['menu_compra', 'menu_only']}
             defaultScope={userDoc?.profile?.aiScope ?? undefined}
           />
