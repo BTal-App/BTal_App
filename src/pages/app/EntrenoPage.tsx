@@ -478,7 +478,7 @@ const EntrenoPage: React.FC = () => {
                     <b>
                       {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
                     </b>{' '}
-                    {diasEntreno === 1 ? 'declarado' : 'declarados'}, el
+                    de entreno {diasEntreno === 1 ? 'declarado' : 'declarados'}, el
                     recomendado es{' '}
                     <button
                       type="button"
