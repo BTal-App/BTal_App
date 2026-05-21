@@ -75,7 +75,7 @@ export function providerLabel(providerId: string): string {
     'facebook.com': 'Facebook',
     'github.com': 'GitHub',
     'microsoft.com': 'Microsoft',
-    'twitter.com': 'X (Twitter)',
+    'twitter.com': 'X',
   };
   return map[providerId] ?? providerId;
 }
