@@ -348,7 +348,7 @@ const CompraPage: React.FC = () => {
               />
               <div className="compra-sup-badge-row">
                 <span className="compra-sup-badge-label">
-                  Batidos que puedes hacer:
+                  Batidos disponibles:
                 </span>
                 <span
                   className={
