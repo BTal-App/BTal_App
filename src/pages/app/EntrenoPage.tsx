@@ -211,6 +211,19 @@ const EntrenoPage: React.FC = () => {
   // Re-throw del error para que `runSave` capture el SAVE_FAILED y
   // el modal muestre el chip "Error" en vez de cerrarse silencioso.
   const handleSavePlanFromEditor = async (plan: PlanEntreno) => {
+    // Invariante "solo un plan predeterminado" · si éste se marca como
+    // pred, desmarcamos todos los demás antes de persistir. Aplica tanto
+    // a custom como a builtIn (ahora ambos pueden serlo). Sin esta
+    // limpieza, el user podría tener dos planes con esPredeterminado=true
+    // y la lógica de selección (`Object.values()[0] con flag`) dejaría
+    // al segundo "huérfano".
+    if (plan.esPredeterminado) {
+      for (const other of Object.values(entrenos.planes)) {
+        if (other && other.id !== plan.id && other.esPredeterminado) {
+          await setPlanEntreno({ ...other, esPredeterminado: false });
+        }
+      }
+    }
     await setPlanEntreno(plan);
     // Si era nuevo, lo activamos automáticamente.
     if (
