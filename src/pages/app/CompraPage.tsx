@@ -489,8 +489,8 @@ const CompraPage: React.FC = () => {
           header="📤 Compartir lista de compra"
           message={
             'Se generará un texto con todos los productos pendientes '
-            + 'de comprar (los NO marcados) agrupados por categoría, con '
-            + 'precios. En el móvil intentará abrir el menú nativo de '
+            + 'de comprar (los NO marcados) agrupados por categoría y su '
+            + 'precio. En el móvil intentará abrir el menú de '
             + 'compartir (WhatsApp, Telegram, email…). Si no, lo copiará '
             + 'al portapapeles.'
           }
