@@ -110,6 +110,11 @@ export function PlanEditorModal({
   // user intenta marcar este plan como predeterminado pero ya existe
   // otro plan con la flag activa. Solo un plan a la vez puede serlo.
   const [confirmReplacePred, setConfirmReplacePred] = useState(false);
+  // IonAlert "¿Quitar el predeterminado?" · se dispara cuando el user
+  // desmarca el toggle en un plan que YA era predeterminado al abrir
+  // el modal. Si lo marcó dentro de la sesión y lo desmarca sin guardar,
+  // no se pregunta (es un toggle exploratorio).
+  const [confirmRemovePred, setConfirmRemovePred] = useState(false);
 
   // Reset al re-abrir · evita arrastrar edits sin guardar.
   const handleWillPresent = () => {
@@ -122,6 +127,7 @@ export function PlanEditorModal({
     );
     setEsPredeterminado(plan?.esPredeterminado ?? false);
     setConfirmReplacePred(false);
+    setConfirmRemovePred(false);
     resetSave();
     setMissingAlert(null);
     setConfirmChanges(null);
@@ -309,7 +315,16 @@ export function PlanEditorModal({
                   onChange={(e) => {
                     const next = e.target.checked;
                     if (!next) {
-                      setEsPredeterminado(false);
+                      // Desactivando · solo confirmamos si el plan YA
+                      // era predeterminado al abrir el modal. Si lo
+                      // marcó dentro de la sesión y lo desmarca antes
+                      // de guardar, es un toggle exploratorio y no
+                      // tiene sentido pedir confirmación.
+                      if (plan?.esPredeterminado) {
+                        setConfirmRemovePred(true);
+                      } else {
+                        setEsPredeterminado(false);
+                      }
                       return;
                     }
                     // Activando · si ya hay otro pred, pedir confirmación
@@ -489,6 +504,27 @@ export function PlanEditorModal({
             text: 'Reemplazar',
             handler: () => {
               setEsPredeterminado(true);
+            },
+          },
+        ]}
+      />
+
+      {/* Alert "¿Quitar predeterminado?" · al desmarcar el toggle en
+          un plan que YA era predeterminado al abrir el modal. */}
+      <IonAlert
+        isOpen={confirmRemovePred}
+        onDidDismiss={() => setConfirmRemovePred(false)}
+        header="¿Quitar el predeterminado?"
+        message={
+          'Este plan dejará de ser tu predeterminado.\n\nLa recomendación volverá a basarse en los días de entreno declarados en tu perfil.'
+        }
+        cssClass="alert-multiline"
+        buttons={[
+          { text: 'Cancelar', role: 'cancel' },
+          {
+            text: 'Quitar',
+            handler: () => {
+              setEsPredeterminado(false);
             },
           },
         ]}
