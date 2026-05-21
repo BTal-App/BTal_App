@@ -385,7 +385,8 @@ function TabRachas({
             )}
             {history.length > 10 && (
               <>
-                {' · '}+{history.length - 10} rachas más
+                {' · '}+{history.length - 10}{' '}
+                {history.length - 10 === 1 ? 'racha' : 'rachas'} más
               </>
             )}
           </div>
@@ -460,7 +461,8 @@ function TabPRs({ rows }: { rows: { exercise: string; kg: number; fecha: string 
           </ul>
           {rows.length > 12 && (
             <p className="graphs-summary">
-              + {rows.length - 12} ejercicios más con récord
+              + {rows.length - 12}{' '}
+              {rows.length - 12 === 1 ? 'ejercicio' : 'ejercicios'} más con récord
             </p>
           )}
         </>

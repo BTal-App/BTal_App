@@ -86,9 +86,9 @@ export function RegistroStatsGrid({
     return 'hasta ayer · Registra hoy para sumar';
   })();
 
-  const esteMesSub = `de ${esteMesTotalDias} días ${
-    esteMesEntrenados === 1 ? 'entrenado' : 'entrenados'
-  }`;
+  const esteMesSub = `de ${esteMesTotalDias} ${
+    esteMesTotalDias === 1 ? 'día' : 'días'
+  } ${esteMesEntrenados === 1 ? 'entrenado' : 'entrenados'}`;
   const prsSub = prsTotal === 1
     ? "ejercicio con récord"
     : "ejercicios con récord";
