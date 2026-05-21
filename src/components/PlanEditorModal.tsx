@@ -320,11 +320,21 @@ export function PlanEditorModal({
                   'plan-editor-toggle'
                   + (isCurrentlyActive ? ' plan-editor-toggle--locked' : '')
                 }
+                title={
+                  isCurrentlyActive
+                    ? 'Para desactivar este plan, activa otro desde su editor.'
+                    : undefined
+                }
               >
                 <input
                   type="checkbox"
                   checked={activo}
                   disabled={isCurrentlyActive}
+                  title={
+                    isCurrentlyActive
+                      ? 'Para desactivar este plan, activa otro desde su editor.'
+                      : undefined
+                  }
                   onChange={(e) => {
                     if (isCurrentlyActive) return; // defensive · disabled
                     const next = e.target.checked;
@@ -332,14 +342,12 @@ export function PlanEditorModal({
                       setActivo(false);
                       return;
                     }
-                    // Activando · pedir confirmación solo si hay otro
-                    // plan EXPLÍCITAMENTE marcado como activo (no si el
-                    // existingActivo es solo el recomendado implícito
-                    // por diasEntreno · ése no es una decisión del user).
+                    // Activando · pedir confirmación si hay CUALQUIER
+                    // otro plan activo (explícito O implícito por
+                    // recomendación). El user debe confirmar el
+                    // reemplazo · siempre debe haber un plan activo.
                     const conflict =
-                      existingActivo
-                      && existingActivo.activo
-                      && existingActivo.id !== plan?.id;
+                      existingActivo && existingActivo.id !== plan?.id;
                     if (conflict) {
                       setConfirmReplaceActivo(true);
                     } else {
@@ -512,14 +520,16 @@ export function PlanEditorModal({
       />
 
       {/* Alert "¿Reemplazar el plan activo?" · al intentar activar
-          este toggle si ya hay otro plan con activo=true. */}
+          el toggle si hay CUALQUIER otro plan activo (explícito o
+          implícito por recomendación). El user debe confirmar el
+          reemplazo · siempre debe haber un plan activo. */}
       <IonAlert
         isOpen={confirmReplaceActivo}
         onDidDismiss={() => setConfirmReplaceActivo(false)}
         header="¿Reemplazar el plan activo?"
         message={
           existingActivo
-            ? `Ya tienes el plan «${existingActivo.nombre}» marcado como activo.\n\nSi activas este plan, el anterior dejará de estarlo (solo uno puede estar activo a la vez).`
+            ? `Tu plan activo actualmente es «${existingActivo.nombre}».\n\nSi activas este plan, «${existingActivo.nombre}» dejará de serlo (solo uno puede estar activo a la vez).`
             : ''
         }
         cssClass="alert-multiline"
