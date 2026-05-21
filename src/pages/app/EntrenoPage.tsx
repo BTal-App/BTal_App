@@ -451,7 +451,7 @@ const EntrenoPage: React.FC = () => {
                 ) : !activePlan.builtIn ? (
                   // Caso 1 · plan custom creado por el user (sin pred).
                   <>
-                    Vas a entrenar{' '}
+                    Entrenarás{' '}
                     <b>
                       {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
                     </b>{' '}
@@ -461,7 +461,7 @@ const EntrenoPage: React.FC = () => {
                 ) : activePlanId === recommendedId ? (
                   // Caso 2 · plan builtIn que coincide con el recomendado.
                   <>
-                    Vas a entrenar{' '}
+                    Entrenarás{' '}
                     <b>
                       {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
                     </b>{' '}
