@@ -529,7 +529,7 @@ export function PlanEditorModal({
         header="¿Reemplazar el plan activo?"
         message={
           existingActivo
-            ? `Tu plan activo actualmente es «${existingActivo.nombre}».\n\nSi activas este plan, «${existingActivo.nombre}» dejará de serlo (solo uno puede estar activo a la vez).`
+            ? `Tu plan activo actualmente es «${existingActivo.nombre}».\n\nSi activas este plan, «${existingActivo.nombre}» se desactivará (solo puede haber un plan activo a la vez).`
             : ''
         }
         cssClass="alert-multiline"
