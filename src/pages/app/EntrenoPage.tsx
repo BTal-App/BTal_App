@@ -269,7 +269,7 @@ const EntrenoPage: React.FC = () => {
   const handleDeleteDia = async () => {
     if (!diaEditor || !activePlan) return;
     if (activePlan.dias.length <= 1) {
-      setErrorToast('El plan debe tener al menos 1 día.');
+      setErrorToast('El plan debe tener al menos 1 día registrado.');
       return;
     }
     const updatedPlan: PlanEntreno = {
