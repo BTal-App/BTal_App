@@ -539,7 +539,7 @@ const EntrenoPage: React.FC = () => {
           {activePlan && activePlan.dias.length === 0 && (
             <div className="entreno-empty">
               <MealIcon value="tb:barbell" size={20} />
-              <p>Este plan está vacío. Pulsa «✏» para añadir días.</p>
+              <p>Este plan está vacío. Pulsa ✏ para añadir días.</p>
             </div>
           )}
 
