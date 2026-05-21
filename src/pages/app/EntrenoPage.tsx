@@ -534,6 +534,26 @@ const EntrenoPage: React.FC = () => {
                     </button>.
                   </>
                 )}
+                {/* Sub-texto "Plan recomendado según días declarados"
+                    · solo en Caso D (custom sin pred, diasEntreno > 0):
+                    el texto principal no menciona el recomendado, así
+                    que aquí indicamos cuál es. En los demás casos sin
+                    pred (E, F) ya aparece en el texto principal · en C
+                    no hay recomendación; en A, B hay pred y este hint
+                    no aplica. */}
+                {!customPredeterminado
+                  && diasEntreno !== null
+                  && diasEntreno > 0
+                  && !activePlan.builtIn && (
+                  <div className="entreno-banner-hint">
+                    Plan recomendado según días de entreno declarados:{' '}
+                    <b>
+                      {entrenos.planes[recommendedId]
+                        ? planShortName(entrenos.planes[recommendedId])
+                        : 'recomendado'}
+                    </b>.
+                  </div>
+                )}
                 {/* Recordatorio para editar perfil · solo aplica cuando
                     la recomendación se basa en `profile.diasEntreno`. Si
                     hay predeterminado, ese plan IGNORA el perfil y el
