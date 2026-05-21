@@ -262,7 +262,7 @@ const Settings: React.FC = () => {
               <div className="settings-row-info">
                 <span className="settings-row-label">Reportar un bug</span>
                 <span className="settings-row-value settings-row-sub">
-                  Envíanos lo que has visto y cómo reproducirlo.
+                  Descríbenos el problema y cómo reproducirlo.
                 </span>
               </div>
               <MealIcon value="tb:mail" size={20} className="settings-row-chevron" />
@@ -276,7 +276,7 @@ const Settings: React.FC = () => {
               <div className="settings-row-info">
                 <span className="settings-row-label">Acerca de BTal</span>
                 <span className="settings-row-value settings-row-sub">
-                  v{APP_VERSION} · privacidad, términos, aviso médico
+                  v{APP_VERSION} · Privacidad, términos y aviso médico
                 </span>
               </div>
               <MealIcon value="tb:info-circle" size={20} className="settings-row-chevron" />
