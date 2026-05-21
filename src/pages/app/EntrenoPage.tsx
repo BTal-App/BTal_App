@@ -534,20 +534,6 @@ const EntrenoPage: React.FC = () => {
                     </button>.
                   </>
                 )}
-                {/* Sub-texto "Plan recomendado según días declarados"
-                    · solo cuando el chip ★ Recomendado está visible
-                    en el strip (no hay predeterminado + diasEntreno > 0).
-                    Explica de dónde sale la recomendación. */}
-                {!customPredeterminado && diasEntreno !== null && diasEntreno > 0 && (
-                  <div className="entreno-banner-hint">
-                    Plan recomendado según días de entreno declarados:{' '}
-                    <b>
-                      {entrenos.planes[recommendedId]
-                        ? planShortName(entrenos.planes[recommendedId])
-                        : 'recomendado'}
-                    </b>.
-                  </div>
-                )}
                 {/* Recordatorio para editar perfil · solo aplica cuando
                     la recomendación se basa en `profile.diasEntreno`. Si
                     hay predeterminado, ese plan IGNORA el perfil y el

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Banner de Entreno · lógica de textos</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-2: #1f2731;
+    --border: #2d3340;
+    --t1: #e6edf3;
+    --t2: #9ba9b8;
+    --t3: #6e7681;
+    --lime: #b5f037;
+    --gold: #f7c948;
+    --coral: #ff7a7a;
+    --violet: #b794f4;
+    --cyan: #5fd3f3;
+    --blue: #74b9ff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--t1);
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin: 0 0 8px;
+    color: var(--lime);
+  }
+  .subtitle {
+    color: var(--t2);
+    margin-bottom: 32px;
+    font-size: 0.95rem;
+  }
+  h2 {
+    font-size: 1.2rem;
+    color: var(--t1);
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tree {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .tree .q {
+    color: var(--cyan);
+    font-weight: 600;
+  }
+  .tree .yes { color: var(--lime); }
+  .tree .no  { color: var(--coral); }
+  .tree .case {
+    background: var(--surface-2);
+    padding: 2px 10px;
+    border-radius: 6px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid var(--gold);
+  }
+  .card.priority { border-left-color: var(--lime); }
+  .card.warn     { border-left-color: var(--coral); }
+  .card.info     { border-left-color: var(--cyan); }
+  .card.split    { border-left-color: var(--violet); }
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .case-tag {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 0.7rem;
+    background: var(--surface-2);
+    color: var(--t2);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .case-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--t1);
+  }
+  .trigger {
+    font-size: 0.85rem;
+    color: var(--t2);
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    background: rgba(94, 211, 243, 0.06);
+    border-left: 2px solid var(--cyan);
+    border-radius: 4px;
+  }
+  .trigger b { color: var(--cyan); font-weight: 600; }
+  .preview-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--t3);
+    font-weight: 600;
+    margin: 12px 0 8px;
+  }
+  .preview {
+    background: linear-gradient(135deg, rgba(181, 240, 55, 0.08), rgba(247, 201, 72, 0.04));
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    color: var(--t1);
+    margin-bottom: 8px;
+  }
+  .preview.priority { border-left-color: var(--lime); background: linear-gradient(135deg, rgba(181, 240, 55, 0.12), rgba(94, 211, 243, 0.04)); }
+  .preview b { color: var(--gold); font-weight: 700; }
+  .preview.priority b { color: var(--lime); }
+  .preview .link {
+    color: var(--cyan);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .preview .rec { color: var(--coral); font-weight: 700; }
+  .sub-trigger {
+    font-size: 0.78rem;
+    color: var(--t3);
+    font-style: italic;
+    margin-top: 8px;
+    padding-left: 4px;
+  }
+  .meta {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 24px;
+  }
+  .meta h3 {
+    margin: 0 0 8px;
+    color: var(--violet);
+    font-size: 1rem;
+  }
+  .meta p { margin: 4px 0; font-size: 0.88rem; color: var(--t2); }
+  .meta .ex {
+    color: var(--t1);
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 0.83rem;
+    background: var(--surface-2);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    font-size: 0.82rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--t2);
+  }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+  }
+  .pred-icon { background: var(--lime); }
+  .rec-icon { background: var(--gold); }
+  .warn-icon { background: var(--coral); }
+  .info-icon { background: var(--cyan); }
+  .split-icon { background: var(--violet); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 0.85rem;
+  }
+  table th, table td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  table th {
+    color: var(--t3);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+  table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+  .var { color: var(--gold); font-family: 'SF Mono', Menlo, monospace; }
+  .var-name { color: var(--cyan); }
+  .check { color: var(--lime); font-weight: 700; }
+  .x { color: var(--coral); }
+  .dim { color: var(--t3); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🏋️ Banner de Entreno · lógica de textos</h1>
+  <p class="subtitle">
+    Qué texto aparece según los 5 inputs:
+    <span class="var">esPredeterminado</span> (¿algún plan marcado?),
+    <span class="var">activePlanId</span> (cuál estás viendo),
+    <span class="var">diasEntreno</span> (perfil),
+    <span class="var">recommendedId</span> (cálculo del perfil),
+    <span class="var">activePlan.builtIn</span> (tipo del plan visto).
+  </p>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot pred-icon"></span> PRIORITARIO · viendo tu pred</div>
+    <div class="legend-item"><span class="legend-dot rec-icon"></span> Recomendado / general</div>
+    <div class="legend-item"><span class="legend-dot warn-icon"></span> Estado problemático (0 días)</div>
+    <div class="legend-item"><span class="legend-dot info-icon"></span> Bifurcación builtIn vs custom</div>
+    <div class="legend-item"><span class="legend-dot split-icon"></span> Caso compuesto</div>
+  </div>
+
+  <!-- ─── DECISION TREE ─── -->
+  <h2>🌳 Árbol de decisión</h2>
+  <div class="tree">
+<span class="q">¿Hay algún plan con esPredeterminado=true?</span>
+├── <span class="yes">SÍ</span> ─┬── <span class="q">¿activePlanId === predeterminado.id?</span>
+│        ├── <span class="yes">SÍ</span> → <span class="case">CASO A · PRIORITARIO</span>
+│        └── <span class="no">NO</span> → <span class="case">CASO B</span> (subdividido por tipo del activePlan)
+│
+└── <span class="no">NO</span> ─┬── <span class="q">¿diasEntreno === 0?</span>
+         ├── <span class="yes">SÍ</span> → <span class="case">CASO C</span> (subdividido por tipo del activePlan)
+         └── <span class="no">NO</span> ─┬── <span class="q">¿!activePlan.builtIn (es custom)?</span>
+                  ├── <span class="yes">SÍ</span> → <span class="case">CASO D</span>
+                  └── <span class="no">NO</span> ─┬── <span class="q">¿activePlanId === recommendedId?</span>
+                           ├── <span class="yes">SÍ</span> → <span class="case">CASO E</span>
+                           └── <span class="no">NO</span> → <span class="case">CASO F</span>
+  </div>
+
+  <!-- ─── CADA CASO CON SU TEXTO ─── -->
+  <h2>📋 Casos del banner · qué dice cada uno</h2>
+
+  <div class="grid">
+
+    <!-- CASO A -->
+    <div class="card priority">
+      <div class="card-head">
+        <span class="case-name">CASO A · PRIORITARIO</span>
+        <span class="case-tag">Viendo el pred</span>
+      </div>
+      <div class="trigger">
+        <b>hay pred</b> + <b>activePlanId === pred.id</b>
+      </div>
+      <div class="preview-label">Texto del banner</div>
+      <div class="preview priority">
+        Estás viendo tu plan predeterminado: <b>4 días</b>. 4 días de entreno.
+      </div>
+      <div class="sub-trigger">→ con pred builtIn (ej. Plan 4 Días)</div>
+      <div class="preview priority">
+        Estás viendo tu plan predeterminado: <b>Crossfit</b>. 5 días de entreno.
+      </div>
+      <div class="sub-trigger">→ con pred custom</div>
+    </div>
+
+    <!-- CASO B -->
+    <div class="card split">
+      <div class="card-head">
+        <span class="case-name">CASO B · Hay pred pero ves otro</span>
+        <span class="case-tag">Sugerir volver al pred</span>
+      </div>
+      <div class="trigger">
+        <b>hay pred</b> + <b>activePlanId ≠ pred.id</b>
+      </div>
+      <div class="preview-label">B.1 · activePlan es builtIn</div>
+      <div class="preview">
+        Estás viendo el plan de <b>3 días</b>. Tu plan predeterminado es <span class="link">Crossfit</span>.
+      </div>
+      <div class="preview-label">B.2 · activePlan es custom</div>
+      <div class="preview">
+        Estás viendo tu plan creado <b>Hipertrofia</b>. Tu plan predeterminado es <span class="link">Crossfit</span>.
+      </div>
+    </div>
+
+    <!-- CASO C -->
+    <div class="card warn">
+      <div class="card-head">
+        <span class="case-name">CASO C · 0 días declarados</span>
+        <span class="case-tag">Sin pred · perfil incompleto</span>
+      </div>
+      <div class="trigger">
+        <b>no hay pred</b> + <b>diasEntreno === 0</b>
+      </div>
+      <div class="preview-label">C.1 · activePlan es builtIn</div>
+      <div class="preview">
+        Estás viendo el plan de <b>4 días</b>. No has seleccionado ningún día de entrenamiento. <span class="rec">Selecciona al menos un día.</span>
+      </div>
+      <div class="preview-label">C.2 · activePlan es custom</div>
+      <div class="preview">
+        Estás viendo tu plan creado <b>Crossfit</b>. No has seleccionado ningún día de entrenamiento. <span class="rec">Selecciona al menos un día.</span>
+      </div>
+    </div>
+
+    <!-- CASO D -->
+    <div class="card info">
+      <div class="card-head">
+        <span class="case-name">CASO D · Custom sin pred</span>
+        <span class="case-tag">Tu plan creado</span>
+      </div>
+      <div class="trigger">
+        <b>no hay pred</b> + <b>diasEntreno > 0</b> + <b>activePlan.builtIn === false</b>
+      </div>
+      <div class="preview-label">Texto del banner</div>
+      <div class="preview">
+        Entrenarás <b>5 días</b> esta semana. Has seleccionado tu plan creado: <span class="rec">Hipertrofia</span>.
+      </div>
+      <div class="sub-trigger">→ N = activePlan.dias.length (días reales del plan, no del perfil)</div>
+    </div>
+
+    <!-- CASO E -->
+    <div class="card priority">
+      <div class="card-head">
+        <span class="case-name">CASO E · BuiltIn = recomendado</span>
+        <span class="case-tag">Match perfecto</span>
+      </div>
+      <div class="trigger">
+        <b>no hay pred</b> + <b>diasEntreno > 0</b> + <b>activePlanId === recommendedId</b>
+      </div>
+      <div class="preview-label">Texto del banner</div>
+      <div class="preview priority">
+        Estás viendo tu plan recomendado: <b>4 días</b>. 4 días de entreno.
+      </div>
+      <div class="sub-trigger">→ el plan activo coincide con el recomendado por diasEntreno</div>
+    </div>
+
+    <!-- CASO F -->
+    <div class="card">
+      <div class="card-head">
+        <span class="case-name">CASO F · BuiltIn ≠ recomendado</span>
+        <span class="case-tag">Sugerir el recomendado</span>
+      </div>
+      <div class="trigger">
+        <b>no hay pred</b> + <b>diasEntreno > 0</b> + <b>activePlan.builtIn === true</b> + <b>activePlanId ≠ recommendedId</b>
+      </div>
+      <div class="preview-label">Texto del banner</div>
+      <div class="preview">
+        Estás viendo el plan de <b>6 días</b>. Para tus <b>4 días</b> de entreno declarados, el recomendado es el plan de <span class="link">4 días</span>.
+      </div>
+      <div class="sub-trigger">→ estás en un builtIn distinto al que sugiere el perfil</div>
+    </div>
+
+  </div>
+
+  <!-- ─── SUB-TEXTOS Y EXTRAS ─── -->
+  <h2>📎 Textos adicionales al final del banner</h2>
+
+  <div class="meta">
+    <h3>Sub-texto · explica el origen del ★ Recomendado</h3>
+    <p>Cuándo aparece: <span class="check">SÍ</span> en casos D, E, F · <span class="x">NO</span> en A, B, C.</p>
+    <p>Condición: <span class="ex">!customPredeterminado && diasEntreno > 0</span></p>
+    <div class="preview" style="margin-top: 10px;">
+      Plan recomendado según días de entreno declarados: <b>4 días</b>.
+    </div>
+  </div>
+
+  <div class="meta">
+    <h3>Recordatorio · editar perfil</h3>
+    <p>Cuándo aparece: cuando <span class="x">NO hay pred</span> (en cualquier diasEntreno · A, B se saltan; C, D, E, F lo muestran).</p>
+    <p>Condición: <span class="ex">!customPredeterminado</span></p>
+    <div class="preview" style="margin-top: 10px;">
+      Puedes cambiar los días de entreno en <b>Editar datos del perfil</b>.
+    </div>
+  </div>
+
+  <!-- ─── BADGES EN EL STRIP ─── -->
+  <h2>⭐ Badges del strip horizontal de planes</h2>
+  <p class="subtitle">Lo que aparece encima del chip de cada plan-mini en el scroll horizontal.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Estado global</th>
+        <th>Plan-mini que muestra badge</th>
+        <th>Badge</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Hay un plan con esPredeterminado=true</td>
+        <td>ese plan (builtIn o custom)</td>
+        <td><b style="color: var(--lime);">★ Predeterminado</b></td>
+      </tr>
+      <tr>
+        <td>No hay pred + diasEntreno > 0</td>
+        <td>plan que coincide con recommendedId</td>
+        <td><b style="color: var(--gold);">★ Recomendado</b></td>
+      </tr>
+      <tr>
+        <td>No hay pred + diasEntreno = 0</td>
+        <td><span class="dim">— ningún plan —</span></td>
+        <td><span class="dim">— sin badge —</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ─── MATRIZ EXHAUSTIVA ─── -->
+  <h2>🧮 Matriz exhaustiva de los 11 sub-casos</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>¿Pred?</th>
+        <th>Tipo pred</th>
+        <th>Tipo activePlan</th>
+        <th>active = pred?</th>
+        <th>diasEntreno</th>
+        <th>active = rec?</th>
+        <th>Rama</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><span class="check">Sí</span></td><td>custom</td><td>custom</td><td><span class="check">Sí</span></td><td>*</td><td>n/a</td><td>A</td></tr>
+      <tr><td>2</td><td><span class="check">Sí</span></td><td>custom</td><td>custom</td><td><span class="x">No</span></td><td>*</td><td>n/a</td><td>B.2</td></tr>
+      <tr><td>3</td><td><span class="check">Sí</span></td><td>custom</td><td>builtIn</td><td><span class="x">No</span></td><td>*</td><td>n/a</td><td>B.1</td></tr>
+      <tr><td>4</td><td><span class="check">Sí</span></td><td>builtIn</td><td>builtIn</td><td><span class="check">Sí</span></td><td>*</td><td>n/a</td><td>A</td></tr>
+      <tr><td>5</td><td><span class="check">Sí</span></td><td>builtIn</td><td>builtIn</td><td><span class="x">No</span></td><td>*</td><td>n/a</td><td>B.1</td></tr>
+      <tr><td>6</td><td><span class="check">Sí</span></td><td>builtIn</td><td>custom</td><td><span class="x">No</span></td><td>*</td><td>n/a</td><td>B.2</td></tr>
+      <tr><td>7</td><td><span class="x">No</span></td><td>—</td><td>builtIn</td><td>n/a</td><td>0</td><td>n/a</td><td>C.1</td></tr>
+      <tr><td>8</td><td><span class="x">No</span></td><td>—</td><td>custom</td><td>n/a</td><td>0</td><td>n/a</td><td>C.2</td></tr>
+      <tr><td>9</td><td><span class="x">No</span></td><td>—</td><td>custom</td><td>n/a</td><td>&gt;0</td><td>n/a</td><td>D</td></tr>
+      <tr><td>10</td><td><span class="x">No</span></td><td>—</td><td>builtIn</td><td>n/a</td><td>&gt;0</td><td><span class="check">Sí</span></td><td>E</td></tr>
+      <tr><td>11</td><td><span class="x">No</span></td><td>—</td><td>builtIn</td><td>n/a</td><td>&gt;0</td><td><span class="x">No</span></td><td>F</td></tr>
+    </tbody>
+  </table>
+
+  <p style="color: var(--t3); font-size: 0.8rem; margin-top: 40px; text-align: center;">
+    Fuente: <span class="ex">src/pages/app/EntrenoPage.tsx</span> · L418-543 · generado al revisar la lógica del banner.
+  </p>
+
+</div>
+</body>
+</html>
