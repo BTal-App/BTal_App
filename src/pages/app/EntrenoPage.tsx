@@ -648,6 +648,7 @@ const EntrenoPage: React.FC = () => {
               planEditorMode.mode === 'edit' ? planEditorMode.plan : undefined
             }
             existingPlanIds={Object.keys(entrenos.planes)}
+            existingPredeterminado={customPredeterminado}
             onSave={handleSavePlanFromEditor}
           />
         )}

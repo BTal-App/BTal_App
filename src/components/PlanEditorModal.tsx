@@ -43,6 +43,10 @@ interface Props {
   // un plan custom nuevo (genera con newPlanEntrenoId hasta encontrar
   // uno libre).
   existingPlanIds: string[];
+  // Plan que ya tiene esPredeterminado=true (si lo hay). Necesario para
+  // mostrar el IonAlert de confirmación cuando el user intenta marcar
+  // OTRO plan como predeterminado. null si no hay ninguno actualmente.
+  existingPredeterminado?: PlanEntreno | null;
   onSave: (plan: PlanEntreno) => Promise<void> | void;
 }
 
@@ -54,6 +58,7 @@ export function PlanEditorModal({
   onClose,
   plan,
   existingPlanIds,
+  existingPredeterminado = null,
   onSave,
 }: Props) {
   const isEdit = !!plan;
@@ -101,6 +106,10 @@ export function PlanEditorModal({
   // Confirmación borrar día · réplica v1 peDelDay con mobileConfirm.
   // Guardamos el índice del día pendiente de borrar.
   const [confirmDeleteDia, setConfirmDeleteDia] = useState<number | null>(null);
+  // IonAlert "¿Reemplazar el predeterminado?" · se dispara cuando el
+  // user intenta marcar este plan como predeterminado pero ya existe
+  // otro plan con la flag activa. Solo un plan a la vez puede serlo.
+  const [confirmReplacePred, setConfirmReplacePred] = useState(false);
 
   // Reset al re-abrir · evita arrastrar edits sin guardar.
   const handleWillPresent = () => {
@@ -112,6 +121,7 @@ export function PlanEditorModal({
       ],
     );
     setEsPredeterminado(plan?.esPredeterminado ?? false);
+    setConfirmReplacePred(false);
     resetSave();
     setMissingAlert(null);
     setConfirmChanges(null);
@@ -287,13 +297,32 @@ export function PlanEditorModal({
             {/* Toggle "predeterminado" · aplica a builtIn y custom.
                 Cuando está activo, el chip muestra "★ Predeterminado"
                 y la lógica de recomendación lo respeta (ignora el
-                cálculo automático basado en los días declarados). */}
+                cálculo automático basado en los días declarados).
+                Si ya existe OTRO plan predeterminado y el user intenta
+                activar este toggle, se dispara un IonAlert de
+                confirmación · solo un plan puede ser pred a la vez. */}
             <div className="sup-form-group">
               <label className="plan-editor-toggle">
                 <input
                   type="checkbox"
                   checked={esPredeterminado}
-                  onChange={(e) => setEsPredeterminado(e.target.checked)}
+                  onChange={(e) => {
+                    const next = e.target.checked;
+                    if (!next) {
+                      setEsPredeterminado(false);
+                      return;
+                    }
+                    // Activando · si ya hay otro pred, pedir confirmación
+                    // (a no ser que éste sea el plan que ya estaba pred).
+                    const conflict =
+                      existingPredeterminado
+                      && existingPredeterminado.id !== plan?.id;
+                    if (conflict) {
+                      setConfirmReplacePred(true);
+                    } else {
+                      setEsPredeterminado(true);
+                    }
+                  }}
                 />
                 <span className="plan-editor-toggle-label">
                   Marcar como predeterminado
@@ -440,6 +469,29 @@ export function PlanEditorModal({
             : ''
         }
         buttons={[{ text: 'Entendido', role: 'cancel' }]}
+      />
+
+      {/* Alert "¿Reemplazar predeterminado?" · al intentar activar
+          este toggle si ya hay otro plan marcado como pred. */}
+      <IonAlert
+        isOpen={confirmReplacePred}
+        onDidDismiss={() => setConfirmReplacePred(false)}
+        header="¿Reemplazar el predeterminado?"
+        message={
+          existingPredeterminado
+            ? `Ya tienes el plan «${existingPredeterminado.nombre}» marcado como predeterminado.\n\nSi marcas este plan, el anterior dejará de serlo (solo un plan puede ser predeterminado a la vez).`
+            : ''
+        }
+        cssClass="alert-multiline"
+        buttons={[
+          { text: 'Cancelar', role: 'cancel' },
+          {
+            text: 'Reemplazar',
+            handler: () => {
+              setEsPredeterminado(true);
+            },
+          },
+        ]}
       />
 
       {/* Confirmación borrar día · réplica v1 peDelDay */}
