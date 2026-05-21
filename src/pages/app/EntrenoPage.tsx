@@ -496,7 +496,7 @@ const EntrenoPage: React.FC = () => {
                     Mostrarlo solo en las variantes basadas en perfil. */}
                 {!customPredeterminado && (
                   <div className="entreno-banner-hint">
-                    Puedes cambiar los días declarados en{' '}
+                    Puedes cambiar los días de entreno en{' '}
                     <b>Editar datos del perfil</b>.
                   </div>
                 )}
