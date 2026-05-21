@@ -93,10 +93,10 @@ function PrivacyPolicy() {
         <strong>NO vendemos ni cedemos tus datos a terceros</strong> para marketing, publicidad ni análisis externos.
       </p>
       <p>
-        Si en el futuro integramos servicios adicionales (por ejemplo Stripe para procesar pagos, Sentry para
-        captura de errores, Google Gemini para generación con IA), te lo notificaremos por email y se actualizará
-        esta política antes de la activación. Cualquier dato enviado a esos servicios viajará cifrado y solo con
-        el mínimo necesario para la función concreta.
+        Es posible que en el futuro se incorporen nuevos servicios para añadir funcionalidades a BTal. Si esto
+        ocurre tras el lanzamiento, esta política se actualizará para reflejarlo y se notificará a los usuarios
+        existentes antes de la activación (ver la sección 10). Cualquier dato enviado a terceros viajará cifrado
+        y solo con el mínimo necesario para la función concreta.
       </p>
 
       <h2>5. Cuánto tiempo los conservamos</h2>
@@ -248,7 +248,7 @@ function TermsOfService() {
         <li>El precio y las funcionalidades incluidas se mostrarán claramente antes de aceptar.</li>
         <li>La suscripción se cobrará a través de la pasarela correspondiente al canal: App Store o Google Play en la app nativa, y Stripe en la versión web. Se aplicarán también los términos del proveedor utilizado.</li>
         <li>No hay derecho de desistimiento sobre los recursos digitales ya consumidos (por ejemplo, generaciones de plan con IA ya emitidas), conforme al art. 103 m) del Texto Refundido de la Ley General para la Defensa de Consumidores. Sí podrás cancelar la renovación en cualquier momento.</li>
-        <li>Los detalles concretos se incluirán en estos términos cuando el plan Pro esté activo, y te lo notificaremos antes de su lanzamiento.</li>
+        <li>Los detalles concretos se incluirán en estos términos cuando el plan Pro esté activo. Si se introduce después del lanzamiento, se aplicará la cláusula de cambios materiales (sección 10).</li>
       </ul>
 
       <h2>9. Eliminación de cuenta</h2>
