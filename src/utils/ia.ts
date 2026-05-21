@@ -50,7 +50,7 @@ export function canGenerateAi(
     return {
       allowed: false,
       reason: 'guest',
-      hint: 'Crea cuenta para usar la IA · es gratis.',
+      hint: 'Crea una cuenta para usar la IA',
     };
   }
   if (!userDoc) {
@@ -82,7 +82,7 @@ export function canGenerateAi(
     return {
       allowed: true,
       reason: 'ok_one_off',
-      hint: 'Generación extra disponible · adelantada por tu pago de 4,99€.',
+      hint: 'Generación extra disponible. Adelantada por tu pago de 4,99 €',
     };
   }
 
@@ -101,7 +101,7 @@ export function canGenerateAi(
     unlocksAt,
     hint:
       `Disponible el ${formatFecha(unlocksAt)}. ` +
-      'Adelanta por 4,99€ o pasa a Pro para regenerar ya.',
+      'Paga 4,99 € para desbloquear la regeneración inmediata o pásate a Pro para regenerar sin límites durante un mes.',
   };
 }
 
