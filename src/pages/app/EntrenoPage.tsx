@@ -200,6 +200,20 @@ const EntrenoPage: React.FC = () => {
 
   const handleSelectPlan = async (planId: string) => {
     if (planId === activePlanId) return;
+
+    // Centrar la card del plan elegido en el strip horizontal. Útil
+    // sobre todo al pulsar los botones del banner ("Plan recomendado",
+    // "Tu plan predeterminado"): si la card no está visible o no está
+    // centrada, scrollIntoView trae el strip a viewport (block:'nearest'
+    // = solo scroll vertical si hace falta) y la centra (inline:'center').
+    // Se dispara también al pulsar directamente una plan-mini · sin
+    // efecto si la card ya está centrada (smooth scroll de 0px).
+    const container = planCardsRef.current;
+    const btn = container?.querySelector(
+      `[data-plan-id="${planId}"]`,
+    ) as HTMLElement | null;
+    btn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
     try {
       await setActivePlan(planId);
     } catch (err) {
@@ -338,6 +352,7 @@ const EntrenoPage: React.FC = () => {
                 <button
                   type="button"
                   key={p.id}
+                  data-plan-id={p.id}
                   ref={isRecommended ? recommendedBtnRef : undefined}
                   className={
                     'plan-mini'
@@ -426,7 +441,7 @@ const EntrenoPage: React.FC = () => {
                   <>
                     Tu plan predeterminado es:{' '}
                     <b className="entreno-banner-rec">
-                      {customPredeterminado.nombre}
+                      {planShortName(customPredeterminado)}
                     </b>.{' '}
                     {customPredeterminado.dias.length}{' '}
                     {customPredeterminado.dias.length === 1 ? 'día' : 'días'}{' '}
@@ -443,7 +458,7 @@ const EntrenoPage: React.FC = () => {
                       className="entreno-banner-link"
                       onClick={blurAndRun(() => handleSelectPlan(customPredeterminado.id))}
                     >
-                      {customPredeterminado.nombre}
+                      {planShortName(customPredeterminado)}
                     </button>.
                   </>
                 ) : diasEntreno === 0 ? (
@@ -462,7 +477,7 @@ const EntrenoPage: React.FC = () => {
                       {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
                     </b>{' '}
                     esta semana. Has seleccionado tu plan creado:{' '}
-                    <b className="entreno-banner-rec">{activePlan.nombre}</b>.
+                    <b className="entreno-banner-rec">{planShortName(activePlan)}</b>.
                   </>
                 ) : activePlanId === recommendedId ? (
                   // Caso 2 · plan builtIn que coincide con el recomendado.
@@ -473,7 +488,9 @@ const EntrenoPage: React.FC = () => {
                     </b>{' '}
                     esta semana. Plan recomendado:{' '}
                     <b className="entreno-banner-rec">
-                      {entrenos.planes[recommendedId]?.nombre ?? 'Plan recomendado'}
+                      {entrenos.planes[recommendedId]
+                        ? planShortName(entrenos.planes[recommendedId])
+                        : 'recomendado'}
                     </b>.
                   </>
                 ) : (
