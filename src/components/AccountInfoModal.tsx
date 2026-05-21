@@ -2,6 +2,7 @@ import { IonModal } from '@ionic/react';
 import type { User } from 'firebase/auth';
 import { MealIcon } from './MealIcon';
 import { formatDate, providerLabel } from '../utils/userDisplay';
+import { useProfile } from '../hooks/useProfile';
 import './SettingsModal.css';
 import './AccountManageModal.css';
 
@@ -11,7 +12,26 @@ interface Props {
   onClose: () => void;
 }
 
+// Label legible de cada tipo de plan, con caducidad si aplica.
+function subscriptionLabel(
+  plan: { tipo: 'free' | 'one_off' | 'pro'; vence_en: number | null } | undefined,
+): string {
+  if (!plan) return '—';
+  if (plan.tipo === 'pro') {
+    return plan.vence_en
+      ? `Pro · activo hasta ${formatDate(new Date(plan.vence_en).toISOString())}`
+      : 'Pro · activo';
+  }
+  if (plan.tipo === 'one_off') {
+    return plan.vence_en
+      ? `Pago único · válido hasta ${formatDate(new Date(plan.vence_en).toISOString())}`
+      : 'Pago único';
+  }
+  return 'Free';
+}
+
 export function AccountInfoModal({ isOpen, user, onClose }: Props) {
+  const { profile: userDoc } = useProfile();
   // Etiquetas únicas de los providers (puede haber duplicados teóricos).
   const providers = user.providerData
     .map((p) => providerLabel(p.providerId))
@@ -91,6 +111,12 @@ export function AccountInfoModal({ isOpen, user, onClose }: Props) {
                 ) : (
                   '—'
                 )}
+              </span>
+            </div>
+            <div className="account-info-item">
+              <span className="account-info-label">Suscripción</span>
+              <span className="account-info-value">
+                {subscriptionLabel(userDoc?.plan)}
               </span>
             </div>
           </div>

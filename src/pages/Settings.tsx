@@ -16,6 +16,7 @@ import { AboutModal } from '../components/AboutModal';
 import { AccountManageModal } from '../components/AccountManageModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
 import { EditProfileModal } from '../components/EditProfileModal';
+import { PaymentsHistoryModal } from '../components/PaymentsHistoryModal';
 import { PreferencesModal } from '../components/PreferencesModal';
 import { CONTACT_EMAIL } from '../config/contact';
 import { downloadUserDataExport } from '../services/exportData';
@@ -61,6 +62,7 @@ const Settings: React.FC = () => {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [paymentsOpen, setPaymentsOpen] = useState(false);
 
   // Export GDPR · loading bloquea el botón para evitar disparar dos
   // descargas si el user da doble click, y el toast verde confirma
@@ -210,6 +212,30 @@ const Settings: React.FC = () => {
             </button>
           </section>
 
+          {/* Pagos · historial + suscripción actual. Solo para users
+              reales (los invitados no pueden hacer pagos). */}
+          {!isAnonymous && (
+            <section className="settings-section">
+              <button
+                type="button"
+                className="settings-row settings-row--link"
+                onClick={blurAndRun(() => setPaymentsOpen(true))}
+              >
+                <div className="settings-row-info">
+                  <span className="settings-row-label">Pagos</span>
+                  <span className="settings-row-value settings-row-sub">
+                    Suscripción actual e historial de pagos en la app.
+                  </span>
+                </div>
+                <MealIcon
+                  value="tb:credit-card"
+                  size={20}
+                  className="settings-row-chevron"
+                />
+              </button>
+            </section>
+          )}
+
           {/* Datos · export RGPD · disponible también para invitados
               (sus datos demo también les pertenecen). */}
           <section className="settings-section">
@@ -312,6 +338,10 @@ const Settings: React.FC = () => {
         <PreferencesModal
           isOpen={preferencesOpen}
           onClose={() => setPreferencesOpen(false)}
+        />
+        <PaymentsHistoryModal
+          isOpen={paymentsOpen}
+          onClose={() => setPaymentsOpen(false)}
         />
 
         {/*
