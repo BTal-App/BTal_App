@@ -431,11 +431,18 @@ export function AiGenerateModal({
 //   return result.data;
 //
 // ⚠ CONTRATO de la respuesta de `generatePlan` (Fase 6):
-//   Cada Comida generada (4 fijas + extras) DEBE incluir `nombrePlato`
-//   con un texto descriptivo (3-7 palabras, ej. "Pollo con arroz y
-//   brócoli"). Detalles en `defaultUser.ts:Comida.nombrePlato`. Sin
-//   esto, la card del menú quedará con placeholder "Pulsa para añadir
-//   nombre" tras la generación y rompe el flujo "IA me hace todo".
+//   1. Cada Comida generada (4 fijas + extras) DEBE incluir `nombrePlato`
+//      con un texto descriptivo (3-7 palabras, ej. "Pollo con arroz y
+//      brócoli"). Detalles en `defaultUser.ts:Comida.nombrePlato`. Sin
+//      esto, la card del menú quedará con placeholder "Pulsa para añadir
+//      nombre" tras la generación y rompe el flujo "IA me hace todo".
+//
+//   2. Para los planes de ENTRENO (scope='all' o 'entrenos_only'): el
+//      plan generado por la IA DEBE persistirse con `activo: true` Y
+//      `entrenos.activePlan` apuntando a su id. Además, el flag `.activo`
+//      de cualquier OTRO plan que lo tuviera debe pasarse a false (la
+//      invariante "solo un plan activo" se respeta). Lógica de referencia:
+//      ver `handleSavePlanFromEditor` en `EntrenoPage.tsx`.
 //
 // El spinner del GeneratingScreen se mostrará automáticamente durante
 // el tiempo REAL que tarde Gemini (5-30s típicos). Sin simulaciones.
