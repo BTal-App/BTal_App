@@ -449,10 +449,16 @@ const EntrenoPage: React.FC = () => {
                   </>
                 ) : customPredeterminado ? (
                   // Hay un predeterminado pero el user está mirando otro.
-                  // Sugerir volver al predeterminado.
+                  // Sugerir volver al predeterminado. El activePlan en
+                  // esta rama puede ser builtIn O custom (distinto del
+                  // predeterminado) · texto distinto en cada caso.
                   <>
-                    Estás viendo el plan de <b>{planShortName(activePlan)}</b>.
-                    Tu plan predeterminado es{' '}
+                    {activePlan.builtIn ? (
+                      <>Estás viendo el plan de <b>{planShortName(activePlan)}</b>.</>
+                    ) : (
+                      <>Estás viendo tu plan creado <b>{planShortName(activePlan)}</b>.</>
+                    )}
+                    {' '}Tu plan predeterminado es{' '}
                     <button
                       type="button"
                       className="entreno-banner-link"
