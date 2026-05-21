@@ -421,21 +421,21 @@ export function getRecommendedPlanId(diasEntreno: number | null): BuiltInPlanId 
   return `${clamp}dias` as BuiltInPlanId;
 }
 
-// Versión que respeta `customPredeterminado` · si el user ha marcado
-// algún plan suyo como predeterminado, ése gana sobre el builtIn
-// derivado de `diasEntreno`. Es la lógica histórica de EntrenoPage,
-// extraída aquí para reutilizarla desde RegistroPage (el selector de
-// plan por día debe mostrar la estrella en el plan que el user marcó
-// como predeterminado, no en el builtIn que sugiere el perfil).
+// Versión que respeta el plan marcado como predeterminado · si el user
+// ha marcado algún plan (builtIn o custom), ése gana sobre el builtIn
+// derivado de `diasEntreno`. Si no hay pred y `diasEntreno === 0`,
+// devolvemos null para que el caller no marque ★ en ningún plan
+// (coherente con EntrenoPage que tampoco lo hace en ese caso).
 export function getEffectiveRecommendedPlanId(
   entrenos: Entrenos | null | undefined,
   diasEntreno: number | null,
-): string {
+): string | null {
   if (entrenos) {
     for (const p of Object.values(entrenos.planes)) {
       if (p && p.esPredeterminado) return p.id;
     }
   }
+  if (diasEntreno === 0) return null;
   return getRecommendedPlanId(diasEntreno);
 }
 
