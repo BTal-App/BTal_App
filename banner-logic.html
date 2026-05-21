@@ -376,11 +376,20 @@
   </div>
 
   <!-- ─── EXTRA AL FINAL DEL BANNER ─── -->
-  <h2>📎 Texto adicional al final del banner</h2>
+  <h2>📎 Textos adicionales al final del banner</h2>
+
+  <div class="meta">
+    <h3>Sub-texto · "Plan recomendado según días declarados"</h3>
+    <p>Cuándo aparece: <span class="check">SÍ</span> solo en caso D (custom sin pred). En E y F el texto principal ya lo dice; en C no hay recomendación; en A, B hay pred.</p>
+    <p>Condición: <span class="ex">!customPredeterminado && diasEntreno > 0 && !activePlan.builtIn</span></p>
+    <div class="preview" style="margin-top: 10px;">
+      Plan recomendado según días de entreno declarados: <b>4 días</b>.
+    </div>
+  </div>
 
   <div class="meta">
     <h3>Recordatorio · editar perfil</h3>
-    <p>Cuándo aparece: cuando <span class="x">NO hay pred</span> (en cualquier diasEntreno · A, B se saltan; C, D, E, F lo muestran).</p>
+    <p>Cuándo aparece: cuando <span class="x">NO hay pred</span> (A, B se saltan; C, D, E, F lo muestran).</p>
     <p>Condición: <span class="ex">!customPredeterminado</span></p>
     <div class="preview" style="margin-top: 10px;">
       Puedes cambiar los días de entreno en <b>Editar datos del perfil</b>.
