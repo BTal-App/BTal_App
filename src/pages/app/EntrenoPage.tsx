@@ -436,11 +436,11 @@ const EntrenoPage: React.FC = () => {
               </div>
               <div className="entreno-banner-text">
                 {customPredeterminado && activePlanId === customPredeterminado.id ? (
-                  // Caso PRIORITARIO · custom predeterminado activo.
-                  // Sustituye a TODAS las variantes basadas en
+                  // Caso PRIORITARIO · predeterminado activo (builtIn o
+                  // custom). Sustituye a TODAS las variantes basadas en
                   // diasEntreno · el predeterminado ignora el perfil.
                   <>
-                    Tu plan predeterminado es:{' '}
+                    Estás viendo tu plan predeterminado:{' '}
                     <b className="entreno-banner-rec">
                       {planShortName(customPredeterminado)}
                     </b>.{' '}
