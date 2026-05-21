@@ -1592,7 +1592,7 @@ function MealCard({ meal, comida, onClick }: MealCardProps) {
           {plato ? (
             plato
           ) : isEmpty ? (
-            <em>Aún sin comida · pulsa para añadir</em>
+            <em>Sin comidas añadidas · Pulsa para añadir</em>
           ) : (
             <em>Pulsa para añadir nombre del plato</em>
           )}
