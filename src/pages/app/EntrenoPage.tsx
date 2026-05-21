@@ -194,6 +194,24 @@ const EntrenoPage: React.FC = () => {
   const showAiButton =
     !!user && !user.isAnonymous && userDoc?.profile?.modo === 'ai';
 
+  // Al cargar la app / volver tras logout, resetea `entrenos.activePlan`
+  // (lo que se VE en el strip y en HoyPage) al `planActivo` (el que está
+  // marcado o el recomendado implícito). Esto garantiza que al abrir la
+  // app siempre se aterrice en el plan activo, no en lo que estuvieras
+  // viendo la última vez. Se ejecuta una sola vez por montaje · una vez
+  // hecho, las navegaciones intra-sesión se respetan.
+  const didInitialActiveResetRef = useRef(false);
+  useEffect(() => {
+    if (didInitialActiveResetRef.current) return;
+    if (!planActivo) return; // esperar a que cargue el doc
+    didInitialActiveResetRef.current = true;
+    if (activePlanId !== planActivo.id) {
+      setActivePlan(planActivo.id).catch((err) => {
+        console.error('[BTal] reset activePlan al activo on mount:', err);
+      });
+    }
+  }, [planActivo, activePlanId, setActivePlan]);
+
   // Centra automáticamente la card del plan activo en el strip
   // horizontal cada vez que cambia. Se dispara al montar (con el plan
   // inicial), al pulsar una plan-mini directamente, y al pulsar los
