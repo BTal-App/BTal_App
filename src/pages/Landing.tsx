@@ -37,7 +37,7 @@ function translateAuthError(code: string): string {
     'auth/invalid-email': 'Email no válido.',
     'auth/weak-password': 'Contraseña débil (mínimo 6 caracteres).',
     'auth/wrong-password': 'Contraseña incorrecta.',
-    'auth/user-not-found': 'No existe una cuenta con este email.',
+    'auth/user-not-found': 'Este email no está registrado.',
     'auth/invalid-credential': 'Email o contraseña incorrectos.',
     'auth/too-many-requests': 'Se han producido demasiados intentos. Espera un momento y vuelve a intentarlo.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',

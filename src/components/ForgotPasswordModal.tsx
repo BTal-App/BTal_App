@@ -16,7 +16,7 @@ const errorCode = (err: unknown): string =>
 function translateError(code: string): string {
   const map: Record<string, string> = {
     'auth/invalid-email': 'Email no válido.',
-    'auth/user-not-found': 'No existe una cuenta con este email.',
+    'auth/user-not-found': 'Este email no está registrado.',
     'auth/too-many-requests': 'Se han producido demasiados intentos. Espera un momento y vuelve a intentarlo.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
   };
