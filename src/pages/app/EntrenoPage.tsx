@@ -103,8 +103,14 @@ const EntrenoPage: React.FC = () => {
   // Para frases tipo "Estás viendo el plan {X}", elimina el prefijo
   // "Plan " del nombre para evitar duplicaciones ("el plan Plan 7 Días",
   // "el plan Plan Crossfit"). Aplica tanto a builtIn como a custom.
-  const planShortName = (p: PlanEntreno): string =>
-    p.nombre.replace(/^plan\s+/i, '');
+  // En builtIns hacemos lowercase del resto ("7 Días" → "7 días") para
+  // que la palabra "Días" no parezca un nombre propio dentro de la
+  // frase ("el plan de 7 días" lee mejor que "el plan de 7 Días"). En
+  // custom respetamos el casing del user (puede ser un nombre propio).
+  const planShortName = (p: PlanEntreno): string => {
+    const stripped = p.nombre.replace(/^plan\s+/i, '');
+    return p.builtIn ? stripped.toLowerCase() : stripped;
+  };
 
   // Si el user tiene algún plan (builtIn o custom) marcado como
   // predeterminado, ese es SIEMPRE el "recomendado" e IGNORA el cálculo
