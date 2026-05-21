@@ -451,7 +451,7 @@ const EntrenoPage: React.FC = () => {
                   // Hay un predeterminado pero el user está mirando otro.
                   // Sugerir volver al predeterminado.
                   <>
-                    Estás viendo el plan <b>{planShortName(activePlan)}</b>.
+                    Estás viendo el plan de <b>{planShortName(activePlan)}</b>.
                     Tu plan predeterminado es{' '}
                     <button
                       type="button"
@@ -496,13 +496,13 @@ const EntrenoPage: React.FC = () => {
                 ) : (
                   // Caso 3 · plan builtIn distinto al recomendado.
                   <>
-                    Estás viendo el plan <b>{planShortName(activePlan)}</b>.
+                    Estás viendo el plan de <b>{planShortName(activePlan)}</b>.
                     Para {diasEntreno === 1 ? 'tu' : 'tus'}{' '}
                     <b>
                       {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
                     </b>{' '}
                     de entreno {diasEntreno === 1 ? 'declarado' : 'declarados'}, el
-                    recomendado es el plan{' '}
+                    recomendado es el plan de{' '}
                     <button
                       type="button"
                       className="entreno-banner-link"
