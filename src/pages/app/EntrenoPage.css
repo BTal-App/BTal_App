@@ -97,10 +97,25 @@ ion-alert.entreno-confirm-alert .alert-message {
   margin-top: 4px;
 }
 
+/* Marcador "★ Recomendado" · sobre el builtIn que coincide con
+   profile.diasEntreno (color oro fijo · destaca del lima del resto
+   del chip). Independiente del tick verde · si el plan tiene ambos
+   (activo + recomendado), ambos se muestran a la vez · el ::after
+   va abajo, el ::before del tick va arriba a la derecha. */
+.plan-mini--recommended::after {
+  content: '★ Recomendado';
+  display: block;
+  font-size: 0.56rem;
+  color: var(--btal-gold);
+  font-weight: 700;
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 /* Plan marcado como `activo` (explícito o implícito) · tick verde en
    la esquina superior derecha del chip · estilo del check de "Tomado"
-   en HoyPage (BATIDO/CREATINA). Sustituye al antiguo "★ Recomendado"
-   con un indicador visual más limpio. */
+   en HoyPage (BATIDO/CREATINA). Coexiste con el ★ Recomendado. */
 .plan-mini--activo {
   border-color: rgba(55, 240, 168, 0.5);
   box-shadow: 0 0 0 1px rgba(55, 240, 168, 0.15) inset;

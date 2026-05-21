@@ -360,11 +360,21 @@ const EntrenoPage: React.FC = () => {
           <div className="plan-cards" ref={planCardsRef}>
             {planList.map((p) => {
               const numDias = p.dias.length;
-              // Badge del chip: "tick verde" sobre el plan que coincida
-              // con `planActivo` (explícito o implícito · ver memo).
-              // No hay otro badge · si planActivo es null (has customs
-              // sin marcar, o diasEntreno=0), ningún plan se marca.
+              // Badges del chip (independientes · pueden coexistir):
+              //   - "tick verde" (--activo) sobre planActivo (explícito
+              //     o implícito).
+              //   - "★ Recomendado" (--recommended) sobre el builtIn
+              //     recomendado por diasEntreno, SOLO si no hay customs
+              //     creados. Independiente del activo · si el user marca
+              //     otro plan como activo, la ★ sigue en el recomendado.
               const isActivo = !!planActivo && p.id === planActivo.id;
+              const showRecomendadoBadge =
+                !hasCustomPlans && !!diasEntreno && diasEntreno > 0;
+              const recommendedId = diasEntreno
+                ? getRecommendedPlanId(diasEntreno)
+                : null;
+              const isRecomendado =
+                showRecomendadoBadge && p.id === recommendedId;
               return (
                 <button
                   type="button"
@@ -375,6 +385,7 @@ const EntrenoPage: React.FC = () => {
                     + (p.id === activePlanId ? ' plan-mini--active' : '')
                     + (!p.builtIn ? ' plan-mini--custom' : '')
                     + (isActivo ? ' plan-mini--activo' : '')
+                    + (isRecomendado ? ' plan-mini--recommended' : '')
                   }
                   onClick={blurAndRun(() => handleSelectPlan(p.id))}
                   aria-label={`Activar ${p.nombre}`}
