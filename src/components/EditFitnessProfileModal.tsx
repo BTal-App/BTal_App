@@ -630,7 +630,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
               >
                 <textarea
                   className="onboarding-textarea"
-                  placeholder="Ej: quiero ganar masa muscular sin perder definición · tengo dolor en el hombro derecho · prefiero recetas rápidas entre semana · …"
+                  placeholder="Ej: Quiero ganar masa muscular sin perder definición · Tengo dolor en el hombro derecho · Prefiero recetas rápidas entre semana · …"
                   value={data.notas}
                   maxLength={1000}
                   rows={4}
