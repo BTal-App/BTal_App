@@ -214,7 +214,7 @@ const HoyPage: React.FC = () => {
                 {userDoc?.profile?.completed
                   ? 'En cuanto se habilite el generador de IA, se creará tu plan diario con macros, comidas y entreno a partir de tu perfil.'
                   : user.isAnonymous
-                  ? 'Crea una cuenta y completa el onboarding para que podamos generar tu plan personalizado.'
+                  ? 'Crea una cuenta y completa el onboarding para generar tu plan personalizado.'
                   : 'Completa tu perfil para que podamos generar tu plan personalizado.'}
               </p>
               {showAiButton ? (
