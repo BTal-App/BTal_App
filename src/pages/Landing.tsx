@@ -101,7 +101,7 @@ const Landing: React.FC = () => {
         await signUpEmail(email.trim(), password);
         // El email de verificación NO se envía aquí — se envía cuando el
         // usuario pulsa "Verificar" en el banner del dashboard.
-        setInfo('Cuenta creada. En el dashboard podrás verificar tu email.');
+        setInfo('Cuenta creada. Verifica tu email desde el panel principal o desde Ajustes → Administrar cuenta.');
       }
     } catch (err) {
       const code = errorCode(err);
