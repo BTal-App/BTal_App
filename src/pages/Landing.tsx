@@ -345,7 +345,7 @@ const Landing: React.FC = () => {
           header="Modo prueba"
           subHeader="Esta cuenta de invitado caducará en 3 días"
           message={
-            'A continuación, vas a probar la app con datos de ejemplo ya '
+            'A continuación, probarás la app con datos de ejemplo '
             + 'precargados. Esta sesión se mantendrá activa durante 3 días. '
             + 'Si pasado ese tiempo no has creado/vinculado una cuenta real, '
             + 'todos los datos se borrarán permanentemente.'
