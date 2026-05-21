@@ -82,7 +82,7 @@ export function canGenerateAi(
     return {
       allowed: true,
       reason: 'ok_one_off',
-      hint: 'Regeneración inmediata disponible · Adelantada por tu pago de 4,99€',
+      hint: 'Regeneración inmediata disponible.',
     };
   }
 
