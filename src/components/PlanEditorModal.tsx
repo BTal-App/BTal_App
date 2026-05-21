@@ -114,14 +114,10 @@ export function PlanEditorModal({
   // Guardamos el índice del día pendiente de borrar.
   const [confirmDeleteDia, setConfirmDeleteDia] = useState<number | null>(null);
   // IonAlert "¿Reemplazar el plan activo?" · se dispara cuando el user
-  // intenta activar este plan pero ya hay otro con activo=true. Solo
-  // uno a la vez puede serlo.
+  // intenta activar este plan pero ya hay otro EXPLÍCITAMENTE marcado.
+  // Solo uno a la vez puede serlo. Si el existing es solo el implícito
+  // (recomendado), no se pide confirmación (no es decisión del user).
   const [confirmReplaceActivo, setConfirmReplaceActivo] = useState(false);
-  // IonAlert "¿Desactivar este plan?" · se dispara cuando el user
-  // desactiva el toggle en un plan que YA estaba activo al abrir el
-  // modal. Si lo activó en la sesión y lo desactiva sin guardar, no se
-  // pregunta (es un toggle exploratorio).
-  const [confirmRemoveActivo, setConfirmRemoveActivo] = useState(false);
 
   // Reset al re-abrir · evita arrastrar edits sin guardar.
   const handleWillPresent = () => {
@@ -138,7 +134,6 @@ export function PlanEditorModal({
         || (!!plan && !!existingActivo && existingActivo.id === plan.id),
     );
     setConfirmReplaceActivo(false);
-    setConfirmRemoveActivo(false);
     resetSave();
     setMissingAlert(null);
     setConfirmChanges(null);
@@ -315,27 +310,26 @@ export function PlanEditorModal({
                 Cuando se activa, el chip de Entreno muestra un tick
                 verde y la lógica de recomendación lo respeta (ignora
                 el cálculo automático basado en los días declarados).
-                Si ya hay OTRO plan activo y el user intenta activar
-                este, se dispara un IonAlert de confirmación · solo
-                uno puede estar activo a la vez. */}
+                DISABLED cuando este plan es el activo actual (explícito
+                o implícito): la regla es "siempre debe haber un plan
+                activo" · para cambiar de activo, hay que marcar OTRO
+                plan (lo cual reemplaza automáticamente al anterior). */}
             <div className="sup-form-group">
-              <label className="plan-editor-toggle">
+              <label
+                className={
+                  'plan-editor-toggle'
+                  + (isCurrentlyActive ? ' plan-editor-toggle--locked' : '')
+                }
+              >
                 <input
                   type="checkbox"
                   checked={activo}
+                  disabled={isCurrentlyActive}
                   onChange={(e) => {
+                    if (isCurrentlyActive) return; // defensive · disabled
                     const next = e.target.checked;
                     if (!next) {
-                      // Desactivando · solo confirmamos si el plan YA
-                      // estaba activo al abrir el modal. Si lo activó
-                      // dentro de la sesión y lo desactiva antes de
-                      // guardar, es un toggle exploratorio · no se
-                      // pide confirmación.
-                      if (plan?.activo) {
-                        setConfirmRemoveActivo(true);
-                      } else {
-                        setActivo(false);
-                      }
+                      setActivo(false);
                       return;
                     }
                     // Activando · pedir confirmación solo si hay otro
@@ -357,8 +351,9 @@ export function PlanEditorModal({
                   Activar este plan
                 </span>
                 <span className="plan-editor-toggle-hint">
-                  Se marcará como tu plan principal en la pestaña Entreno
-                  y reemplazará al recomendado por los días declarados.
+                  {isCurrentlyActive
+                    ? 'Este es tu plan activo. Para cambiar a otro, márcalo desde su editor (lo reemplazará automáticamente).'
+                    : 'Se marcará como tu plan principal en la pestaña Entreno y reemplazará al actual.'}
                 </span>
               </label>
             </div>
@@ -534,27 +529,6 @@ export function PlanEditorModal({
             text: 'Reemplazar',
             handler: () => {
               setActivo(true);
-            },
-          },
-        ]}
-      />
-
-      {/* Alert "¿Desactivar este plan?" · al desactivar el toggle en
-          un plan que YA estaba activo al abrir el modal. */}
-      <IonAlert
-        isOpen={confirmRemoveActivo}
-        onDidDismiss={() => setConfirmRemoveActivo(false)}
-        header="¿Desactivar este plan?"
-        message={
-          'Este plan dejará de ser tu plan activo.\n\nLa recomendación volverá a basarse en los días de entreno declarados en tu perfil.'
-        }
-        cssClass="alert-multiline"
-        buttons={[
-          { text: 'Cancelar', role: 'cancel' },
-          {
-            text: 'Desactivar',
-            handler: () => {
-              setActivo(false);
             },
           },
         ]}

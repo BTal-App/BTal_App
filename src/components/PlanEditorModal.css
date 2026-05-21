@@ -50,6 +50,28 @@
   margin-top: 2px;
 }
 
+/* Estado "locked" · cuando este plan es el activo actual, el toggle
+   no se puede desmarcar (siempre debe haber un plan activo · para
+   cambiar, marcar OTRO plan). Visual: borde verde sutil + cursor
+   default + opacidad menor en el checkbox. */
+.plan-editor-toggle--locked {
+  border-color: rgba(55, 240, 168, 0.5);
+  background: linear-gradient(
+    135deg,
+    rgba(55, 240, 168, 0.06),
+    rgba(181, 240, 55, 0.03)
+  );
+  cursor: default;
+}
+.plan-editor-toggle--locked:hover {
+  border-color: rgba(55, 240, 168, 0.6);
+}
+.plan-editor-toggle--locked input[type='checkbox']:disabled {
+  cursor: default;
+  opacity: 0.8;
+  accent-color: rgb(55, 240, 168);
+}
+
 .plan-editor-toggle-label {
   font-size: 0.92rem;
   font-weight: 600;
