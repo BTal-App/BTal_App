@@ -738,7 +738,7 @@ const Onboarding: React.FC = () => {
         <GeneratingScreen
           isOpen={submitting && modeChoice.modo === 'ai'}
           title="Generando tu plan inicial…"
-          subtitle="Guardando tu perfil y preparando tu plan personalizado… No cierres la app."
+          subtitle="Guardando tu perfil y preparando tu plan personalizado. No cierres la app."
         />
       </IonContent>
     </IonPage>
