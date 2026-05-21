@@ -129,7 +129,7 @@ ion-alert.entreno-confirm-alert .alert-message {
   content: '✓ ACTIVO';
   position: absolute;
   top: -9px;
-  left: 12px;
+  right: 12px;
   background: rgb(55, 240, 168);
   color: #0a0e0c;
   padding: 2px 9px;
