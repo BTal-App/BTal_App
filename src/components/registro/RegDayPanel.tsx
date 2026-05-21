@@ -345,7 +345,7 @@ export function RegDayPanel({
       await onSave(cleaned);
     } catch (err) {
       console.warn('[RegDayPanel] save failed', err);
-      setErrorMsg('No se pudo guardar el registro. Reintenta.');
+      setErrorMsg('No se pudo guardar el registro. Reinténtalo de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -359,7 +359,7 @@ export function RegDayPanel({
       await onDelete();
     } catch (err) {
       console.warn('[RegDayPanel] delete failed', err);
-      setErrorMsg('No se pudo eliminar el registro. Reintenta.');
+      setErrorMsg('No se pudo eliminar el registro. Reinténtalo de nuevo.');
     } finally {
       setSaving(false);
     }
