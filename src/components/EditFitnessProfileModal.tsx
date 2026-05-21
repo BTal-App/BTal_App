@@ -735,7 +735,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
               >
                 <ChipsInput
                   color="coral"
-                  placeholder="Ej: hígado, coliflor, atún…"
+                  placeholder="Ej: Hígado, coliflor, atún…"
                   value={data.alimentosProhibidos}
                   onChange={(v) => setField('alimentosProhibidos', v)}
                   ariaLabel="Añadir alimento prohibido"

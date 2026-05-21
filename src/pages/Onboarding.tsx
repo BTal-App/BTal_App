@@ -579,7 +579,7 @@ const Onboarding: React.FC = () => {
                 >
                   <ChipsInput
                     color="coral"
-                    placeholder="Ej: hígado, coliflor, atún…"
+                    placeholder="Ej: Hígado, coliflor, atún…"
                     value={data.alimentosProhibidos}
                     onChange={(v) => setField('alimentosProhibidos', v)}
                     ariaLabel="Añadir alimento prohibido"
@@ -621,9 +621,10 @@ const Onboarding: React.FC = () => {
               <>
                 <h1 className="onboarding-title">¿Cómo quieres empezar?</h1>
                 <p className="onboarding-text">
-                  Puedes dejar que la IA genere tu plan a partir de tus datos
-                  o partir de plantillas vacías y rellenarlas tú. Podrás cambiar
-                  esta decisión en cualquier momento desde Ajustes.
+                  Permite que la IA genere tu plan a partir de tus datos o
+                  empezar con plantillas vacías y rellenarlas por tu cuenta.
+                  Podrás cambiar esta decisión en cualquier momento desde
+                  Ajustes.
                 </p>
 
                 <StepMode value={modeChoice} onChange={setModeChoice} />
