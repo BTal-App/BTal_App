@@ -111,7 +111,7 @@ export function AdblockBanner() {
         type="button"
         className="adblock-banner-dismiss"
         onClick={dismiss}
-        aria-label="Ocultar aviso una hora"
+        aria-label="Ocultar aviso durante 1 hora"
       >
         ×
       </button>
