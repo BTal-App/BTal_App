@@ -101,6 +101,12 @@ const EntrenoPage: React.FC = () => {
   const activePlan: PlanEntreno | undefined = entrenos.planes[activePlanId];
   const diasEntreno = userDoc?.profile?.diasEntreno ?? null;
 
+  // Para frases tipo "Estás viendo el plan {X}", elimina el prefijo
+  // "Plan " del nombre para evitar duplicaciones ("el plan Plan 7 Días",
+  // "el plan Plan Crossfit"). Aplica tanto a builtIn como a custom.
+  const planShortName = (p: PlanEntreno): string =>
+    p.nombre.replace(/^plan\s+/i, '');
+
   // Sub-fase 2D.1 · Si el user tiene algún plan custom marcado como
   // predeterminado, ese es SIEMPRE el "recomendado" e IGNORA el cálculo
   // basado en `profile.diasEntreno`. Solo cuando se borra ese plan
@@ -430,8 +436,8 @@ const EntrenoPage: React.FC = () => {
                   // Hay un predeterminado pero el user está mirando otro.
                   // Sugerir volver al predeterminado.
                   <>
-                    Estás viendo: <b>{activePlan.nombre}</b>. Tu plan
-                    predeterminado es{' '}
+                    Estás viendo el plan <b>{planShortName(activePlan)}</b>.
+                    Tu plan predeterminado es{' '}
                     <button
                       type="button"
                       className="entreno-banner-link"
@@ -473,19 +479,21 @@ const EntrenoPage: React.FC = () => {
                 ) : (
                   // Caso 3 · plan builtIn distinto al recomendado.
                   <>
-                    Estás viendo: <b>{activePlan.nombre}</b>. Para{' '}
-                    {diasEntreno === 1 ? 'tu' : 'tus'}{' '}
+                    Estás viendo el plan <b>{planShortName(activePlan)}</b>.
+                    Para {diasEntreno === 1 ? 'tu' : 'tus'}{' '}
                     <b>
                       {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
                     </b>{' '}
                     de entreno {diasEntreno === 1 ? 'declarado' : 'declarados'}, el
-                    recomendado es{' '}
+                    recomendado es el plan{' '}
                     <button
                       type="button"
                       className="entreno-banner-link"
                       onClick={blurAndRun(() => handleSelectPlan(recommendedId))}
                     >
-                      {entrenos.planes[recommendedId]?.nombre ?? 'Plan recomendado'}
+                      {entrenos.planes[recommendedId]
+                        ? planShortName(entrenos.planes[recommendedId])
+                        : 'recomendado'}
                     </button>.
                   </>
                 )}
