@@ -123,6 +123,18 @@ const EntrenoPage: React.FC = () => {
     return false;
   }, [entrenos.planes]);
 
+  // ¿Tiene el user algún plan custom creado? Determina si en el banner
+  // usamos la palabra "recomendado" o no. Regla: "Recomendado" SOLO
+  // aparece cuando no hay customs Y el activo es implícito (= el
+  // recomendado por días). Con customs el user está en control · no
+  // se le sugiere nada como "recomendado" en el texto.
+  const hasCustomPlans = useMemo(() => {
+    for (const p of Object.values(entrenos.planes)) {
+      if (p && !p.builtIn) return true;
+    }
+    return false;
+  }, [entrenos.planes]);
+
   // Plan efectivamente activo · uno solo a la vez. Lógica:
   //   1. Plan con flag `activo=true` (marcado explícitamente por el
   //      user en el PlanEditorModal) → ése gana.
@@ -430,9 +442,14 @@ const EntrenoPage: React.FC = () => {
               <div className="entreno-banner-text">
                 {planActivo && activePlanId === planActivo.id ? (
                   // Caso A · viendo el plan activo (builtIn o custom).
-                  // Texto distinto según sea EXPLÍCITO (marcado por el
-                  // user con activo=true) o IMPLÍCITO (recomendado
-                  // automático por diasEntreno).
+                  // Texto varía según:
+                  //   - Explícito (.activo=true) → "tu plan activo"
+                  //   - Implícito + sin customs → "tu plan recomendado"
+                  //     (estado inicial · el user no ha marcado nada y
+                  //     no tiene customs · el sistema sugiere)
+                  //   - Implícito + con customs → "el plan de X"
+                  //     (neutral · el user tiene customs pero no marcó,
+                  //     el sistema no se atreve a llamarlo "recomendado")
                   planActivo.activo ? (
                     <>
                       Estás viendo tu plan activo:{' '}
@@ -443,33 +460,54 @@ const EntrenoPage: React.FC = () => {
                       {planActivo.dias.length === 1 ? 'día' : 'días'}{' '}
                       de entreno.
                     </>
-                  ) : (
+                  ) : !hasCustomPlans ? (
                     <>
                       Estás viendo tu plan recomendado según los días de entreno indicados:{' '}
                       <b className="entreno-banner-rec">
                         {planShortName(planActivo)}
                       </b>.
                     </>
+                  ) : (
+                    <>
+                      Estás viendo el plan de{' '}
+                      <b className="entreno-banner-rec">{planShortName(planActivo)}</b>.
+                    </>
                   )
                 ) : planActivo ? (
                   // Caso B · hay plan activo pero el user está mirando
-                  // otro. Texto distinto según sea explícito o implícito.
-                  // El activePlan en esta rama puede ser builtIn o
-                  // custom (distinto del activo).
+                  // otro. Texto varía igual que en Caso A:
+                  //   - Explícito → "Tu plan activo es Y"
+                  //   - Implícito + sin customs → "Tu plan recomendado es Y"
+                  //   - Implícito + con customs → no segundo parte
                   <>
                     {activePlan.builtIn ? (
                       <>Estás viendo el plan de <b>{planShortName(activePlan)}</b>.</>
                     ) : (
                       <>Estás viendo tu plan creado <b>{planShortName(activePlan)}</b>.</>
                     )}
-                    {planActivo.activo ? <> Tu plan activo es </> : <> Tu plan recomendado es </>}
-                    <button
-                      type="button"
-                      className="entreno-banner-link"
-                      onClick={blurAndRun(() => handleSelectPlan(planActivo.id))}
-                    >
-                      {planShortName(planActivo)}
-                    </button>.
+                    {planActivo.activo ? (
+                      <>
+                        {' '}Tu plan activo es{' '}
+                        <button
+                          type="button"
+                          className="entreno-banner-link"
+                          onClick={blurAndRun(() => handleSelectPlan(planActivo.id))}
+                        >
+                          {planShortName(planActivo)}
+                        </button>.
+                      </>
+                    ) : !hasCustomPlans ? (
+                      <>
+                        {' '}Tu plan recomendado es{' '}
+                        <button
+                          type="button"
+                          className="entreno-banner-link"
+                          onClick={blurAndRun(() => handleSelectPlan(planActivo.id))}
+                        >
+                          {planShortName(planActivo)}
+                        </button>.
+                      </>
+                    ) : null}
                   </>
                 ) : diasEntreno === 0 ? (
                   // Caso 0 · user declaró 0 días · pídele que seleccione.
