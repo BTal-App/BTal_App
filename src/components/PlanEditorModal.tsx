@@ -69,7 +69,16 @@ export function PlanEditorModal({
   // de recomendación lo respeta (ignora el cálculo basado en
   // `profile.diasEntreno`). Solo uno a la vez · invariante garantizada
   // por el alert al activar y el cleanup en handleSavePlanFromEditor.
-  const [activo, setActivo] = useState<boolean>(plan?.activo ?? false);
+  // Initial value: el toggle arranca ON si este plan ES el activo actual,
+  // sea EXPLÍCITO (.activo=true) o IMPLÍCITO (este plan es el activo
+  // por defecto = recomendado por perfil). Antes solo cogía .activo lo
+  // cual no tenía sentido cuando el plan era el activo implícito (el
+  // user veía toggle OFF en su plan activo). Al guardar con ON desde
+  // implícito, el plan se vuelve explícito (activo=true persistido).
+  const isCurrentlyActive =
+    !!plan?.activo
+    || (!!plan && !!existingActivo && existingActivo.id === plan.id);
+  const [activo, setActivo] = useState<boolean>(isCurrentlyActive);
 
   // Límite de días del plan. Los planes builtIn ('1dias'..'7dias') son
   // FIJOS en N días (Plan 1 Día = 1 día, Plan 7 Días = 7 días) · ni se
@@ -123,7 +132,11 @@ export function PlanEditorModal({
         { ...emptyDiaEntreno(), titulo: 'Día 1' },
       ],
     );
-    setActivo(plan?.activo ?? false);
+    // Toggle ON si el plan es el activo actual (explícito o implícito).
+    setActivo(
+      !!plan?.activo
+        || (!!plan && !!existingActivo && existingActivo.id === plan.id),
+    );
     setConfirmReplaceActivo(false);
     setConfirmRemoveActivo(false);
     resetSave();
