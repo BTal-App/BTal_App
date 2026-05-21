@@ -54,3 +54,6 @@ playwright/.auth/
 # Revisión de copy · solo local (no se sube al repo)
 TEXTOS_APP.md
 scripts/extract-texts.mjs
+
+# Docs visuales auxiliares · solo local
+banner-logic.html
