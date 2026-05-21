@@ -462,7 +462,7 @@ export function RegDayPanel({
 
       {isVacio && (
         <p className="reg-day-panel-empty">
-          Selecciona el plan que has hecho hoy o marca "Descanso".
+          Selecciona el plan que has realizado hoy o marca «Descanso».
         </p>
       )}
 
@@ -633,7 +633,7 @@ export function RegDayPanel({
           className="reg-day-panel-textarea"
           maxLength={NOTES_MAX}
           rows={3}
-          placeholder="¿Cómo te sentiste? ¿Algo a destacar?"
+          placeholder="¿Cómo te has sentido? ¿Algo que destacar?"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
