@@ -55,12 +55,12 @@ const STAT_INFO: Record<StatKey, { title: string; message: string }> = {
   prs: {
     title: "PR's (Personal Records)",
     message:
-      "Número de ejercicios distintos en los que has alcanzado tu peso máximo histórico. Cada vez que superas tu récord en un ejercicio (kg más alto que cualquier sesión anterior) sube. Solo se actualiza al alza al guardar · eliminar un registro NO descuenta PR's.",
+      'Número de ejercicios distintos en los que has alcanzado tu récord de peso. Cada vez que superas tu marca en un ejercicio (más kg que en cualquier sesión anterior), el contador aumenta. Solo se actualiza al guardar; eliminar un registro no descuenta PRs.',
   },
   total: {
     title: 'Total registrado',
     message:
-      'Total de días con registro guardado desde que empezaste a usar la app · suma entrenos y descansos. Cada save de un día nuevo lo aumenta en 1, cada delete lo reduce en 1.',
+      'Total de días registrados desde que empezaste a usar la app, incluyendo entrenamientos y descansos. Cada nuevo registro aumenta el contador en 1; eliminar un registro lo reduce en 1.',
   },
 };
 
