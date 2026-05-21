@@ -633,7 +633,7 @@ const Onboarding: React.FC = () => {
                     "todo" entiende mejor lo que va a pasar al Finalizar. */}
                 {modeChoice.modo === 'ai' && modeChoice.aiScope === null && (
                   <p className="onboarding-text" style={{ color: 'var(--btal-gold)' }}>
-                    Falta elegir qué quieres que genere la IA antes de continuar.
+                    Selecciona qué quieres que genere la IA antes de continuar.
                   </p>
                 )}
               </>
