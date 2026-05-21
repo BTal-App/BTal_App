@@ -97,29 +97,10 @@ ion-alert.entreno-confirm-alert .alert-message {
   margin-top: 4px;
 }
 
-/* Marcador "★ Recomendado" · solo en el plan que coincide con
-   profile.diasEntreno (o el más cercano). Color oro fijo
-   (`--btal-gold`) para que destaque del resto del chip que es lima
-   · antes era `var(--rec-color)` con escala dinámica pero el user
-   pidió un color único oro/naranja para que el marcador se
-   distinga claramente independientemente de la "calidad" de la
-   recomendación. La escala `--rec-color` sigue activa en el banner
-   principal (gradient, borde) · solo aquí en el chip se fuerza oro. */
-.plan-mini--recommended::after {
-  content: '★ Recomendado';
-  display: block;
-  font-size: 0.56rem;
-  color: var(--btal-gold);
-  font-weight: 700;
-  margin-top: 6px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-/* Plan marcado como `activo` · tick verde en la esquina superior
-   derecha del chip · estilo del check de "Tomado" en HoyPage
-   (BATIDO/CREATINA). El tick reemplaza al "★ Recomendado": cuando
-   un plan es activo, NO se muestra el ★ (el activo gana). */
+/* Plan marcado como `activo` (explícito o implícito) · tick verde en
+   la esquina superior derecha del chip · estilo del check de "Tomado"
+   en HoyPage (BATIDO/CREATINA). Sustituye al antiguo "★ Recomendado"
+   con un indicador visual más limpio. */
 .plan-mini--activo {
   border-color: rgba(55, 240, 168, 0.5);
   box-shadow: 0 0 0 1px rgba(55, 240, 168, 0.15) inset;
@@ -133,19 +114,11 @@ ion-alert.entreno-confirm-alert .alert-message {
   height: 14px;
   border-radius: 50%;
   background: rgb(55, 240, 168);
-  /* Tick interior · usa mask con un SVG checkmark inline (sin requerir
-     imágenes externas). El círculo de fondo lleva el verde sólido. */
+  /* Tick interior · SVG checkmark inline en base64 (sin assets). */
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230a0e0c' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
   background-position: center;
   background-repeat: no-repeat;
   box-shadow: 0 0 0 2px var(--btal-surface);
-}
-
-/* Cuando un plan es a la vez `activo` y `recommended` (caso raro:
-   no hay customs · el builtIn recomendado coincide con uno activo),
-   ocultamos el ★ Recomendado · el tick verde manda. */
-.plan-mini--activo.plan-mini--recommended::after {
-  content: none;
 }
 
 /* Nombre del plan custom · sustituye al `.plan-num` en planes no

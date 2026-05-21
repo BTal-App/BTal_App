@@ -325,10 +325,14 @@ export function PlanEditorModal({
                       }
                       return;
                     }
-                    // Activando · si ya hay otro plan activo, pedir
-                    // confirmación (a no ser que éste sea el mismo).
+                    // Activando · pedir confirmación solo si hay otro
+                    // plan EXPLÍCITAMENTE marcado como activo (no si el
+                    // existingActivo es solo el recomendado implícito
+                    // por diasEntreno · ése no es una decisión del user).
                     const conflict =
-                      existingActivo && existingActivo.id !== plan?.id;
+                      existingActivo
+                      && existingActivo.activo
+                      && existingActivo.id !== plan?.id;
                     if (conflict) {
                       setConfirmReplaceActivo(true);
                     } else {

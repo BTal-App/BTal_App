@@ -421,30 +421,21 @@ export function getRecommendedPlanId(diasEntreno: number | null): BuiltInPlanId 
 }
 
 // Plan "efectivo" para marcar con la estrella en el selector de Registro.
-// Nueva lógica (Fase 2D refactor):
-//   - Si el user ha marcado algún plan como `activo` (builtIn o custom),
-//     ése gana → ese es el activo y se marca con tick verde / estrella.
-//   - Si no hay plan activo Y no hay ningún custom creado, el recomendado
-//     según `diasEntreno` es el activo implícito → marcar el builtIn.
-//   - En el resto de casos (hay customs pero ninguno activo, o
-//     diasEntreno=0) devolvemos null y no se marca nada.
+// Lógica simétrica a `planActivo` en EntrenoPage:
+//   - Si hay plan con `activo=true` (explícito) → ése gana.
+//   - Si no hay marcado → el builtIn recomendado por `diasEntreno`
+//     es el activo implícito (aplica tenga o no customs el user).
+//   - Si diasEntreno=0 o null → null (sin recomendación, sin activo).
 export function getEffectiveRecommendedPlanId(
   entrenos: Entrenos | null | undefined,
   diasEntreno: number | null,
 ): string | null {
   if (entrenos) {
-    let hasCustom = false;
     for (const p of Object.values(entrenos.planes)) {
-      if (!p) continue;
-      if (p.activo) return p.id;
-      if (!p.builtIn) hasCustom = true;
+      if (p && p.activo) return p.id;
     }
-    // Sin plan activo · solo mostramos recomendado si NO hay customs
-    // (estado inicial del user · ayuda a orientar). Una vez tiene
-    // customs, asumimos que está en control y no marcamos nada.
-    if (hasCustom) return null;
   }
-  if (diasEntreno === 0) return null;
+  if (diasEntreno === 0 || diasEntreno === null) return null;
   return getRecommendedPlanId(diasEntreno);
 }
 

@@ -112,34 +112,35 @@ const EntrenoPage: React.FC = () => {
     return p.builtIn ? stripped.toLowerCase() : stripped;
   };
 
-  // Si el user tiene algún plan (builtIn o custom) marcado como `activo`,
-  // ese es THE plan principal · ignora el cálculo basado en
-  // `profile.diasEntreno`. Si no hay ninguno marcado, el builtIn
-  // recomendado por el perfil es el "activo por defecto" (solo
-  // implícitamente · sin badge visual en ese caso si hay customs).
-  const planActivo: PlanEntreno | null = useMemo(() => {
+  // ¿Hay algún plan marcado explícitamente como `activo`? Necesario
+  // para distinguir "activo explícito (marcado)" vs "activo implícito
+  // (recomendado por días)". El recordatorio de editar perfil solo
+  // aplica cuando NO hay marca (cambiar días afecta al activo).
+  const hasExplicitActivo = useMemo(() => {
     for (const p of Object.values(entrenos.planes)) {
-      if (p && p.activo) return p;
-    }
-    return null;
-  }, [entrenos.planes]);
-
-  // ¿Hay algún plan custom creado? Determina si mostramos el chip
-  // "★ Recomendado": solo aparece cuando NO hay customs (estado
-  // inicial del user · ayuda a orientar). Una vez tiene customs, el
-  // user está en control y la ★ desaparece.
-  const hasCustomPlans = useMemo(() => {
-    for (const p of Object.values(entrenos.planes)) {
-      if (p && !p.builtIn) return true;
+      if (p && p.activo) return true;
     }
     return false;
   }, [entrenos.planes]);
 
-  // recommendedId · si hay plan activo, ese gana. Si no, el builtIn
-  // según `diasEntreno` (que será el activo implícito si no hay customs).
-  const recommendedId = planActivo
-    ? planActivo.id
-    : getRecommendedPlanId(diasEntreno);
+  // Plan efectivamente activo · uno solo a la vez. Lógica:
+  //   1. Plan con flag `activo=true` (marcado explícitamente por el
+  //      user en el PlanEditorModal) → ése gana.
+  //   2. Si no hay marca explícita → el builtIn recomendado según
+  //      `diasEntreno` es el "activo por defecto" (implícito). Esto
+  //      aplica TENGA o NO el user planes custom · cambiar los días
+  //      en el perfil mueve este activo automáticamente.
+  //   3. Si diasEntreno=0 o null → null (no hay recomendación, no
+  //      hay activo).
+  const planActivo: PlanEntreno | null = useMemo(() => {
+    for (const p of Object.values(entrenos.planes)) {
+      if (p && p.activo) return p;
+    }
+    if (!diasEntreno) return null;
+    const recId = getRecommendedPlanId(diasEntreno);
+    return entrenos.planes[recId] ?? null;
+  }, [entrenos.planes, diasEntreno]);
+
   // Color dinámico de la recomendación · escala 0 (peor, coral) → 7
   // (mejor, verde) según `profile.diasEntreno`. Se inyecta como
   // CSS custom prop `--rec-color` en el banner y en el plan-mini
@@ -347,17 +348,11 @@ const EntrenoPage: React.FC = () => {
           <div className="plan-cards" ref={planCardsRef}>
             {planList.map((p) => {
               const numDias = p.dias.length;
-              // Lógica de los badges del chip:
-              //   - "tick verde" sobre el plan con `activo=true` (uno
-              //     a la vez · marca explícita del user).
-              //   - "★ Recomendado" sobre el `recommendedId` SOLO si
-              //     no hay plan activo Y no hay customs Y diasEntreno>0
-              //     (estado inicial, ayuda a orientar). Una vez tienes
-              //     customs, la estrella desaparece.
-              const isActivo = !!p.activo;
-              const showStar =
-                !planActivo && !hasCustomPlans && diasEntreno !== 0;
-              const isRecommended = showStar && p.id === recommendedId;
+              // Badge del chip: "tick verde" sobre el plan que coincida
+              // con `planActivo` (explícito o implícito · ver memo).
+              // No hay otro badge · si planActivo es null (has customs
+              // sin marcar, o diasEntreno=0), ningún plan se marca.
+              const isActivo = !!planActivo && p.id === planActivo.id;
               return (
                 <button
                   type="button"
@@ -366,18 +361,8 @@ const EntrenoPage: React.FC = () => {
                   className={
                     'plan-mini'
                     + (p.id === activePlanId ? ' plan-mini--active' : '')
-                    + (isRecommended ? ' plan-mini--recommended' : '')
                     + (!p.builtIn ? ' plan-mini--custom' : '')
                     + (isActivo ? ' plan-mini--activo' : '')
-                  }
-                  // Inyectamos --rec-color para el ::after "★ ..." que
-                  // usa este token. Los builtIn-recomendados usan la
-                  // escala dinámica de diasEntreno · los custom-pred
-                  // siempre lima sólida (decisión del user, no perfil).
-                  style={
-                    isRecommended
-                      ? ({ '--rec-color': recColor } as React.CSSProperties)
-                      : undefined
                   }
                   onClick={blurAndRun(() => handleSelectPlan(p.id))}
                   aria-label={`Activar ${p.nombre}`}
@@ -444,30 +429,40 @@ const EntrenoPage: React.FC = () => {
               </div>
               <div className="entreno-banner-text">
                 {planActivo && activePlanId === planActivo.id ? (
-                  // Caso PRIORITARIO · el user está viendo su plan
-                  // activo (builtIn o custom). Sustituye a las variantes
-                  // basadas en diasEntreno · el activo ignora el perfil.
-                  <>
-                    Estás viendo tu plan activo:{' '}
-                    <b className="entreno-banner-rec">
-                      {planShortName(planActivo)}
-                    </b>.{' '}
-                    {planActivo.dias.length}{' '}
-                    {planActivo.dias.length === 1 ? 'día' : 'días'}{' '}
-                    de entreno.
-                  </>
+                  // Caso A · viendo el plan activo (builtIn o custom).
+                  // Texto distinto según sea EXPLÍCITO (marcado por el
+                  // user con activo=true) o IMPLÍCITO (recomendado
+                  // automático por diasEntreno).
+                  planActivo.activo ? (
+                    <>
+                      Estás viendo tu plan activo:{' '}
+                      <b className="entreno-banner-rec">
+                        {planShortName(planActivo)}
+                      </b>.{' '}
+                      {planActivo.dias.length}{' '}
+                      {planActivo.dias.length === 1 ? 'día' : 'días'}{' '}
+                      de entreno.
+                    </>
+                  ) : (
+                    <>
+                      Estás viendo tu plan recomendado según los días de entreno indicados:{' '}
+                      <b className="entreno-banner-rec">
+                        {planShortName(planActivo)}
+                      </b>.
+                    </>
+                  )
                 ) : planActivo ? (
-                  // Hay un plan activo pero el user está mirando otro.
-                  // Sugerir volver al activo. El activePlan en esta rama
-                  // puede ser builtIn o custom (distinto del activo) ·
-                  // texto distinto en cada caso.
+                  // Caso B · hay plan activo pero el user está mirando
+                  // otro. Texto distinto según sea explícito o implícito.
+                  // El activePlan en esta rama puede ser builtIn o
+                  // custom (distinto del activo).
                   <>
                     {activePlan.builtIn ? (
                       <>Estás viendo el plan de <b>{planShortName(activePlan)}</b>.</>
                     ) : (
                       <>Estás viendo tu plan creado <b>{planShortName(activePlan)}</b>.</>
                     )}
-                    {' '}Tu plan activo es{' '}
+                    {planActivo.activo ? <> Tu plan activo es </> : <> Tu plan recomendado es </>}
                     <button
                       type="button"
                       className="entreno-banner-link"
@@ -491,77 +486,23 @@ const EntrenoPage: React.FC = () => {
                       Selecciona al menos un día.
                     </b>
                   </>
-                ) : !activePlan.builtIn ? (
-                  // Caso 1 · plan custom creado por el user (sin pred).
-                  // Usamos `activePlan.dias.length` (días reales del
-                  // plan) en vez de `diasEntreno` (declarados en perfil),
-                  // que solo se usa para calcular el `recommendedId`.
+                ) : (
+                  // Caso D · fallback defensivo. Con la lógica actual
+                  // (planActivo siempre poblado salvo diasEntreno=0)
+                  // este branch solo se alcanza si entrenos.planes
+                  // está en un estado raro (sin builtIn recomendado).
+                  // Texto mínimo para no romper el render.
                   <>
-                    Entrenarás{' '}
-                    <b>
-                      {activePlan.dias.length}{' '}
-                      {activePlan.dias.length === 1 ? 'día' : 'días'}
-                    </b>{' '}
-                    esta semana. Has seleccionado tu plan creado:{' '}
+                    Estás viendo el plan de{' '}
                     <b className="entreno-banner-rec">{planShortName(activePlan)}</b>.
                   </>
-                ) : activePlanId === recommendedId ? (
-                  // Caso 2 · plan builtIn que coincide con el recomendado.
-                  // El texto integra la justificación ("según los días
-                  // de entreno indicados") para que no necesite el
-                  // sub-texto "Plan recomendado según…" del final.
-                  <>
-                    Estás viendo tu plan recomendado según los días de entreno indicados:{' '}
-                    <b className="entreno-banner-rec">
-                      {entrenos.planes[recommendedId]
-                        ? planShortName(entrenos.planes[recommendedId])
-                        : 'recomendado'}
-                    </b>.
-                  </>
-                ) : (
-                  // Caso 3 · plan builtIn distinto al recomendado.
-                  <>
-                    Estás viendo el plan de <b>{planShortName(activePlan)}</b>.
-                    Para {diasEntreno === 1 ? 'tu' : 'tus'}{' '}
-                    <b>
-                      {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
-                    </b>{' '}
-                    de entreno {diasEntreno === 1 ? 'declarado' : 'declarados'}, el
-                    recomendado es el plan de{' '}
-                    <button
-                      type="button"
-                      className="entreno-banner-link"
-                      onClick={blurAndRun(() => handleSelectPlan(recommendedId))}
-                    >
-                      {entrenos.planes[recommendedId]
-                        ? planShortName(entrenos.planes[recommendedId])
-                        : 'recomendado'}
-                    </button>.
-                  </>
-                )}
-                {/* Sub-texto "Plan recomendado según días declarados"
-                    · solo cuando NO hay activo + diasEntreno > 0 + el
-                    plan visto es custom (Caso D). En los demás casos
-                    el texto principal ya menciona el recomendado o no
-                    aplica. */}
-                {!planActivo
-                  && diasEntreno !== null
-                  && diasEntreno > 0
-                  && !activePlan.builtIn && (
-                  <div className="entreno-banner-hint">
-                    Plan recomendado según días de entreno declarados:{' '}
-                    <b>
-                      {entrenos.planes[recommendedId]
-                        ? planShortName(entrenos.planes[recommendedId])
-                        : 'recomendado'}
-                    </b>.
-                  </div>
                 )}
                 {/* Recordatorio para editar perfil · solo aplica cuando
-                    la recomendación se basa en `profile.diasEntreno`. Si
-                    hay plan activo, ese ignora el perfil y el
-                    hint no tiene sentido. */}
-                {!planActivo && (
+                    el activo es IMPLÍCITO (recomendado por diasEntreno).
+                    Si hay activo explícito (marcado), cambiar los días
+                    no afecta · si diasEntreno=0 (planActivo null) sí
+                    aplica también (el user debe declarar días). */}
+                {!hasExplicitActivo && (
                   <div className="entreno-banner-hint">
                     Puedes cambiar los días de entreno en{' '}
                     <b>Editar datos del perfil</b>.
