@@ -291,7 +291,7 @@ const Settings: React.FC = () => {
                 <div className="settings-row-info">
                   <span className="settings-row-label">Eliminar cuenta</span>
                   <span className="settings-row-value settings-row-sub">
-                    Borra esta sesión de invitado. Perderás los datos al instante.
+                    Eliminará esta sesión de invitado y todos sus datos de forma permanente.
                   </span>
                 </div>
                 <IonButton
