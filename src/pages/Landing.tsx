@@ -39,7 +39,7 @@ function translateAuthError(code: string): string {
     'auth/wrong-password': 'Contraseña incorrecta.',
     'auth/user-not-found': 'No existe una cuenta con este email.',
     'auth/invalid-credential': 'Email o contraseña incorrectos.',
-    'auth/too-many-requests': 'Se han producido demasiados intentos. Espera un momento para volver a probar.',
+    'auth/too-many-requests': 'Se han producido demasiados intentos. Espera un momento y vuelve a intentarlo.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
     'auth/missing-password': 'Falta la contraseña.',
   };
