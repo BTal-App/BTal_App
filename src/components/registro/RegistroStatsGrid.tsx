@@ -78,14 +78,14 @@ export function RegistroStatsGrid({
   // hoy) lo indicamos para que el user sepa por qué la racha no es 0
   // pese a no haber registrado nada hoy.
   const rachaSub = (() => {
-    if (rachaActual === 0) return 'sin racha · ¡empieza hoy!';
+    if (rachaActual === 0) return 'sin racha · ¡Empieza hoy!';
     if (!rachaUltimaFecha) return 'días consecutivos';
     const today = new Date();
     const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     if (rachaUltimaFecha === todayKey) {
       return rachaActual === 1 ? 'día consecutivo' : 'días consecutivos';
     }
-    return 'hasta ayer · regístra hoy para sumar';
+    return 'hasta ayer · Registra hoy para sumar';
   })();
 
   const esteMesSub = `de ${esteMesTotalDias} días ${
