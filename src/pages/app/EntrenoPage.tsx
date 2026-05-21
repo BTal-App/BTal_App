@@ -499,19 +499,16 @@ const EntrenoPage: React.FC = () => {
                   </>
                 ) : activePlanId === recommendedId ? (
                   // Caso 2 · plan builtIn que coincide con el recomendado.
-                  // Mismo patrón que el caso PRIORITARIO de predeterminado
-                  // ("Estás viendo tu plan {tipo}: X. N días de entreno.")
-                  // para coherencia narrativa con el resto del banner.
+                  // El texto integra la justificación ("según los días
+                  // de entreno indicados") para que no necesite el
+                  // sub-texto "Plan recomendado según…" del final.
                   <>
-                    Estás viendo tu plan recomendado:{' '}
+                    Estás viendo tu plan recomendado según los días de entreno indicados:{' '}
                     <b className="entreno-banner-rec">
                       {entrenos.planes[recommendedId]
                         ? planShortName(entrenos.planes[recommendedId])
                         : 'recomendado'}
-                    </b>.{' '}
-                    {activePlan.dias.length}{' '}
-                    {activePlan.dias.length === 1 ? 'día' : 'días'}{' '}
-                    de entreno.
+                    </b>.
                   </>
                 ) : (
                   // Caso 3 · plan builtIn distinto al recomendado.
