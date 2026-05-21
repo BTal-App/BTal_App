@@ -181,7 +181,7 @@ export function MealExtraEditorModal({
       // Mensaje detallado · nombra exactamente los campos que faltan
       // para que el user no tenga que adivinar.
       setErrorMsg(
-        'Faltan campos obligatorios: ' + camposFaltantes.join(', ') + '.',
+        'Faltan campos obligatorios:\n\n• ' + camposFaltantes.join('\n• '),
       );
       return;
     }
@@ -248,7 +248,7 @@ export function MealExtraEditorModal({
     // campo después de pulsar Guardar pero antes de Confirmar.
     if (!camposOk) {
       setErrorMsg(
-        'Faltan campos obligatorios: ' + camposFaltantes.join(', ') + '.',
+        'Faltan campos obligatorios:\n\n• ' + camposFaltantes.join('\n• '),
       );
       setConfirmChanges(null);
       return;
@@ -495,7 +495,7 @@ export function MealExtraEditorModal({
               </p>
 
               {errorMsg && (
-                <div className="landing-msg error" style={{ marginBottom: 8 }}>
+                <div className="landing-msg error" style={{ marginBottom: 8, whiteSpace: 'pre-line' }}>
                   {errorMsg}
                 </div>
               )}
