@@ -641,7 +641,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
 
               <CollapsibleSection
                 title="Alergias"
-                subtitle="Los 14 alérgenos del Reglamento UE + lo que añadas"
+                subtitle="Las 14 más comunes en la UE + lo que añadas"
                 badge={data.alergias.length > 0 ? data.alergias.length : undefined}
               >
                 <span className="onboarding-field-label">Más comunes</span>
@@ -664,7 +664,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                 <span className="onboarding-field-label">Otras alergias</span>
                 <ChipsInput
                   color="coral"
-                  placeholder="Escribe y pulsa Enter (ej: melocotón)"
+                  placeholder="Escribe y pulsa Enter (ej: Melocotón)"
                   value={data.alergias.filter(
                     (v) => !ALERGIAS_COMUNES.some((a) => a.value === v),
                   )}
