@@ -730,7 +730,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
 
               <CollapsibleSection
                 title="Alimentos prohibidos"
-                subtitle="No quiero ver esto en mis comidas"
+                subtitle="Excluir de mis comidas"
                 badge={data.alimentosProhibidos.length > 0 ? data.alimentosProhibidos.length : undefined}
               >
                 <ChipsInput
