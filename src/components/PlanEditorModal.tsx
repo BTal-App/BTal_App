@@ -411,20 +411,21 @@ export function PlanEditorModal({
                     </optgroup>
                   </select>
                 </div>
-                <button
-                  type="button"
-                  className="plan-editor-day-del"
-                  onClick={blurAndRun(() => requestRemoveDia(i))}
-                  aria-label={
-                    isBuiltInPlan
-                      ? 'No se pueden quitar días en los planes 1-7 días'
-                      : `Quitar día ${i + 1}`
-                  }
-                  // Mín 1 día en custom · builtIns no permiten quitar.
-                  disabled={isBuiltInPlan || dias.length <= 1}
-                >
-                  <MealIcon value="tb:trash" size={16} />
-                </button>
+                {/* Trash · oculto en builtIns (días fijos) · el flex
+                    layout del `.plan-editor-day-row` hace que los
+                    campos del día se expandan al llenar el hueco. */}
+                {!isBuiltInPlan && (
+                  <button
+                    type="button"
+                    className="plan-editor-day-del"
+                    onClick={blurAndRun(() => requestRemoveDia(i))}
+                    aria-label={`Quitar día ${i + 1}`}
+                    // Mín 1 día en custom · no permitir quitar el último.
+                    disabled={dias.length <= 1}
+                  >
+                    <MealIcon value="tb:trash" size={16} />
+                  </button>
+                )}
               </div>
             ))}
 
