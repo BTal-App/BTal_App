@@ -136,7 +136,7 @@ const Settings: React.FC = () => {
 
           {isAnonymous && (
             <div className="settings-banner">
-              Estás como invitado. Para gestionar tu cuenta, regístrate o inicia sesión con email.
+              Estás en modo invitado. Para gestionar tu cuenta, crea una cuenta o inicia sesión con email.
             </div>
           )}
 
@@ -203,7 +203,7 @@ const Settings: React.FC = () => {
               <div className="settings-row-info">
                 <span className="settings-row-label">Preferencias</span>
                 <span className="settings-row-value settings-row-sub">
-                  Sistema de unidades · inicio de la semana
+                  Sistema de unidades · Inicio de la semana
                 </span>
               </div>
               <MealIcon value="tb:adjustments" size={20} className="settings-row-chevron" />
@@ -224,7 +224,7 @@ const Settings: React.FC = () => {
               <div className="settings-row-info">
                 <span className="settings-row-label">Descargar mis datos</span>
                 <span className="settings-row-value settings-row-sub">
-                  Una copia completa en formato JSON (RGPD).
+                  Copia completa de mis datos en formato JSON (RGPD).
                 </span>
               </div>
               {exporting ? (
@@ -245,9 +245,9 @@ const Settings: React.FC = () => {
               rel="noreferrer"
             >
               <div className="settings-row-info">
-                <span className="settings-row-label">Contactar soporte</span>
+                <span className="settings-row-label">Contactar con soporte</span>
                 <span className="settings-row-value settings-row-sub">
-                  Se abrirá tu email con asunto y datos pre-rellenados.
+                  Se abrirá tu app de correo con el asunto y los datos ya rellenados.
                 </span>
               </div>
               <MealIcon value="tb:help-circle" size={20} className="settings-row-chevron" />
