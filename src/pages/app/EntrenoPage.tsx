@@ -468,7 +468,14 @@ const EntrenoPage: React.FC = () => {
                   <MealIcon value="tb:barbell" size={26} />
                 )}
               </div>
-              <div className="entreno-banner-text">
+              {/* Key dinámica · cambia cuando cambia el activo o el
+                  plan visto · fuerza remount del nodo y re-dispara
+                  btal-anim-fade-in para que el texto del banner haga
+                  cross-fade suave al alternar entre casos A/B/C/D/E. */}
+              <div
+                key={`${planActivo?.id ?? 'none'}|${activePlanId}|${planActivo?.activo ? 'exp' : 'imp'}`}
+                className="entreno-banner-text btal-anim-fade-in"
+              >
                 {planActivo && activePlanId === planActivo.id ? (
                   // Caso A · viendo el plan activo (builtIn o custom).
                   // Texto varía según:

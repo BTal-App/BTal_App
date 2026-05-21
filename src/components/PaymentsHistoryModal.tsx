@@ -77,7 +77,7 @@ export function PaymentsHistoryModal({ isOpen, onClose }: Props) {
             Historial
           </h3>
           {pagos.length === 0 ? (
-            <div className="account-info-card">
+            <div className="account-info-card btal-anim-fade-up">
               <p className="settings-modal-text" style={{ margin: 0 }}>
                 Aún no se han realizado pagos en esta cuenta.
               </p>
