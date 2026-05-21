@@ -16,8 +16,8 @@ import './LegalPlaceholder.css';
 // vigor (el roadmap llamaría a esto en la Fase 6 con Cloud Functions).
 
 const LEGAL_VERSION = {
-  privacidad: '2026-05-12',
-  terminos: '2026-05-12',
+  privacidad: '2026-05-18',
+  terminos: '2026-05-18',
   'aviso-medico': '2026-05-12',
 } as const;
 
@@ -128,21 +128,22 @@ function PrivacyPolicy() {
       <h2>8. Cookies y almacenamiento local</h2>
       <p>
         BTal <strong>NO usa cookies de seguimiento</strong> publicitario ni de terceros. Solo usamos
-        almacenamiento local del navegador (localStorage e IndexedDB) para:
+        almacenamiento local del dispositivo (en la app nativa) o del navegador (en la versión web ·
+        localStorage e IndexedDB) para:
       </p>
       <ul>
         <li>Mantener tu sesión iniciada (para no pedirte login en cada visita).</li>
         <li>Guardar tus preferencias (unidades, inicio de semana, estilo de barra de navegación).</li>
         <li>Recordar avisos que ya cerraste.</li>
       </ul>
-      <p>Si limpias el almacenamiento del navegador, tendrás que volver a iniciar sesión.</p>
+      <p>Si borras los datos de la app (o limpias el almacenamiento del navegador), tendrás que volver a iniciar sesión.</p>
 
       <h2>9. Seguridad</h2>
       <p>
         Aplicamos medidas técnicas y organizativas razonables: cifrado en tránsito (HTTPS),
         reglas de acceso estrictas en la base de datos (cada usuario solo puede leer/escribir sus propios datos),
-        hash seguro de contraseñas (gestionado por Firebase Authentication; nunca tenemos acceso a tu contraseña en claro),
-        cabeceras HTTP de seguridad (CSP, HSTS, X-Frame-Options, Permissions-Policy).
+        hash seguro de contraseñas (gestionado por Firebase Authentication; nunca tenemos acceso a tu contraseña en claro)
+        y, en la versión web, cabeceras HTTP de seguridad (CSP, HSTS, X-Frame-Options, Permissions-Policy).
       </p>
       <p>
         Si descubres una vulnerabilidad de seguridad, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> antes
@@ -180,10 +181,11 @@ function TermsOfService() {
 
       <h2>1. Qué es BTal</h2>
       <p>
-        BTal es una aplicación web y móvil que te ayuda a organizar tu plan de nutrición, entrenamientos,
-        suplementación y lista de la compra. Está disponible como aplicación web (PWA) en{' '}
-        <a href={PUBLIC_URL} target="_blank" rel="noreferrer">{PUBLIC_HOSTNAME}</a> y, próximamente,
-        como aplicación nativa para iOS y Android.
+        BTal es una aplicación de fitness que te ayuda a organizar tu plan de nutrición, entrenamientos,
+        suplementación y lista de la compra. El canal principal es la <strong>app nativa para iOS y Android</strong>{' '}
+        (próximamente disponible en App Store y Google Play). De forma complementaria, también puedes
+        utilizar BTal como aplicación web (PWA) en{' '}
+        <a href={PUBLIC_URL} target="_blank" rel="noreferrer">{PUBLIC_HOSTNAME}</a>.
       </p>
 
       <h2>2. Aceptación de los términos</h2>
@@ -244,7 +246,7 @@ function TermsOfService() {
       </p>
       <ul>
         <li>El precio y las funcionalidades incluidas se mostrarán claramente antes de aceptar.</li>
-        <li>La suscripción se cobrará a través de Stripe; se aplicarán también sus términos.</li>
+        <li>La suscripción se cobrará a través de la pasarela correspondiente al canal: App Store o Google Play en la app nativa, y Stripe en la versión web. Se aplicarán también los términos del proveedor utilizado.</li>
         <li>No hay derecho de desistimiento sobre los recursos digitales ya consumidos (por ejemplo, generaciones de plan con IA ya emitidas), conforme al art. 103 m) del Texto Refundido de la Ley General para la Defensa de Consumidores. Sí podrás cancelar la renovación en cualquier momento.</li>
         <li>Los detalles concretos se incluirán en estos términos cuando el plan Pro esté activo, y te lo notificaremos antes de su lanzamiento.</li>
       </ul>
