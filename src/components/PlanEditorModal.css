@@ -2,6 +2,20 @@
    la estructura de SettingsModal y SupModal · las clases aquí cubren
    solo el listado de días (que es la parte específica). */
 
+/* Nota informativa para builtIns (1-7 días) · días fijos, sin
+   add/delete. Pequeña pill discreta debajo del título de la sección. */
+.plan-editor-builtin-note {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: var(--btal-t-2);
+  background: rgba(94, 211, 243, 0.06);
+  border: 1px solid var(--btal-border);
+  border-left: 2px solid var(--btal-cyan, #5fd3f3);
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
 /* Toggle "Marcar como predeterminado" · checkbox + label en una
    pill discreta. Solo visible para planes custom (Sub-fase 2D.1). */
 .plan-editor-toggle {

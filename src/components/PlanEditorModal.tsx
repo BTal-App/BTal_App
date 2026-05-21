@@ -74,12 +74,13 @@ export function PlanEditorModal({
     plan?.esPredeterminado ?? false,
   );
 
-  // Límite de días del plan. Los planes builtIn ('1dias'..'7dias') se
-  // capean a N días (Plan 1 Día → max 1, Plan 7 Días → max 7) porque
-  // el id codifica esa capacidad. Los custom permiten hasta 7 días
-  // (toda la semana). Min siempre 1 día en ambos.
+  // Límite de días del plan. Los planes builtIn ('1dias'..'7dias') son
+  // FIJOS en N días (Plan 1 Día = 1 día, Plan 7 Días = 7 días) · ni se
+  // pueden añadir ni quitar días desde la UI · si esos cambian, dejan
+  // de tener sentido (el nombre miente). Los custom permiten 1-7 días.
+  const isBuiltInPlan = isEdit && plan?.builtIn === true;
   const planMaxDias = (() => {
-    if (isEdit && plan?.builtIn) {
+    if (isBuiltInPlan && plan) {
       const m = /^(\d+)dias$/.exec(plan.id);
       if (m) return Math.max(1, Math.min(7, parseInt(m[1], 10)));
     }
@@ -360,10 +361,17 @@ export function PlanEditorModal({
                 <span className="plan-editor-required">*</span>
               </h3>
               <span className="plan-editor-count">
-                {dias.length} / {planMaxDias}{' '}
-                {planMaxDias === 1 ? 'día' : 'días'}
+                {isBuiltInPlan
+                  ? `${planMaxDias} ${planMaxDias === 1 ? 'día' : 'días'} (fijos)`
+                  : `${dias.length} / ${planMaxDias} ${planMaxDias === 1 ? 'día' : 'días'}`}
               </span>
             </div>
+            {isBuiltInPlan && (
+              <p className="plan-editor-builtin-note">
+                Los planes 1-7 días tienen un número fijo de días. Para
+                ajustar el número de días, crea un plan personalizado.
+              </p>
+            )}
 
             {dias.map((d, i) => (
               <div key={i} className="plan-editor-day-row">
@@ -407,33 +415,41 @@ export function PlanEditorModal({
                   type="button"
                   className="plan-editor-day-del"
                   onClick={blurAndRun(() => requestRemoveDia(i))}
-                  aria-label={`Quitar día ${i + 1}`}
-                  // Permitimos quedar a 1 día mínimo · si es el último, deshabilitamos.
-                  disabled={dias.length <= 1}
+                  aria-label={
+                    isBuiltInPlan
+                      ? 'No se pueden quitar días en los planes 1-7 días'
+                      : `Quitar día ${i + 1}`
+                  }
+                  // Mín 1 día en custom · builtIns no permiten quitar.
+                  disabled={isBuiltInPlan || dias.length <= 1}
                 >
                   <MealIcon value="tb:trash" size={16} />
                 </button>
               </div>
             ))}
 
-            <button
-              type="button"
-              className="plan-editor-add-btn"
-              onClick={blurAndRun(addDia)}
-              disabled={dias.length >= planMaxDias}
-              aria-label={
-                dias.length >= planMaxDias
-                  ? `Has alcanzado el máximo de ${planMaxDias} ${
-                    planMaxDias === 1 ? 'día' : 'días'
-                  } para este plan`
-                  : 'Añadir día'
-              }
-            >
-              <MealIcon value="tb:plus" size={18} />
-              {dias.length >= planMaxDias
-                ? `Máximo ${planMaxDias} ${planMaxDias === 1 ? 'día' : 'días'}`
-                : 'Añadir día'}
-            </button>
+            {/* Botón "Añadir día" · oculto en builtIns (días fijos) ·
+                en custom se deshabilita al alcanzar el máximo (7). */}
+            {!isBuiltInPlan && (
+              <button
+                type="button"
+                className="plan-editor-add-btn"
+                onClick={blurAndRun(addDia)}
+                disabled={dias.length >= planMaxDias}
+                aria-label={
+                  dias.length >= planMaxDias
+                    ? `Has alcanzado el máximo de ${planMaxDias} ${
+                      planMaxDias === 1 ? 'día' : 'días'
+                    } para este plan`
+                    : 'Añadir día'
+                }
+              >
+                <MealIcon value="tb:plus" size={18} />
+                {dias.length >= planMaxDias
+                  ? `Máximo ${planMaxDias} ${planMaxDias === 1 ? 'día' : 'días'}`
+                  : 'Añadir día'}
+              </button>
+            )}
 
             {/* Indicador de estado del guardado · "Guardando…" /
                 "Guardado" / "Error". Réplica del patrón MealEditor. */}
