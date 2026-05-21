@@ -608,8 +608,8 @@ const MenuPage: React.FC = () => {
                   aria-selected={active}
                   aria-label={
                     DAY_LABEL_FULL[day]
-                    + (isHidden ? ' · oculto' : '')
-                    + (isExcluded ? ' · excluido del promedio' : '')
+                    + (isHidden ? ' · Oculto' : '')
+                    + (isExcluded ? ' · Excluido del promedio' : '')
                   }
                   className={
                     'menu-day-chip'
