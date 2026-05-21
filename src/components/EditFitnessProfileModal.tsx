@@ -680,7 +680,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
 
               <CollapsibleSection
                 title="Intolerancias"
-                subtitle="Lactosa, fructosa, FODMAP… o lo que necesites"
+                subtitle="Lactosa, fructosa, FODMAP… o lo que añadas"
                 badge={data.intolerancias.length > 0 ? data.intolerancias.length : undefined}
               >
                 <span className="onboarding-field-label">Más comunes</span>
