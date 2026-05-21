@@ -41,7 +41,7 @@ function translateAuthError(code: string): string {
     'auth/invalid-credential': 'Email o contraseña incorrectos.',
     'auth/too-many-requests': 'Se han producido demasiados intentos. Espera un momento y vuelve a intentarlo.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
-    'auth/missing-password': 'Falta la contraseña.',
+    'auth/missing-password': 'No se ha indicado una contraseña.',
   };
   return map[code] ?? 'Algo ha salido mal. Inténtalo de nuevo.';
 }
