@@ -332,10 +332,10 @@ const Settings: React.FC = () => {
             'Un archivo JSON con TODOS tus datos de BTal:\n\n'
             + '• Datos de tu cuenta (email, nombre, proveedores de login, fechas de creación y último acceso).\n'
             + '• Tu perfil físico (peso, altura, edad, objetivo, intolerancias, etc.).\n'
-            + '• Tus menús de las 7 días, lista de la compra, plan de entreno y suplementación.\n'
+            + '• Tus menús de los 7 días, lista de la compra, planes de entreno y suplementación.\n'
             + '• Historial completo de registros de pesos.\n'
             + '• Tus preferencias guardadas (unidades, inicio de semana, etc.).\n\n'
-            + 'El archivo viaja solo a tu dispositivo · no se envía a ningún servidor. '
+            + 'El archivo se descarga solo en tu dispositivo · No se envía a ningún servidor. '
             + 'Trátalo con cuidado: contiene información personal.'
           }
           buttons={[
