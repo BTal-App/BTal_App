@@ -50,7 +50,7 @@ const STAT_INFO: Record<StatKey, { title: string; message: string }> = {
   esteMes: {
     title: 'Este mes',
     message:
-      'Días con entrenamiento real (excluyendo descansos) registrados en el mes que estás viendo en el calendar. El segundo número es la referencia: días transcurridos del mes hasta hoy si miras el mes actual, o el total de días si miras un mes pasado.',
+      'Días con entrenamiento registrado (sin contar descansos) en el mes que estás viendo en el calendario. El segundo número es la referencia: días transcurridos hasta hoy si es el mes actual, o total de días si es un mes pasado.',
   },
   prs: {
     title: "PR's (Personal Records)",
