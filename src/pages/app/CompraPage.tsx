@@ -464,9 +464,9 @@ const CompraPage: React.FC = () => {
           onDidDismiss={() => setConfirmResetOpen(false)}
           header="🔄 Reiniciar carrito"
           message={
-            `¿Desmarcar todos los productos comprados? Se desmarcarán `
+            `¿Desmarcar todos los productos comprados? Se ${markedCount === 1 ? 'desmarcará' : 'desmarcarán'} `
             + `${markedCount} producto${markedCount === 1 ? '' : 's'}. `
-            + `Quedarán todos como pendientes de comprar.`
+            + `${markedCount === 1 ? 'Quedará' : 'Quedarán todos'} como pendiente${markedCount === 1 ? '' : 's'} de comprar.`
           }
           buttons={[
             { text: 'Cancelar', role: 'cancel' },
@@ -489,7 +489,7 @@ const CompraPage: React.FC = () => {
           header="📤 Compartir lista de compra"
           message={
             'Se generará un texto con todos los productos pendientes '
-            + 'de comprar (los NO marcados) agrupados por categoría y su '
+            + 'de comprar (los NO marcados), agrupados por categoría y su '
             + 'precio. En el móvil intentará abrir el menú de '
             + 'compartir (WhatsApp, Telegram, email…). Si no, lo copiará '
             + 'al portapapeles.'
