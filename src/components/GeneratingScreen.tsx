@@ -27,7 +27,7 @@ interface Props {
 //   - Cualquier futuro disparador de generación
 export function GeneratingScreen({
   isOpen,
-  title = 'Generando con IA',
+  title = 'Generando con IA…',
   subtitle = 'Se está generando tu plan personalizado. No cierres la app — esto puede tardar unos segundos.',
 }: Props) {
   return (

@@ -403,7 +403,7 @@ export function AiGenerateModal({
           es un setTimeout de 2s que simula el feedback visual. */}
       <GeneratingScreen
         isOpen={generating}
-        title="Generando con IA"
+        title="Generando con IA…"
         subtitle={summaryToSubtitle(selected)}
       />
 

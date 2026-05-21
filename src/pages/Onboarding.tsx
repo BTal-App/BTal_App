@@ -737,8 +737,8 @@ const Onboarding: React.FC = () => {
             cubre el momento entre Confirmar y la redirección a /app. */}
         <GeneratingScreen
           isOpen={submitting && modeChoice.modo === 'ai'}
-          title="Generando tu plan inicial"
-          subtitle="Estamos guardando tu perfil y preparando tu plan personalizado. No cierres la app."
+          title="Generando tu plan inicial…"
+          subtitle="Guardando tu perfil y preparando tu plan personalizado… No cierres la app."
         />
       </IonContent>
     </IonPage>
