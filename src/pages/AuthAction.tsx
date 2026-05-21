@@ -301,7 +301,7 @@ const AuthAction: React.FC = () => {
     body = (
       <>
         <h2 className="auth-action-title">Acción desconocida</h2>
-        <p className="auth-action-text">No reconocemos este tipo de enlace.</p>
+        <p className="auth-action-text">No se reconoce este tipo de enlace.</p>
         <IonButton expand="block" className="auth-action-primary" onClick={goHome}>
           Volver
         </IonButton>
