@@ -126,22 +126,29 @@ ion-alert.entreno-confirm-alert .alert-message {
   box-shadow: inset 0 0 0 2px rgba(55, 240, 168, 0.4);
 }
 .plan-mini--activo::before {
-  content: '✓ ACTIVO';
+  /* Círculo verde con ✓ pegado a la esquina superior derecha,
+     sobresaliendo del borde. Réplica del v1
+     `.menu-batido-info-btn.day-has-it::after` (index.html ref). */
+  content: '✓';
   position: absolute;
-  top: -9px;
-  right: 12px;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   background: rgb(55, 240, 168);
   color: #0a0e0c;
-  padding: 2px 9px;
-  border-radius: 999px;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
   font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--btal-surface);
   z-index: 6;
-  white-space: nowrap;
-  /* Pop-in al aplicar la clase · cuando el plan pasa a ser activo. */
-  animation: btal-check-pop 0.4s cubic-bezier(0.2, 1.6, 0.5, 1) both;
+  /* Pop-in con overshoot · réplica v1 `checkPop`. */
+  animation: btal-check-pop 0.35s cubic-bezier(0.2, 1.6, 0.5, 1) both;
 }
 
 /* Nombre del plan custom · sustituye al `.plan-num` en planes no
