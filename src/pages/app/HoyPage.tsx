@@ -370,7 +370,7 @@ const HoyPage: React.FC = () => {
                           </div>
                         ) : (
                           <p className="hoy-meal-empty-text">
-                            Aún sin definir · pulsa para añadir
+                            Aún sin definir · Pulsa para añadir
                           </p>
                         )}
                       </div>
@@ -472,7 +472,7 @@ const HoyPage: React.FC = () => {
               <div className="hoy-empty-info">
                 <span className="hoy-empty-title">Cargando menú…</span>
                 <span className="hoy-empty-sub">
-                  Estamos sincronizando tus comidas con la base de datos.
+                  Se están sincronizando tus comidas con la base de datos.
                 </span>
               </div>
             </div>
@@ -612,7 +612,7 @@ function SuplementacionBlock() {
           <MealIcon value="tb:flask" size={24} />
         </div>
         <div className="hoy-empty-info">
-          <span className="hoy-empty-title">Sin suplementos para hoy</span>
+          <span className="hoy-empty-title">No se han añadido suplementos hoy</span>
           <span className="hoy-empty-sub">
             Activa el batido proteico o la creatina en la pestaña{' '}
             <strong>Menú</strong> y aparecerán aquí los días que los tomes.
