@@ -143,9 +143,9 @@ export function AiPromptSummaryModal({
   // active "permitir tocar lo mío". Se lo indicamos al user en el
   // resumen para que sepa lo que la IA va a recibir.
   const activePlan = entrenos?.planes[entrenos.activePlan] ?? null;
-  const customPredeterminado = entrenos
+  const planActivo = entrenos
     ? Object.values(entrenos.planes).find(
-        (p) => p && p.esPredeterminado,
+        (p) => p && p.activo,
       ) ?? null
     : null;
 
@@ -269,10 +269,10 @@ export function AiPromptSummaryModal({
                   label="Días del plan"
                   value={`${activePlan.dias.length} ${activePlan.dias.length === 1 ? 'día' : 'días'}`}
                 />
-                {customPredeterminado && (
+                {planActivo && (
                   <SummaryRow
-                    label="Predeterminado"
-                    value={`${customPredeterminado.nombre} (la IA respetará este plan)`}
+                    label="Plan activo"
+                    value={`${planActivo.nombre} (la IA respetará este plan)`}
                   />
                 )}
               </SummaryBlock>

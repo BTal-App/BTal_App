@@ -377,13 +377,12 @@ export interface PlanEntreno {
   // True para los 7 builtIn (1dias..7dias) · no se pueden eliminar.
   // False para los custom · sí se pueden borrar.
   builtIn: boolean;
-  // Sub-fase 2D.1 · Marca un plan custom como "predeterminado". Cuando
-  // está activo, el chip se renderiza idéntico a los builtIn (centrado
-  // sin tag con el nombre debajo) · útil para que el user destaque su
-  // plan habitual. Optional para retrocompat con docs creados antes.
-  // Los planes builtIn tienen builtIn=true · esta flag NO aplica a
-  // ellos (siempre se consideran predeterminados implícitamente).
-  esPredeterminado?: boolean;
+  // Flag "Activo" · marca este plan como el plan principal del user.
+  // Solo uno a la vez puede tenerlo. Aplica tanto a builtIn como a
+  // custom (renombrado desde `esPredeterminado` en Fase 2D · mismo
+  // comportamiento pero terminología más explícita: "activo" = en uso).
+  // Optional para retrocompat con docs creados antes.
+  activo?: boolean;
 }
 
 export interface Entrenos {
@@ -421,19 +420,29 @@ export function getRecommendedPlanId(diasEntreno: number | null): BuiltInPlanId 
   return `${clamp}dias` as BuiltInPlanId;
 }
 
-// Versión que respeta el plan marcado como predeterminado · si el user
-// ha marcado algún plan (builtIn o custom), ése gana sobre el builtIn
-// derivado de `diasEntreno`. Si no hay pred y `diasEntreno === 0`,
-// devolvemos null para que el caller no marque ★ en ningún plan
-// (coherente con EntrenoPage que tampoco lo hace en ese caso).
+// Plan "efectivo" para marcar con la estrella en el selector de Registro.
+// Nueva lógica (Fase 2D refactor):
+//   - Si el user ha marcado algún plan como `activo` (builtIn o custom),
+//     ése gana → ese es el activo y se marca con tick verde / estrella.
+//   - Si no hay plan activo Y no hay ningún custom creado, el recomendado
+//     según `diasEntreno` es el activo implícito → marcar el builtIn.
+//   - En el resto de casos (hay customs pero ninguno activo, o
+//     diasEntreno=0) devolvemos null y no se marca nada.
 export function getEffectiveRecommendedPlanId(
   entrenos: Entrenos | null | undefined,
   diasEntreno: number | null,
 ): string | null {
   if (entrenos) {
+    let hasCustom = false;
     for (const p of Object.values(entrenos.planes)) {
-      if (p && p.esPredeterminado) return p.id;
+      if (!p) continue;
+      if (p.activo) return p.id;
+      if (!p.builtIn) hasCustom = true;
     }
+    // Sin plan activo · solo mostramos recomendado si NO hay customs
+    // (estado inicial del user · ayuda a orientar). Una vez tiene
+    // customs, asumimos que está en control y no marcamos nada.
+    if (hasCustom) return null;
   }
   if (diasEntreno === 0) return null;
   return getRecommendedPlanId(diasEntreno);

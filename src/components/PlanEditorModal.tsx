@@ -43,10 +43,10 @@ interface Props {
   // un plan custom nuevo (genera con newPlanEntrenoId hasta encontrar
   // uno libre).
   existingPlanIds: string[];
-  // Plan que ya tiene esPredeterminado=true (si lo hay). Necesario para
-  // mostrar el IonAlert de confirmación cuando el user intenta marcar
-  // OTRO plan como predeterminado. null si no hay ninguno actualmente.
-  existingPredeterminado?: PlanEntreno | null;
+  // Plan que ya tiene `activo=true` (si lo hay). Necesario para mostrar
+  // el IonAlert de confirmación cuando el user intenta activar OTRO
+  // plan. null si no hay ninguno actualmente.
+  existingActivo?: PlanEntreno | null;
   onSave: (plan: PlanEntreno) => Promise<void> | void;
 }
 
@@ -58,21 +58,18 @@ export function PlanEditorModal({
   onClose,
   plan,
   existingPlanIds,
-  existingPredeterminado = null,
+  existingActivo = null,
   onSave,
 }: Props) {
   const isEdit = !!plan;
   const [nombre, setNombre] = useState(plan?.nombre ?? '');
   const [dias, setDias] = useState<DiaEntreno[]>(plan?.dias ?? []);
-  // Toggle "Marcar como predeterminado" · aplica a builtIn y custom.
-  // Si está activo, el chip de EntrenoPage muestra "★ Predeterminado"
-  // y la lógica de recomendación lo respeta (ignora el cálculo basado
-  // en `profile.diasEntreno`). Sub-fase 2D.1 · ampliado para incluir
-  // builtIn: el user puede declarar "Plan 4 Días" como su predeterminado
-  // y el ★ Recomendado se desactiva en favor de su decisión explícita.
-  const [esPredeterminado, setEsPredeterminado] = useState<boolean>(
-    plan?.esPredeterminado ?? false,
-  );
+  // Toggle "Activar este plan" · aplica a builtIn y custom. Si está
+  // activado, el chip de EntrenoPage muestra un tick verde y la lógica
+  // de recomendación lo respeta (ignora el cálculo basado en
+  // `profile.diasEntreno`). Solo uno a la vez · invariante garantizada
+  // por el alert al activar y el cleanup en handleSavePlanFromEditor.
+  const [activo, setActivo] = useState<boolean>(plan?.activo ?? false);
 
   // Límite de días del plan. Los planes builtIn ('1dias'..'7dias') son
   // FIJOS en N días (Plan 1 Día = 1 día, Plan 7 Días = 7 días) · ni se
@@ -107,15 +104,15 @@ export function PlanEditorModal({
   // Confirmación borrar día · réplica v1 peDelDay con mobileConfirm.
   // Guardamos el índice del día pendiente de borrar.
   const [confirmDeleteDia, setConfirmDeleteDia] = useState<number | null>(null);
-  // IonAlert "¿Reemplazar el predeterminado?" · se dispara cuando el
-  // user intenta marcar este plan como predeterminado pero ya existe
-  // otro plan con la flag activa. Solo un plan a la vez puede serlo.
-  const [confirmReplacePred, setConfirmReplacePred] = useState(false);
-  // IonAlert "¿Quitar el predeterminado?" · se dispara cuando el user
-  // desmarca el toggle en un plan que YA era predeterminado al abrir
-  // el modal. Si lo marcó dentro de la sesión y lo desmarca sin guardar,
-  // no se pregunta (es un toggle exploratorio).
-  const [confirmRemovePred, setConfirmRemovePred] = useState(false);
+  // IonAlert "¿Reemplazar el plan activo?" · se dispara cuando el user
+  // intenta activar este plan pero ya hay otro con activo=true. Solo
+  // uno a la vez puede serlo.
+  const [confirmReplaceActivo, setConfirmReplaceActivo] = useState(false);
+  // IonAlert "¿Desactivar este plan?" · se dispara cuando el user
+  // desactiva el toggle en un plan que YA estaba activo al abrir el
+  // modal. Si lo activó en la sesión y lo desactiva sin guardar, no se
+  // pregunta (es un toggle exploratorio).
+  const [confirmRemoveActivo, setConfirmRemoveActivo] = useState(false);
 
   // Reset al re-abrir · evita arrastrar edits sin guardar.
   const handleWillPresent = () => {
@@ -126,9 +123,9 @@ export function PlanEditorModal({
         { ...emptyDiaEntreno(), titulo: 'Día 1' },
       ],
     );
-    setEsPredeterminado(plan?.esPredeterminado ?? false);
-    setConfirmReplacePred(false);
-    setConfirmRemovePred(false);
+    setActivo(plan?.activo ?? false);
+    setConfirmReplaceActivo(false);
+    setConfirmRemoveActivo(false);
     resetSave();
     setMissingAlert(null);
     setConfirmChanges(null);
@@ -218,11 +215,11 @@ export function PlanEditorModal({
       // builtIn solo si veníamos editando uno · al crear nuevo siempre
       // es custom (false). v1 distingue 1dias..7dias como builtIn.
       builtIn: isEdit && plan ? plan.builtIn : false,
-      // Flag predeterminado · aplica a builtIn y custom por igual.
-      // Cuando está activo, el chip de EntrenoPage se renderiza con
-      // "★ Predeterminado" y la lógica de recomendación lo respeta
-      // ignorando el cálculo basado en `profile.diasEntreno`.
-      esPredeterminado,
+      // Flag "activo" · aplica a builtIn y custom por igual. Cuando
+      // está activo, el chip de EntrenoPage se renderiza con tick verde
+      // y la lógica de recomendación lo respeta (ignora el cálculo
+      // basado en `profile.diasEntreno`).
+      activo,
     };
 
     // Construye el diff antes/después · réplica del v1 confirmSave.
@@ -301,50 +298,49 @@ export function PlanEditorModal({
               />
             </div>
 
-            {/* Toggle "predeterminado" · aplica a builtIn y custom.
-                Cuando está activo, el chip muestra "★ Predeterminado"
-                y la lógica de recomendación lo respeta (ignora el
-                cálculo automático basado en los días declarados).
-                Si ya existe OTRO plan predeterminado y el user intenta
-                activar este toggle, se dispara un IonAlert de
-                confirmación · solo un plan puede ser pred a la vez. */}
+            {/* Toggle "Activar este plan" · aplica a builtIn y custom.
+                Cuando se activa, el chip de Entreno muestra un tick
+                verde y la lógica de recomendación lo respeta (ignora
+                el cálculo automático basado en los días declarados).
+                Si ya hay OTRO plan activo y el user intenta activar
+                este, se dispara un IonAlert de confirmación · solo
+                uno puede estar activo a la vez. */}
             <div className="sup-form-group">
               <label className="plan-editor-toggle">
                 <input
                   type="checkbox"
-                  checked={esPredeterminado}
+                  checked={activo}
                   onChange={(e) => {
                     const next = e.target.checked;
                     if (!next) {
                       // Desactivando · solo confirmamos si el plan YA
-                      // era predeterminado al abrir el modal. Si lo
-                      // marcó dentro de la sesión y lo desmarca antes
-                      // de guardar, es un toggle exploratorio y no
-                      // tiene sentido pedir confirmación.
-                      if (plan?.esPredeterminado) {
-                        setConfirmRemovePred(true);
+                      // estaba activo al abrir el modal. Si lo activó
+                      // dentro de la sesión y lo desactiva antes de
+                      // guardar, es un toggle exploratorio · no se
+                      // pide confirmación.
+                      if (plan?.activo) {
+                        setConfirmRemoveActivo(true);
                       } else {
-                        setEsPredeterminado(false);
+                        setActivo(false);
                       }
                       return;
                     }
-                    // Activando · si ya hay otro pred, pedir confirmación
-                    // (a no ser que éste sea el plan que ya estaba pred).
+                    // Activando · si ya hay otro plan activo, pedir
+                    // confirmación (a no ser que éste sea el mismo).
                     const conflict =
-                      existingPredeterminado
-                      && existingPredeterminado.id !== plan?.id;
+                      existingActivo && existingActivo.id !== plan?.id;
                     if (conflict) {
-                      setConfirmReplacePred(true);
+                      setConfirmReplaceActivo(true);
                     } else {
-                      setEsPredeterminado(true);
+                      setActivo(true);
                     }
                   }}
                 />
                 <span className="plan-editor-toggle-label">
-                  Marcar como predeterminado
+                  Activar este plan
                 </span>
                 <span className="plan-editor-toggle-hint">
-                  Se mostrará como tu plan principal en la pestaña Entreno
+                  Se marcará como tu plan principal en la pestaña Entreno
                   y reemplazará al recomendado por los días declarados.
                 </span>
               </label>
@@ -503,15 +499,15 @@ export function PlanEditorModal({
         buttons={[{ text: 'Entendido', role: 'cancel' }]}
       />
 
-      {/* Alert "¿Reemplazar predeterminado?" · al intentar activar
-          este toggle si ya hay otro plan marcado como pred. */}
+      {/* Alert "¿Reemplazar el plan activo?" · al intentar activar
+          este toggle si ya hay otro plan con activo=true. */}
       <IonAlert
-        isOpen={confirmReplacePred}
-        onDidDismiss={() => setConfirmReplacePred(false)}
-        header="¿Reemplazar el predeterminado?"
+        isOpen={confirmReplaceActivo}
+        onDidDismiss={() => setConfirmReplaceActivo(false)}
+        header="¿Reemplazar el plan activo?"
         message={
-          existingPredeterminado
-            ? `Ya tienes el plan «${existingPredeterminado.nombre}» marcado como predeterminado.\n\nSi marcas este plan, el anterior dejará de serlo (solo un plan puede ser predeterminado a la vez).`
+          existingActivo
+            ? `Ya tienes el plan «${existingActivo.nombre}» marcado como activo.\n\nSi activas este plan, el anterior dejará de estarlo (solo uno puede estar activo a la vez).`
             : ''
         }
         cssClass="alert-multiline"
@@ -520,28 +516,28 @@ export function PlanEditorModal({
           {
             text: 'Reemplazar',
             handler: () => {
-              setEsPredeterminado(true);
+              setActivo(true);
             },
           },
         ]}
       />
 
-      {/* Alert "¿Quitar predeterminado?" · al desmarcar el toggle en
-          un plan que YA era predeterminado al abrir el modal. */}
+      {/* Alert "¿Desactivar este plan?" · al desactivar el toggle en
+          un plan que YA estaba activo al abrir el modal. */}
       <IonAlert
-        isOpen={confirmRemovePred}
-        onDidDismiss={() => setConfirmRemovePred(false)}
-        header="¿Quitar el predeterminado?"
+        isOpen={confirmRemoveActivo}
+        onDidDismiss={() => setConfirmRemoveActivo(false)}
+        header="¿Desactivar este plan?"
         message={
-          'Este plan dejará de ser tu predeterminado.\n\nLa recomendación volverá a basarse en los días de entreno declarados en tu perfil.'
+          'Este plan dejará de ser tu plan activo.\n\nLa recomendación volverá a basarse en los días de entreno declarados en tu perfil.'
         }
         cssClass="alert-multiline"
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
           {
-            text: 'Quitar',
+            text: 'Desactivar',
             handler: () => {
-              setEsPredeterminado(false);
+              setActivo(false);
             },
           },
         ]}

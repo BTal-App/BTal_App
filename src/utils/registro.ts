@@ -122,7 +122,7 @@ export interface PlanOptionsGroups {
 //     (todas las combinaciones plan-día).
 //
 //   - Agrupación: builtIn van a `predeterminados`, custom (sin
-//     importar `esPredeterminado`) a `personalizados`. Cada grupo
+//     importar el flag `activo`) a `personalizados`. Cada grupo
 //     ordenado: builtIn por nº de días (1..7), custom alfabético
 //     por nombre del plan.
 //

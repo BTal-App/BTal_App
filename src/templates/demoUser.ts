@@ -341,7 +341,7 @@ const DEMO_PLAN_CUSTOM_PRED: PlanEntreno = {
   estructura: '',
   estructura2: '',
   builtIn: false,
-  esPredeterminado: true,
+  activo: true,
   dias: [
     {
       titulo: 'Día A · Empuje',

@@ -116,13 +116,36 @@ ion-alert.entreno-confirm-alert .alert-message {
   text-transform: uppercase;
 }
 
-/* Sub-fase 2D.1 · Cuando el chip recomendado es un custom marcado
-   como predeterminado, sustituimos "★ Recomendado" por
-   "★ Predeterminado" para reflejar la decisión explícita del user
-   (vs sugerencia automática del perfil). El selector más específico
-   gana sobre `.plan-mini--recommended::after` de arriba. */
-.plan-mini--custom-pred.plan-mini--recommended::after {
-  content: '★ Predeterminado';
+/* Plan marcado como `activo` · tick verde en la esquina superior
+   derecha del chip · estilo del check de "Tomado" en HoyPage
+   (BATIDO/CREATINA). El tick reemplaza al "★ Recomendado": cuando
+   un plan es activo, NO se muestra el ★ (el activo gana). */
+.plan-mini--activo {
+  border-color: rgba(55, 240, 168, 0.5);
+  box-shadow: 0 0 0 1px rgba(55, 240, 168, 0.15) inset;
+}
+.plan-mini--activo::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgb(55, 240, 168);
+  /* Tick interior · usa mask con un SVG checkmark inline (sin requerir
+     imágenes externas). El círculo de fondo lleva el verde sólido. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230a0e0c' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>");
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 0 0 2px var(--btal-surface);
+}
+
+/* Cuando un plan es a la vez `activo` y `recommended` (caso raro:
+   no hay customs · el builtIn recomendado coincide con uno activo),
+   ocultamos el ★ Recomendado · el tick verde manda. */
+.plan-mini--activo.plan-mini--recommended::after {
+  content: none;
 }
 
 /* Nombre del plan custom · sustituye al `.plan-num` en planes no
