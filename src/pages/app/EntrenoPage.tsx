@@ -418,7 +418,7 @@ const EntrenoPage: React.FC = () => {
                   // Sustituye a TODAS las variantes basadas en
                   // diasEntreno · el predeterminado ignora el perfil.
                   <>
-                    Tu plan predeterminado:{' '}
+                    Tu plan predeterminado es:{' '}
                     <b className="entreno-banner-rec">
                       {customPredeterminado.nombre}
                     </b>.{' '}
@@ -430,7 +430,7 @@ const EntrenoPage: React.FC = () => {
                   // Hay un predeterminado pero el user está mirando otro.
                   // Sugerir volver al predeterminado.
                   <>
-                    Estás viendo <b>{activePlan.nombre}</b>. Tu plan
+                    Estás viendo el <b>{activePlan.nombre}</b>. Tu plan
                     predeterminado es{' '}
                     <button
                       type="button"
@@ -473,7 +473,7 @@ const EntrenoPage: React.FC = () => {
                 ) : (
                   // Caso 3 · plan builtIn distinto al recomendado.
                   <>
-                    Estás viendo <b>{activePlan.nombre}</b>. Para{' '}
+                    Estás viendo el <b>{activePlan.nombre}</b>. Para{' '}
                     {diasEntreno === 1 ? 'tu' : 'tus'}{' '}
                     <b>
                       {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
