@@ -482,7 +482,7 @@ const Onboarding: React.FC = () => {
 
                 <CollapsibleSection
                   title="Alergias"
-                  subtitle="Las 14 declarables del Reglamento UE + lo que añadas"
+                  subtitle="Los 14 alérgenos del Reglamento UE + lo que añadas"
                   badge={data.alergias.length > 0 ? data.alergias.length : undefined}
                 >
                   <span className="onboarding-field-label">Más comunes</span>
