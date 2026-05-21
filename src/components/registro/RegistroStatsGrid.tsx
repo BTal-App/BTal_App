@@ -40,12 +40,10 @@ const STAT_INFO: Record<StatKey, { title: string; message: string }> = {
       + 'Cuándo se rompe:\n'
       + '• Si registras un día como DESCANSO\n'
       + '• Si no registras actividad durante un día completo\n\n'
-      + 'Excepción (margen de hoy): si hoy aún no has registrado actividad pero '
-      + 'ayer sí entrenaste, la racha mantiene el valor de ayer hasta que '
-      + 'termine el día. Te da margen para entrenar más tarde.\n\n'
-      + 'Para empezar la racha: registra un entrenamiento y verás «1 día». Cada '
-      + 'entrenamiento consecutivo posterior suma +1.\n\n'
-      + 'Mira tu historial completo y mejores rachas en «Gráficos» → pestaña «Rachas».',
+      + 'Más detalles:\n'
+      + '• Margen de hoy: si hoy aún no has registrado actividad pero ayer sí entrenaste, la racha mantiene el valor de ayer hasta que termine el día. Te da margen para entrenar más tarde.\n'
+      + '• Para empezar la racha, registra un entrenamiento y verás «1 día». Cada entrenamiento consecutivo posterior suma +1.\n'
+      + '• Puedes ver tu historial completo y mejores rachas en «Gráficos» → pestaña «Rachas».',
   },
   esteMes: {
     title: 'Este mes',
@@ -78,7 +76,7 @@ export function RegistroStatsGrid({
   // hoy) lo indicamos para que el user sepa por qué la racha no es 0
   // pese a no haber registrado nada hoy.
   const rachaSub = (() => {
-    if (rachaActual === 0) return 'sin racha · ¡Empieza hoy!';
+    if (rachaActual === 0) return 'días · ¡Empieza hoy!';
     if (!rachaUltimaFecha) return 'días consecutivos';
     const today = new Date();
     const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;

@@ -14,12 +14,10 @@ const RACHA_INFO =
   + 'Cuándo se rompe:\n'
   + '• Si registras un día como DESCANSO\n'
   + '• Si no registras actividad durante un día completo\n\n'
-  + 'Excepción (margen de hoy): si hoy aún no has registrado actividad pero '
-  + 'ayer sí entrenaste, la racha mantiene el valor de ayer hasta que '
-  + 'termine el día. Te da margen para entrenar más tarde.\n\n'
-  + 'Para empezar la racha: registra un entrenamiento y verás «1 día». Cada '
-  + 'entrenamiento consecutivo posterior suma +1.\n\n'
-  + 'Mira tu historial completo y mejores rachas en «Gráficos» → pestaña «Rachas».';
+  + 'Más detalles:\n'
+  + '• Margen de hoy: si hoy aún no has registrado actividad pero ayer sí entrenaste, la racha mantiene el valor de ayer hasta que termine el día. Te da margen para entrenar más tarde.\n'
+  + '• Para empezar la racha, registra un entrenamiento y verás «1 día». Cada entrenamiento consecutivo posterior suma +1.\n'
+  + '• Puedes ver tu historial completo y mejores rachas en «Gráficos» → pestaña «Rachas».';
 
 // Chip "🔥 N días" que se muestra a la izquierda del avatar en el
 // TabHeader de HoyPage. Lee la racha de entrenos consecutivos del

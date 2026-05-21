@@ -401,11 +401,11 @@ export function RegistroCalendar({
         onDidDismiss={() => setInfoOpen(false)}
         header="Código de colores del calendario"
         message={
-          'AZUL · día con descanso registrado.\n\n'
-          + 'LIMA · día con plan de entreno registrado.\n\n'
-          + 'BORDE CYAN · día de hoy.\n\n'
-          + 'FONDO LIMA · día seleccionado actualmente.\n\n'
-          + 'Sin color · día sin registro · pulsa para añadir uno.'
+          '• AZUL · día con descanso registrado.\n'
+          + '• LIMA · día con plan de entreno registrado.\n'
+          + '• BORDE CYAN · día de hoy.\n'
+          + '• FONDO LIMA · día seleccionado actualmente.\n'
+          + '• Sin color · día sin registro · pulsa para añadir uno.'
         }
         buttons={['Entendido']}
       />
