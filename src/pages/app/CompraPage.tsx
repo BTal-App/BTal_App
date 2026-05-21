@@ -191,7 +191,7 @@ const CompraPage: React.FC = () => {
       setInfoAlert({
         header: 'Lista vacía',
         message:
-          'Todos los productos están marcados como comprados. Desmarca los que aún necesites para compartir la lista.',
+          'Todos los productos están marcados como comprados. Desmarca los que aún necesites antes de compartir la lista.',
       });
       return;
     }
