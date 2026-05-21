@@ -257,7 +257,7 @@ const Onboarding: React.FC = () => {
                   <span>Nombre</span>
                   <input
                     type="text"
-                    placeholder="Pablo"
+                    placeholder="Tu nombre"
                     value={data.nombre}
                     onChange={(e) => setField('nombre', e.target.value)}
                     autoComplete="given-name"
