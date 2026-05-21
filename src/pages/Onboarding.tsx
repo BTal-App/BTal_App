@@ -355,7 +355,7 @@ const Onboarding: React.FC = () => {
               <>
                 <h1 className="onboarding-title">Tu estilo de vida</h1>
                 <p className="onboarding-text">
-                  Cuanto te muevas y dónde entrenes condicionan el plan.
+                  Cuánto te mueves y dónde entrenas condicionan el plan.
                 </p>
 
                 <span className="onboarding-field-label">Nivel de actividad</span>
