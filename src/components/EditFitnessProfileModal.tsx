@@ -749,7 +749,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
               >
                 <ChipsInput
                   color="cyan"
-                  placeholder="Ej: salmón al menos 2 veces, arroz a diario…"
+                  placeholder="Ej: Salmón al menos 2 veces, arroz a diario…"
                   value={data.alimentosObligatorios}
                   onChange={(v) => setField('alimentosObligatorios', v)}
                   ariaLabel="Añadir alimento obligatorio"
@@ -763,7 +763,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
               >
                 <ChipsInput
                   color="lime"
-                  placeholder="Ej: aguacate, huevos, espinacas…"
+                  placeholder="Ej: Aguacate, huevos, espinacas…"
                   value={data.ingredientesFavoritos}
                   onChange={(v) => setField('ingredientesFavoritos', v)}
                   ariaLabel="Añadir ingrediente favorito"
