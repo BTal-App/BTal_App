@@ -215,7 +215,7 @@ const HoyPage: React.FC = () => {
                   ? 'En cuanto se habilite el generador de IA, se creará tu plan diario con macros, comidas y entreno a partir de tu perfil.'
                   : user.isAnonymous
                   ? 'Crea una cuenta y completa el onboarding para generar tu plan personalizado.'
-                  : 'Completa tu perfil para que podamos generar tu plan personalizado.'}
+                  : 'Completa tu perfil para generar tu plan personalizado.'}
               </p>
               {showAiButton ? (
                 <button
@@ -230,8 +230,8 @@ const HoyPage: React.FC = () => {
                 <div className="hoy-hero-tag">
                   <MealIcon value="tb:sparkles" size={16} />
                   {user.isAnonymous
-                    ? 'Datos de ejemplo · regístrate para personalizar'
-                    : 'Cambia a modo IA en Ajustes para generar tu plan'}
+                    ? 'Datos de ejemplo · Regístrate para personalizar'
+                    : 'Cambia a "Modo IA" en Ajustes → Administrar cuenta → Modo de generación para generar tu plan'}
                 </div>
               )}
             </div>

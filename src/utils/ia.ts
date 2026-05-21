@@ -60,7 +60,7 @@ export function canGenerateAi(
     return {
       allowed: false,
       reason: 'manual_mode',
-      hint: 'Cambia a modo IA en Ajustes para generar tu plan.',
+      hint: 'Cambia a "Modo IA" en Ajustes → Administrar cuenta → Modo de generación para generar tu plan.',
     };
   }
 
