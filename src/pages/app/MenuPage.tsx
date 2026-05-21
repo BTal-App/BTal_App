@@ -712,7 +712,7 @@ const MenuPage: React.FC = () => {
                   </span>
                   <span className="menu-day-hidden-sub">
                     Sus comidas siguen guardadas y no cuentan en la media
-                    semanal. Puedes mostrarlo cuando quieras.
+                    semanal. Puedes mostrarlas cuando quieras.
                   </span>
                 </div>
               </div>
@@ -799,7 +799,7 @@ const MenuPage: React.FC = () => {
               <div className="hoy-empty-info">
                 <span className="hoy-empty-title">Cargando menú…</span>
                 <span className="hoy-empty-sub">
-                  Estamos sincronizando tus comidas con la base de datos.
+                  Se están sincronizando tus comidas con la base de datos.
                 </span>
               </div>
             </div>
