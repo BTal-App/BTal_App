@@ -104,7 +104,7 @@ const AuthAction: React.FC = () => {
           await refreshUser();
           if (!cancelled) {
             setSuccessMsg(
-              'Se ha eliminado el segundo factor de autenticación que se añadió. Cambia tu contraseña por seguridad.',
+              'Se ha eliminado el segundo factor de autenticación (2FA). Cambia tu contraseña por seguridad.',
             );
           }
         }
@@ -283,14 +283,14 @@ const AuthAction: React.FC = () => {
           Se recomienda cambiar la contraseña ahora desde "¿Has olvidado tu contraseña?".
         </p>
         <IonButton expand="block" className="auth-action-primary" onClick={goHome}>
-          Ir a la landing
+          Iniciar sesión
         </IonButton>
       </>
     );
   } else if (info?.operation === 'REVERT_SECOND_FACTOR_ADDITION') {
     body = (
       <>
-        <h2 className="auth-action-title">Segundo factor revocado</h2>
+        <h2 className="auth-action-title">Segundo factor de autenticación (2FA) revocado</h2>
         <div className="landing-msg info">{successMsg}</div>
         <IonButton expand="block" className="auth-action-primary" onClick={goHome}>
           Continuar
