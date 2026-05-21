@@ -112,6 +112,16 @@
   50% { opacity: 0.45; }
 }
 
+/* Pop-in con rebote estilo "check añadido" · réplica del v1
+   `checkPop` (BATIDO/CREATINA "TOMADO"). Para badges/chips que
+   aparecen al activar un estado · sale desde scale(0) con un overshoot
+   suave y vuelve a 1. */
+@keyframes btal-check-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 /* ── Clases helper · aplicar con className ────────────────────────── */
 
 .btal-anim-pop-in {
