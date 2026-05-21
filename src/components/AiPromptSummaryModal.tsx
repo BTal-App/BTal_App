@@ -145,7 +145,7 @@ export function AiPromptSummaryModal({
   const activePlan = entrenos?.planes[entrenos.activePlan] ?? null;
   const customPredeterminado = entrenos
     ? Object.values(entrenos.planes).find(
-        (p) => p && !p.builtIn && p.esPredeterminado,
+        (p) => p && p.esPredeterminado,
       ) ?? null
     : null;
 

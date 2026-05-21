@@ -433,7 +433,7 @@ export function getEffectiveRecommendedPlanId(
 ): string {
   if (entrenos) {
     for (const p of Object.values(entrenos.planes)) {
-      if (p && !p.builtIn && p.esPredeterminado) return p.id;
+      if (p && p.esPredeterminado) return p.id;
     }
   }
   return getRecommendedPlanId(diasEntreno);

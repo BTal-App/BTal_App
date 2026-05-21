@@ -94,7 +94,6 @@ const EntrenoPage: React.FC = () => {
   // se hace en el contenedor `.plan-cards` (overflow-x: auto), no en
   // la página entera (eso reventaría el contentRef).
   const planCardsRef = useRef<HTMLDivElement>(null);
-  const recommendedBtnRef = useRef<HTMLButtonElement>(null);
 
   const entrenos = userDoc?.entrenos ?? defaultEntrenos();
   const activePlanId = entrenos.activePlan;
@@ -107,14 +106,16 @@ const EntrenoPage: React.FC = () => {
   const planShortName = (p: PlanEntreno): string =>
     p.nombre.replace(/^plan\s+/i, '');
 
-  // Sub-fase 2D.1 · Si el user tiene algún plan custom marcado como
+  // Si el user tiene algún plan (builtIn o custom) marcado como
   // predeterminado, ese es SIEMPRE el "recomendado" e IGNORA el cálculo
   // basado en `profile.diasEntreno`. Solo cuando se borra ese plan
-  // (o se desmarca el flag), vuelve la lógica del perfil.
-  // Iteración corta · `entrenos.planes` es máx ~10-15 entries.
+  // (o se desmarca el flag), vuelve la lógica del perfil. Sub-fase 2D.1
+  // ampliada para incluir builtIns (1dias..7dias también pueden marcarse
+  // como predeterminado por el user). Iteración corta · `entrenos.planes`
+  // es máx ~10-15 entries.
   const customPredeterminado: PlanEntreno | null = useMemo(() => {
     for (const p of Object.values(entrenos.planes)) {
-      if (p && !p.builtIn && p.esPredeterminado) return p;
+      if (p && p.esPredeterminado) return p;
     }
     return null;
   }, [entrenos.planes]);
@@ -165,57 +166,37 @@ const EntrenoPage: React.FC = () => {
   const showAiButton =
     !!user && !user.isAnonymous && userDoc?.profile?.modo === 'ai';
 
-  // Asegura que el chip "★ Recomendado" siempre quede visible en el
-  // viewport inicial del switcher · si el recomendado es 5dias o
-  // superior, en pantallas estrechas el card cae fuera de la zona
-  // visible al entrar en la tab. Lo centramos suavemente. Se ejecuta
-  // al montar y cada vez que cambia el recommendedId (ej. el user
-  // edita `profile.diasEntreno`).
+  // Centra automáticamente la card del plan activo en el strip
+  // horizontal cada vez que cambia. Se dispara al montar (con el plan
+  // inicial), al pulsar una plan-mini directamente, y al pulsar los
+  // botones del banner ("Plan recomendado" / "Tu plan predeterminado").
+  // Usa querySelector con data-plan-id en vez de un ref dedicado · la
+  // regla react-hooks/refs de React 19 rechaza refs condicionales
+  // dentro de un map. scrollIntoView con block:'nearest' solo hace
+  // scroll vertical si la card está fuera de viewport, y inline:'center'
+  // siempre centra horizontalmente dentro del strip scroll.
   useEffect(() => {
-    const btn = recommendedBtnRef.current;
     const container = planCardsRef.current;
-    if (!btn || !container) return;
+    if (!container) return;
     // requestAnimationFrame para que el scroll ocurra DESPUÉS de que
     // la lista esté pintada · sin esto, en algunas vueltas el scroll
     // se aplica antes y se pierde.
     const raf = requestAnimationFrame(() => {
-      const btnLeft = btn.offsetLeft;
-      const btnRight = btnLeft + btn.offsetWidth;
-      const visibleStart = container.scrollLeft;
-      const visibleEnd = visibleStart + container.clientWidth;
-      // Solo scroll si el botón cae fuera del área visible · respeta
-      // el scroll manual del user si ya lo movió.
-      if (btnLeft < visibleStart || btnRight > visibleEnd) {
-        // Centramos el card recomendado · margin de 16px para que el
-        // siguiente card también asome y dé pista de "hay más".
-        const target = Math.max(
-          0,
-          btnLeft - (container.clientWidth - btn.offsetWidth) / 2,
-        );
-        container.scrollTo({ left: target, behavior: 'smooth' });
-      }
+      const btn = container.querySelector(
+        `[data-plan-id="${activePlanId}"]`,
+      ) as HTMLElement | null;
+      btn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     });
     return () => cancelAnimationFrame(raf);
-  }, [recommendedId, planList.length]);
+  }, [activePlanId, planList.length]);
 
   const handleSelectPlan = async (planId: string) => {
     if (planId === activePlanId) return;
-
-    // Centrar la card del plan elegido en el strip horizontal. Útil
-    // sobre todo al pulsar los botones del banner ("Plan recomendado",
-    // "Tu plan predeterminado"): si la card no está visible o no está
-    // centrada, scrollIntoView trae el strip a viewport (block:'nearest'
-    // = solo scroll vertical si hace falta) y la centra (inline:'center').
-    // Se dispara también al pulsar directamente una plan-mini · sin
-    // efecto si la card ya está centrada (smooth scroll de 0px).
-    const container = planCardsRef.current;
-    const btn = container?.querySelector(
-      `[data-plan-id="${planId}"]`,
-    ) as HTMLElement | null;
-    btn?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-
     try {
       await setActivePlan(planId);
+      // El scroll-into-view de la nueva card lo dispara el useEffect
+      // de arriba al detectar el cambio de activePlanId · evitamos
+      // acceder a planCardsRef.current aquí (regla react-hooks/refs).
     } catch (err) {
       console.error('[BTal] setActivePlan error:', err);
       setErrorToast('Error al cambiar de plan');
@@ -339,27 +320,28 @@ const EntrenoPage: React.FC = () => {
           <div className="plan-cards" ref={planCardsRef}>
             {planList.map((p) => {
               const numDias = p.dias.length;
-              // Sub-fase 2D.1 · Lógica del marcador "★ Recomendado":
-              //   - Si hay customPredeterminado · ese plan se marca,
+              // Lógica del marcador "★ Recomendado" / "★ Predeterminado":
+              //   - Si hay un plan marcado como predeterminado (builtIn
+              //     o custom) · ese plan muestra "★ Predeterminado",
               //     IGNORANDO `diasEntreno` (incluso si es 0).
-              //   - Si NO hay · fallback a la lógica del perfil (que
-              //     no marca nada cuando diasEntreno === 0).
+              //   - Si NO hay · fallback a la lógica del perfil que
+              //     muestra "★ Recomendado" en el plan que coincide con
+              //     `diasEntreno` (nada si es 0).
               const isRecommended = customPredeterminado
                 ? p.id === customPredeterminado.id
                 : diasEntreno !== 0 && p.id === recommendedId;
-              const isCustomPredeterminado = !p.builtIn && !!p.esPredeterminado;
+              const isPredeterminado = !!p.esPredeterminado;
               return (
                 <button
                   type="button"
                   key={p.id}
                   data-plan-id={p.id}
-                  ref={isRecommended ? recommendedBtnRef : undefined}
                   className={
                     'plan-mini'
                     + (p.id === activePlanId ? ' plan-mini--active' : '')
                     + (isRecommended ? ' plan-mini--recommended' : '')
                     + (!p.builtIn ? ' plan-mini--custom' : '')
-                    + (isCustomPredeterminado ? ' plan-mini--custom-pred' : '')
+                    + (isPredeterminado ? ' plan-mini--custom-pred' : '')
                   }
                   // Inyectamos --rec-color para el ::after "★ ..." que
                   // usa este token. Los builtIn-recomendados usan la
@@ -469,18 +451,29 @@ const EntrenoPage: React.FC = () => {
                   </>
                 ) : diasEntreno === 0 ? (
                   // Caso 0 · user declaró 0 días · pídele que seleccione.
+                  // Mostramos también qué plan está viendo (builtIn o
+                  // custom) para coherencia con el resto de casos.
                   <>
-                    No has seleccionado ningún día de entrenamiento.{' '}
+                    {activePlan.builtIn ? (
+                      <>Estás viendo el plan de <b>{planShortName(activePlan)}</b>.</>
+                    ) : (
+                      <>Estás viendo tu plan creado <b>{planShortName(activePlan)}</b>.</>
+                    )}
+                    {' '}No has seleccionado ningún día de entrenamiento.{' '}
                     <b className="entreno-banner-rec">
                       Selecciona al menos un día.
                     </b>
                   </>
                 ) : !activePlan.builtIn ? (
                   // Caso 1 · plan custom creado por el user (sin pred).
+                  // Usamos `activePlan.dias.length` (días reales del
+                  // plan) en vez de `diasEntreno` (declarados en perfil),
+                  // que solo se usa para calcular el `recommendedId`.
                   <>
                     Entrenarás{' '}
                     <b>
-                      {diasEntreno} {diasEntreno === 1 ? 'día' : 'días'}
+                      {activePlan.dias.length}{' '}
+                      {activePlan.dias.length === 1 ? 'día' : 'días'}
                     </b>{' '}
                     esta semana. Has seleccionado tu plan creado:{' '}
                     <b className="entreno-banner-rec">{planShortName(activePlan)}</b>.
@@ -520,11 +513,24 @@ const EntrenoPage: React.FC = () => {
                     </button>.
                   </>
                 )}
-                {/* Recordatorio · solo aplica cuando la recomendación
-                    se basa en `profile.diasEntreno`. Si el user tiene
-                    un plan custom marcado como predeterminado, ese
-                    plan IGNORA el perfil y el hint no tiene sentido.
-                    Mostrarlo solo en las variantes basadas en perfil. */}
+                {/* Sub-texto "Plan recomendado según días declarados"
+                    · solo cuando el chip ★ Recomendado está visible
+                    en el strip (no hay predeterminado + diasEntreno > 0).
+                    Explica de dónde sale la recomendación. */}
+                {!customPredeterminado && diasEntreno !== null && diasEntreno > 0 && (
+                  <div className="entreno-banner-hint">
+                    Plan recomendado según días de entreno declarados:{' '}
+                    <b>
+                      {entrenos.planes[recommendedId]
+                        ? planShortName(entrenos.planes[recommendedId])
+                        : 'recomendado'}
+                    </b>.
+                  </div>
+                )}
+                {/* Recordatorio para editar perfil · solo aplica cuando
+                    la recomendación se basa en `profile.diasEntreno`. Si
+                    hay predeterminado, ese plan IGNORA el perfil y el
+                    hint no tiene sentido. */}
                 {!customPredeterminado && (
                   <div className="entreno-banner-hint">
                     Puedes cambiar los días de entreno en{' '}

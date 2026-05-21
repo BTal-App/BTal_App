@@ -59,12 +59,27 @@ export function PlanEditorModal({
   const isEdit = !!plan;
   const [nombre, setNombre] = useState(plan?.nombre ?? '');
   const [dias, setDias] = useState<DiaEntreno[]>(plan?.dias ?? []);
-  // Toggle "Marcar como predeterminado" · solo aplica a planes custom
-  // (no a builtIn). Si está activo, el chip de EntrenoPage se renderiza
-  // sin tag con el nombre · idéntico a los builtIn 1-7 días. Sub-fase 2D.1.
+  // Toggle "Marcar como predeterminado" · aplica a builtIn y custom.
+  // Si está activo, el chip de EntrenoPage muestra "★ Predeterminado"
+  // y la lógica de recomendación lo respeta (ignora el cálculo basado
+  // en `profile.diasEntreno`). Sub-fase 2D.1 · ampliado para incluir
+  // builtIn: el user puede declarar "Plan 4 Días" como su predeterminado
+  // y el ★ Recomendado se desactiva en favor de su decisión explícita.
   const [esPredeterminado, setEsPredeterminado] = useState<boolean>(
     plan?.esPredeterminado ?? false,
   );
+
+  // Límite de días del plan. Los planes builtIn ('1dias'..'7dias') se
+  // capean a N días (Plan 1 Día → max 1, Plan 7 Días → max 7) porque
+  // el id codifica esa capacidad. Los custom permiten hasta 7 días
+  // (toda la semana). Min siempre 1 día en ambos.
+  const planMaxDias = (() => {
+    if (isEdit && plan?.builtIn) {
+      const m = /^(\d+)dias$/.exec(plan.id);
+      if (m) return Math.max(1, Math.min(7, parseInt(m[1], 10)));
+    }
+    return 7;
+  })();
   // Status del guardado · saving/saved/error · alimenta el SaveIndicator.
   const { status, runSave, reset: resetSave } = useSaveStatus();
   const submitting = status === 'saving';
@@ -113,10 +128,13 @@ export function PlanEditorModal({
   };
 
   const addDia = () => {
-    setDias((cur) => [
-      ...cur,
-      { ...emptyDiaEntreno(), titulo: `Día ${cur.length + 1}` },
-    ]);
+    setDias((cur) => {
+      if (cur.length >= planMaxDias) return cur;
+      return [
+        ...cur,
+        { ...emptyDiaEntreno(), titulo: `Día ${cur.length + 1}` },
+      ];
+    });
   };
 
   const requestRemoveDia = (idx: number) => {
@@ -183,13 +201,11 @@ export function PlanEditorModal({
       // builtIn solo si veníamos editando uno · al crear nuevo siempre
       // es custom (false). v1 distingue 1dias..7dias como builtIn.
       builtIn: isEdit && plan ? plan.builtIn : false,
-      // Sub-fase 2D.1 · solo persistimos esPredeterminado en planes
-      // custom · los builtIn ya son predeterminados implícitamente y
-      // no necesitan la flag (sería redundante). Si el plan es builtIn,
-      // dejamos esPredeterminado fuera del doc (undefined).
-      ...(isEdit && plan?.builtIn
-        ? {}
-        : { esPredeterminado }),
+      // Flag predeterminado · aplica a builtIn y custom por igual.
+      // Cuando está activo, el chip de EntrenoPage se renderiza con
+      // "★ Predeterminado" y la lógica de recomendación lo respeta
+      // ignorando el cálculo basado en `profile.diasEntreno`.
+      esPredeterminado,
     };
 
     // Construye el diff antes/después · réplica del v1 confirmSave.
@@ -268,30 +284,26 @@ export function PlanEditorModal({
               />
             </div>
 
-            {/* Toggle "predeterminado" · solo en planes custom (los
-                builtIn 1-7 días ya son predeterminados implícitamente).
-                Cuando está activo, el chip de EntrenoPage se renderiza
-                centrado sin la tag con el nombre debajo · idéntico look
-                a los builtIn. Útil para que el user destaque su plan
-                habitual entre el resto de custom. */}
-            {!plan?.builtIn && (
-              <div className="sup-form-group">
-                <label className="plan-editor-toggle">
-                  <input
-                    type="checkbox"
-                    checked={esPredeterminado}
-                    onChange={(e) => setEsPredeterminado(e.target.checked)}
-                  />
-                  <span className="plan-editor-toggle-label">
-                    Marcar como predeterminado
-                  </span>
-                  <span className="plan-editor-toggle-hint">
-                    Se mostrará centrado y sin etiqueta, igual que los
-                    planes 1–7 días.
-                  </span>
-                </label>
-              </div>
-            )}
+            {/* Toggle "predeterminado" · aplica a builtIn y custom.
+                Cuando está activo, el chip muestra "★ Predeterminado"
+                y la lógica de recomendación lo respeta (ignora el
+                cálculo automático basado en los días declarados). */}
+            <div className="sup-form-group">
+              <label className="plan-editor-toggle">
+                <input
+                  type="checkbox"
+                  checked={esPredeterminado}
+                  onChange={(e) => setEsPredeterminado(e.target.checked)}
+                />
+                <span className="plan-editor-toggle-label">
+                  Marcar como predeterminado
+                </span>
+                <span className="plan-editor-toggle-hint">
+                  Se mostrará como tu plan principal en la pestaña Entreno
+                  y reemplazará al recomendado por los días declarados.
+                </span>
+              </label>
+            </div>
 
             {/* Lista de días · sólo título + día semana + borrar · el
                 resto (badges, ejercicios, comentario) se edita después
@@ -304,8 +316,8 @@ export function PlanEditorModal({
                 <span className="plan-editor-required">*</span>
               </h3>
               <span className="plan-editor-count">
-                {dias.length}{' '}
-                {dias.length === 1 ? 'día seleccionado' : 'días seleccionados'}
+                {dias.length} / {planMaxDias}{' '}
+                {planMaxDias === 1 ? 'día' : 'días'}
               </span>
             </div>
 
@@ -364,9 +376,19 @@ export function PlanEditorModal({
               type="button"
               className="plan-editor-add-btn"
               onClick={blurAndRun(addDia)}
+              disabled={dias.length >= planMaxDias}
+              aria-label={
+                dias.length >= planMaxDias
+                  ? `Has alcanzado el máximo de ${planMaxDias} ${
+                    planMaxDias === 1 ? 'día' : 'días'
+                  } para este plan`
+                  : 'Añadir día'
+              }
             >
               <MealIcon value="tb:plus" size={18} />
-              Añadir día
+              {dias.length >= planMaxDias
+                ? `Máximo ${planMaxDias} ${planMaxDias === 1 ? 'día' : 'días'}`
+                : 'Añadir día'}
             </button>
 
             {/* Indicador de estado del guardado · "Guardando…" /
