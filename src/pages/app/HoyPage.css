@@ -516,12 +516,48 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  /* position:relative · anclaje del badge ::before "✓" en la esquina
+     superior derecha cuando la card está en estado "taken" (tomado
+     hoy). El border-top accent + el badge coexisten sin solaparse. */
+  position: relative;
   /* Entrada con pop-in suave al cargar la tab. */
   animation: btal-pop-in 0.34s cubic-bezier(0.4, 0, 0.2, 1) both;
   transition:
     transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
     border-color 0.18s ease,
     box-shadow 0.18s ease;
+}
+
+/* Estado "tomado" · indicador visual sobre la card (no solo en el
+   CTA pill interno). Estilo idéntico al `.plan-mini--activo::before`:
+   círculo verde con ✓ pegado a la esquina superior derecha,
+   sobresaliendo del borde con ring del color de fondo. */
+.hoy-sup-card--taken {
+  box-shadow: inset 0 0 0 2px rgba(55, 240, 168, 0.18);
+}
+.hoy-sup-card--taken::before {
+  content: '✓';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgb(55, 240, 168);
+  color: #0a0e0c;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--btal-surface);
+  z-index: 6;
+  animation: btal-check-pop 0.35s cubic-bezier(0.2, 1.6, 0.5, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hoy-sup-card--taken::before { animation: none; }
 }
 
 .hoy-sup-card.hoy-sup-card--batido { animation-delay: 0.02s; }

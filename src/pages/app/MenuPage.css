@@ -821,10 +821,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin: 0 0 12px;
-  /* padding-top:14px deja sitio al círculo ✓ que aparece en
-     top:-8px right:-8px cuando .menu-sup-btn--has-it · sin esto el
-     contenedor padre (con overflow heredado) recortaba el badge. */
-  padding: 14px 16px 0;
+  padding: 0 16px;
 }
 
 .menu-sup-btn {
@@ -919,10 +916,10 @@
   box-shadow: 0 0 0 3px rgba(176, 122, 240, 0.14);
 }
 
-/* Estado "ya añadido al día activo": tinte verde + círculo flotante ✓
-   en la esquina superior derecha (mismo estilo que .plan-mini--activo
-   y .menu-batido-info-btn.day-has-it del v1). Necesita padding-top en
-   .menu-sup-toolbar para que el badge no se recorte. */
+/* Estado "ya añadido al día activo": tinte verde + ✓ inline en el texto.
+   Antes había un ✓ flotante posicionado fuera del botón (top: -7px) que
+   en algunos contenedores se recortaba con overflow · ahora el texto del
+   botón incluye " ✓" cuando dayHasIt y queda 100% dentro de la caja. */
 .menu-sup-btn--has-it {
   background: rgba(55, 240, 168, 0.16);
   border-color: rgba(55, 240, 168, 0.55);
@@ -932,30 +929,6 @@
   background: rgba(55, 240, 168, 0.26);
   border-color: rgb(55, 240, 168);
   box-shadow: 0 0 0 3px rgba(55, 240, 168, 0.18);
-}
-.menu-sup-btn--has-it::after {
-  content: '✓';
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: rgb(55, 240, 168);
-  color: #0a0e0c;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 800;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 0 2px var(--btal-bg);
-  z-index: 6;
-  animation: btal-check-pop 0.35s cubic-bezier(0.2, 1.6, 0.5, 1) both;
-}
-@media (prefers-reduced-motion: reduce) {
-  .menu-sup-btn--has-it::after { animation: none; }
 }
 
 /* ── Mini-card de batido / creatina añadidos al día ─────────────────── */
