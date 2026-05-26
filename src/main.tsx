@@ -5,16 +5,6 @@
 // token real a reCAPTCHA → falla en dev local.
 import './debug-appcheck'
 
-// Helper temporal para testar firestore.rules · lazy load gated por URL.
-// Solo se descarga el chunk si abres la app con `?debug-rules=1`. Sin
-// flag = sin coste para usuarios normales.
-if (
-  typeof window !== 'undefined'
-  && new URLSearchParams(window.location.search).get('debug-rules') === '1'
-) {
-  import('./debug-rules')
-}
-
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
