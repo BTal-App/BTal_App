@@ -93,29 +93,28 @@ function PrivacyPolicy() {
         <strong>NO vendemos ni cedemos tus datos a terceros</strong> para marketing, publicidad ni análisis externos.
       </p>
       <p>
-        Como parte del despliegue público (apps en stores y funcionalidades adicionales), está previsto incorporar
-        los siguientes servicios complementarios. Cada uno recibe únicamente la información estrictamente necesaria
-        para su función, viajará cifrada en tránsito y nunca incluirá datos que no se enumeren aquí:
+        Cuando lancemos BTal en App Store y Google Play, se irán añadiendo servicios adicionales para que la
+        app funcione completa. Te enumeramos los previstos y qué información recibe cada uno (solo lo
+        imprescindible, siempre cifrado, y nunca más de lo que se indica aquí):
       </p>
       <ul>
         <li>
-          <strong>Google Gemini</strong> (generación con IA): cuando uses la función "Generar con IA", se envían
-          los datos de perfil necesarios para generar tu plan (edad, peso, altura, sexo biológico, nivel de
-          actividad, objetivo, días de entreno e intolerancias). <strong>NO</strong> se le envía email, nombre,
-          foto ni identificación.
+          <strong>Google Gemini</strong> (generación de tu plan con inteligencia artificial): cuando pulses
+          "Generar con IA" se le envían tus datos de perfil para que pueda elaborar el plan (edad, peso, altura,
+          sexo biológico, nivel de actividad, objetivo, días de entreno e intolerancias). <strong>NO</strong> se
+          le envía tu email, tu nombre, tu foto ni nada que permita identificarte personalmente.
         </li>
         <li>
-          <strong>Pasarelas de pago</strong> (Apple App Store, Google Play en la app nativa; Stripe en la web): si
-          te suscribes al plan Pro, los datos de pago (tarjeta, dirección de facturación, etc.) son procesados
-          directamente por la pasarela del canal correspondiente. <strong>BTal nunca ve ni almacena los datos de
-          tu tarjeta</strong> — solo recibe la confirmación de la suscripción para activar las funcionalidades
-          de pago en tu cuenta.
+          <strong>Plataformas de pago</strong> (App Store y Google Play en el móvil; Stripe en la web): si te
+          suscribes al plan Pro, los datos de tu tarjeta los procesa directamente la plataforma que uses para
+          pagar. <strong>BTal nunca ve ni guarda los datos de tu tarjeta</strong> — solo recibe el aviso de que
+          el pago se ha completado para activarte el plan Pro.
         </li>
         <li>
-          <strong>Sentry</strong> (diagnóstico de errores): para detectar y arreglar bugs y crashes, se podrá
-          enviar información técnica anonimizada (identificador interno de la sesión, mensaje de error, versión
-          del navegador o sistema operativo, ruta dentro de la app). <strong>NO</strong> se envía contenido de
-          tu plan, tus registros ni datos personales identificables.
+          <strong>Sentry</strong> (servicio que nos ayuda a detectar fallos): si la app se cuelga o muestra un
+          error, se envía un aviso técnico para que podamos arreglarlo. El aviso incluye únicamente: un código
+          anónimo de sesión, el mensaje de error, qué navegador o móvil usas y en qué pantalla estabas.
+          <strong> NO</strong> se envía nada de tu plan, tus comidas, tus entrenos ni datos que te identifiquen.
         </li>
       </ul>
       <p>
@@ -165,17 +164,18 @@ function PrivacyPolicy() {
 
       <h2>9. Seguridad</h2>
       <p>
-        Aplicamos medidas técnicas y organizativas razonables: cifrado en tránsito (HTTPS),
-        reglas de acceso estrictas en la base de datos (cada usuario solo puede leer/escribir sus propios datos),
-        hash seguro de contraseñas (gestionado por Firebase Authentication; nunca tenemos acceso a tu contraseña en claro)
-        y, en la versión web, cabeceras HTTP de seguridad (CSP, HSTS, X-Frame-Options, Permissions-Policy).
+        Aplicamos medidas técnicas y de organización razonables para proteger tus datos: toda la conexión
+        viaja cifrada (HTTPS), cada usuario solo puede ver y modificar sus propios datos (nadie ajeno puede
+        acceder a tu cuenta), tu contraseña no se guarda nunca en texto legible (la gestiona Google con
+        cifrado de un solo sentido, así que ni nosotros ni nadie puede recuperarla) y en la versión web
+        añadimos protecciones estándar del navegador para evitar suplantaciones e inyecciones.
       </p>
       <p>
-        Puedes activar opcionalmente la <strong>verificación en dos pasos (2FA)</strong> basada en una app
-        authenticator (Google Authenticator, Authy, 1Password u otras) desde <em>Ajustes → Administrar
-        cuenta → Verificación en dos pasos</em>. Una vez activada, además de tu contraseña te pediremos un
-        código de 6 dígitos generado en tu dispositivo al iniciar sesión. El secreto del 2FA se almacena
-        cifrado por Firebase Authentication y BTal nunca tiene acceso a él en claro.
+        Puedes activar opcionalmente la <strong>verificación en dos pasos</strong> desde <em>Ajustes →
+        Administrar cuenta → Verificación en dos pasos</em>. Una vez activada, al iniciar sesión te
+        pediremos, además de tu contraseña, un código de 6 dígitos que genera una app de tu móvil (Google
+        Authenticator, Authy, 1Password u otra similar). El código secreto se guarda cifrado en los
+        servidores de Google y ni BTal ni nadie de nuestro equipo tiene acceso a él.
       </p>
       <p>
         Si descubres una vulnerabilidad de seguridad, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> antes
