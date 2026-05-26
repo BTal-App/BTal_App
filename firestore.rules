@@ -1,113 +1,147 @@
 rules_version = '2';
 
-// Rules version: 2026-05-13-T-registros-fix · sin size check en /registros.
-// Reglas Firestore — Fase 2A endurecimiento + Fase 11-1 validación.
+// Rules version: 2026-05-26-monetizacion-blindada.
+// Endurecimiento de campos de monetización · cierra el vector que dejaban
+// las rules de 2026-05-13 (un user logueado en la app oficial podía
+// modificar `plan`/`plan_pro`/`generaciones`/`fecha_expiracion`/
+// `fecha_ultima_generacion` desde DevTools porque solo se chequeaba uid).
 //
-// Filosofía:
-//  - Cada usuario solo accede a su propio documento /users/{uid}.
-//  - Crear el documento inicial es libre (lo hace el cliente desde
-//    saveOnboardingProfile o seedGuestDocument con defaults seguros).
-//    Si se incluye profile, se validan los rangos · si no se incluye,
-//    pasa libre (el cliente lo creará después al completar onboarding).
-//  - Actualizar campos de uso del usuario (profile, preferences, menu,
-//    entrenos, compra, suplementos, lastActive) está permitido.
-//  - Actualizar campos de monetización / IA (plan, generaciones,
-//    plan_pro, fecha_expiracion, fecha_ultima_generacion) está
-//    BLOQUEADO desde el cliente. Solo Cloud Functions con Admin SDK los
-//    puede tocar (Stripe webhook, generatePlan). Esto evita que un
-//    usuario se haga Pro vía REST API o resetee su contador del mes.
-//  - Tamaño máximo del doc 100 KB · defensa contra inflación de gastos
-//    y ataques de spam (Firestore cobra por byte leído/escrito).
+// FILOSOFÍA
+//  - Cross-user: bloqueado por `uid == userId` (como siempre).
+//  - Campos de uso (profile, preferences, menu, entrenos, compra,
+//    suplementos, registroStats, menuFlags, lastActive, etc.): el dueño
+//    puede escribirlos libremente.
+//  - Campos de monetización (plan, generaciones, plan_pro,
+//    fecha_expiracion, fecha_ultima_generacion): el cliente SOLO puede
+//    sembrarlos UNA VEZ con valores "free" seguros. Cualquier cambio
+//    posterior queda bloqueado. Admin SDK (Stripe webhook +
+//    Cloud Functions con tipos `generatePlan` / `setUserPlan`) ignora
+//    rules y puede modificarlos libremente.
+//  - El cliente NO puede vaciar/borrar estos campos (set sin merge que
+//    los omitiera fallaría también: `affectedKeys()` incluye el campo
+//    como "afectado" y el predicado de seed inicial pide que el campo
+//    no exista en prev, lo que sería falso si ya existía).
 //
-// Implementación de "campo intacto":
-//   Usamos `request.resource.data.diff(resource.data).affectedKeys()`
-//   que devuelve el SET de claves top-level que cambian entre el doc
-//   antiguo y el nuevo. Es el patrón canónico de Firestore para esta
-//   defensa · más fiable que comparar valores con `==` (los maps de
-//   `plan` y `generaciones` pueden dar falsos positivos al comparar).
+// Implementación · seed-only via `affectedKeys()`:
+//   El campo SOLO se puede escribir si CUMPLE:
+//     - El campo NO existía antes (`!(field in resource.data)`)
+//     - El nuevo valor es el default seguro (planSafe/genSafe/false/null)
+//   Esto cubre exactamente el caso de la migración automática
+//   `ensureUserDocumentSchema` (que siembra defaults a docs viejos).
+//   Y bloquea cualquier intento de upgrade vía DevTools.
 //
-// Validación de profile · solo EN CREATE:
-//   La validación de rangos del profile EN UPDATE se omite a propósito.
-//   El motivo: con merge:true / paths con punto, el comportamiento de
-//   diff() sobre sub-objetos era frágil y daba falsos positivos
-//   bloqueando writes legítimos (touchLastActive, etc.). La validación
-//   cliente cubre el caso normal · contra un atacante vía REST API
-//   nos defienden docSizeOk() y App Check (Fase 6).
+// Subcolección /registros/{YYYY-MM-DD}:
+//   Sin cambios desde 2026-05-13. uid + regex de fecha en writes,
+//   solo uid en delete.
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ──────────────────────────────────────────────────────────────────
+    // Helpers de monetización
+    // ──────────────────────────────────────────────────────────────────
+
+    // Plan free + valores iniciales (los que devuelve defaultPlan()).
+    function planSafe(p) {
+      return p.tipo == 'free'
+        && p.vence_en == null
+        && p.one_off_consumido == false;
+    }
+
+    // Generaciones con cero consumo (los que devuelve defaultGeneraciones()).
+    // `ciclo_inicio` puede ser cualquier número (Date.now al seed) · no se
+    // chequea su valor porque el cliente legítimamente lo siembra con un
+    // timestamp fresco; lo que importa es que `consumidas_ciclo == 0` y
+    // que `menu_at`/`entrenos_at` sigan a null.
+    function genSafe(g) {
+      return g.menu_at == null
+        && g.entrenos_at == null
+        && g.consumidas_ciclo == 0;
+    }
+
+    // Devuelve true si la escritura NO toca campos de monetización, O si
+    // los toca es un seed inicial (el campo no existía antes y el valor
+    // nuevo es el default seguro). Cualquier otro caso = bloqueado.
+    function monetizationLocked(req, prev) {
+      return (
+        !req.diff(prev).affectedKeys().hasAny(['plan'])
+        || (!('plan' in prev) && planSafe(req.plan))
+      ) && (
+        !req.diff(prev).affectedKeys().hasAny(['generaciones'])
+        || (!('generaciones' in prev) && genSafe(req.generaciones))
+      ) && (
+        !req.diff(prev).affectedKeys().hasAny(['plan_pro'])
+        || (!('plan_pro' in prev) && req.plan_pro == false)
+      ) && (
+        !req.diff(prev).affectedKeys().hasAny(['fecha_expiracion'])
+        || (!('fecha_expiracion' in prev) && req.fecha_expiracion == null)
+      ) && (
+        !req.diff(prev).affectedKeys().hasAny(['fecha_ultima_generacion'])
+        || (!('fecha_ultima_generacion' in prev) && req.fecha_ultima_generacion == null)
+      );
+    }
+
+    // Para CREATE: si incluye los campos, deben ser valores seguros.
+    // No hace falta el check de "no existía antes" porque CREATE solo
+    // aplica cuando el doc no existe.
+    function monetizationSafeOnCreate(data) {
+      return (
+        !('plan' in data) || planSafe(data.plan)
+      ) && (
+        !('generaciones' in data) || genSafe(data.generaciones)
+      ) && (
+        !('plan_pro' in data) || data.plan_pro == false
+      ) && (
+        !('fecha_expiracion' in data) || data.fecha_expiracion == null
+      ) && (
+        !('fecha_ultima_generacion' in data) || data.fecha_ultima_generacion == null
+      );
+    }
 
     match /users/{userId} {
       // Lectura: solo el dueño.
       allow read: if request.auth != null && request.auth.uid == userId;
 
-      // Creación: solo el dueño.
-      //
-      // ⚠ NOTA · sin `docSizeOk()` aquí adrede. `request.resource.size`
-      // en Firestore Rules NO es el tamaño JSON · cuenta cada campo
-      // anidado con su overhead. El `demoUserDocument()` que sembramos
-      // al invitado ocupa 25 KB en JSON pero su tamaño "Firestore"
-      // (path + field names + values + overhead por nivel anidado)
-      // se acerca o supera los 500 KB. El techo real lo pone Firestore
-      // a 1 MiB hard-limit · ningún write puede superarlo a nivel de
-      // servicio · esa es nuestra red de seguridad para create.
-      //
-      // ⚠ Validación de rangos del profile (peso 30-300, edad 14-90,
-      // enums cerrados, etc.) deshabilitada · la defensa real vendrá
-      // con App Check + Cloud Functions (Fase 6).
+      // Creación: dueño + monetización en valores seguros (free / null / 0).
+      // Cubre `saveOnboardingProfile` y `seedGuestDocument` que ya
+      // siembran los defaults seguros vía `defaultPlan()`/`defaultGeneraciones()`.
       allow create: if request.auth != null
-                    && request.auth.uid == userId;
+                    && request.auth.uid == userId
+                    && monetizationSafeOnCreate(request.resource.data);
 
-      // Actualización: dueño + tamaño ok.
+      // Actualización: dueño + monetización bloqueada salvo seed inicial.
       //
-      // ⚠ NOTA SOBRE CAMPOS DE MONETIZACIÓN (plan, generaciones,
-      // plan_pro, fecha_expiracion, fecha_ultima_generacion):
-      //   Originalmente bloqueábamos estos campos a nivel de rule con
-      //   `affectedKeys()` para impedir que el cliente se ascendiera a
-      //   Pro vía REST API. Lo retiramos porque interactuaba mal con la
-      //   migración automática `ensureUserDocumentSchema` y otros writes
-      //   legítimos (touchLastActive). La defensa real contra fraude
-      //   monetario NO es esta rule · es:
-      //     1. Cloud Function `generatePlan` (Fase 6) decide si el user
-      //        puede generar IA leyendo el estado REAL desde el webhook
-      //        de Stripe, no desde el doc del user. Falsear `plan.tipo`
-      //        en el doc no concede acceso real.
-      //     2. App Check (Fase 6) bloqueará todo tráfico que no provenga
-      //        de la app oficial firmada · cierra el vector REST entero.
-      //     3. Cloud Function `setUserPlan` (Fase 6) será la ÚNICA vía
-      //        de escribir estos campos · usa Admin SDK que salta rules.
-      //   Mientras tanto el trade-off es aceptable: un user técnico
-      //   puede mentir en su propio doc, pero la app no le creerá.
+      // Permite:
+      //   - Updates normales (profile, preferences, menu, entrenos,
+      //     compra, suplementos, registroStats, lastActive, etc.).
+      //   - Migración `ensureUserDocumentSchema` sembrando defaults en
+      //     docs viejos (los campos faltantes pasan el check de seed).
+      //
+      // Bloquea:
+      //   - Cliente intentando subirse a Pro (`plan.tipo = 'pro'`).
+      //   - Cliente intentando resetear su contador (`consumidas_ciclo = 0`
+      //     cuando ya era >0).
+      //   - Cliente intentando adelantarse la fecha de expiración.
+      //   - Cliente intentando vaciar/borrar estos campos.
+      //
+      // Stripe webhook + Cloud Functions usan Admin SDK que ignora rules
+      // · pueden tocar libremente para flujos legítimos (suscripción Pro,
+      // pago único 4,99€, decremento de generaciones consumidas, etc.).
       allow update: if request.auth != null
-                    && request.auth.uid == userId;
+                    && request.auth.uid == userId
+                    && monetizationLocked(request.resource.data, resource.data);
 
       // Borrado: solo el dueño (caso eliminar cuenta).
       allow delete: if request.auth != null && request.auth.uid == userId;
 
-      // Subcolección /registros/{YYYY-MM-DD} · Sub-fase 2E.
-      // Cada doc representa el registro de pesos (o descanso) de un
-      // día concreto. Solo el dueño accede · valida formato fecha
-      // en el id para evitar paths arbitrarios.
-      //
-      // ⚠ NOTA · sin `request.resource.size < 50 KB` aquí adrede.
-      // Mismo descubrimiento que en `allow create` del user doc:
-      // `request.resource.size` NO mide el JSON · cuenta cada campo
-      // anidado con su overhead. Un registro con 5 ejercicios × 4
-      // series ocupa ~2 KB JSON pero su tamaño "Firestore" supera
-      // los 50 KB por el overhead de las claves anidadas, y la rule
-      // rechazaba todas las writes del seed del invitado. Síntoma:
-      // los dots aparecían un instante en el calendario (optimistic
-      // update del SDK) y desaparecían en cuanto el servidor
-      // rechazaba (rollback). El techo real lo pone Firestore como
-      // hard-limit de 1 MiB · suficiente defensa contra docs gigantes.
+      // Subcolección /registros/{YYYY-MM-DD} · sin cambios.
       //
       // ⚠ NOTA · separamos `create, update` de `delete`. En un delete
       // `request.resource` es null, por lo que cualquier predicado
       // sobre `request.resource.X` evalúa false y bloquearía también
       // los deletes legítimos del botón "Eliminar registro" del
       // RegDayPanel. Por eso el delete tiene solo el check de
-      // ownership · el `fecha.matches(...)` solo aplica a writes que
-      // crean/modifican.
+      // ownership · el `fecha.matches(...)` solo aplica a writes.
       match /registros/{fecha} {
         allow read: if request.auth != null && request.auth.uid == userId;
         allow create, update: if request.auth != null
@@ -123,8 +157,3 @@ service cloud.firestore {
     }
   }
 }
-
-// (Helpers retirados · docSizeOk() y profileValidOnCreate() intentaron
-// añadir defensas extra pero ambos rompían writes legítimos. El techo
-// real de tamaño lo aplica Firestore como hard-limit a 1 MiB y la
-// defensa contra abusos REST API la dará App Check en Fase 6.)
