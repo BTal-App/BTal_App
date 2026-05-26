@@ -44,13 +44,18 @@ const App: React.FC = () => (
     <ErrorProvider>
     <OfflineBanner />
     <AdblockBanner />
-    <CookieConsentBanner />
     <AuthProvider>
       <ProfileProvider>
         <PreferencesProvider>
         <VerifyBannerProvider>
           <IonApp>
             <IonReactRouter>
+              {/* CookieConsentBanner DEBE ir dentro de IonReactRouter
+                  porque usa `<Link>` de react-router-dom, que necesita
+                  el contexto del router. Si se monta fuera revienta con
+                  "Invariant failed". Es position:fixed bottom · no
+                  interfiere visualmente con las rutas. */}
+              <CookieConsentBanner />
               <IonRouterOutlet>
                 <Route exact path="/">
                   <Landing />
