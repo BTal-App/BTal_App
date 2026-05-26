@@ -26,9 +26,9 @@
     "@tabler/icons-react": "^3.44.0",
     "firebase": "^12.12.1",
     "ionicons": "^8.0.13",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-qr-code": "^2.0.21",
     "react-router": "^5.3.4",
     "react-router-dom": "^5.3.4"
   },

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { IonButton, IonContent, IonModal, IonSpinner } from '@ionic/react';
 import { MealIcon } from './MealIcon';
-import QRCode from 'react-qr-code';
+import { QRCodeSVG } from 'qrcode.react';
 import type { TotpSecret, User } from 'firebase/auth';
 import { finishTotpEnrollment, startTotpEnrollment } from '../services/auth';
 import { ReauthModal } from './ReauthModal';
@@ -30,16 +30,9 @@ function translateError(code: string): string {
     'auth/requires-recent-login': 'Tu sesión ha caducado. Cierra sesión y vuelve a iniciarla.',
   };
   if (map[code]) return map[code];
-  // Fallback para códigos NO mapeados. Antes se mostraba el código
-  // técnico entre paréntesis al usuario (ruido); ahora se omite del
-  // texto visible y se conserva para diagnóstico:
-  //   ADMIN/DEV: el código Firebase real va a consola con prefijo
-  //   [BTal][2FA]. Códigos ya contemplados (ver `map` arriba):
-  //     auth/invalid-verification-code · auth/code-expired ·
-  //     auth/totp-challenge-timeout · auth/operation-not-allowed ·
-  //     auth/unverified-email · auth/admin-restricted-operation ·
-  //     auth/requires-recent-login
-  //   Si aparece uno nuevo recurrente, añadirlo al `map` con su copy.
+  // Fallback para códigos NO mapeados · el código técnico se omite del
+  // texto visible y se conserva en consola para diagnóstico con prefijo
+  // [BTal][2FA]. Si aparece uno nuevo recurrente, añadirlo al `map`.
   console.warn('[BTal][2FA] código de error no mapeado:', code || '(vacío)');
   return 'No se ha podido activar la verificación en dos pasos. Inténtalo de nuevo.';
 }
@@ -151,7 +144,11 @@ export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {
                   este código:
                 </p>
                 <div className="totp-qr-wrap">
-                  <QRCode value={qrUrl} size={180} bgColor="#ffffff" fgColor="#0a0e0c" />
+                  {/* qrcode.react · React 19-compatible · sustituye a
+                      react-qr-code v2.0.21 que crasheaba con #130 al renderizar.
+                      QRCodeSVG es SVG puro (sin canvas), idéntico a la
+                      alternativa anterior visualmente. */}
+                  <QRCodeSVG value={qrUrl} size={180} bgColor="#ffffff" fgColor="#0a0e0c" />
                 </div>
                 <p className="settings-modal-text" style={{ fontSize: '0.82rem', color: 'var(--btal-t-3)' }}>
                   Si no puedes escanear, introduce esta clave manualmente:

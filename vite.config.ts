@@ -145,11 +145,6 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   build: {
-    // TEMPORAL · sourcemaps habilitados para debugging del React #130 en
-    // producción. Quitar tras identificar el componente que renderiza el
-    // objeto. NO subir sourcemaps a producción permanentemente (expone
-    // estructura interna del bundle).
-    sourcemap: true,
     // Code splitting manual · sin esto Rollup empaqueta todo en un solo
     // chunk de ~1.5 MB. Separando vendors grandes el chunk principal
     // baja a ~600 KB y firebase/ionic/react cargan en paralelo desde la
