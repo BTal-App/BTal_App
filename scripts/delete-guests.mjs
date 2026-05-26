@@ -3,30 +3,23 @@
 // Borra:
 //   - Usuarios Firebase Auth cuyo provider sea "anonymous" (sin email)
 //   - Docs Firestore /users/{uid} con campo `expiresAt` presente
-//   - Subcoleccion /users/{uid}/registros (recursive)
+//   - Subcoleccion /users/{uid}/registros entera
 //
-// Uso:
-//   1. gcloud auth application-default login          (una sola vez)
-//   2. cd btal && npm install --save-dev firebase-admin   (una sola vez)
-//   3. node scripts/delete-guests.mjs                  (DRY-RUN, no toca nada)
-//   4. node scripts/delete-guests.mjs --execute        (borra de verdad)
+// Usa REST directo + gcloud token. Evita los quirks del Firebase Admin
+// SDK con quota project en user-credentials ADC (el SDK envia un
+// consumer wrong, la API rechaza con SERVICE_DISABLED).
 //
-// Idempotente · seguro re-ejecutar. No toca cuentas reales (con email).
+// Uso (Cloud Shell o local con gcloud + Node 18+):
+//   1. gcloud auth login                          (una sola vez si hace falta)
+//   2. node scripts/delete-guests.mjs             (DRY-RUN, no toca nada)
+//   3. node scripts/delete-guests.mjs --execute   (borra de verdad)
+//
+// Idempotente · seguro re-ejecutar.
 
-import { initializeApp, applicationDefault } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import { execSync } from 'child_process';
 
 const DRY_RUN = !process.argv.includes('--execute');
 const PROJECT_ID = 'btal-app';
-
-initializeApp({
-  credential: applicationDefault(),
-  projectId: PROJECT_ID,
-});
-
-const auth = getAuth();
-const db = getFirestore();
 
 const banner = DRY_RUN
   ? '(DRY-RUN · no borra nada)'
@@ -34,31 +27,85 @@ const banner = DRY_RUN
 console.log(`\n=== Cleanup invitados ${banner} ===`);
 console.log(`Proyecto: ${PROJECT_ID}\n`);
 
-// === Paso 1: enumerar usuarios anonymous en Auth ===
+function getToken() {
+  return execSync('gcloud auth print-access-token', {
+    encoding: 'utf-8',
+  }).trim();
+}
+
+let TOKEN;
+try {
+  TOKEN = getToken();
+} catch (err) {
+  console.error('Error obteniendo token gcloud · ¿estas logueado?');
+  console.error(`  gcloud auth login`);
+  process.exit(1);
+}
+
+function authHeaders() {
+  return {
+    Authorization: `Bearer ${TOKEN}`,
+    'x-goog-user-project': PROJECT_ID,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function call(url, init = {}) {
+  const res = await fetch(url, {
+    ...init,
+    headers: { ...authHeaders(), ...(init.headers || {}) },
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    const err = new Error(`${res.status} ${res.statusText}: ${text.slice(0, 500)}`);
+    err.status = res.status;
+    err.body = text;
+    throw err;
+  }
+  return text ? JSON.parse(text) : null;
+}
+
+// === Step 1: list anonymous users in Firebase Auth ===
 console.log('Listando usuarios Auth...');
-let totalAuth = 0;
 const anonymousUids = new Set();
+let totalAuth = 0;
 let nextPageToken;
 do {
-  const res = await auth.listUsers(1000, nextPageToken);
-  for (const u of res.users) {
+  const params = new URLSearchParams({ maxResults: '1000' });
+  if (nextPageToken) params.set('nextPageToken', nextPageToken);
+  const data = await call(
+    `https://identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}/accounts:batchGet?${params}`,
+  );
+  for (const u of data.users || []) {
     totalAuth++;
-    // Anonymous = sin providerData (sin email, sin google, etc)
-    if (!u.providerData || u.providerData.length === 0) {
-      anonymousUids.add(u.uid);
-    }
+    const hasProvider = (u.providerUserInfo || []).length > 0;
+    const hasEmail = !!u.email;
+    // Anonymous = sin email y sin providers vinculados (google, password, etc)
+    if (!hasProvider && !hasEmail) anonymousUids.add(u.localId);
   }
-  nextPageToken = res.pageToken;
+  nextPageToken = data.nextPageToken;
 } while (nextPageToken);
 console.log(`  Total usuarios Auth: ${totalAuth}`);
 console.log(`  Anonymous: ${anonymousUids.size}\n`);
 
-// === Paso 2: enumerar docs Firestore /users con expiresAt ===
+// === Step 2: list Firestore /users docs ===
 console.log('Listando docs Firestore /users con expiresAt...');
-// orderBy('expiresAt') solo devuelve docs donde el campo exista, asi que
-// equivale a "donde expiresAt esta definido".
-const docsSnap = await db.collection('users').orderBy('expiresAt').get();
-const docUids = new Set(docsSnap.docs.map((d) => d.id));
+const docUids = new Set();
+let pageToken;
+do {
+  const params = new URLSearchParams({ pageSize: '300' });
+  if (pageToken) params.set('pageToken', pageToken);
+  const data = await call(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/users?${params}`,
+  );
+  for (const doc of data.documents || []) {
+    if (doc.fields?.expiresAt) {
+      const uid = doc.name.split('/').pop();
+      docUids.add(uid);
+    }
+  }
+  pageToken = data.nextPageToken;
+} while (pageToken);
 console.log(`  Docs con expiresAt: ${docUids.size}\n`);
 
 // === Diff ===
@@ -67,7 +114,7 @@ const onlyDoc = [...docUids].filter((u) => !anonymousUids.has(u));
 const inBoth = [...anonymousUids].filter((u) => docUids.has(u));
 const toDelete = new Set([...anonymousUids, ...docUids]);
 
-console.log(`Resumen:`);
+console.log('Resumen:');
 console.log(`  En Auth y Firestore (par limpio): ${inBoth.length}`);
 console.log(`  Solo en Auth (sin doc):           ${onlyAuth.length}`);
 console.log(`  Solo en Firestore (huerfanos):    ${onlyDoc.length}`);
@@ -78,7 +125,6 @@ if (toDelete.size === 0) {
   process.exit(0);
 }
 
-// === Paso 3: borrar (si --execute) ===
 if (DRY_RUN) {
   console.log(
     'DRY-RUN. Para borrar de verdad:  node scripts/delete-guests.mjs --execute\n',
@@ -86,42 +132,87 @@ if (DRY_RUN) {
   process.exit(0);
 }
 
+// === Step 3: delete each UID ===
 console.log('Borrando... (Ctrl+C para abortar)\n');
-let n = 0;
+const FS_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+const AUTH_BASE = `https://identitytoolkit.googleapis.com/v1/projects/${PROJECT_ID}`;
+
 let firestoreOk = 0;
+let firestoreSkip = 0;
 let firestoreErr = 0;
 let authOk = 0;
-let authErr = 0;
 let authNotFound = 0;
+let authErr = 0;
+let registrosDeleted = 0;
+
+let n = 0;
 for (const uid of toDelete) {
-  // Borrar /users/{uid} + subcolecciones (recursive)
+  // 3a. delete /users/{uid}/registros/* (subcollection)
   try {
-    await db.recursiveDelete(db.collection('users').doc(uid));
+    let regToken;
+    do {
+      const params = new URLSearchParams({ pageSize: '300' });
+      if (regToken) params.set('pageToken', regToken);
+      const data = await call(`${FS_BASE}/users/${uid}/registros?${params}`);
+      for (const regDoc of data.documents || []) {
+        try {
+          await call(`https://firestore.googleapis.com/v1/${regDoc.name}`, {
+            method: 'DELETE',
+          });
+          registrosDeleted++;
+        } catch (err) {
+          if (err.status !== 404) {
+            console.warn(`  [WARN] registro ${regDoc.name}: ${err.message}`);
+          }
+        }
+      }
+      regToken = data.nextPageToken;
+    } while (regToken);
+  } catch (err) {
+    // 404 = no subcollection, OK
+    if (err.status !== 404 && !err.body?.includes('NOT_FOUND')) {
+      console.warn(`  [WARN] listar registros ${uid}: ${err.message}`);
+    }
+  }
+
+  // 3b. delete /users/{uid}
+  try {
+    await call(`${FS_BASE}/users/${uid}`, { method: 'DELETE' });
     firestoreOk++;
   } catch (err) {
-    firestoreErr++;
-    console.warn(`  [WARN] Firestore ${uid}: ${err.message}`);
+    if (err.status === 404) firestoreSkip++;
+    else {
+      firestoreErr++;
+      console.warn(`  [WARN] Firestore ${uid}: ${err.message}`);
+    }
   }
-  // Borrar Auth user (puede no existir)
+
+  // 3c. delete Auth user
   try {
-    await auth.deleteUser(uid);
+    await call(`${AUTH_BASE}/accounts:delete`, {
+      method: 'POST',
+      body: JSON.stringify({ localId: uid }),
+    });
     authOk++;
   } catch (err) {
-    if (err.code === 'auth/user-not-found') {
+    if (err.body?.includes('USER_NOT_FOUND') || err.status === 400) {
       authNotFound++;
     } else {
       authErr++;
       console.warn(`  [WARN] Auth ${uid}: ${err.message}`);
     }
   }
+
   n++;
   if (n % 25 === 0) console.log(`  Progreso: ${n}/${toDelete.size}`);
 }
 
 console.log(`\n=== Resultado ===`);
-console.log(`  Firestore borrados:    ${firestoreOk}`);
-console.log(`  Firestore errores:     ${firestoreErr}`);
-console.log(`  Auth borrados:         ${authOk}`);
-console.log(`  Auth ya no existian:   ${authNotFound}`);
-console.log(`  Auth errores:          ${authErr}`);
+console.log(`  Firestore docs borrados:   ${firestoreOk}`);
+console.log(`  Firestore docs ya no existian: ${firestoreSkip}`);
+console.log(`  Firestore errores:         ${firestoreErr}`);
+console.log(`  Registros borrados:        ${registrosDeleted}`);
+console.log(`  Auth users borrados:       ${authOk}`);
+console.log(`  Auth users ya no existian: ${authNotFound}`);
+console.log(`  Auth errores:              ${authErr}`);
 console.log(`\n${n}/${toDelete.size} UIDs procesados.\n`);
