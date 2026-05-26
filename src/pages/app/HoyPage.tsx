@@ -804,12 +804,7 @@ function SupCardHoy({
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   return (
-    <div
-      className={
-        `hoy-sup-card hoy-sup-card--${kind}`
-        + (tomadoHoy ? ' hoy-sup-card--taken' : '')
-      }
-    >
+    <div className={`hoy-sup-card hoy-sup-card--${kind}`}>
       {/* Head compacto · estilo preview NewVersion: emoji + info +
           CTA inline a la derecha. Cuando ya está tomado hoy, el CTA
           cambia a un badge "✓ Tomado/a" + un mini-botón ⟳ cancelar

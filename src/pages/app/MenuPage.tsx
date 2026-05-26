@@ -672,9 +672,6 @@ const MenuPage: React.FC = () => {
                 <span className="menu-sup-btn-label">
                   <MealIcon value="tb:cup" size={16} className="menu-sup-btn-icon" />
                   BATIDO
-                  {userDoc.suplementos.daysWithBatido.includes(selectedDay)
-                    ? ' ✓'
-                    : ''}
                 </span>
               </button>
               <button
@@ -691,9 +688,6 @@ const MenuPage: React.FC = () => {
                 <span className="menu-sup-btn-label">
                   <MealIcon value="tb:ladle" size={16} className="menu-sup-btn-icon" />
                   CREATINA
-                  {userDoc.suplementos.daysWithCreatina.includes(selectedDay)
-                    ? ' ✓'
-                    : ''}
                 </span>
               </button>
             </div>
