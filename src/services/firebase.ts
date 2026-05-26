@@ -47,10 +47,6 @@ const firebaseConfig: FirebaseOptions = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  // Analytics web · Fase 13-2. Sin esto, `getAnalytics(app)` no sabe a
-  // qué property GA4 enviar los eventos y o falla silenciosamente o hace
-  // una llamada extra al Installations API que también puede fallar.
-  // Lo pasamos explícitamente para que el SDK lo use directo.
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 

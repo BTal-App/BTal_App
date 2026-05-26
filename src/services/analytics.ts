@@ -53,6 +53,16 @@ const MEASUREMENT_ID = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID as
 let analyticsInstance: Analytics | null = null;
 let bootstrapPromise: Promise<void> | null = null;
 
+// Cola del último setAnalyticsUser disparado antes de que el SDK esté
+// listo · típicamente onAuthStateChanged fires con el user persistido
+// inmediatamente al cargar, mientras bootstrapAnalytics aún está en su
+// `await import('firebase/analytics')` async. Sin esta cola, el primer
+// page_view del SDK (que sale en cuanto getAnalytics() resuelve) se
+// atribuiría a "anónimo" porque setUserId no llegó a tiempo. Guardamos
+// la última llamada y la reproducimos al final de bootstrap.
+let pendingUid: string | null | undefined = undefined; // undefined = no hay pending
+let pendingProperties: Record<string, string> | undefined;
+
 /**
  * Inicializa Firebase Analytics SOLO si el user dio consentimiento.
  * El SDK se carga lazy via `import('firebase/analytics')` para no
@@ -90,6 +100,16 @@ export async function bootstrapAnalytics(): Promise<void> {
         return;
       }
       analyticsInstance = getAnalytics(app);
+      // Replay del último setAnalyticsUser que se intentó antes de
+      // que el SDK estuviera listo. Sin esto, el page_view inicial
+      // se atribuiría a usuario anónimo aunque hubiera un UID conocido.
+      if (pendingUid !== undefined) {
+        const uidToFlush = pendingUid;
+        const propsToFlush = pendingProperties;
+        pendingUid = undefined;
+        pendingProperties = undefined;
+        setAnalyticsUser(uidToFlush, propsToFlush);
+      }
     } catch (err) {
       // No fatal · simplemente no medimos. La app sigue funcionando.
       if (import.meta.env.DEV) {
@@ -117,6 +137,8 @@ export function subscribeAnalyticsToConsent(): () => void {
       // simple y robusto: reload la página · al volver el SDK no se
       // inicializa (no hay consent). Lo gestiona el componente Settings.
       analyticsInstance = null;
+      pendingUid = undefined;
+      pendingProperties = undefined;
     }
   });
 }
@@ -152,7 +174,13 @@ export function setAnalyticsUser(
   uid: string | null,
   properties?: Record<string, string>,
 ): void {
-  if (!analyticsInstance) return;
+  if (!analyticsInstance) {
+    // SDK aún no listo (bootstrap async en curso o esperando consent).
+    // Guardamos la última llamada para reproducirla cuando inicialice.
+    pendingUid = uid;
+    pendingProperties = properties;
+    return;
+  }
   void (async () => {
     try {
       const { setUserId, setUserProperties } = await import('firebase/analytics');
