@@ -16,7 +16,7 @@ import './LegalPlaceholder.css';
 // vigor (el roadmap llamaría a esto en la Fase 6 con Cloud Functions).
 
 const LEGAL_VERSION = {
-  privacidad: '2026-05-26',
+  privacidad: '2026-05-26 (rev. analytics)',
   terminos: '2026-05-18',
   'aviso-medico': '2026-05-12',
 } as const;
@@ -111,10 +111,23 @@ function PrivacyPolicy() {
           el pago se ha completado para activarte el plan Pro.
         </li>
         <li>
-          <strong>Sentry</strong> (servicio que nos ayuda a detectar fallos): si la app se cuelga o muestra un
-          error, se envía un aviso técnico para que podamos arreglarlo. El aviso incluye únicamente: un código
-          anónimo de sesión, el mensaje de error, qué navegador o móvil usas y en qué pantalla estabas.
-          <strong> NO</strong> se envía nada de tu plan, tus comidas, tus entrenos ni datos que te identifiquen.
+          <strong>Firebase Analytics</strong> (servicio de Google que nos ayuda a entender qué pantallas se
+          usan más, dónde se atascan los usuarios y detectar problemas): registra acciones anónimas como qué
+          tab abres, cuándo terminas el onboarding, si generas un plan con IA, etc. <strong>En la app
+          nativa</strong> (iOS y Android) este registro es completamente anónimo y no usa cookies. <strong>En
+          la versión web</strong>, Firebase Analytics usa pequeñas cookies (<code>_ga</code> y similares) para
+          distinguir sesiones · por eso al entrar por web te preguntamos primero con un banner si lo aceptas o
+          no, y puedes cambiar de opinión en <em>Ajustes → Privacidad → Cookies de analíticas</em>. Si
+          rechazas, la app sigue funcionando exactamente igual. <strong>NO</strong> se envía tu email, tu
+          nombre, tu foto, tu peso/altura exactos ni el contenido de tus comidas o entrenos.
+        </li>
+        <li>
+          <strong>Firebase Crashlytics</strong> (también de Google · solo en la app nativa, llegará con la
+          publicación en App Store y Play Store): si la app se cierra inesperadamente o lanza un error, se
+          envía un informe técnico para que podamos arreglarlo. El informe incluye únicamente: identificador
+          anónimo de tu dispositivo, el tipo de error, el modelo del móvil, la versión del sistema operativo y
+          la pantalla donde ocurrió. <strong>NO</strong> se envía nada de tu plan, comidas, entrenos ni datos
+          que te identifiquen.
         </li>
       </ul>
       <p>
@@ -151,16 +164,33 @@ function PrivacyPolicy() {
 
       <h2>8. Cookies y almacenamiento local</h2>
       <p>
-        BTal <strong>NO usa cookies de seguimiento</strong> publicitario ni de terceros. Solo usamos
-        almacenamiento local del dispositivo (en la app nativa) o del navegador (en la versión web ·
-        localStorage e IndexedDB) para:
+        BTal <strong>NO usa cookies publicitarias</strong> ni de terceros que te rastreen por la web. Usamos
+        dos tipos de almacenamiento, según para qué:
       </p>
+      <p><strong>Estrictamente necesarias</strong> (siempre activas, no requieren tu consentimiento):</p>
       <ul>
-        <li>Mantener tu sesión iniciada (para no pedirte iniciar sesión en cada visita).</li>
+        <li>Almacenamiento local del dispositivo (en la app nativa) o del navegador (<code>localStorage</code> e <code>IndexedDB</code> en la versión web) para mantener tu sesión iniciada y no pedirte iniciar sesión en cada visita.</li>
         <li>Guardar tus preferencias (unidades, inicio de semana, estilo de barra de navegación).</li>
-        <li>Recordar avisos que ya cerraste.</li>
+        <li>Recordar avisos que ya cerraste (banner de cookies, banner de modo invitado).</li>
       </ul>
-      <p>Si borras los datos de la app (o limpias el almacenamiento del navegador), tendrás que volver a iniciar sesión.</p>
+      <p><strong>Analíticas</strong> (opcionales, requieren tu consentimiento):</p>
+      <ul>
+        <li>
+          <strong>Solo en la versión web</strong>: Firebase Analytics usa pequeñas cookies (<code>_ga</code>,
+          <code>_ga_&lt;ID&gt;</code>) de duración 2 años, propias del dominio btal-app.web.app, para
+          distinguir sesiones del mismo usuario y agregar estadísticas anónimas. Al entrar por primera vez te
+          mostraremos un banner para que aceptes o rechaces. Si rechazas, no se instalan. Si aceptas, puedes
+          cambiar de opinión en <em>Ajustes → Privacidad → Cookies de analíticas</em>.
+        </li>
+        <li>
+          <strong>En la app nativa</strong> (iOS y Android, llegará con la publicación en stores): Firebase
+          Analytics nativo NO usa cookies · usa identificadores anónimos del sistema operativo (IDFV en iOS,
+          ID de aplicación en Android) que son específicos para BTal y no se comparten con otras apps. El uso
+          de estos identificadores se declara obligatoriamente en las fichas de privacidad de App Store
+          (Privacy Nutrition Labels) y Google Play (Data Safety) que verás antes de instalar la app.
+        </li>
+      </ul>
+      <p>Si borras los datos de la app (o limpias el almacenamiento del navegador), tendrás que volver a iniciar sesión y volverá a aparecer el banner de cookies.</p>
 
       <h2>9. Seguridad</h2>
       <p>

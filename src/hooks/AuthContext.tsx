@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { consumePendingRedirect } from '../services/auth';
+import { setAnalyticsUser } from '../services/analytics';
 import { AuthContext, type AuthState } from './auth-context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -44,6 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
+      // Asociar / desasociar UID en Firebase Analytics. No-op silencioso
+      // si Analytics no está activo (sin consent, sin Measurement ID, etc.).
+      setAnalyticsUser(u?.uid ?? null, u
+        ? { auth_provider: u.providerData[0]?.providerId ?? 'unknown',
+            is_anonymous: String(u.isAnonymous) }
+        : undefined);
     });
     return unsub;
   }, []);

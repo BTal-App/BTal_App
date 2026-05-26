@@ -16,6 +16,7 @@ import { ErrorProvider } from './hooks/ErrorProvider';
 import { AdblockBanner } from './hooks/AdblockBanner';
 import { OfflineBanner } from './hooks/OfflineBanner';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { CookieConsentBanner } from './components/CookieConsentBanner';
 
 /* Ionic core CSS — obligatorio */
 import '@ionic/react/css/core.css';
@@ -43,6 +44,7 @@ const App: React.FC = () => (
     <ErrorProvider>
     <OfflineBanner />
     <AdblockBanner />
+    <CookieConsentBanner />
     <AuthProvider>
       <ProfileProvider>
         <PreferencesProvider>

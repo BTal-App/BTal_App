@@ -10,6 +10,17 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import './styles/animations.css'
 import App from './App.tsx'
+import { bootstrapAnalytics, subscribeAnalyticsToConsent } from './services/analytics'
+
+// Analytics · Fase 13. Si el user ya aceptó cookies en una visita previa
+// (localStorage.btal_cookie_consent_v1 === 'accepted'), lanzamos el init
+// inmediatamente · si no, queda dormido hasta que toque "Aceptar" en el
+// banner (subscribeAnalyticsToConsent escucha el cambio y arranca solo).
+// En nativo Capacitor el banner no se muestra · Analytics web SDK tampoco
+// arranca · Fase 9 instalará el plugin nativo que reporta al mismo
+// proyecto Firebase Analytics sin necesidad de consentimiento (IDFV/GAID).
+void bootstrapAnalytics()
+subscribeAnalyticsToConsent()
 
 // ── Estilo del nav inferior · aplicar body class lo antes posible ──
 // La preferencia persistente vive en `preferences.navStyle`

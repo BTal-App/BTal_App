@@ -20,6 +20,7 @@ import { PaymentsHistoryModal } from '../components/PaymentsHistoryModal';
 import { PreferencesModal } from '../components/PreferencesModal';
 import { CONTACT_EMAIL } from '../config/contact';
 import { downloadUserDataExport } from '../services/exportData';
+import { useCookieConsent } from '../hooks/useCookieConsent';
 import { blurAndRun } from '../utils/focus';
 import { initialsOf } from '../utils/userDisplay';
 import './Settings.css';
@@ -76,6 +77,27 @@ const Settings: React.FC = () => {
   const [exporting, setExporting] = useState(false);
   const [exportedToast, setExportedToast] = useState(false);
   const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
+
+  // Cookie consent · Fase 13. Estado vive en localStorage vía store puro
+  // · `useCookieConsent` expone state + accept/reject/revoke. Revoke en
+  // Settings vuelve a abrir el banner inferior si el user cambia de
+  // opinión. En nativo Capacitor toda esta UI sigue visible · permite
+  // revocar la decisión web si el user llegó desde el navegador antes
+  // de instalar la app (la decisión en nativo no afecta porque Analytics
+  // nativo usa IDFV/GAID, no cookies).
+  const { state: consentState, revoke: revokeConsent } = useCookieConsent();
+  const [cookieRevokeConfirmOpen, setCookieRevokeConfirmOpen] = useState(false);
+  const [cookieRevokedToast, setCookieRevokedToast] = useState(false);
+
+  const handleRevokeCookies = () => {
+    revokeConsent();
+    setCookieRevokeConfirmOpen(false);
+    setCookieRevokedToast(true);
+    // Reload tras un tick para asegurar que el SDK de Analytics (si ya
+    // estaba cargado) deja de medir. Sin reload, los listeners siguen
+    // disparando hasta el próximo refresh natural.
+    setTimeout(() => window.location.reload(), 800);
+  };
 
   const handleExportRequest = () => {
     if (!user || exporting) return;
@@ -261,6 +283,36 @@ const Settings: React.FC = () => {
             </button>
           </section>
 
+          {/* Privacidad · permite revocar el consent de cookies dado al
+              banner inferior · sin sección si el user nunca decidió (el
+              banner sigue visible y desde ahí gestiona). */}
+          {consentState !== 'undecided' && (
+            <section className="settings-section">
+              <h2 className="settings-section-title">Privacidad</h2>
+              <button
+                type="button"
+                className="settings-row settings-row--link"
+                onClick={blurAndRun(() => setCookieRevokeConfirmOpen(true))}
+              >
+                <div className="settings-row-info">
+                  <span className="settings-row-label">
+                    Cookies de analíticas
+                  </span>
+                  <span className="settings-row-value settings-row-sub">
+                    {consentState === 'accepted'
+                      ? 'Aceptadas · pulsa para revocar y deshabilitar Analytics'
+                      : 'Rechazadas · pulsa para cambiar tu elección'}
+                  </span>
+                </div>
+                <MealIcon
+                  value="tb:cookie"
+                  size={20}
+                  className="settings-row-chevron"
+                />
+              </button>
+            </section>
+          )}
+
           <section className="settings-section">
             <h2 className="settings-section-title">Soporte</h2>
 
@@ -389,6 +441,37 @@ const Settings: React.FC = () => {
           position="top"
           color="success"
           onDidDismiss={() => setExportedToast(false)}
+        />
+
+        {/* Revoke cookies · confirmación previa porque haremos un reload de
+            la página tras revocar (para detener cualquier listener del SDK
+            de Analytics que ya estuviese activo). */}
+        <IonAlert
+          isOpen={cookieRevokeConfirmOpen}
+          onDidDismiss={() => setCookieRevokeConfirmOpen(false)}
+          header="Revocar consentimiento"
+          message={
+            consentState === 'accepted'
+              ? 'Si revocas, Firebase Analytics dejará de medir tu uso y volverá a aparecer el banner para que elijas de nuevo. La página se recargará.'
+              : 'El banner volverá a aparecer para que elijas de nuevo. La página se recargará.'
+          }
+          buttons={[
+            { text: 'Cancelar', role: 'cancel' },
+            {
+              text: 'Revocar',
+              role: 'destructive',
+              handler: handleRevokeCookies,
+            },
+          ]}
+        />
+
+        <IonToast
+          isOpen={cookieRevokedToast}
+          message="Consentimiento revocado · recargando..."
+          duration={1500}
+          position="top"
+          color="success"
+          onDidDismiss={() => setCookieRevokedToast(false)}
         />
 
         {/* DeleteAccountModal aquí solo se usa para invitados (los registrados
