@@ -66,7 +66,7 @@ function PrivacyPolicy() {
         (Google Firebase, infraestructura en la Unión Europea) los siguientes datos:
       </p>
       <ul>
-        <li><strong>Identificación</strong>: email, contraseña (guardada cifrada · ni nosotros podemos leerla), nombre que elijas y, opcionalmente, foto de perfil.</li>
+        <li><strong>Identificación</strong>: email, contraseña (se guarda cifrada), nombre que elijas y, opcionalmente, foto de perfil.</li>
         <li><strong>Perfil físico</strong>: edad, peso, altura, sexo biológico, nivel de actividad, objetivo, días de entreno, equipamiento, intolerancias/alergias alimentarias y preferencias (proporcionado voluntariamente).</li>
         <li><strong>Datos generados por tu uso</strong>: menús, planes de entreno, lista de la compra, suplementación, registros de ejercicios (peso, repeticiones, fecha).</li>
         <li><strong>Preferencias técnicas</strong>: sistema de unidades, inicio de semana, modo de generación (IA o manual), estilo de la barra de navegación.</li>
