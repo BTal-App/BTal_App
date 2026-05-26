@@ -250,7 +250,7 @@ const Settings: React.FC = () => {
               <div className="settings-row-info">
                 <span className="settings-row-label">Descargar mis datos</span>
                 <span className="settings-row-value settings-row-sub">
-                  Copia completa de mis datos en formato JSON (RGPD).
+                  Copia completa de tus datos para llevártelos donde quieras (RGPD).
                 </span>
               </div>
               {exporting ? (
@@ -359,8 +359,8 @@ const Settings: React.FC = () => {
           header="Descargar mis datos"
           subHeader="¿Qué se va a descargar?"
           message={
-            'Un archivo JSON con TODOS tus datos de BTal:\n\n'
-            + '• Datos de tu cuenta (email, nombre, proveedores de login, fechas de creación y último acceso).\n'
+            'Un archivo con TODOS tus datos de BTal:\n\n'
+            + '• Datos de tu cuenta (email, nombre, formas de iniciar sesión, fechas de creación y último acceso).\n'
             + '• Tu perfil físico (peso, altura, edad, objetivo, intolerancias, etc.).\n'
             + '• Tus menús de los 7 días, lista de la compra, planes de entreno y suplementación.\n'
             + '• Historial completo de registros de pesos.\n'

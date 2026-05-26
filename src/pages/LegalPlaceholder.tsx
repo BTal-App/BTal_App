@@ -66,11 +66,11 @@ function PrivacyPolicy() {
         (Google Firebase, infraestructura en la Unión Europea) los siguientes datos:
       </p>
       <ul>
-        <li><strong>Identificación</strong>: email, contraseña (hash, nunca en claro), nombre que elijas y, opcionalmente, foto de perfil.</li>
+        <li><strong>Identificación</strong>: email, contraseña (guardada cifrada · ni nosotros podemos leerla), nombre que elijas y, opcionalmente, foto de perfil.</li>
         <li><strong>Perfil físico</strong>: edad, peso, altura, sexo biológico, nivel de actividad, objetivo, días de entreno, equipamiento, intolerancias/alergias alimentarias y preferencias (proporcionado voluntariamente).</li>
         <li><strong>Datos generados por tu uso</strong>: menús, planes de entreno, lista de la compra, suplementación, registros de ejercicios (peso, repeticiones, fecha).</li>
         <li><strong>Preferencias técnicas</strong>: sistema de unidades, inicio de semana, modo de generación (IA o manual), estilo de la barra de navegación.</li>
-        <li><strong>Datos técnicos</strong>: identificador interno (UID), fecha de creación, fecha de última actividad.</li>
+        <li><strong>Datos técnicos</strong>: un identificador interno de tu cuenta, fecha de creación y fecha de última actividad.</li>
       </ul>
       <p>
         <strong>NO recopilamos</strong>: geolocalización, contactos, micrófono, cámara,
@@ -135,7 +135,7 @@ function PrivacyPolicy() {
       <p>Sobre tus datos personales tienes los siguientes derechos:</p>
       <ul>
         <li><strong>Acceso</strong>: solicitar copia de los datos que tenemos sobre ti.</li>
-        <li><strong>Portabilidad</strong>: descargar tus datos en formato legible. Disponible ya desde <em>Ajustes → Datos → Descargar mis datos</em> (formato JSON).</li>
+        <li><strong>Portabilidad</strong>: descargar tus datos en un archivo que puedas llevarte a otro servicio. Disponible ya desde <em>Ajustes → Datos → Descargar mis datos</em>.</li>
         <li><strong>Rectificación</strong>: corregir datos inexactos. Editable desde <em>Ajustes → Editar perfil</em>.</li>
         <li><strong>Supresión</strong>: borrar tu cuenta y todos los datos asociados.</li>
         <li><strong>Oposición y limitación</strong>: oponerte al tratamiento concreto o pedir que se limite a ciertos usos.</li>
@@ -156,7 +156,7 @@ function PrivacyPolicy() {
         localStorage e IndexedDB) para:
       </p>
       <ul>
-        <li>Mantener tu sesión iniciada (para no pedirte login en cada visita).</li>
+        <li>Mantener tu sesión iniciada (para no pedirte iniciar sesión en cada visita).</li>
         <li>Guardar tus preferencias (unidades, inicio de semana, estilo de barra de navegación).</li>
         <li>Recordar avisos que ya cerraste.</li>
       </ul>
