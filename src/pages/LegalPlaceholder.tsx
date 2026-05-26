@@ -16,7 +16,7 @@ import './LegalPlaceholder.css';
 // vigor (el roadmap llamaría a esto en la Fase 6 con Cloud Functions).
 
 const LEGAL_VERSION = {
-  privacidad: '2026-05-18',
+  privacidad: '2026-05-26',
   terminos: '2026-05-18',
   'aviso-medico': '2026-05-12',
 } as const;
@@ -93,10 +93,35 @@ function PrivacyPolicy() {
         <strong>NO vendemos ni cedemos tus datos a terceros</strong> para marketing, publicidad ni análisis externos.
       </p>
       <p>
-        Es posible que en el futuro se incorporen nuevos servicios para añadir funcionalidades a BTal. Si esto
-        ocurre tras el lanzamiento, esta política se actualizará para reflejarlo y se notificará a los usuarios
-        existentes antes de la activación (ver la sección 10). Cualquier dato enviado a terceros viajará cifrado
-        y solo con el mínimo necesario para la función concreta.
+        Como parte del despliegue público (apps en stores y funcionalidades adicionales), está previsto incorporar
+        los siguientes servicios complementarios. Cada uno recibe únicamente la información estrictamente necesaria
+        para su función, viajará cifrada en tránsito y nunca incluirá datos que no se enumeren aquí:
+      </p>
+      <ul>
+        <li>
+          <strong>Google Gemini</strong> (generación con IA): cuando uses la función "Generar con IA", se envían
+          los datos de perfil necesarios para generar tu plan (edad, peso, altura, sexo biológico, nivel de
+          actividad, objetivo, días de entreno e intolerancias). <strong>NO</strong> se le envía email, nombre,
+          foto ni identificación.
+        </li>
+        <li>
+          <strong>Pasarelas de pago</strong> (Apple App Store, Google Play en la app nativa; Stripe en la web): si
+          te suscribes al plan Pro, los datos de pago (tarjeta, dirección de facturación, etc.) son procesados
+          directamente por la pasarela del canal correspondiente. <strong>BTal nunca ve ni almacena los datos de
+          tu tarjeta</strong> — solo recibe la confirmación de la suscripción para activar las funcionalidades
+          de pago en tu cuenta.
+        </li>
+        <li>
+          <strong>Sentry</strong> (diagnóstico de errores): para detectar y arreglar bugs y crashes, se podrá
+          enviar información técnica anonimizada (identificador interno de la sesión, mensaje de error, versión
+          del navegador o sistema operativo, ruta dentro de la app). <strong>NO</strong> se envía contenido de
+          tu plan, tus registros ni datos personales identificables.
+        </li>
+      </ul>
+      <p>
+        Si tras el lanzamiento se incorpora algún servicio adicional no enumerado aquí, esta política se
+        actualizará para reflejarlo y se notificará a los usuarios existentes antes de la activación (ver la
+        sección 10).
       </p>
 
       <h2>5. Cuánto tiempo los conservamos</h2>
@@ -144,6 +169,13 @@ function PrivacyPolicy() {
         reglas de acceso estrictas en la base de datos (cada usuario solo puede leer/escribir sus propios datos),
         hash seguro de contraseñas (gestionado por Firebase Authentication; nunca tenemos acceso a tu contraseña en claro)
         y, en la versión web, cabeceras HTTP de seguridad (CSP, HSTS, X-Frame-Options, Permissions-Policy).
+      </p>
+      <p>
+        Puedes activar opcionalmente la <strong>verificación en dos pasos (2FA)</strong> basada en una app
+        authenticator (Google Authenticator, Authy, 1Password u otras) desde <em>Ajustes → Administrar
+        cuenta → Verificación en dos pasos</em>. Una vez activada, además de tu contraseña te pediremos un
+        código de 6 dígitos generado en tu dispositivo al iniciar sesión. El secreto del 2FA se almacena
+        cifrado por Firebase Authentication y BTal nunca tiene acceso a él en claro.
       </p>
       <p>
         Si descubres una vulnerabilidad de seguridad, escríbenos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> antes
