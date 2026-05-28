@@ -48,7 +48,11 @@ try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {
         apply plugin: 'com.google.gms.google-services'
+        // Crashlytics plugin requiere google-services aplicado primero.
+        // Misma condicion: solo lo aplicamos si el JSON existe (en dev
+        // sin JSON la app compila igual sin Firebase nativo).
+        apply plugin: 'com.google.firebase.crashlytics'
     }
 } catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+    logger.info("google-services.json not found, google-services + crashlytics plugins not applied. Native Firebase Analytics and Crashlytics will not work.")
 }
