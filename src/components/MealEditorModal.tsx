@@ -6,6 +6,7 @@ import {
   IonModal,
 } from '@ionic/react';
 import { useProfile } from '../hooks/useProfile';
+import { trackEvent } from '../services/analytics';
 import {
   SAVED_INDICATOR_MS,
   SAVE_FAILED,
@@ -163,6 +164,10 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
       );
       return;
     }
+    trackEvent('meal_edited', {
+      meal,
+      foods_count: cleaned.alimentos.length,
+    });
     dismissApproved.current = true;
     closeTimer.current = setTimeout(() => {
       onClose();

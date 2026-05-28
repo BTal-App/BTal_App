@@ -11,6 +11,7 @@ import { MealIcon } from '../components/MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { signOut } from '../services/auth';
+import { trackEvent } from '../services/analytics';
 import { AiPromptSummaryModal } from '../components/AiPromptSummaryModal';
 import { ChipsInput } from '../components/ChipsInput';
 import { CollapsibleSection } from '../components/CollapsibleSection';
@@ -157,7 +158,10 @@ const Onboarding: React.FC = () => {
 
   const handleNext = () => {
     if (!stepValid) return;
-    if (step < 4) setStep((step + 1) as 0 | 1 | 2 | 3 | 4);
+    if (step < 4) {
+      trackEvent('onboarding_step', { step });
+      setStep((step + 1) as 0 | 1 | 2 | 3 | 4);
+    }
   };
 
   const handleBack = () => {
@@ -182,18 +186,26 @@ const Onboarding: React.FC = () => {
     if (!stepValid || modeChoice.modo === null) return;
     setError('');
     setSubmitting(true);
+    // Capturamos fuera del closure async · el narrowing de `modeChoice.modo !== null`
+    // no se propaga después del await.
+    const modoToTrack = modeChoice.modo;
+    const aiScopeToTrack = modeChoice.aiScope;
     try {
       // Inyectamos modo + aiScope del paso 4 en el perfil que se persiste.
       // Si modo='manual', aiScope es null por construcción del StepMode.
       await saveOnboarding({
         ...data,
-        modo: modeChoice.modo,
-        aiScope: modeChoice.aiScope,
+        modo: modoToTrack,
+        aiScope: aiScopeToTrack,
       });
       // FASE 6 PENDIENTE · si modo='ai' aquí dispararíamos la primera
       // generación llamando a la Cloud Function `generatePlan(scope=aiScope)`.
       // Por ahora el shell muestra empty states + botón "Generar con IA"
       // que el user tendrá que pulsar (toast informativo).
+      trackEvent('signup_completed', {
+        modo: modoToTrack,
+        ai_scope: aiScopeToTrack ?? 'none',
+      });
       history.replace('/app');
     } catch (err) {
       console.error('[BTal] saveOnboarding error:', err);

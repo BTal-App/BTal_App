@@ -15,6 +15,7 @@ import {
 } from '../hooks/useSaveStatus';
 import { SaveIndicator } from './SaveIndicator';
 import { StepMode, type StepModeValue } from './StepMode';
+import { trackEvent } from '../services/analytics';
 import { blurAndRun } from '../utils/focus';
 import './SettingsModal.css';
 
@@ -115,6 +116,11 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
       setError('No se ha podido cambiar el modo. Inténtalo de nuevo.');
       return;
     }
+    trackEvent('mode_changed', {
+      from: currentModo,
+      to: modoToSave,
+      ai_scope: aiScopeToSave ?? 'none',
+    });
     // Tras éxito esperamos a que el chip "Guardado" se vea antes de cerrar.
     closeTimer.current = setTimeout(() => {
       setSavedToast(true);

@@ -18,6 +18,7 @@ import {
 import { getEffectiveRecommendedPlanId, type RegistroDia } from '../../templates/defaultUser';
 import { todayDateStr } from '../../utils/dateKeys';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
+import { trackEvent } from '../../services/analytics';
 import { SaveStatusToast } from '../../components/SaveStatusToast';
 import { DeleteStatusToast } from '../../components/DeleteStatusToast';
 import { useSaveStatus, SAVE_FAILED } from '../../hooks/useSaveStatus';
@@ -125,6 +126,10 @@ const RegistroPage: React.FC = () => {
       setRegistroDiaDb(user.uid, selectedDate, next),
     );
     if (result === SAVE_FAILED) return;
+    trackEvent('workout_logged', {
+      plan_type: next.plan === 'rest' ? 'rest' : next.plan ? 'workout' : 'empty',
+      exercises_count: Object.keys(next.exercises).length,
+    });
     // Refrescamos los recientes para que la racha se recalcule
     // inmediatamente (sin esperar a re-mount).
     void stats.refresh();
