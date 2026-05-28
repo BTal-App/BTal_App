@@ -88,6 +88,15 @@ const AppShell: React.FC = () => {
     );
   }
 
+  // Guard síncrono · user real sin onboarding completo → redirect
+  // durante el render. Evita el flash de IonTabs antes de que el
+  // useEffect dispare el history.replace · en Brave/Safari iOS ese
+  // flash dejaba al user atascado en /app/hoy porque IonTabs gana
+  // el control de navegación al useEffect que llega un tick tarde.
+  if (!user.isAnonymous && !userDoc?.profile?.completed) {
+    return <Redirect to="/onboarding" />;
+  }
+
   return (
     <IonTabs>
       <IonRouterOutlet>
