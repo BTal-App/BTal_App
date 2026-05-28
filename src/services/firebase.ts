@@ -84,6 +84,29 @@ const RECAPTCHA_V3_SITE_KEY = import.meta.env.VITE_RECAPTCHA_V3_SITE_KEY as
 let appCheck: AppCheck | null = null;
 function bootstrapAppCheck(): void {
   if (typeof window === 'undefined') return; // SSR / vitest jsdom OK pero no hay window
+
+  // Debug token mode (DEV ONLY) · activable via env var. Necesario para
+  // testing en Capacitor WebView (Android/iOS) y entornos donde reCAPTCHA
+  // v3 Classic puntúa bajo y devuelve 403 (Brave Shields, incógnito, etc.).
+  // El SDK genera un UUID y lo imprime en console (DevTools / chrome://inspect)
+  // la primera vez. Ese UUID se registra en:
+  //   Firebase Console > App Check > Apps > tu app > Manage debug tokens
+  // CAUTION: si VITE_APPCHECK_DEBUG queda 'true' en build de producción,
+  // App Check rechazará a TODOS los users reales con 403 (porque sus
+  // tokens auto-generados NO están en la allow list). Quitar esta var
+  // del .env antes de cada release a Play Store / App Store. La forma
+  // canónica en BTal es tenerla en .env.local (gitignored) solo para dev.
+  if (import.meta.env.VITE_APPCHECK_DEBUG === 'true') {
+    (globalThis as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string })
+      .FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    if (import.meta.env.DEV) {
+      console.info(
+        '[BTal] App Check DEBUG mode activo · el SDK imprimirá un UUID ' +
+        'al inicializar. Regístralo en Firebase Console > App Check.',
+      );
+    }
+  }
+
   if (!RECAPTCHA_V3_SITE_KEY) {
     // En CI / build sin site key, App Check NO se inicializa · las llamadas
     // pasan sin token. En modo enforcement de Firebase Console, esas
