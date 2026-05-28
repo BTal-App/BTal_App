@@ -1,7 +1,8 @@
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
 import {
+  CustomProvider,
   initializeAppCheck,
-  ReCaptchaV3Provider,
+  ReCaptchaEnterpriseProvider,
   type AppCheck,
 } from 'firebase/app-check';
 import {
@@ -11,6 +12,7 @@ import {
   initializeAuth,
   type Auth,
 } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
 
 const required = [
   'VITE_FIREBASE_API_KEY',
@@ -29,13 +31,13 @@ if (import.meta.env.DEV) {
       `Auth y Firestore darán errores hasta que las añadas.`,
     );
   }
-  if (!import.meta.env.VITE_RECAPTCHA_V3_SITE_KEY) {
+  if (!import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY) {
     console.warn(
-      '[BTal] Falta VITE_RECAPTCHA_V3_SITE_KEY en .env · App Check no '
-      + 'se activará. En dev usa `self.FIREBASE_APPCHECK_DEBUG_TOKEN = '
-      + 'true` antes del primer import de Firebase para que App Check '
-      + 'imprima un token de debug en consola que puedes añadir desde '
-      + 'Firebase Console > App Check > Apps > ... > Manage debug tokens.',
+      '[BTal] Falta VITE_RECAPTCHA_ENTERPRISE_SITE_KEY en .env · ' +
+      'App Check web no se activará. Crear el site key en ' +
+      'https://console.cloud.google.com/security/recaptcha (tipo ' +
+      '"Score-based" o "Checkbox") y registrarlo en Firebase Console ' +
+      '> App Check > Apps > web app > reCAPTCHA Enterprise.',
     );
   }
 }
@@ -52,50 +54,63 @@ const firebaseConfig: FirebaseOptions = {
 
 export const app = initializeApp(firebaseConfig);
 
-// ── App Check · Fase 11-0 ──────────────────────────────────────────────
+// ── App Check · Fase 11-0 · split web/native ────────────────────────────
 // Defensa contra abuso de tu backend desde clientes NO oficiales (Postman,
 // curl, scripts, headless browsers sin contexto). Cada llamada a Firebase
-// (Auth, Firestore, Functions, Storage) lleva un token criptográfico
-// generado por reCAPTCHA v3 que el servidor verifica antes de procesar.
-// Sin token o token inválido → 403 a nivel de servicio · ni siquiera entra
-// a las security rules.
+// (Auth, Firestore, Functions, Storage) lleva un token criptográfico que
+// el servidor verifica antes de procesar. Sin token o token inválido →
+// 403 a nivel de servicio · ni siquiera entra a las security rules.
 //
-// reCAPTCHA v3 es invisible para el user · puntúa cada request 0-1 según
-// señales del navegador. Firebase Auth con reCAPTCHA Enterprise (toggle en
-// Console > Authentication > Settings) hace el challenge VISIBLE solo en
-// flujos sensibles (signup, recover password) cuando el score baja del
-// umbral configurado.
+// PROVIDERS POR PLATAFORMA
+//   - Web (PWA / browser): reCAPTCHA Enterprise. Score-based, invisible
+//     para el user, free tier 1M assessments/mes (vs 10K de Classic v3).
+//     Mucho mejor scoring que Classic en Brave Shields / incógnito.
+//   - Capacitor Android nativo: Play Integrity via plugin Capacitor. El
+//     SO verifica que la app es una instalación legítima desde Play Store
+//     (o build debug con SHA-256 registrado). Free 10K/día (300K/mes).
+//   - Capacitor iOS nativo: DeviceCheck / App Attest via plugin Capacitor.
+//     El SO verifica el dispositivo. Free unlimited.
 //
-// El init es síncrono pero `getToken()` es async · App Check intercepta
-// las llamadas de los SDK de Firebase y añade el header automáticamente.
+// FLUJO EN NATIVO
+//   El plugin @capacitor-firebase/app-check inicializa App Check nativo y
+//   obtiene tokens de Play Integrity / DeviceCheck. Como el resto de la
+//   app usa el SDK web de Firebase desde WebView, integramos el plugin
+//   con el web SDK vía `CustomProvider`: cada vez que el web SDK necesita
+//   un token, llama al plugin nativo que devuelve el token producido por
+//   el SO. Lo mejor de los dos mundos.
 //
-// En dev local sin site key, usamos debug provider:
-//   - Antes de `import './firebase'`, en main.tsx o en consola del browser:
-//     `self.FIREBASE_APPCHECK_DEBUG_TOKEN = true`
-//   - El SDK imprime un debug token en consola la primera vez
-//   - Copia ese token a Firebase Console > App Check > Apps > web app
-//     > ⋮ > Manage debug tokens > Add debug token
-//   - A partir de ahí, las llamadas desde tu dev pasan App Check sin
-//     site key real
-const RECAPTCHA_V3_SITE_KEY = import.meta.env.VITE_RECAPTCHA_V3_SITE_KEY as
-  | string
-  | undefined;
+// DEBUG TOKEN (DEV ONLY · ver bloque de codigo abajo)
+//   En entornos donde reCAPTCHA o Play Integrity no se pueden obtener
+//   (debug builds sin SHA registrado, emuladores Android sin Google Play,
+//   navegadores con privacy extremo), activar VITE_APPCHECK_DEBUG=true
+//   en .env. El SDK genera un UUID que se registra en Firebase Console
+//   > App Check > Apps > Manage debug tokens.
+//
+// CONFIGURACIÓN EN FIREBASE CONSOLE
+//   1. App Check > Apps > web app: añadir reCAPTCHA Enterprise site key
+//   2. App Check > Apps > Android app: activar Play Integrity provider
+//      (requiere SHA-256 del APK debug + release)
+//   3. App Check > Apps > iOS app: activar DeviceCheck / App Attest
+//      (cuando llegue iOS · requiere Bundle ID + Team ID)
+const RECAPTCHA_ENTERPRISE_SITE_KEY = import.meta.env
+  .VITE_RECAPTCHA_ENTERPRISE_SITE_KEY as string | undefined;
 
 let appCheck: AppCheck | null = null;
 function bootstrapAppCheck(): void {
   if (typeof window === 'undefined') return; // SSR / vitest jsdom OK pero no hay window
 
-  // Debug token mode (DEV ONLY) · activable via env var. Necesario para
-  // testing en Capacitor WebView (Android/iOS) y entornos donde reCAPTCHA
-  // v3 Classic puntúa bajo y devuelve 403 (Brave Shields, incógnito, etc.).
-  // El SDK genera un UUID y lo imprime en console (DevTools / chrome://inspect)
-  // la primera vez. Ese UUID se registra en:
-  //   Firebase Console > App Check > Apps > tu app > Manage debug tokens
+  // Debug token mode (DEV ONLY) · activable via env var. Sirve cuando:
+  //   - Capacitor Android sin SHA-256 registrado en Play Integrity
+  //   - Emulador Android sin Google Play Services
+  //   - Brave Shields / incógnito bloqueando reCAPTCHA Enterprise
+  //   - iOS dev build sin DeviceCheck habilitado todavía
+  // El SDK genera un UUID y lo imprime en console. Registrar UNA VEZ por
+  // device en Firebase Console > App Check > Apps > tu app > Manage
+  // debug tokens. Solo ese device pasa App Check con ese UUID.
   // CAUTION: si VITE_APPCHECK_DEBUG queda 'true' en build de producción,
-  // App Check rechazará a TODOS los users reales con 403 (porque sus
-  // tokens auto-generados NO están en la allow list). Quitar esta var
-  // del .env antes de cada release a Play Store / App Store. La forma
-  // canónica en BTal es tenerla en .env.local (gitignored) solo para dev.
+  // App Check rechazará a TODOS los users reales con 403. Quitar antes
+  // de cada release. La forma canónica en BTal es tenerla en .env.local
+  // (gitignored) solo para dev y nunca en .env (que es el "release").
   if (import.meta.env.VITE_APPCHECK_DEBUG === 'true') {
     (globalThis as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string })
       .FIREBASE_APPCHECK_DEBUG_TOKEN = true;
@@ -107,7 +122,21 @@ function bootstrapAppCheck(): void {
     }
   }
 
-  if (!RECAPTCHA_V3_SITE_KEY) {
+  if (Capacitor.isNativePlatform()) {
+    // Native (Capacitor Android / iOS) · usa el plugin nativo via
+    // CustomProvider. El plugin se encarga de Play Integrity (Android)
+    // o DeviceCheck / App Attest (iOS) en el lado nativo, y nos da los
+    // tokens vía API JS. El web SDK los inyecta en headers de Firebase.
+    bootstrapAppCheckNative().catch((err) => {
+      if (import.meta.env.DEV) {
+        console.warn('[BTal] Native App Check init failed:', err);
+      }
+    });
+    return;
+  }
+
+  // Web (PWA / browser) · reCAPTCHA Enterprise
+  if (!RECAPTCHA_ENTERPRISE_SITE_KEY) {
     // En CI / build sin site key, App Check NO se inicializa · las llamadas
     // pasan sin token. En modo enforcement de Firebase Console, esas
     // llamadas fallarán 403. Esto es intencional · el dev tiene que tener
@@ -116,7 +145,7 @@ function bootstrapAppCheck(): void {
   }
   try {
     appCheck = initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
+      provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_ENTERPRISE_SITE_KEY),
       // isTokenAutoRefreshEnabled · App Check refresca el token antes de
       // que caduque (cada 30 min aprox). Sin esto las llamadas tras una
       // sesión larga (1h+) fallarían. Default true desde firebase@9.6+.
@@ -131,6 +160,49 @@ function bootstrapAppCheck(): void {
     }
   }
 }
+
+async function bootstrapAppCheckNative(): Promise<void> {
+  const { FirebaseAppCheck } = await import('@capacitor-firebase/app-check');
+  // Inicializar el plugin nativo. En Android se conecta automáticamente
+  // a Play Integrity (gratis 10K/día); en iOS, a DeviceCheck / App Attest
+  // (gratis unlimited). El provider concreto se configura en Firebase
+  // Console > App Check > tu app · el SDK nativo lo lee al boot.
+  // `isTokenAutoRefreshEnabled` (lado nativo) · refresca antes de caducar.
+  // `debug` solo si la env var VITE_APPCHECK_DEBUG === 'true' · permite
+  // a Firebase aceptar tokens de debug registrados manualmente en Console.
+  await FirebaseAppCheck.initialize({
+    isTokenAutoRefreshEnabled: true,
+    debug: import.meta.env.VITE_APPCHECK_DEBUG === 'true',
+  });
+
+  try {
+    appCheck = initializeAppCheck(app, {
+      // CustomProvider: el web SDK pide token via callback async · nosotros
+      // delegamos al plugin nativo que devuelve un token producido por el
+      // SO (Play Integrity / DeviceCheck). El web SDK lo inyecta en los
+      // headers `X-Firebase-AppCheck` de todas las llamadas a Firebase.
+      provider: new CustomProvider({
+        getToken: async () => {
+          const result = await FirebaseAppCheck.getToken({
+            forceRefresh: false,
+          });
+          return {
+            token: result.token,
+            // El plugin devuelve `expireTimeMillis` como string (epoch ms);
+            // CustomProvider espera number. Parseamos.
+            expireTimeMillis: Number(result.expireTimeMillis),
+          };
+        },
+      }),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } catch (err) {
+    if (import.meta.env.DEV) {
+      console.warn('[BTal] App Check (native CustomProvider) init failed:', err);
+    }
+  }
+}
+
 bootstrapAppCheck();
 // Re-exportamos por si alguna parte de la app necesita el handle (p.ej.
 // para `getToken(appCheck)` manual en debugging). Hoy nadie lo usa.
