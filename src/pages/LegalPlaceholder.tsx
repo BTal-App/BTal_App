@@ -16,7 +16,7 @@ import './LegalPlaceholder.css';
 // vigor (el roadmap llamaría a esto en la Fase 6 con Cloud Functions).
 
 const LEGAL_VERSION = {
-  privacidad: '2026-05-26 (rev. analytics)',
+  privacidad: '2026-05-28 (rev. app-check)',
   terminos: '2026-05-18',
   'aviso-medico': '2026-05-12',
 } as const;
@@ -128,6 +128,24 @@ function PrivacyPolicy() {
           anónimo de tu dispositivo, el tipo de error, el modelo del móvil, la versión del sistema operativo y
           la pantalla donde ocurrió. <strong>NO</strong> se envía nada de tu plan, comidas, entrenos ni datos
           que te identifiquen.
+        </li>
+        <li>
+          <strong>Verificación de aplicaciones (App Check)</strong>: para que tu cuenta y los datos del resto
+          de usuarios estén protegidos frente a bots, scripts automatizados, apps clonadas y otras formas de
+          abuso, cada petición de BTal a nuestros servidores incluye un token criptográfico de seguridad. Este
+          token lo genera, según el dispositivo desde el que entres:
+          <ul>
+            <li><strong>reCAPTCHA Enterprise</strong> de Google en la versión web (analiza patrones
+              anónimos del navegador para distinguir usuarios reales de bots · <strong>NO</strong> guarda
+              huella permanente, ni te identifica, ni rastrea entre sitios).</li>
+            <li><strong>Play Integrity</strong> de Google en la app de Android (Google Play verifica que la
+              app instalada es la oficial publicada en la tienda y que el dispositivo no está modificado · solo
+              se envían metadatos técnicos del dispositivo, ningún dato de tu cuenta).</li>
+            <li><strong>App Attest / DeviceCheck</strong> de Apple en la app de iOS (Apple confirma la
+              identidad del dispositivo con dos bits anónimos · ningún dato personal).</li>
+          </ul>
+          Estos servicios son obligatorios para mantener la integridad del sistema y se ejecutan de forma
+          completamente invisible para ti. <strong>NO</strong> registran tu actividad ni tus datos personales.
         </li>
       </ul>
       <p>
