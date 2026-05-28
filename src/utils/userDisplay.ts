@@ -2,12 +2,30 @@ import type { User } from 'firebase/auth';
 
 // Devuelve hasta 2 iniciales en mayúscula para el avatar fallback.
 // Si no hay nombre ni email, cae a '?'.
+//
+// Para emails (cuando no hay nombre real) usamos SOLO el local part:
+// "mohamedsaid00t@gmail.com" → "M" (no "MG" cogiendo G de gmail).
+// Si el local tiene un separador semántico ("pablo.castillo@x.com" → "PC").
 export function initialsOf(name?: string | null, email?: string | null): string {
-  const source = (name?.trim() || email || '?').trim();
-  const parts = source.split(/[\s@._-]+/).filter(Boolean);
-  const a = parts[0]?.[0] ?? '?';
-  const b = parts[1]?.[0] ?? '';
-  return (a + b).toUpperCase();
+  const trimmedName = name?.trim();
+  if (trimmedName) {
+    // En el nombre splitamos por todos los separadores típicos (espacio,
+    // guion, punto, underscore) para que "maria.lopez" siga dando "ML".
+    const parts = trimmedName.split(/[\s._-]+/).filter(Boolean);
+    const a = parts[0]?.[0] ?? '?';
+    const b = parts[1]?.[0] ?? '';
+    return (a + b).toUpperCase();
+  }
+  if (email) {
+    // Local part = lo de antes del @. El dominio NUNCA participa
+    // en las iniciales (era el origen del bug "MG" para gmail).
+    const local = email.split('@')[0] ?? '';
+    const parts = local.split(/[._-]+/).filter(Boolean);
+    const a = parts[0]?.[0] ?? '?';
+    const b = parts[1]?.[0] ?? '';
+    return (a + b).toUpperCase();
+  }
+  return '?';
 }
 
 // Normaliza un nombre a Title Case respetando acentos españoles y los

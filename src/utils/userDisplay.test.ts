@@ -22,9 +22,17 @@ describe('initialsOf', () => {
     expect(initialsOf('Pablo')).toBe('P');
   });
 
-  it('parsea email split por @ . _ - cuando no hay nombre', () => {
-    // 'pablo@btal.app' → parts ['pablo','btal','app'] → 'P' + 'B'
-    expect(initialsOf(null, 'pablo@btal.app')).toBe('PB');
+  it('coge SOLO el local part del email cuando no hay nombre (no el dominio)', () => {
+    // 'pablo@btal.app' → local 'pablo' sin separadores → 'P'
+    expect(initialsOf(null, 'pablo@btal.app')).toBe('P');
+    // 'mohamedsaid00t@gmail.com' → 'M' (antes daba 'MG' cogiendo G de gmail · bug fixed 28-may)
+    expect(initialsOf(null, 'mohamedsaid00t@gmail.com')).toBe('M');
+  });
+
+  it('si el local part tiene separadores semánticos, saca 2 iniciales', () => {
+    expect(initialsOf(null, 'pablo.castillo@gmail.com')).toBe('PC');
+    expect(initialsOf(null, 'juan_perez@example.org')).toBe('JP');
+    expect(initialsOf(null, 'jean-pierre@correo.fr')).toBe('JP');
   });
 
   it('devuelve "?" sin nombre ni email', () => {
