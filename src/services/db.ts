@@ -1,4 +1,5 @@
 import type { Firestore } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
 import { app } from './firebase';
 import { syncAuthDisplayName } from './auth';
 import { toTitleCase } from '../utils/userDisplay';
@@ -75,9 +76,33 @@ let firestoreInstance: Firestore | null = null;
 async function getDb() {
   const fs = (firestorePromise ??= import('firebase/firestore'));
   const mod = await fs;
-  // getFirestore es idempotente para el mismo app, pero cacheamos la instancia
-  // para no llamar a la fábrica en cada operación.
-  firestoreInstance ??= mod.getFirestore(app);
+  // En Capacitor (Android/iOS) el WebView puede no establecer bien el
+  // WebSocket persistente que Firestore usa por defecto, lo que se
+  // manifiesta como "Could not reach Cloud Firestore backend. Backend
+  // didn't respond within 10 seconds" en boot tras login. Forzamos
+  // long-polling explícito en nativo, que es la transport más estable
+  // en WebViews. En navegador (PWA web) dejamos autodetect, que prueba
+  // WebSocket primero y cae a long-poll si falla (mejor latencia en
+  // browsers donde WS funciona perfecto).
+  //
+  // initializeFirestore debe llamarse ANTES de cualquier getFirestore()
+  // sobre la misma app · como getDb() es la única vía de acceso a
+  // Firestore en BTal y cacheamos `firestoreInstance`, esto se respeta.
+  if (!firestoreInstance) {
+    try {
+      firestoreInstance = mod.initializeFirestore(
+        app,
+        Capacitor.isNativePlatform()
+          ? { experimentalForceLongPolling: true }
+          : { experimentalAutoDetectLongPolling: true },
+      );
+    } catch {
+      // HMR de Vite re-evalúa el módulo y la segunda llamada a
+      // initializeFirestore lanza · caemos al default que devuelve la
+      // instancia ya inicializada.
+      firestoreInstance = mod.getFirestore(app);
+    }
+  }
   return { mod, db: firestoreInstance };
 }
 
