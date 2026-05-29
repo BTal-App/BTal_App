@@ -158,8 +158,6 @@ export const generatePlan = onCall(
         apiKey: geminiKey.value(),
         systemInstruction,
         prompt,
-        wantMenu,
-        wantEntreno,
       });
     } catch (err) {
       logger.error('[generatePlan] Gemini falló', { uid, scope, err: String(err) });
