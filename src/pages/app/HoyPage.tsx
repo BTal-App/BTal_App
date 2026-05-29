@@ -19,6 +19,7 @@ import {
   type DiaEntreno,
   type MealKey,
   type PlanEntreno,
+  type UserDocument,
 } from '../../templates/defaultUser';
 import { MealIcon } from '../../components/MealIcon';
 import { badgeLabel, BADGE_BY_VAL } from '../../templates/exerciseCatalog';
@@ -49,6 +50,33 @@ function formatToday(date: Date): string {
   const year = date.getFullYear();
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   return `${cap(dow)} · ${day} ${cap(month)} ${year}`;
+}
+
+// ¿El user tiene un plan con contenido (menú/entreno IA o manual)?
+// Función pura a nivel módulo (no hook) · se llama tras los early returns
+// del componente sin problemas de rules-of-hooks. Cálculo barato.
+function computeHasPlan(userDoc: UserDocument | null): boolean {
+  if (!userDoc) return false;
+  const g = userDoc.generaciones;
+  if (g && (g.menu_at || g.entrenos_at)) return true;
+  // Menú con alguna comida con alimentos (manual o IA).
+  const menu = userDoc.menu;
+  if (menu) {
+    for (const dia of Object.values(menu)) {
+      if (!dia) continue;
+      for (const mk of MEAL_KEYS) {
+        if (dia[mk]?.alimentos?.length) return true;
+      }
+      if (dia.extras?.some((e) => e.alimentos?.length)) return true;
+    }
+  }
+  // Plan de entreno activo con ejercicios.
+  const entrenos = userDoc.entrenos;
+  if (entrenos) {
+    const active = entrenos.planes?.[entrenos.activePlan];
+    if (active?.dias?.some((d) => d.ejercicios?.length)) return true;
+  }
+  return false;
 }
 
 // Etiquetas locales de las 4 comidas fijas (label). Los iconos de
@@ -160,32 +188,11 @@ const HoyPage: React.FC = () => {
   const today = formatToday(new Date());
 
   // ¿El user tiene ya un plan (menú/entreno con contenido)? Antes de
-  // Fase 6 esto era un placeholder fijo a false; ahora se calcula de los
-  // datos reales · cubre tanto el plan generado por IA como el rellenado
-  // a mano. Si hay contenido, ocultamos el hero "Aún sin plan generado".
-  const hasPlan = useMemo(() => {
-    if (!userDoc) return false;
-    const g = userDoc.generaciones;
-    if (g && (g.menu_at || g.entrenos_at)) return true;
-    // Menú con alguna comida con alimentos (manual o IA).
-    const menu = userDoc.menu;
-    if (menu) {
-      for (const dia of Object.values(menu)) {
-        if (!dia) continue;
-        for (const mk of MEAL_KEYS) {
-          if (dia[mk]?.alimentos?.length) return true;
-        }
-        if (dia.extras?.some((e) => e.alimentos?.length)) return true;
-      }
-    }
-    // Plan de entreno activo con ejercicios.
-    const entrenos = userDoc.entrenos;
-    if (entrenos) {
-      const active = entrenos.planes?.[entrenos.activePlan];
-      if (active?.dias?.some((d) => d.ejercicios?.length)) return true;
-    }
-    return false;
-  }, [userDoc]);
+  // Fase 6 era un placeholder fijo a false; ahora se calcula de los datos
+  // reales (IA o manual). NO usamos useMemo (es cálculo barato) para poder
+  // colocarlo tras los early returns del componente sin violar las reglas
+  // de hooks. Si hay contenido, ocultamos el hero "Aún sin plan generado".
+  const hasPlan = computeHasPlan(userDoc);
 
   // ¿Mostramos el botón "Generar con IA"? Solo si:
   //   - el user no es invitado (los anónimos no pueden usar IA)
