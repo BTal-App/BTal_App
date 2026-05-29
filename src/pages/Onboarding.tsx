@@ -12,6 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { signOut } from '../services/auth';
 import { trackEvent } from '../services/analytics';
+import { generatePlan } from '../services/functions';
 import { AiPromptSummaryModal } from '../components/AiPromptSummaryModal';
 import { ChipsInput } from '../components/ChipsInput';
 import { CollapsibleSection } from '../components/CollapsibleSection';
@@ -46,7 +47,7 @@ function toggleInArray(arr: string[], value: string): string[] {
 const Onboarding: React.FC = () => {
   const history = useHistory();
   const { user, loading: authLoading, isAuthed } = useAuth();
-  const { profile: userDoc, loading: profileLoading, saveOnboarding } = useProfile();
+  const { profile: userDoc, loading: profileLoading, saveOnboarding, refresh } = useProfile();
 
   // Form state · arrancamos con los defaults (todos null hasta que el user elige).
   const [data, setData] = useState<UserProfile>(defaultProfile);
@@ -198,14 +199,25 @@ const Onboarding: React.FC = () => {
         modo: modoToTrack,
         aiScope: aiScopeToTrack,
       });
-      // FASE 6 PENDIENTE · si modo='ai' aquí dispararíamos la primera
-      // generación llamando a la Cloud Function `generatePlan(scope=aiScope)`.
-      // Por ahora el shell muestra empty states + botón "Generar con IA"
-      // que el user tendrá que pulsar (toast informativo).
       trackEvent('signup_completed', {
         modo: modoToTrack,
         ai_scope: aiScopeToTrack ?? 'none',
       });
+      // Si eligió IA, generamos su primer plan AQUÍ (cumple la promesa
+      // "elegí IA → la IA me hace el plan"). La GeneratingScreen ya está
+      // visible (isOpen = submitting && modo==='ai') y cubre el tiempo real
+      // de Gemini. Tras generar, refrescamos el doc para que /app muestre
+      // el plan ya poblado. Si la generación falla (Gemini caído, límite,
+      // etc.) entramos igual a /app · el user puede reintentar desde el
+      // botón "Generar con IA" (no bloqueamos el onboarding por esto).
+      if (modoToTrack === 'ai' && aiScopeToTrack) {
+        try {
+          await generatePlan({ scope: aiScopeToTrack, allowUserItems: true });
+          await refresh();
+        } catch (err) {
+          console.warn('[BTal] generación inicial del onboarding falló (reintentable):', err);
+        }
+      }
       history.replace('/app');
     } catch (err) {
       console.error('[BTal] saveOnboarding error:', err);
@@ -744,9 +756,10 @@ const Onboarding: React.FC = () => {
           />
         )}
 
-        {/* GeneratingScreen mientras se persiste el perfil + (Fase 6) se
-            llama a la Cloud Function `generatePlan`. Submitting=true
-            cubre el momento entre Confirmar y la redirección a /app. */}
+        {/* GeneratingScreen mientras se persiste el perfil Y se llama a la
+            Cloud Function `generatePlan` (la generación inicial real para
+            users en modo IA). Submitting=true cubre todo el proceso hasta
+            la redirección a /app con el plan ya generado. */}
         <GeneratingScreen
           isOpen={submitting && modeChoice.modo === 'ai'}
           title="Generando tu plan inicial…"
