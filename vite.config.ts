@@ -22,12 +22,19 @@ export default defineConfig({
     // propia runtime, `test.describe` no es compatible con Vitest y
     // revienta con "Playwright Test did not expect test.describe()").
     exclude: [
-      'node_modules',
+      '**/node_modules/**',
       'dist',
       '.idea',
       '.git',
       'cypress',
       'tests/e2e/**',
+      // Firebase Functions · proyecto npm aparte con su propio runtime
+      // (firebase-functions, no jsdom). Sin esto vitest globbea
+      // functions/node_modules y revienta con transform errors.
+      'functions/**',
+      // Capacitor Android · build output con JS bundles (native-bridge.js)
+      // que no son tests del frontend.
+      'android/**',
     ],
     css: false, // no procesamos CSS en tests · acelera y evita
                 // problemas con @import de Ionic.

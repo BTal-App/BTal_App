@@ -1,0 +1,189 @@
+// Tipos compartidos de las Cloud Functions de BTal.
+//
+// NOTA: este paquete (functions/) es un proyecto npm independiente del
+// frontend (btal/src). No importamos de ../src porque tienen tsconfig y
+// módulo distintos. Espejamos aquí el subconjunto de tipos que las
+// funciones necesitan leer del UserDocument y escribir de vuelta. Si el
+// schema del frontend cambia, hay que reflejarlo aquí (son contratos
+// estables · cambian poco).
+
+export type DayKey = 'lun' | 'mar' | 'mie' | 'jue' | 'vie' | 'sab' | 'dom';
+export type MealKey = 'desayuno' | 'comida' | 'merienda' | 'cena';
+
+export const DAY_KEYS: DayKey[] = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
+export const MEAL_KEYS: MealKey[] = ['desayuno', 'comida', 'merienda', 'cena'];
+
+// Hora por defecto de cada comida fija (si la IA no especifica una).
+export const MEAL_DEFAULT_HORA: Record<MealKey, string> = {
+  desayuno: '08:00',
+  comida: '14:00',
+  merienda: '17:30',
+  cena: '21:00',
+};
+
+export type Sexo = 'm' | 'f';
+export type NivelActividad =
+  | 'sedentario'
+  | 'ligero'
+  | 'moderado'
+  | 'activo'
+  | 'muy_activo';
+export type Equipamiento = 'gimnasio' | 'casa' | 'sin_material';
+export type Objetivo = 'volumen' | 'definicion' | 'recomposicion' | 'mantenimiento';
+
+// Scope de generación que llega del cliente (AiGenerateModal).
+export type AiScopeChoice = 'all' | 'menu_compra' | 'menu_only' | 'entrenos_only';
+
+// Tag de origen de cada item (comida/ejercicio/plan).
+export type SourceTag = 'default' | 'user' | 'ai' | 'ai-estimated';
+
+export type PlanTipo = 'free' | 'one_off' | 'pro';
+
+// ── Subconjunto del UserProfile que las funciones leen ──
+export interface UserProfile {
+  nombre: string;
+  edad: number | null;
+  peso: number | null;
+  altura: number | null;
+  sexo: Sexo | null;
+  actividad: NivelActividad | null;
+  diasEntreno: number | null;
+  equipamiento: Equipamiento | null;
+  objetivo: Objetivo | null;
+  restricciones: string[];
+  notas: string;
+  intolerancias: string[];
+  alergias: string[];
+  alimentosProhibidos: string[];
+  alimentosObligatorios: string[];
+  ingredientesFavoritos: string[];
+  objetivoKcal: number | null;
+  modo: 'ai' | 'manual';
+  aiScope: AiScopeChoice | null;
+  // Preferencia de supermercados (Fase 6B) · opcional · puede no existir.
+  supermercados?: string[];
+  completed: boolean;
+}
+
+export interface PlanIA {
+  tipo: PlanTipo;
+  vence_en: number | null;
+  one_off_consumido: boolean;
+}
+
+export interface GeneracionesIA {
+  menu_at: number | null;
+  entrenos_at: number | null;
+  consumidas_ciclo: number;
+  ciclo_inicio: number;
+}
+
+// ── Shapes de persistencia (lo que ESCRIBIMOS en Firestore) ──
+
+export interface Alimento {
+  nombre: string;
+  cantidad: string;
+}
+
+export interface Comida {
+  alimentos: Alimento[];
+  hora: string | null;
+  kcal: number;
+  prot: number;
+  carb: number;
+  fat: number;
+  source: SourceTag;
+  emoji?: string | null;
+  nombrePlato?: string | null;
+}
+
+export interface ComidasDelDia {
+  desayuno: Comida;
+  comida: Comida;
+  merienda: Comida;
+  cena: Comida;
+  // Las extras NO las genera la IA · se preservan las del user.
+  extras: unknown[];
+}
+
+export type Menu = Record<DayKey, ComidasDelDia>;
+
+export type EjercicioBadge =
+  | 'pecho' | 'espalda' | 'piernas' | 'hombros' | 'biceps' | 'triceps'
+  | 'core' | 'fullbody' | 'fuerza' | 'hipertrofia' | 'resistencia'
+  | 'cardio' | 'movilidad' | 'empuje' | 'tiron' | 'custom' | '';
+
+export interface Ejercicio {
+  nombre: string;
+  desc: string;
+  series: string;
+  source: SourceTag;
+}
+
+export interface DiaEntreno {
+  titulo: string;
+  descripcion: string;
+  tiempoEstimadoMin: number | null;
+  diaSemana: DayKey | null;
+  badge: EjercicioBadge;
+  badgeCustom: string;
+  badge2: EjercicioBadge;
+  badgeCustom2: string;
+  badge3: EjercicioBadge;
+  badgeCustom3: string;
+  ejercicios: Ejercicio[];
+  comentario: string;
+  source: SourceTag;
+}
+
+export interface PlanEntreno {
+  id: string;
+  nombre: string;
+  estructura: string;
+  estructura2: string;
+  dias: DiaEntreno[];
+  builtIn: boolean;
+  activo?: boolean;
+}
+
+export interface Entrenos {
+  activePlan: string;
+  planes: Record<string, PlanEntreno>;
+}
+
+export interface ItemCompra {
+  id: string;
+  nombre: string;
+  cantidad: string;
+  comprado: boolean;
+  precio: number | null;
+  source: SourceTag;
+}
+
+export interface CategoriaCompra {
+  id: string;
+  nombre: string;
+  emoji: string;
+  color: string;
+  order: number;
+  builtIn: boolean;
+}
+
+export interface Compra {
+  categorias: CategoriaCompra[];
+  items: Record<string, ItemCompra[]>;
+}
+
+// UserDocument · solo los campos que las funciones leen/escriben.
+export interface UserDocument {
+  profile: UserProfile;
+  menu: Menu;
+  entrenos: Entrenos;
+  compra: Compra;
+  plan: PlanIA;
+  generaciones: GeneracionesIA;
+  plan_pro?: boolean;
+  fecha_expiracion?: number | null;
+  fecha_ultima_generacion?: number | null;
+  isDemo?: boolean;
+}

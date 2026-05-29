@@ -6,7 +6,9 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // functions/ tiene su propio eslint.config.js · android/ es build output
+  // de Capacitor (no nuestro código). El lint del frontend no debe tocarlos.
+  globalIgnores(['dist', 'functions/**', 'android/**']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

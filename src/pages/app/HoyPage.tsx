@@ -212,7 +212,7 @@ const HoyPage: React.FC = () => {
               <h2 className="hoy-hero-title">Aún sin plan generado</h2>
               <p className="hoy-hero-sub">
                 {userDoc?.profile?.completed
-                  ? 'En cuanto se habilite el generador de IA, se creará tu plan diario con macros, comidas y entreno a partir de tu perfil.'
+                  ? 'Genera tu plan con IA y crearé tu menú, tu lista de la compra y tu entreno a partir de tu perfil.'
                   : user.isAnonymous
                   ? 'Crea una cuenta y completa el onboarding para generar tu plan personalizado.'
                   : 'Completa tu perfil para generar tu plan personalizado.'}

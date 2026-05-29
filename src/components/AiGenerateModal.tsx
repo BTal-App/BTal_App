@@ -9,9 +9,9 @@ import { MealIcon } from './MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { canGenerateAi } from '../utils/ia';
+import { generatePlan, type GenerateError } from '../services/functions';
 import { blurAndRun } from '../utils/focus';
 import {
-  affectedStats,
   getAffectedItems,
   initialExcludedIds,
 } from '../utils/aiAffectedItems';
@@ -78,7 +78,7 @@ export function AiGenerateModal({
   defaultScope,
 }: Props) {
   const { user } = useAuth();
-  const { profile: userDoc } = useProfile();
+  const { profile: userDoc, refresh } = useProfile();
   const isAnonymous = user?.isAnonymous ?? false;
 
   // Calcula el scope inicial defensivamente:
@@ -100,7 +100,9 @@ export function AiGenerateModal({
   // sobre el wizard. Al cerrarlo se vuelve al resumen con los datos ya
   // actualizados, sin salir del flujo.
   const [editProfileOpen, setEditProfileOpen] = useState(false);
-  const [pendingToast, setPendingToast] = useState(false);
+  // Toasts post-generación · éxito (verde) o error tipado (rojo).
+  const [successToast, setSuccessToast] = useState(false);
+  const [errorToast, setErrorToast] = useState('');
   // GeneratingScreen overlay · activo mientras la IA está "trabajando".
   // Por ahora simulamos 2s con setTimeout (Fase 6 reemplazará con el
   // await de la Cloud Function `generatePlan`). Bloquea interacción para
@@ -154,7 +156,6 @@ export function AiGenerateModal({
   const visibleOptions = AI_SCOPE_OPTIONS.filter((o) =>
     availableScopes.includes(o.value),
   );
-  const stats = affectedStats(items, excludedIds, allowUserItems);
 
   // Handlers de navegación entre pasos
   const handleScopeContinue = () => {
@@ -177,33 +178,28 @@ export function AiGenerateModal({
   };
 
   // Confirmar generación: cierra el wizard, abre la GeneratingScreen, y
-  // espera a que termine la generación REAL. Sin simulaciones · el
-  // spinner solo se ve el tiempo que la Cloud Function tarde de verdad
-  // (en Fase 6 serán 5-30s con Gemini · ahora la fake-function resuelve
-  // de inmediato y el spinner casi no se aprecia, lo cual es correcto).
+  // espera a la Cloud Function `generatePlan` (Gemini · 5-30s típicos).
+  // Tras éxito refresca el doc para que las tabs muestren lo generado.
+  // En error muestra un toast con el mensaje tipado de la función.
   const handleConfirmGenerate = async () => {
-    console.info('[BTal] generatePlan request (Fase 6 pendiente)', {
-      scope: selected,
-      excludedIds: Array.from(excludedIds),
-      allowUserItems,
-      willOverwrite: stats.willOverwrite,
-      willKeep: stats.willKeep,
-    });
     setShowSummary(false);
     setGenerating(true);
     try {
-      await callGenerateAiPlaceholder({
+      await generatePlan({
         scope: selected,
         excludedIds: Array.from(excludedIds),
         allowUserItems,
       });
-    } catch (err) {
-      console.error('[BTal] generatePlan error:', err);
-      // En Fase 6 mostraremos un toast de error · por ahora no hay
-      // forma de fallar (placeholder resuelve siempre OK).
-    } finally {
+      // Recargamos el UserDocument · el menú/entrenos/compra recién
+      // generados aparecen en cuanto el provider re-emite.
+      await refresh();
       setGenerating(false);
-      setPendingToast(true);
+      setSuccessToast(true);
+      onClose();
+    } catch (err) {
+      setGenerating(false);
+      const ge = err as GenerateError;
+      setErrorToast(ge?.message || 'No se ha podido generar. Inténtalo de nuevo.');
       onClose();
     }
   };
@@ -407,55 +403,34 @@ export function AiGenerateModal({
         subtitle={summaryToSubtitle(selected)}
       />
 
-      {/* Toast informativo Fase 6 · se elimina cuando llegue la Cloud Function. */}
+      {/* Toast de éxito tras generar · verde. */}
       <IonToast
-        isOpen={pendingToast}
-        onDidDismiss={() => setPendingToast(false)}
-        message="La IA estará disponible cuando activemos Gemini · Fase 6 del roadmap."
-        duration={3500}
+        isOpen={successToast}
+        onDidDismiss={() => setSuccessToast(false)}
+        message="¡Listo! Tu plan se ha generado con IA."
+        duration={3000}
         position="bottom"
-        color="warning"
+        color="success"
+      />
+
+      {/* Toast de error · rojo · mensaje tipado de la Cloud Function. */}
+      <IonToast
+        isOpen={!!errorToast}
+        onDidDismiss={() => setErrorToast('')}
+        message={errorToast}
+        duration={5000}
+        position="bottom"
+        color="danger"
       />
     </>
   );
 }
 
-// Placeholder para la Cloud Function `generatePlan` que vendrá en Fase 6.
-// Por ahora resuelve inmediatamente (operación de duración 0) · cuando
-// llegue Fase 6, este `Promise.resolve()` se reemplazará por:
-//
-//   import { httpsCallable } from 'firebase/functions';
-//   const generate = httpsCallable(functions, 'generatePlan');
-//   const result = await generate({ scope, excludedIds, allowUserItems });
-//   await refreshProfile();
-//   return result.data;
-//
-// ⚠ CONTRATO de la respuesta de `generatePlan` (Fase 6):
-//   1. Cada Comida generada (4 fijas + extras) DEBE incluir `nombrePlato`
-//      con un texto descriptivo (3-7 palabras, ej. "Pollo con arroz y
-//      brócoli"). Detalles en `defaultUser.ts:Comida.nombrePlato`. Sin
-//      esto, la card del menú quedará con placeholder "Pulsa para añadir
-//      nombre" tras la generación y rompe el flujo "IA me hace todo".
-//
-//   2. Para los planes de ENTRENO (scope='all' o 'entrenos_only'): el
-//      plan generado por la IA DEBE persistirse con `activo: true` Y
-//      `entrenos.activePlan` apuntando a su id. Además, el flag `.activo`
-//      de cualquier OTRO plan que lo tuviera debe pasarse a false (la
-//      invariante "solo un plan activo" se respeta). Lógica de referencia:
-//      ver `handleSavePlanFromEditor` en `EntrenoPage.tsx`.
-//
-// El spinner del GeneratingScreen se mostrará automáticamente durante
-// el tiempo REAL que tarde Gemini (5-30s típicos). Sin simulaciones.
-async function callGenerateAiPlaceholder(payload: {
-  scope: AiScopeChoice;
-  excludedIds: string[];
-  allowUserItems: boolean;
-}): Promise<void> {
-  // No-op intencional · la generación real vive en Fase 6.
-  // El payload se loguea por si quieres ver desde DevTools qué se mandaría.
-  console.debug('[BTal] generatePlan payload (Fase 6 will use this):', payload);
-  return Promise.resolve();
-}
+// La generación real vive en la Cloud Function `generatePlan`
+// (functions/src/generatePlan.ts), invocada vía services/functions.ts.
+// Los contratos que la función respeta (nombrePlato en cada Comida IA +
+// plan de entreno marcado activo con la invariante "solo uno activo")
+// están implementados y documentados en functions/src/persist.ts.
 
 // Texto del subtitulo de la GeneratingScreen según el scope · "Estamos
 // creando tu menú semanal y la lista de la compra…" etc.
