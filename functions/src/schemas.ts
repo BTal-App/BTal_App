@@ -72,12 +72,6 @@ export const generatedMenuSchema = z.object(
 );
 export type GeneratedMenu = z.infer<typeof generatedMenuSchema>;
 
-const EJERCICIO_BADGES = [
-  'pecho', 'espalda', 'piernas', 'hombros', 'biceps', 'triceps',
-  'core', 'fullbody', 'fuerza', 'hipertrofia', 'resistencia',
-  'cardio', 'movilidad', 'empuje', 'tiron',
-] as const;
-
 const generatedExerciseSchema = z.object({
   nombre: z.string().min(1).max(120),
   series: z.string().min(1).max(40),
@@ -85,14 +79,20 @@ const generatedExerciseSchema = z.object({
 });
 
 const generatedTrainingDaySchema = z.object({
-  titulo: z.string().min(1).max(80),
-  descripcion: z.string().max(120),
-  diaSemana: z.enum(DAY_KEYS as [string, ...string[]]).nullable(),
-  tiempoEstimadoMin: z.number().int().min(10).max(240).nullable(),
-  // 1-3 badges de la lista cerrada.
-  badges: z.array(z.enum(EJERCICIO_BADGES)).min(1).max(3),
-  ejercicios: z.array(generatedExerciseSchema).min(1).max(15),
-  comentario: z.string().max(300),
+  titulo: z.string().min(1).max(120),
+  descripcion: z.string().max(200),
+  // LENIENTE a propósito: el LLM a veces escribe "lunes" en vez de "lun".
+  // Aceptamos cualquier string y lo normalizamos a DayKey|null en persist.
+  diaSemana: z.string().nullable(),
+  // tiempoEstimadoMin · sin min/max estricto · el LLM puede dar valores
+  // raros · persist lo usa tal cual (es informativo). Acepta number o null.
+  tiempoEstimadoMin: z.number().nullable(),
+  // LENIENTE: el LLM ignora a veces el "máximo 3" y devuelve más, o usa
+  // badges fuera de la lista. Aceptamos strings libres y en persist
+  // filtramos a los válidos + nos quedamos con los 3 primeros.
+  badges: z.array(z.string()).min(1).max(20),
+  ejercicios: z.array(generatedExerciseSchema).min(1).max(20),
+  comentario: z.string().max(400),
 });
 export type GeneratedTrainingDay = z.infer<typeof generatedTrainingDaySchema>;
 

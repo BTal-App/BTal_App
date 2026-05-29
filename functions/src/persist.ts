@@ -13,13 +13,36 @@
 import type {
   Comida,
   ComidasDelDia,
+  DayKey,
   DiaEntreno,
   EjercicioBadge,
   Entrenos,
   Menu,
   PlanEntreno,
 } from './types.js';
-import { MEAL_DEFAULT_HORA, MEAL_KEYS } from './types.js';
+import { DAY_KEYS, MEAL_DEFAULT_HORA, MEAL_KEYS } from './types.js';
+
+// Badges válidos del schema de la app · cualquier badge que el LLM
+// invente fuera de esta lista se descarta en mapTrainingDay.
+const VALID_BADGES = new Set<EjercicioBadge>([
+  'pecho', 'espalda', 'piernas', 'hombros', 'biceps', 'triceps',
+  'core', 'fullbody', 'fuerza', 'hipertrofia', 'resistencia',
+  'cardio', 'movilidad', 'empuje', 'tiron',
+]);
+
+// Normaliza el diaSemana que devuelve el LLM ("lunes", "Miércoles",
+// "sábado"…) a una DayKey válida o null. Quita acentos + minúsculas +
+// primeros 3 chars, y comprueba contra DAY_KEYS.
+function normalizeDiaSemana(v: string | null): DayKey | null {
+  if (!v) return null;
+  const norm = v
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim()
+    .slice(0, 3);
+  return (DAY_KEYS as string[]).includes(norm) ? (norm as DayKey) : null;
+}
 import type {
   GeneratedMeal,
   GeneratedMenu,
@@ -72,12 +95,17 @@ export function mapMenu(gen: GeneratedMenu, existing: Menu, preserveUser: boolea
 }
 
 function mapTrainingDay(gen: GeneratedTrainingDay): DiaEntreno {
-  const badges = gen.badges as EjercicioBadge[];
+  // Filtra a badges válidos del schema (descarta inventados) + máx 3.
+  const badges = gen.badges
+    .map((b) => b.toLowerCase().trim())
+    .filter((b): b is EjercicioBadge => VALID_BADGES.has(b as EjercicioBadge))
+    .slice(0, 3);
   return {
     titulo: gen.titulo,
     descripcion: gen.descripcion,
-    tiempoEstimadoMin: gen.tiempoEstimadoMin,
-    diaSemana: gen.diaSemana as DiaEntreno['diaSemana'],
+    tiempoEstimadoMin:
+      gen.tiempoEstimadoMin === null ? null : Math.round(gen.tiempoEstimadoMin),
+    diaSemana: normalizeDiaSemana(gen.diaSemana),
     badge: badges[0] ?? '',
     badgeCustom: '',
     badge2: badges[1] ?? '',
