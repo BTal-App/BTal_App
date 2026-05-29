@@ -380,7 +380,7 @@ const CompraPage: React.FC = () => {
                 consumo real, no por precio total del bote). Se oculta
                 durante la búsqueda · el dato deja de tener sentido si
                 el listado mostrado no es completo. ─── */}
-          {!queryNorm && totalSemanal > 0 && (
+          {!queryNorm && (
             <div className="compra-total">
               <div className="compra-total-label-wrap">
                 <span className="compra-total-label">Total semanal</span>
@@ -400,7 +400,7 @@ const CompraPage: React.FC = () => {
                 varias semanas. Solo se muestra si hay datos. Se oculta
                 durante la búsqueda · idem total semanal: contexto
                 roto si el resto del listado está filtrado. */}
-          {!queryNorm && totalMes !== null && totalMes > 0 && (
+          {!queryNorm && (
             <div className="compra-sup-cost">
               <div className="compra-sup-cost-label">
                 Coste suplementación{' '}
@@ -412,7 +412,7 @@ const CompraPage: React.FC = () => {
                 <div className="compra-sup-cost-cell compra-sup-cost-cell--mes">
                   <span className="compra-sup-cost-period">/ MES</span>
                   <span className="compra-sup-cost-amount">
-                    {fmtPrice(totalMes)}
+                    {fmtPrice(totalMes ?? 0)}
                   </span>
                 </div>
                 <div className="compra-sup-cost-cell compra-sup-cost-cell--anio">

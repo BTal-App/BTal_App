@@ -568,21 +568,19 @@ const MenuPage: React.FC = () => {
           <TabHeader
             title="Plan "
             accent="nutricional"
+            subtitle={<AiGeneratedBadge userDoc={userDoc} scope="menu" />}
             right={
               <>
                 {showAiButton && (
-                  <>
-                    <AiGeneratedBadge userDoc={userDoc} scope="menu" />
-                    <button
-                      type="button"
-                      className="tab-header-ia-btn"
-                      onClick={blurAndRun(() => setAiGenOpen(true))}
-                      aria-label="Generar con IA"
-                    >
-                      <MealIcon value="tb:sparkles" size={18} />
-                      <span>Generar con IA</span>
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    className="tab-header-ia-btn"
+                    onClick={blurAndRun(() => setAiGenOpen(true))}
+                    aria-label="Generar con IA"
+                  >
+                    <MealIcon value="tb:sparkles" size={18} />
+                    <span>Generar con IA</span>
+                  </button>
                 )}
                 <AppAvatarButton />
               </>
