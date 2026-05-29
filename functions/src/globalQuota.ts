@@ -1,41 +1,59 @@
-// Cap diario GLOBAL de generaciones IA · protección de presupuesto.
+// Cap diario GLOBAL de generaciones IA · FRENO DE EMERGENCIA, no un
+// límite para usuarios normales.
 //
-// POR QUÉ ESTO Y NO "desconectar billing si >5€/día":
-//   - Desconectar billing tumba TODA la app (Firestore, Auth, Hosting) ·
-//     opción nuclear · un falso positivo deja a todos los users fuera.
-//   - El vector de coste real en Fase 6 es Gemini (cada generación = ~1
-//     llamada). Un bucle runaway o un pico de abuso se frena limitando
-//     las generaciones GLOBALES por día · cero riesgo para el resto de
-//     la app, y ataca exactamente la fuente del gasto.
+// PROPÓSITO: cortar SOLO un runaway catastrófico (un bug que genere en
+// bucle, un ataque) antes de que dispare la factura de Gemini. NO debe
+// bloquear nunca a usuarios legítimos · por eso el default es ALTO.
 //
-// Contador en /system/dailyQuota/{YYYY-MM-DD}. Se incrementa atómicamente
-// por cada generación. Si supera GLOBAL_DAILY_CAP, generatePlan rechaza
-// con 'unavailable' (capacidad) hasta el día siguiente. El doc del día se
-// crea solo · los antiguos se pueden limpiar con TTL o ignorar (mínimos).
+// POR QUÉ NO desconectar billing: tumbaría toda la app. Limitar las
+// generaciones globales ataca directamente la fuente del gasto (Gemini)
+// sin afectar Firestore/Auth/Hosting.
 //
-// CAP pre-launch conservador. Estimación de coste: gemini-2.5-flash-lite
-// a ~1-2k tokens out/generación · ~500 generaciones/día está muy por
-// debajo del budget de 5€/mes. Subir cuando crezca la base de usuarios.
+// CONFIGURABLE SIN REDEPLOY: el cap se lee de Firestore /system/config
+// campo `dailyGenCap`. Si no existe, usa DEFAULT_DAILY_CAP. Así, al
+// crecer la base de usuarios, se sube el número desde Firestore Console
+// (Console > Firestore > system > config > dailyGenCap) sin tocar código.
+//
+// DIMENSIONAR: a ~€0,004/generación, el techo × €0,004 = gasto máximo
+// diario de Gemini SI se llegara al tope. Default 20.000 → ~€80/día tope
+// absoluto (solo en caso de runaway real). El uso normal queda MUY por
+// debajo: incluso 10.000 DAU generan ~300-500/día (Free = 1/mes/usuario,
+// repartido), así que 20.000 da >40x de margen. Cuando la base crezca de
+// verdad, subir el número en Firestore.
 
 import type { Firestore } from 'firebase-admin/firestore';
 
-const GLOBAL_DAILY_CAP = 500;
+// Techo alto por defecto · NO es un límite por-usuario (eso lo da el
+// rate-limit 10/h + el Free 1/mes). Es el freno de emergencia global.
+const DEFAULT_DAILY_CAP = 20000;
 
 function todayKey(now: number): string {
   return new Date(now).toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
 }
 
-// Incrementa el contador global del día de forma atómica y lanza si se
-// supera el cap. Devuelve normalmente si hay cupo.
+// Lee el cap configurable de /system/config.dailyGenCap (default 20000).
+async function readDailyCap(db: Firestore): Promise<number> {
+  try {
+    const snap = await db.doc('system/config').get();
+    const v = snap.exists ? (snap.data()?.dailyGenCap as unknown) : undefined;
+    return typeof v === 'number' && v > 0 ? v : DEFAULT_DAILY_CAP;
+  } catch {
+    return DEFAULT_DAILY_CAP;
+  }
+}
+
+// Incrementa el contador global del día de forma atómica y lanza SOLO si
+// se supera el techo de emergencia. Devuelve normalmente en uso normal.
 export async function enforceGlobalDailyCap(
   db: Firestore,
   now: number,
 ): Promise<void> {
+  const cap = await readDailyCap(db);
   const ref = db.doc(`system/dailyQuota_${todayKey(now)}`);
   await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     const count = snap.exists ? ((snap.data()?.count as number) ?? 0) : 0;
-    if (count >= GLOBAL_DAILY_CAP) {
+    if (count >= cap) {
       const err = new Error('global_cap_reached');
       err.name = 'GlobalCapError';
       throw err;
@@ -44,4 +62,4 @@ export async function enforceGlobalDailyCap(
   });
 }
 
-export { GLOBAL_DAILY_CAP };
+export { DEFAULT_DAILY_CAP };
