@@ -48,6 +48,15 @@
   margin-top: 8px;
 }
 
+/* Estado de la generación IA bajo la fila "Modo de generación" ·
+   "disponible ahora" o "Próxima generación gratuita: [fecha]". */
+.account-manage-gen-status {
+  margin: 6px 4px 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--btal-t-3);
+}
+
 /* ── Información de la cuenta · solo lectura (usado por AccountInfoModal) ── */
 .account-info-card {
   background: var(--btal-bg-2);

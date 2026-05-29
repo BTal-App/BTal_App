@@ -89,12 +89,17 @@ export function canGenerateAi(
   // Free: 1 gen al mes (opción 1 estricta — sea total o parcial cuenta igual).
   // Ciclo lo gestiona la Cloud Function. El cliente solo lee.
   const consumidas = userDoc.generaciones.consumidas_ciclo;
-  if (consumidas === 0) {
+  const unlocksAt = addTreintaDias(userDoc.generaciones.ciclo_inicio);
+  // Disponible si no ha consumido, O si el ciclo de 30 días ya venció: en
+  // ese caso el servidor reseteará `consumidas_ciclo` en el próximo intento
+  // (`maybeResetCycle`), así que la gen procede. Sin este `now >= unlocksAt`
+  // el cliente seguiría mostrando "bloqueado" tras vencer el plazo aunque
+  // ya pudiera generar — y la cuenta atrás de HoyPage nunca volvería a verde.
+  if (consumidas === 0 || now >= unlocksAt) {
     return { allowed: true, reason: 'ok_free' };
   }
 
-  // Bloqueado · ya gastó la gen del mes.
-  const unlocksAt = addTreintaDias(userDoc.generaciones.ciclo_inicio);
+  // Bloqueado · ya gastó la gen del mes y el ciclo sigue vigente.
   return {
     allowed: false,
     reason: 'limit_reached',
@@ -112,4 +117,26 @@ function formatFecha(ms: number): string {
     month: 'long',
     year: 'numeric',
   }).format(d);
+}
+
+// Fecha completa de desbloqueo · "29 de junio de 2026". La usa Ajustes
+// (AccountManageModal) para mostrar cuándo vuelve la generación gratuita.
+export function formatUnlockDate(ms: number): string {
+  return formatFecha(ms);
+}
+
+// Cuenta atrás compacta hasta `targetMs` con DÍAS + horas (y horas+minutos
+// el último día, minutos la última hora). Para el chip de HoyPage · el
+// caller la refresca con un tick periódico (pásale su `now` bucketizado).
+// Devuelve '' si ya venció (en ese caso el chip debería estar en verde).
+export function formatCountdown(targetMs: number, now: number = Date.now()): string {
+  const diff = targetMs - now;
+  if (diff <= 0) return '';
+  const totalMin = Math.floor(diff / 60_000);
+  const days = Math.floor(totalMin / 1440);
+  const hours = Math.floor((totalMin % 1440) / 60);
+  const mins = totalMin % 60;
+  if (days >= 1) return `${days} d ${hours} h`;
+  if (hours >= 1) return `${hours} h ${mins} m`;
+  return `${Math.max(1, mins)} m`;
 }

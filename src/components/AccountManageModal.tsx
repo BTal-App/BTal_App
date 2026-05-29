@@ -18,6 +18,7 @@ import { EnableTotpModal } from './EnableTotpModal';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { VerifyEmailRow } from './VerifyEmailRow';
 import { useProfile } from '../hooks/useProfile';
+import { canGenerateAi, formatUnlockDate } from '../utils/ia';
 import { blurAndRun } from '../utils/focus';
 import {
   getEnrolledTotpFactor,
@@ -153,6 +154,22 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                       className="settings-row-chevron"
                     />
                   </button>
+
+                  {/* Estado de la generación IA · solo en modo IA. Muestra
+                      si está disponible ahora o la FECHA exacta de desbloqueo
+                      (en HoyPage el chip muestra la cuenta atrás · aquí la
+                      fecha concreta, que es lo que se pidió para Ajustes). */}
+                  {userDoc?.profile?.modo === 'ai' && (() => {
+                    const elig = canGenerateAi(userDoc, user.isAnonymous);
+                    const text = elig.allowed
+                      ? 'Tu generación con IA está disponible ahora.'
+                      : elig.reason === 'limit_reached' && elig.unlocksAt
+                        ? `Próxima generación gratuita: ${formatUnlockDate(elig.unlocksAt)}.`
+                        : null;
+                    return text
+                      ? <p className="account-manage-gen-status">{text}</p>
+                      : null;
+                  })()}
                 </>
               )}
 

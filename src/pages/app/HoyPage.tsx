@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   IonAlert,
   IonContent,
@@ -38,7 +38,7 @@ import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
 import { greetingName } from '../../utils/userDisplay';
-import { canGenerateAi } from '../../utils/ia';
+import { canGenerateAi, formatCountdown } from '../../utils/ia';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
 import './HoyPage.css';
 
@@ -51,14 +51,6 @@ function formatToday(date: Date): string {
   const year = date.getFullYear();
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   return `${cap(dow)} · ${day} ${cap(month)} ${year}`;
-}
-
-// Fecha corta "5 jun" para el chip de "IA disponible el …".
-function formatAiDate(ms: number): string {
-  return new Intl.DateTimeFormat('es-ES', {
-    day: 'numeric',
-    month: 'short',
-  }).format(new Date(ms));
 }
 
 // ¿El user tiene un plan con contenido (menú/entreno IA o manual)?
@@ -175,6 +167,19 @@ const HoyPage: React.FC = () => {
   // con el detalle completo de ejercicios + series + reps.
   const [trainSheetOpen, setTrainSheetOpen] = useState(false);
 
+  // Tick periódico (30 s) para refrescar la cuenta atrás del chip de IA
+  // bloqueado. `useSyncExternalStore` con el valor bucketizado a 30 s para
+  // que getSnapshot sea estable entre ticks · devolver Date.now() directo
+  // provocaría un bucle de renders. (Mismo patrón que GuestBanner.)
+  const nowTick = useSyncExternalStore(
+    (cb) => {
+      const id = window.setInterval(cb, 30_000);
+      return () => window.clearInterval(id);
+    },
+    () => Math.floor(Date.now() / 30_000) * 30_000,
+    () => 0,
+  );
+
   if (loading || !user) {
     return (
       <IonPage className="app-tab-page">
@@ -241,12 +246,16 @@ const HoyPage: React.FC = () => {
                 </div>
               );
             } else if (elig.reason === 'limit_reached' && elig.unlocksAt) {
-              chip = (
+              // Cuenta atrás en vivo (días + horas) hasta que vuelve la
+              // generación gratuita · se refresca con nowTick (30 s). La
+              // fecha exacta de desbloqueo vive en Ajustes.
+              const left = formatCountdown(elig.unlocksAt, nowTick);
+              chip = left ? (
                 <div className="hoy-ai-status hoy-ai-status--locked">
                   <MealIcon value="tb:lock" size={15} />
-                  <span>IA disponible el {formatAiDate(elig.unlocksAt)}</span>
+                  <span>IA en {left}</span>
                 </div>
-              );
+              ) : null;
             }
             // Alineado a la derecha (bajo el avatar/racha).
             return chip ? <div className="hoy-ai-status-row">{chip}</div> : null;
