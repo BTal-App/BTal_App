@@ -191,13 +191,7 @@ export const generatePlan = onCall(
 
     if (wantEntreno && parsed.entrenos) {
       // Rellena los 7 planes builtin · activo = el que coincide con diasEntreno.
-      // planNombre = nombre corto que la IA resume del objetivo del user.
-      updates.entrenos = mapAllBuiltInPlans(
-        userDoc.entrenos,
-        parsed.entrenos,
-        profile.diasEntreno,
-        parsed.planNombre,
-      );
+      updates.entrenos = mapAllBuiltInPlans(userDoc.entrenos, parsed.entrenos, profile.diasEntreno);
     }
 
     // ── 10. Generaciones + plan + legacy ──

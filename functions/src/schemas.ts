@@ -119,14 +119,10 @@ export type GeneratedEntrenos = z.infer<typeof generatedEntrenosSchema>;
 // Respuesta completa · ambas partes opcionales según scope. La función
 // pide solo lo que el scope necesita; valida lo que llegó.
 //
-// planNombre · nombre corto descriptivo del plan de entreno que la IA
-// resume del objetivo/notas del user (p.ej. "Hipertrofia full-body").
-// LENIENTE en validación (max 80) · persist lo sanea y recorta al límite
-// real compartido con el editor manual (PLAN_NOMBRE_MAX). Opcional: si la
-// IA no lo manda, persist cae al "Plan N Días" de siempre.
+// La IA NUNCA genera nombres de plan: los 7 builtin conservan su "Plan N
+// Días" (ver persist.mapAllBuiltInPlans). Por eso aquí no hay planNombre.
 export const geminiResponseSchema = z.object({
   menu: generatedMenuSchema.optional(),
   entrenos: generatedEntrenosSchema.optional(),
-  planNombre: z.string().max(80).optional(),
 });
 export type GeminiResponse = z.infer<typeof geminiResponseSchema>;

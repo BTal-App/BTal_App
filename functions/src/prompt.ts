@@ -223,13 +223,6 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
       'ejercicios (nombre, series tipo "4x8-10", desc = nota técnica breve), y comentario final. ' +
       'Asigna diaSemana (lun..dom) a cada día repartido de forma sensata.',
     );
-    lines.push(
-      'NOMBRE DEL PLAN: añade un campo "planNombre" con un nombre corto y descriptivo ' +
-      `del plan, resumido del objetivo del usuario (${OBJETIVO_LABEL[p.objetivo]})` +
-      (notas ? ' y de sus notas' : '') +
-      '. MÁXIMO 28 caracteres. Sin la palabra "Plan", sin número de días, sin comillas. ' +
-      'Ejemplos: "Hipertrofia full-body", "Pérdida de grasa", "Fuerza y volumen".',
-    );
   }
 
   // Esqueleto JSON EXACTO · sin responseSchema, el modelo se guía por esto.
@@ -265,7 +258,6 @@ function buildJsonSkeleton(opts: BuildPromptOpts): string {
       `"entrenos":{"1":[${diaEntreno}],"2":[${diaEntreno}],"3":[${diaEntreno}],` +
       `"4":[${diaEntreno}],"5":[${diaEntreno}],"6":[${diaEntreno}],"7":[${diaEntreno}]}`,
     );
-    parts.push('"planNombre":"texto corto"');
   }
   return `{${parts.join(',')}}`;
 }
