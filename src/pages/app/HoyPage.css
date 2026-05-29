@@ -1510,7 +1510,13 @@
 .hoy-ai-status-row {
   display: flex;
   justify-content: flex-end;
-  margin: 2px 0 14px;
+  /* Gutter de 16px a la derecha · .app-tab-content NO tiene padding
+     horizontal (cada hijo se lo pone), sin esto el chip se iba al borde
+     y "se salía" por la derecha respecto al avatar del header. */
+  padding-right: 16px;
+  /* Margen negativo arriba para acercarlo al header · bottom reducido
+     para que el aire hasta la sección de abajo sea discreto. */
+  margin: -8px 0 8px;
 }
 
 .hoy-ai-status {

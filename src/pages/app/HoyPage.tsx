@@ -237,7 +237,7 @@ const HoyPage: React.FC = () => {
               chip = (
                 <div className="hoy-ai-status hoy-ai-status--ready">
                   <MealIcon value="tb:sparkles" size={16} />
-                  <span>Generación IA lista</span>
+                  <span>Generación IA - LISTA</span>
                 </div>
               );
             } else if (elig.reason === 'limit_reached' && elig.unlocksAt) {

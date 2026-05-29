@@ -69,6 +69,10 @@
   letter-spacing: 0.1em;
   text-align: center;
   font-weight: 600;
+  /* .landing-input trae padding-left:44px (hueco del icono que aquí NO
+     existe) · eso descentraba el texto y el placeholder. Lo igualamos al
+     padding derecho para que el centrado sea real. */
+  padding-left: 16px;
 }
 
 .delete-account-actions {
