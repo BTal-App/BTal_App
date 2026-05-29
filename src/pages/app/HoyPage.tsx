@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   IonAlert,
   IonContent,
@@ -232,23 +232,24 @@ const HoyPage: React.FC = () => {
               Free). Se calcula con canGenerateAi (misma verdad que el modal). */}
           {showAiButton && (() => {
             const elig = canGenerateAi(userDoc, user.isAnonymous);
+            let chip: ReactNode = null;
             if (elig.allowed) {
-              return (
+              chip = (
                 <div className="hoy-ai-status hoy-ai-status--ready">
                   <MealIcon value="tb:sparkles" size={16} />
                   <span>Generación IA lista</span>
                 </div>
               );
-            }
-            if (elig.reason === 'limit_reached' && elig.unlocksAt) {
-              return (
+            } else if (elig.reason === 'limit_reached' && elig.unlocksAt) {
+              chip = (
                 <div className="hoy-ai-status hoy-ai-status--locked">
                   <MealIcon value="tb:lock" size={15} />
                   <span>IA disponible el {formatAiDate(elig.unlocksAt)}</span>
                 </div>
               );
             }
-            return null;
+            // Alineado a la derecha (bajo el avatar/racha).
+            return chip ? <div className="hoy-ai-status-row">{chip}</div> : null;
           })()}
 
           {/* Banner verificación de email — solo si el user tiene email

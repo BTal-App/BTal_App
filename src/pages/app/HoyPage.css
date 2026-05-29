@@ -1506,12 +1506,17 @@
 /* ── Chip de estado de la IA (HoyPage) ──────────────────────────────
    Píldora informativa bajo el header · "Generación IA lista" (verde) o
    "IA disponible el [fecha]" (atenuada, cuando el ciclo Free está gastado).
-   Solo se muestra a users en modo IA. */
+   Solo se muestra a users en modo IA. Alineado a la derecha. */
+.hoy-ai-status-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: 2px 0 14px;
+}
+
 .hoy-ai-status {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  margin: 2px 0 14px;
   padding: 7px 13px;
   border-radius: 999px;
   font-size: 0.82rem;

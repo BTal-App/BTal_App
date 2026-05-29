@@ -12,5 +12,8 @@ initializeApp();
 // Fase 6A · generación de planes con Gemini.
 export { generatePlan } from './generatePlan.js';
 
+// Borrado RGPD completo de cuenta (doc + subcolecciones + Auth user).
+export { deleteAccount } from './deleteAccount.js';
+
 // Fase 6C · limpieza en cascada de invitados expirados (TTL deja huérfanos).
 export { cleanupExpiredGuests } from './cleanupGuests.js';

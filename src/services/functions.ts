@@ -111,3 +111,26 @@ export async function generatePlan(
     throw mapError(err);
   }
 }
+
+// Borrado RGPD completo de la cuenta (doc + subcolecciones + Auth user) vía
+// Cloud Function. Si la sesión no es reciente, la función responde
+// 'requires-recent-login' (failed-precondition) · lo re-lanzamos con
+// code 'auth/requires-recent-login' para que DeleteAccountModal dispare
+// su flujo de reauth + reintento (mismo que ya tenía).
+export async function deleteAccountFull(): Promise<void> {
+  const callable = httpsCallable<Record<string, never>, { ok: boolean }>(
+    fns(),
+    'deleteAccount',
+  );
+  try {
+    await callable({});
+  } catch (err) {
+    const e = err as RawFnError;
+    if (e.code === 'functions/failed-precondition' && e.message === 'requires-recent-login') {
+      const reauthErr = new Error('requires-recent-login') as Error & { code: string };
+      reauthErr.code = 'auth/requires-recent-login';
+      throw reauthErr;
+    }
+    throw err;
+  }
+}

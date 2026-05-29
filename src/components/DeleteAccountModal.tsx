@@ -2,7 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { IonButton, IonModal, IonSpinner } from '@ionic/react';
 import { MealIcon } from './MealIcon';
 import type { User } from 'firebase/auth';
-import { deleteAccount } from '../services/auth';
+import { signOut } from '../services/auth';
+import { deleteAccountFull } from '../services/functions';
 import { ReauthModal } from './ReauthModal';
 import './SettingsModal.css';
 import './DeleteAccountModal.css';
@@ -45,13 +46,20 @@ export function DeleteAccountModal({ isOpen, user, onClose }: Props) {
     setError('');
     setBusy(true);
     try {
-      await deleteAccount(user);
-      // onAuthStateChanged dispara con null → AuthProvider actualiza →
-      // Settings.useEffect redirige a /. El modal se desmonta solo.
+      // Token fresco · tras un reauth previo esto hace que el ID token lleve
+      // el auth_time nuevo, que es lo que el callable exige (<5 min).
+      await user.getIdToken(true);
+      // Cloud Function `deleteAccount` · borra en cascada el doc + /registros
+      // + el usuario de Auth (RGPD completo · ya NO quedan datos huérfanos).
+      await deleteAccountFull();
+      // Borrado OK · cerramos sesión → onAuthStateChanged null → AuthProvider
+      // actualiza → Settings.useEffect redirige a /. El modal se desmonta solo.
+      await signOut();
     } catch (err) {
       const code = errorCode(err);
       if (code === 'auth/requires-recent-login') {
-        // Sesión vieja → reauth y volvemos a intentar.
+        // Sesión vieja → reauth y volvemos a intentar (post-reauth el
+        // auth_time será reciente y el callable procederá).
         setReauthOpen(true);
       } else {
         setError(translateError(code));
