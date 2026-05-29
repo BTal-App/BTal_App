@@ -26,8 +26,8 @@
 }
 
 .ai-generated-badge-label {
+  /* Sin max-width ni ellipsis · el chip vive en su propia línea (slot
+     subtitle del TabHeader), así que la fecha completa cabe entera
+     ("ENTRENO · 29 may 2026") sin recortarse. */
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 140px;
 }
