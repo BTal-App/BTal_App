@@ -193,14 +193,19 @@ export function AiGenerateModal({
       // Recargamos el UserDocument · el menú/entrenos/compra recién
       // generados aparecen en cuanto el provider re-emite.
       await refresh();
+      // Cierre ESCALONADO de modales · GeneratingScreen y el wizard son
+      // dos IonModal. Cerrarlos en el mismo tick deja un backdrop negro
+      // pegado en iOS WebKit (modales solapados). Cerramos primero la
+      // GeneratingScreen, esperamos su animación de salida (~300ms) y
+      // después cerramos el wizard.
       setGenerating(false);
       setSuccessToast(true);
-      onClose();
+      window.setTimeout(() => onClose(), 450);
     } catch (err) {
       setGenerating(false);
       const ge = err as GenerateError;
       setErrorToast(ge?.message || 'No se ha podido generar. Inténtalo de nuevo.');
-      onClose();
+      window.setTimeout(() => onClose(), 450);
     }
   };
 
