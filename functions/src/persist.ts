@@ -6,8 +6,9 @@
 //      entrenos.activePlan = su id + se desmarca cualquier otro activo.
 //   3. estructura/estructura2: campos ocultos pero preservados · se
 //      rellenan con valor descriptivo (no se dejan undefined).
-//   4. source: items IA = 'ai-estimated' en 6A (macros estimadas por IA ·
-//      6B las hará reales con FatSecret/OFF y pasará a 'ai'/'fatsecret').
+//   4. source: items IA = 'ai' (el SourceTag del frontend es
+//      'default'|'ai'|'user'). El distintivo de macros estimadas vs
+//      reales llegará en 6B (FatSecret) añadiendo 'ai-estimated'/'fatsecret'.
 //   5. extras del menú: NO las toca la IA · se preservan las del user.
 
 import type {

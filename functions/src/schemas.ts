@@ -4,8 +4,8 @@
 //   2. Validación de la respuesta JSON de Gemini ANTES de persistir
 //      (roadmap 6-8 · la IA a veces devuelve campos extra o mal tipados).
 //
-// El responseSchema que se le PASA a Gemini (formato OpenAPI) vive en
-// gemini.ts · esto es la red de seguridad de PARSEO de lo que vuelve.
+// Ya NO usamos responseSchema con Gemini (lo rechazaba por complejidad) ·
+// la respuesta se guía por el esqueleto JSON del prompt y se valida aquí.
 
 import { z } from 'zod';
 import { DAY_KEYS } from './types.js';
@@ -44,7 +44,7 @@ const generatedMealSchema = z.object({
     .array(
       z.object({
         nombre: z.string().min(1).max(120),
-        cantidad: z.string().max(40),
+        cantidad: z.string().max(80), // verboso: "1 cucharada de aceite de oliva..."
       }),
     )
     .min(1)
@@ -74,7 +74,7 @@ export type GeneratedMenu = z.infer<typeof generatedMenuSchema>;
 
 const generatedExerciseSchema = z.object({
   nombre: z.string().min(1).max(120),
-  series: z.string().min(1).max(40),
+  series: z.string().min(1).max(60), // "4x8-10 @ RIR 2", etc.
   desc: z.string().max(200),
 });
 
