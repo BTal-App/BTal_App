@@ -39,20 +39,20 @@ export type ValidatedProfile = z.infer<typeof profileSchema>;
 // ── 2. Respuesta de Gemini (shapes "generadas", simples) ──
 
 const generatedMealSchema = z.object({
-  nombrePlato: z.string().min(1).max(120),
+  nombrePlato: z.string().min(1).max(150),
   alimentos: z
     .array(
       z.object({
-        nombre: z.string().min(1).max(120),
-        cantidad: z.string().max(80), // verboso: "1 cucharada de aceite de oliva..."
+        nombre: z.string().min(1).max(150),
+        cantidad: z.string().max(100), // verboso: "1 cucharada de aceite de oliva virgen extra"
       }),
     )
     .min(1)
-    .max(20),
-  kcal: z.number().min(0).max(5000),
-  prot: z.number().min(0).max(500),
-  carb: z.number().min(0).max(800),
-  fat: z.number().min(0).max(400),
+    .max(25),
+  kcal: z.number().min(0).max(6000),
+  prot: z.number().min(0).max(600),
+  carb: z.number().min(0).max(1000),
+  fat: z.number().min(0).max(500),
 });
 export type GeneratedMeal = z.infer<typeof generatedMealSchema>;
 
@@ -73,14 +73,14 @@ export const generatedMenuSchema = z.object(
 export type GeneratedMenu = z.infer<typeof generatedMenuSchema>;
 
 const generatedExerciseSchema = z.object({
-  nombre: z.string().min(1).max(120),
-  series: z.string().min(1).max(60), // "4x8-10 @ RIR 2", etc.
-  desc: z.string().max(200),
+  nombre: z.string().min(1).max(150),
+  series: z.string().min(1).max(80), // "4x8-10 @ RIR 2 (descanso 90s)", etc.
+  desc: z.string().max(300),
 });
 
 const generatedTrainingDaySchema = z.object({
-  titulo: z.string().min(1).max(120),
-  descripcion: z.string().max(200),
+  titulo: z.string().min(1).max(150),
+  descripcion: z.string().max(300),
   // LENIENTE a propósito: el LLM a veces escribe "lunes" en vez de "lun".
   // Aceptamos cualquier string y lo normalizamos a DayKey|null en persist.
   diaSemana: z.string().nullable(),
@@ -92,13 +92,13 @@ const generatedTrainingDaySchema = z.object({
   // filtramos a los válidos + nos quedamos con los 3 primeros.
   badges: z.array(z.string()).min(1).max(20),
   ejercicios: z.array(generatedExerciseSchema).min(1).max(20),
-  comentario: z.string().max(400),
+  comentario: z.string().max(600),
 });
 export type GeneratedTrainingDay = z.infer<typeof generatedTrainingDaySchema>;
 
 export const generatedTrainingPlanSchema = z.object({
-  nombre: z.string().min(1).max(60),
-  dias: z.array(generatedTrainingDaySchema).min(1).max(7),
+  nombre: z.string().min(1).max(120),
+  dias: z.array(generatedTrainingDaySchema).min(1).max(8),
 });
 export type GeneratedTrainingPlan = z.infer<typeof generatedTrainingPlanSchema>;
 
