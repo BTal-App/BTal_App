@@ -50,8 +50,13 @@ import type {
   GeneratedTrainingPlan,
 } from './schemas.js';
 
-// En 6A las macros las estima la IA · 6B las hará reales (FatSecret/OFF).
-const AI_SOURCE = 'ai-estimated' as const;
+// Source de los items generados por IA. Usamos 'ai' (no 'ai-estimated')
+// porque el SourceTag del frontend es 'default'|'ai'|'user' · 'ai' es lo
+// que dispara el badge "generado con IA" en las cards (MenuPage). El
+// distintivo de "macros estimadas vs reales" llegará en 6B (FatSecret),
+// momento en que se añadirá 'ai-estimated'/'fatsecret' al SourceTag del
+// frontend con su manejo · hoy rompería la UI (source desconocido).
+const AI_SOURCE = 'ai' as const;
 
 function mapMeal(gen: GeneratedMeal, meal: keyof typeof MEAL_DEFAULT_HORA): Comida {
   return {

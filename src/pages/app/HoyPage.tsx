@@ -159,9 +159,33 @@ const HoyPage: React.FC = () => {
   // (las iniciales del avatar las gestiona <AppAvatarButton /> internamente.)
   const today = formatToday(new Date());
 
-  // El plan generado por IA aún no existe (Cloud Functions / Gemini en
-  // Fase 6). Para todas las cuentas reales actuales, hasPlan = false.
-  const hasPlan = false;
+  // ¿El user tiene ya un plan (menú/entreno con contenido)? Antes de
+  // Fase 6 esto era un placeholder fijo a false; ahora se calcula de los
+  // datos reales · cubre tanto el plan generado por IA como el rellenado
+  // a mano. Si hay contenido, ocultamos el hero "Aún sin plan generado".
+  const hasPlan = useMemo(() => {
+    if (!userDoc) return false;
+    const g = userDoc.generaciones;
+    if (g && (g.menu_at || g.entrenos_at)) return true;
+    // Menú con alguna comida con alimentos (manual o IA).
+    const menu = userDoc.menu;
+    if (menu) {
+      for (const dia of Object.values(menu)) {
+        if (!dia) continue;
+        for (const mk of MEAL_KEYS) {
+          if (dia[mk]?.alimentos?.length) return true;
+        }
+        if (dia.extras?.some((e) => e.alimentos?.length)) return true;
+      }
+    }
+    // Plan de entreno activo con ejercicios.
+    const entrenos = userDoc.entrenos;
+    if (entrenos) {
+      const active = entrenos.planes?.[entrenos.activePlan];
+      if (active?.dias?.some((d) => d.ejercicios?.length)) return true;
+    }
+    return false;
+  }, [userDoc]);
 
   // ¿Mostramos el botón "Generar con IA"? Solo si:
   //   - el user no es invitado (los anónimos no pueden usar IA)

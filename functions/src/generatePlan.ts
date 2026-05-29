@@ -186,7 +186,7 @@ export const generatePlan = onCall(
       const menu = reconcileMealMacros(mapMenu(parsed.menu, userDoc.menu, !allowUserItems));
       updates.menu = menu;
       if (deriveCompra) {
-        updates.compra = deriveShoppingList(userDoc.compra, menu, 'ai-estimated');
+        updates.compra = deriveShoppingList(userDoc.compra, menu, 'ai');
       }
     }
 
