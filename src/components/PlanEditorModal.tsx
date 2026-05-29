@@ -50,7 +50,10 @@ interface Props {
   onSave: (plan: PlanEntreno) => Promise<void> | void;
 }
 
-const NOMBRE_MAX = 40;
+// Límite del nombre de plan · COMPARTIDO con la IA (functions persist.ts
+// PLAN_NOMBRE_MAX = 32). Ni minúsculo ni enorme: cabe en el banner sin
+// romper el layout y la IA resume el objetivo dentro de este mismo tope.
+const NOMBRE_MAX = 32;
 const DAY_TITLE_MAX = 50;
 
 export function PlanEditorModal({

@@ -51,6 +51,29 @@ import type {
   GeneratedTrainingDay,
 } from './schemas.js';
 
+// Límite de caracteres del nombre de un plan · COMPARTIDO con el editor
+// manual del frontend (PlanEditorModal NOMBRE_MAX). Ni minúsculo ni
+// enorme: cabe en el banner sin romper el layout. Si se cambia aquí,
+// cambiar también NOMBRE_MAX en PlanEditorModal.tsx.
+export const PLAN_NOMBRE_MAX = 32;
+
+// Sanea + recorta el nombre de plan que sugiere la IA: colapsa espacios,
+// quita comillas/saltos y trunca a PLAN_NOMBRE_MAX (sin cortar a media
+// palabra cuando es fácil). Devuelve '' si queda vacío (el caller cae al
+// nombre builtin por defecto).
+function cleanPlanName(raw: string | undefined): string {
+  if (!raw) return '';
+  let s = raw.replace(/["'\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+  // Quita un prefijo "Plan " redundante (el banner ya dice "el plan de …").
+  s = s.replace(/^plan\s+/i, '').trim();
+  if (s.length <= PLAN_NOMBRE_MAX) return s;
+  const cut = s.slice(0, PLAN_NOMBRE_MAX);
+  const lastSpace = cut.lastIndexOf(' ');
+  // Si hay un espacio razonablemente cerca del final, corta ahí (palabra
+  // entera); si no, corte duro. Sin "…": el nombre ya es el dato.
+  return (lastSpace > PLAN_NOMBRE_MAX - 10 ? cut.slice(0, lastSpace) : cut).trim();
+}
+
 // Source de los items generados por IA. Usamos 'ai' (no 'ai-estimated')
 // porque el SourceTag del frontend es 'default'|'ai'|'user' · 'ai' es lo
 // que dispara el badge "generado con IA" en las cards (MenuPage). El
@@ -140,12 +163,16 @@ export function mapAllBuiltInPlans(
   existing: Entrenos,
   gen: GeneratedEntrenos,
   diasEntreno: number,
+  planNombre?: string,
 ): Entrenos {
   const planes: Record<string, PlanEntreno> = {};
   // Copia todo lo existente desmarcando activo (custom incluidos).
   for (const [id, p] of Object.entries(existing.planes)) {
     planes[id] = { ...p, activo: false };
   }
+  // Nombre IA resumido (objetivo del user) ya saneado y recortado · si la
+  // IA no mandó uno usable, cada builtin conserva su "Plan N Días".
+  const aiName = cleanPlanName(planNombre);
   // Rellena cada builtin Ndias con los días generados de la clave "N".
   for (let n = 1; n <= 7; n++) {
     const id = `${n}dias`;
@@ -153,7 +180,7 @@ export function mapAllBuiltInPlans(
     const prev = planes[id];
     planes[id] = {
       id,
-      nombre: prev?.nombre ?? `Plan ${n} Día${n === 1 ? '' : 's'}`,
+      nombre: aiName || prev?.nombre || `Plan ${n} Día${n === 1 ? '' : 's'}`,
       estructura: prev?.estructura ?? `${n} día${n === 1 ? '' : 's'}/semana`,
       estructura2: prev?.estructura2 ?? '',
       // Ajusta al número exacto de días del builtin · trunca si la IA dio
