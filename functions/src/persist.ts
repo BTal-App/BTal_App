@@ -45,10 +45,10 @@ function normalizeDiaSemana(v: string | null): DayKey | null {
   return (DAY_KEYS as string[]).includes(norm) ? (norm as DayKey) : null;
 }
 import type {
+  GeneratedEntrenos,
   GeneratedMeal,
   GeneratedMenu,
   GeneratedTrainingDay,
-  GeneratedTrainingPlan,
 } from './schemas.js';
 
 // Source de los items generados por IA. Usamos 'ai' (no 'ai-estimated')
@@ -129,34 +129,47 @@ function mapTrainingDay(gen: GeneratedTrainingDay): DiaEntreno {
   };
 }
 
-export function newAiPlanId(): string {
-  return `plan_ai_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
-
-// Mapea el plan generado a PlanEntreno custom · activo=true, builtIn=false.
-export function mapTrainingPlan(gen: GeneratedTrainingPlan): PlanEntreno {
-  const dias = gen.dias.length;
-  return {
-    id: newAiPlanId(),
-    nombre: gen.nombre || `Plan IA · ${dias} días`,
-    // estructura/estructura2 ocultos en UI pero preservados · valor sensato.
-    estructura: `${dias} día${dias === 1 ? '' : 's'}/semana`,
-    estructura2: '',
-    dias: gen.dias.map(mapTrainingDay),
-    builtIn: false,
-    activo: true,
-  };
-}
-
-// Inserta el plan nuevo en entrenos respetando la invariante "solo un
-// plan activo": desmarca activo en todos los demás + apunta activePlan.
-export function applyTrainingPlan(existing: Entrenos, plan: PlanEntreno): Entrenos {
+// Rellena los 7 planes builtin (1dias..7dias) con los días generados por
+// la IA (decisión 29-may: NO crear plan nuevo suelto · rellenar los
+// builtin). Cada builtin conserva su id/nombre/estructura/builtIn=true y
+// solo se le reemplazan los `dias` con los ejercicios generados para ese
+// número de días. El plan activo pasa a ser el que coincide con
+// diasEntreno (clamp 1-7; 0/null → 4dias por defecto, como la app). Los
+// planes custom del user se conservan (desmarcados como activo).
+export function mapAllBuiltInPlans(
+  existing: Entrenos,
+  gen: GeneratedEntrenos,
+  diasEntreno: number,
+): Entrenos {
   const planes: Record<string, PlanEntreno> = {};
+  // Copia todo lo existente desmarcando activo (custom incluidos).
   for (const [id, p] of Object.entries(existing.planes)) {
     planes[id] = { ...p, activo: false };
   }
-  planes[plan.id] = plan;
-  return { activePlan: plan.id, planes };
+  // Rellena cada builtin Ndias con los días generados de la clave "N".
+  for (let n = 1; n <= 7; n++) {
+    const id = `${n}dias`;
+    const genDays = gen[String(n) as keyof GeneratedEntrenos] ?? [];
+    const prev = planes[id];
+    planes[id] = {
+      id,
+      nombre: prev?.nombre ?? `Plan ${n} Día${n === 1 ? '' : 's'}`,
+      estructura: prev?.estructura ?? `${n} día${n === 1 ? '' : 's'}/semana`,
+      estructura2: prev?.estructura2 ?? '',
+      // Ajusta al número exacto de días del builtin · trunca si la IA dio
+      // de más; si dio de menos, deja lo que haya (el prompt pide N exactos).
+      dias: genDays.slice(0, n).map(mapTrainingDay),
+      builtIn: true,
+      activo: false,
+    };
+  }
+  // Activo = builtin que coincide con diasEntreno (0/null → 4dias default).
+  const clampedN = Math.min(7, Math.max(1, diasEntreno || 4));
+  const activeId = `${clampedN}dias`;
+  if (planes[activeId]) {
+    planes[activeId] = { ...planes[activeId], activo: true };
+  }
+  return { activePlan: activeId, planes };
 }
 
 // Validación post-Zod adicional: coherencia de macros. Si las kcal de una

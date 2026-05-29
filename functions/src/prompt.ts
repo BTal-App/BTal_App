@@ -206,23 +206,22 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
   }
 
   if (opts.wantEntreno) {
-    const dias = p.diasEntreno === 0 ? 3 : p.diasEntreno; // si 0, propón 3 por defecto
     lines.push(
-      `ENTRENO: un plan de entrenamiento de EXACTAMENTE ${dias} día(s) a la semana, adaptado a ` +
-      `${EQUIP_LABEL[p.equipamiento]} y al objetivo de ${OBJETIVO_LABEL[p.objetivo]}.`,
+      'ENTRENO: genera SIETE planes de entrenamiento, uno por cada número de días a la ' +
+      'semana (1, 2, 3, 4, 5, 6 y 7 días), en el objeto "entrenos" con claves "1".."7". ' +
+      `Cada plan adaptado a ${EQUIP_LABEL[p.equipamiento]} y al objetivo de ${OBJETIVO_LABEL[p.objetivo]}.`,
     );
+    lines.push('SPLIT por número de días · el plan de la clave "N" tiene EXACTAMENTE N días:');
+    for (let n = 1; n <= 7; n++) {
+      lines.push(`- "${n}" (${n} día${n === 1 ? '' : 's'}): ${splitGuidance(n)}`);
+    }
     lines.push(
-      `Diseña un SPLIT semanal coherente para ${dias} día(s): ${splitGuidance(dias)} ` +
-      'Reparte los grupos musculares de forma equilibrada · cada grupo principal trabajado ' +
-      'con frecuencia adecuada a lo largo de la semana, sin solapar en exceso ni dejar huecos.',
-    );
-    lines.push(
-      'Cada día del plan con: titulo (ej. "Día A · Empuje" o "Full Body"), descripcion (grupos del día), ' +
-      '1-3 badges que reflejen los grupos/tipo de ESE día (lista cerrada: pecho, espalda, piernas, ' +
-      'hombros, biceps, triceps, core, fullbody, fuerza, hipertrofia, resistencia, cardio, movilidad, ' +
-      'empuje, tiron), tiempoEstimadoMin (número o null), lista de ejercicios (nombre, series tipo ' +
-      '"4x8-10", desc = nota técnica breve), y comentario final. Asigna diaSemana (lun..dom) a cada día ' +
-      'repartido de forma sensata en la semana.',
+      'Cada día (en cualquiera de los 7 planes) con: titulo (ej. "Día A · Empuje" o "Full Body"), ' +
+      'descripcion (grupos del día), 1-3 badges que reflejen los grupos/tipo de ESE día (lista ' +
+      'cerrada: pecho, espalda, piernas, hombros, biceps, triceps, core, fullbody, fuerza, hipertrofia, ' +
+      'resistencia, cardio, movilidad, empuje, tiron), tiempoEstimadoMin (número o null), lista de ' +
+      'ejercicios (nombre, series tipo "4x8-10", desc = nota técnica breve), y comentario final. ' +
+      'Asigna diaSemana (lun..dom) a cada día repartido de forma sensata.',
     );
   }
 
@@ -253,7 +252,12 @@ function buildJsonSkeleton(opts: BuildPromptOpts): string {
     const diaEntreno =
       `{"titulo":"texto","descripcion":"texto","diaSemana":"lun","tiempoEstimadoMin":60,` +
       `"badges":["pecho"],"ejercicios":[${ejercicio}],"comentario":"texto"}`;
-    parts.push(`"entreno":{"nombre":"texto","dias":[${diaEntreno}]}`);
+    // entrenos: clave "1".."7", cada una con N días (aquí 1 día de ejemplo;
+    // la clave "3" llevaría 3 días, etc.).
+    parts.push(
+      `"entrenos":{"1":[${diaEntreno}],"2":[${diaEntreno}],"3":[${diaEntreno}],` +
+      `"4":[${diaEntreno}],"5":[${diaEntreno}],"6":[${diaEntreno}],"7":[${diaEntreno}]}`,
+    );
   }
   return `{${parts.join(',')}}`;
 }

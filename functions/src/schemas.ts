@@ -96,16 +96,30 @@ const generatedTrainingDaySchema = z.object({
 });
 export type GeneratedTrainingDay = z.infer<typeof generatedTrainingDaySchema>;
 
-export const generatedTrainingPlanSchema = z.object({
-  nombre: z.string().min(1).max(120),
-  dias: z.array(generatedTrainingDaySchema).min(1).max(8),
+// Array de días de un plan · lenient (min 1, max 8) · persist ajusta al
+// número exacto del builtin correspondiente.
+const trainingDaysArray = z.array(generatedTrainingDaySchema).min(1).max(8);
+
+// Entrenos generados · un plan por cada número de días (1..7), para
+// rellenar los 7 planes builtin (1dias..7dias). Cada clave "N" trae N días
+// con el split apropiado. Decisión 29-may: la IA rellena TODOS los builtin
+// (no crea un plan nuevo suelto) · así el user puede cambiar de días y
+// tener siempre un plan IA listo.
+export const generatedEntrenosSchema = z.object({
+  '1': trainingDaysArray,
+  '2': trainingDaysArray,
+  '3': trainingDaysArray,
+  '4': trainingDaysArray,
+  '5': trainingDaysArray,
+  '6': trainingDaysArray,
+  '7': trainingDaysArray,
 });
-export type GeneratedTrainingPlan = z.infer<typeof generatedTrainingPlanSchema>;
+export type GeneratedEntrenos = z.infer<typeof generatedEntrenosSchema>;
 
 // Respuesta completa · ambas partes opcionales según scope. La función
 // pide solo lo que el scope necesita; valida lo que llegó.
 export const geminiResponseSchema = z.object({
   menu: generatedMenuSchema.optional(),
-  entreno: generatedTrainingPlanSchema.optional(),
+  entrenos: generatedEntrenosSchema.optional(),
 });
 export type GeminiResponse = z.infer<typeof geminiResponseSchema>;

@@ -38,6 +38,7 @@ import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
 import { greetingName } from '../../utils/userDisplay';
+import { canGenerateAi } from '../../utils/ia';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
 import './HoyPage.css';
 
@@ -50,6 +51,14 @@ function formatToday(date: Date): string {
   const year = date.getFullYear();
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   return `${cap(dow)} · ${day} ${cap(month)} ${year}`;
+}
+
+// Fecha corta "5 jun" para el chip de "IA disponible el …".
+function formatAiDate(ms: number): string {
+  return new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'short',
+  }).format(new Date(ms));
 }
 
 // ¿El user tiene un plan con contenido (menú/entreno IA o manual)?
@@ -217,6 +226,30 @@ const HoyPage: React.FC = () => {
               </>
             }
           />
+
+          {/* Estado de la IA · solo para users en modo IA. Muestra si la
+              generación está lista o cuándo se desbloquea (límite del ciclo
+              Free). Se calcula con canGenerateAi (misma verdad que el modal). */}
+          {showAiButton && (() => {
+            const elig = canGenerateAi(userDoc, user.isAnonymous);
+            if (elig.allowed) {
+              return (
+                <div className="hoy-ai-status hoy-ai-status--ready">
+                  <MealIcon value="tb:sparkles" size={16} />
+                  <span>Generación IA lista</span>
+                </div>
+              );
+            }
+            if (elig.reason === 'limit_reached' && elig.unlocksAt) {
+              return (
+                <div className="hoy-ai-status hoy-ai-status--locked">
+                  <MealIcon value="tb:lock" size={15} />
+                  <span>IA disponible el {formatAiDate(elig.unlocksAt)}</span>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Banner verificación de email — solo si el user tiene email
               y aún no lo ha verificado y no es invitado. */}

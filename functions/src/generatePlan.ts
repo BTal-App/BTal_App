@@ -21,9 +21,8 @@ import { checkEligibility, maybeResetCycle } from './eligibility.js';
 import { enforceRateLimit } from './rateLimit.js';
 import { enforceGlobalDailyCap } from './globalQuota.js';
 import {
-  applyTrainingPlan,
+  mapAllBuiltInPlans,
   mapMenu,
-  mapTrainingPlan,
   reconcileMealMacros,
 } from './persist.js';
 import { deriveShoppingList } from './shoppingList.js';
@@ -175,8 +174,8 @@ export const generatePlan = onCall(
     if (wantMenu && !parsed.menu) {
       throw new HttpsError('internal', 'La IA no generó el menú. Vuelve a intentarlo.');
     }
-    if (wantEntreno && !parsed.entreno) {
-      throw new HttpsError('internal', 'La IA no generó el plan de entreno. Vuelve a intentarlo.');
+    if (wantEntreno && !parsed.entrenos) {
+      throw new HttpsError('internal', 'La IA no generó los planes de entreno. Vuelve a intentarlo.');
     }
 
     // ── 9. Mapear a Firestore aplicando contratos ──
@@ -190,9 +189,9 @@ export const generatePlan = onCall(
       }
     }
 
-    if (wantEntreno && parsed.entreno) {
-      const plan = mapTrainingPlan(parsed.entreno);
-      updates.entrenos = applyTrainingPlan(userDoc.entrenos, plan);
+    if (wantEntreno && parsed.entrenos) {
+      // Rellena los 7 planes builtin · activo = el que coincide con diasEntreno.
+      updates.entrenos = mapAllBuiltInPlans(userDoc.entrenos, parsed.entrenos, profile.diasEntreno);
     }
 
     // ── 10. Generaciones + plan + legacy ──

@@ -1502,3 +1502,32 @@
 .hoy-train-time-icon {
   flex-shrink: 0;
 }
+
+/* ── Chip de estado de la IA (HoyPage) ──────────────────────────────
+   Píldora informativa bajo el header · "Generación IA lista" (verde) o
+   "IA disponible el [fecha]" (atenuada, cuando el ciclo Free está gastado).
+   Solo se muestra a users en modo IA. */
+.hoy-ai-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 2px 0 14px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.hoy-ai-status--ready {
+  background: rgba(181, 240, 55, 0.1);
+  color: var(--btal-lime, #b5f037);
+  border-color: rgba(181, 240, 55, 0.28);
+}
+
+.hoy-ai-status--locked {
+  background: var(--btal-bg-2, #161b18);
+  color: var(--btal-t-2, #aab3a8);
+  border-color: var(--btal-border-2, #2e3530);
+}
