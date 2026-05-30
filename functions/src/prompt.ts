@@ -214,17 +214,30 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
   // como comida; la creatina la recomienda según objetivo.
   if (opts.wantMenu) {
     lines.push(
-      'SUPLEMENTOS (campo "suplementos"): recomienda en qué días de la semana conviene tomar el batido ' +
-      'de proteína y la creatina, según el objetivo y el nivel de actividad. NO son comidas del menú.',
+      'SUPLEMENTOS (campo "suplementos"): recomienda un esquema COHERENTE de batido de proteína y ' +
+      'creatina según el objetivo y la actividad. NO son comidas del menú. Sé sensato y estable, ' +
+      'no alternes batido un día y creatina otro sin lógica.',
     );
     lines.push(
-      `- batidoDias: días (lun..dom) en los que un batido de proteína ayuda a alcanzar la proteína objetivo ` +
-      `(unos ${Math.round(p.peso * PROT_FACTOR[p.objetivo])} g/día). Útil sobre todo en ` +
-      `${OBJETIVO_LABEL[p.objetivo]}; normalmente coincide con los ~${p.diasEntreno} días de entreno. Si no aporta, deja [].`,
+      `- batidoDias: el batido de proteína ayuda a alcanzar la proteína objetivo (~${Math.round(p.peso * PROT_FACTOR[p.objetivo])} g/día). ` +
+      `Ponlo en los días que aporte (normalmente los ~${p.diasEntreno} de entreno, o a diario si hace falta para llegar a la proteína). ` +
+      `Mismos días cada semana. Si no aporta, deja [].`,
     );
     lines.push(
-      '- creatinaDias: la creatina se toma A DIARIO · si la recomiendas (habitual en volumen/fuerza), ' +
-      'pon los 7 días ["lun","mar","mie","jue","vie","sab","dom"]; si no procede, deja [].',
+      '- creatinaEnBatido (true/false): decide TÚ si conviene meter la creatina DENTRO del batido (un solo ' +
+      'gesto, lo habitual si se toma batido casi siempre). Esto define cómo rellenar creatinaDias para que ' +
+      'NO haya doble dosis ni huecos:',
+    );
+    lines.push(
+      '   · Si creatinaEnBatido=true: los días con batido YA llevan la creatina. En creatinaDias pon SOLO ' +
+      'los días que NO tienen batido, para completar la toma diaria. Resultado: creatina todos los días, sin repetir.',
+    );
+    lines.push(
+      '   · Si creatinaEnBatido=false: la creatina va siempre suelta. En creatinaDias pon todos los días que ' +
+      'toque (la creatina se toma A DIARIO por saturación, entreno o descanso → normalmente los 7 días).',
+    );
+    lines.push(
+      '- Si NO recomiendas creatina, deja creatinaDias [] y creatinaEnBatido false. Si NO recomiendas batido, deja batidoDias [].',
     );
   }
 
@@ -283,7 +296,7 @@ function buildJsonSkeleton(opts: BuildPromptOpts): string {
     );
   }
   if (opts.wantMenu) {
-    parts.push('"suplementos":{"batidoDias":["lun","mie","vie"],"creatinaDias":["lun","mar","mie","jue","vie","sab","dom"]}');
+    parts.push('"suplementos":{"batidoDias":["lun","mar","mie","jue","vie"],"creatinaDias":["sab","dom"],"creatinaEnBatido":true}');
   }
   return `{${parts.join(',')}}`;
 }

@@ -262,12 +262,13 @@ export const generatePlan = onCall(
     // stock y contadores del user. Sustituye al error de meter batidos como
     // comidas del menú.
     if (parsed.suplementos) {
-      // Si el batido del user ya lleva creatina (su check), no se duplica la
-      // creatina suelta en los días que ya tienen batido (lo aplica mapSuplementosDias).
-      const includeCreatina = userDoc.suplementos?.batidoConfig?.includeCreatina ?? false;
-      const dias = mapSuplementosDias(parsed.suplementos, includeCreatina);
+      // La IA recomienda los días de batido/creatina Y decide el check
+      // includeCreatina (creatina dentro del batido). Escribimos el flag con
+      // dot-path para preservar el resto de batidoConfig (gramos, producto…).
+      const dias = mapSuplementosDias(parsed.suplementos);
       updates['suplementos.daysWithBatido'] = dias.daysWithBatido;
       updates['suplementos.daysWithCreatina'] = dias.daysWithCreatina;
+      updates['suplementos.batidoConfig.includeCreatina'] = dias.includeCreatina;
     }
 
     // ── 10. Timestamps de generación · la CUOTA ya se reservó en la

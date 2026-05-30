@@ -128,6 +128,9 @@ export type GeneratedEntrenos = z.infer<typeof generatedEntrenosSchema>;
 const generatedSuplementosSchema = z.object({
   batidoDias: z.array(z.string()).max(10),
   creatinaDias: z.array(z.string()).max(10),
+  // El "check" includeCreatina del batido · la IA decide si la creatina va
+  // DENTRO del batido. Default false si la IA lo omite (no rompe la parse).
+  creatinaEnBatido: z.boolean().default(false),
 });
 export type GeneratedSuplementos = z.infer<typeof generatedSuplementosSchema>;
 
