@@ -118,19 +118,16 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          {
-            // Firestore + Auth + Identity Toolkit · NUNCA cachear.
-            // Los datos del usuario tienen que ser live · el SW debe
-            // dejar pasar las peticiones tal cual.
-            urlPattern: /^https:\/\/(firestore|identitytoolkit|securetoken|firebaseinstallations)\.googleapis\.com\/.*/i,
-            handler: 'NetworkOnly',
-          },
-          {
-            // Firebase Realtime Database (no usado hoy pero protegido
-            // por si se añade en el futuro · NetworkOnly preventivo).
-            urlPattern: /^https:\/\/.*\.firebaseio\.com\/.*/i,
-            handler: 'NetworkOnly',
-          },
+          // ⚠ Firestore / Auth / Identity Toolkit / RTDB · NO se les pone
+          // ruta A PROPÓSITO. Antes estaban en `NetworkOnly`, pero eso NO
+          // las "deja pasar": el SW igual las intercepta y hace su propio
+          // `fetch`, lo que ROMPE el long-polling de Firestore (el `channel`
+          // aborta/reconecta sin parar y el wrapper del SW lo convierte en
+          // `net::ERR_FAILED`/`canceled` · peticiones duplicadas + lentitud
+          // al cargar el perfil, sobre todo en Capacitor). Sin ruta, Workbox
+          // NO llama a `respondWith` y el navegador/WebView maneja la
+          // conexión de streaming de forma nativa (abort/stream correctos).
+          // Siguen sin cachearse (nunca había ruta de cache para ellas).
           {
             // Imágenes de perfil de Google (avatar) · CacheFirst 7 días.
             // Cambian poco y el user no nota si tarda un día en
