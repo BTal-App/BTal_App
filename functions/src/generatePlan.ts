@@ -207,7 +207,17 @@ export const generatePlan = onCall(
 
     // ── 7. Prompt + Gemini ──
     const { wantMenu, wantEntreno, deriveCompra } = scopeParts(scope);
-    const prompt = buildPrompt(profile, { scope, wantMenu, wantEntreno });
+    // Top récords del usuario (solo si genera entreno y ya tiene historial) ·
+    // se inyectan en el prompt para progresiones realistas. Vacío en la 1ª
+    // generación (sin entrenos registrados todavía).
+    const topPRs = wantEntreno
+      ? Object.entries(userDoc.registroStats?.prs ?? {})
+          .map(([exercise, pr]) => ({ exercise, kg: pr?.kg ?? 0 }))
+          .filter((r) => r.kg > 0)
+          .sort((a, b) => b.kg - a.kg)
+          .slice(0, 8)
+      : [];
+    const prompt = buildPrompt(profile, { scope, wantMenu, wantEntreno, topPRs });
     const systemInstruction = buildSystemInstruction();
 
     let rawJson: string;

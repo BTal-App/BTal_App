@@ -174,6 +174,20 @@ export interface Compra {
   items: Record<string, ItemCompra[]>;
 }
 
+// Récord por ejercicio · clave = nombre normalizado (minúsculas). Solo
+// necesitamos el kg máximo para guiar progresiones en el prompt de entreno.
+export interface PRStat {
+  kg: number;
+  fecha?: string;
+}
+
+// Stats del registro de pesos · las funciones solo leen los PRs (para que
+// la IA proponga cargas por encima de lo ya levantado). Optional · un user
+// recién registrado no tiene historial todavía.
+export interface RegistroStats {
+  prs?: Record<string, PRStat>;
+}
+
 // UserDocument · solo los campos que las funciones leen/escriben.
 export interface UserDocument {
   profile: UserProfile;
@@ -182,6 +196,8 @@ export interface UserDocument {
   compra: Compra;
   plan: PlanIA;
   generaciones: GeneracionesIA;
+  // Historial de PRs · lo lee el prompt de entreno (progresiones realistas).
+  registroStats?: RegistroStats;
   plan_pro?: boolean;
   fecha_expiracion?: number | null;
   fecha_ultima_generacion?: number | null;

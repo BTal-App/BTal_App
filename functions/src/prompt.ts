@@ -148,6 +148,10 @@ export interface BuildPromptOpts {
   // Qué partes generar (derivado del scope · lo pasa generatePlan).
   wantMenu: boolean;
   wantEntreno: boolean;
+  // Récords del usuario (top por kg) · solo si ya tiene historial de
+  // registro. Vacío en la primera generación (sin entrenos registrados).
+  // Se inyectan en el bloque de entreno para progresiones realistas.
+  topPRs?: { exercise: string; kg: number }[];
 }
 
 export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string {
@@ -259,6 +263,20 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
       'ejercicios (nombre, series tipo "4x8-10", desc = nota técnica breve), y comentario final. ' +
       'Asigna diaSemana (lun..dom) a cada día repartido de forma sensata.',
     );
+    // Récords actuales · solo si el user tiene historial (no en 1ª generación).
+    // Le dan a la IA contexto para proponer progresiones por encima de lo ya
+    // levantado, no cargas por debajo del PR. Sanitizamos el nombre del
+    // ejercicio (texto que en parte puede venir del user).
+    const prs = (opts.topPRs ?? []).filter((r) => r.kg > 0).slice(0, 8);
+    if (prs.length) {
+      const prList = prs
+        .map((r) => `${sanitize(r.exercise)} ${Math.round(r.kg)} kg`)
+        .join(', ');
+      lines.push(
+        `RÉCORDS ACTUALES del usuario (máximos ya levantados · úsalos como referencia para proponer ` +
+        `cargas/progresiones realistas en esos ejercicios, nunca por debajo de su PR): ${prList}.`,
+      );
+    }
   }
 
   // Esqueleto JSON EXACTO · sin responseSchema, el modelo se guía por esto.
