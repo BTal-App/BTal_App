@@ -69,11 +69,11 @@ export function StepMode({ value, onChange, variant = 'onboarding', hideScope = 
         </div>
         <div className="step-mode-info">
           <div className="step-mode-title">
-            La IA genera mi programa
+            Generar con IA
             <span className="step-mode-tag step-mode-tag--rec">Recomendado</span>
           </div>
           <div className="step-mode-sub">
-            El programa se generará a partir de tus datos. Podrás editarlo
+            La IA generará el programa a partir de tus datos. Podrás editarlo
             después y elegir qué secciones generar.
           </div>
           <div className="step-mode-meta">1 generación gratis al mes · ilimitado en Pro</div>
