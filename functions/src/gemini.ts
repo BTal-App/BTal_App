@@ -49,9 +49,12 @@ export async function callGemini(args: CallGeminiArgs): Promise<string> {
       // lo guía el esqueleto del prompt + lo valida Zod.
       responseMimeType: 'application/json',
       temperature: 0.8,
-      // Un menú semanal completo + plan en JSON puede ser grande · damos
-      // margen para que no se trunque (truncado → JSON inválido → falla Zod).
-      maxOutputTokens: 16384,
+      // Scope 'all' genera menú (7×4) + los 7 planes builtin (28 días) +
+      // suplementos en un solo JSON · eso supera con holgura los 16k tokens
+      // y se truncaba ("Unterminated string in JSON" → JSON.parse falla →
+      // perfil vacío). Subimos al máximo del modelo (65536). NO encarece:
+      // se factura por tokens realmente generados, el cap solo evita el corte.
+      maxOutputTokens: 65536,
     },
   });
   const text = response.text;
