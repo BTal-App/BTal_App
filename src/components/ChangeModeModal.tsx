@@ -171,7 +171,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
                   </p>
                   <ul className="change-mode-ai-info-list">
                     <li>
-                      <strong>Hoy</strong>: Generación completa, Menú + lista de
+                      <strong>Hoy</strong>: Todo, Menú + lista de
                       compra, Solo menú o Solo entrenos.
                     </li>
                     <li>
