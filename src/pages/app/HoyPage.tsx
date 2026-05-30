@@ -35,7 +35,6 @@ import { MealSheet } from '../../components/MealSheet';
 import { TrainSheet } from '../../components/TrainSheet';
 import { GuestBanner } from '../../components/GuestBanner';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
-import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
 import { greetingName } from '../../utils/userDisplay';
 import { canGenerateAi, formatCountdown, formatUnlockDate } from '../../utils/ia';
@@ -322,7 +321,6 @@ const HoyPage: React.FC = () => {
               <div className="hoy-hero-label">
                 <span className="hoy-hero-dot" />
                 Tu programa diario
-                <AiGeneratedBadge userDoc={userDoc} scope="any" />
               </div>
               <h2 className="hoy-hero-title">Sin programa generado aún</h2>
               <p className="hoy-hero-sub">
