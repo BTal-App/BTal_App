@@ -24,8 +24,17 @@ import {
   type RegistroStats,
   type UserProfile,
 } from '../templates/defaultUser';
+import type { AffectedItem, AffectedSection } from '../utils/aiAffectedItems';
 import './SettingsModal.css';
 import './AiPromptSummaryModal.css';
+
+// Etiqueta de sección para el bloque "lo que la IA NO reemplazará".
+// Orden de uso: menú → compra → entreno (mismo que el paso 2).
+const PROTECTED_SECTION_LABEL: Record<AffectedSection, string> = {
+  menu: 'Menú',
+  compra: 'Lista de la compra',
+  entrenos: 'Entreno',
+};
 
 // Mismo mapping de scope → Ionicon que en AiGenerateModal · sustituye
 // los emojis (✨ 🍽️ 📋 🏋️) por iconos coherentes con el resto de la UI.
@@ -41,6 +50,10 @@ interface Props {
   onClose: () => void;
   // Scope que se va a generar (lo que el user eligió en el paso anterior).
   scope: AiScopeChoice;
+  // Items que la IA NO va a reemplazar (protegidos en el paso 2). Solo se
+  // pasa desde el flujo de generación en tabs · en onboarding es undefined
+  // (no hay paso de protección) y el bloque no se renderiza.
+  protectedItems?: AffectedItem[];
   // Override del perfil — útil en el onboarding, donde el perfil aún no
   // está guardado. Si no se pasa, usa userDoc.profile del provider.
   profileOverride?: UserProfile;
@@ -79,6 +92,7 @@ export function AiPromptSummaryModal({
   isOpen,
   onClose,
   scope,
+  protectedItems,
   profileOverride,
   onConfirm,
   onModify,
@@ -345,6 +359,36 @@ export function AiPromptSummaryModal({
                     items={profile.ingredientesFavoritos}
                     color="lime"
                   />
+                )}
+              </SummaryBlock>
+            )}
+
+            {/* ── Lo que la IA NO reemplazará ──
+                Solo en el flujo de generación (protectedItems definido · en
+                onboarding es undefined). Lista los items protegidos agrupados
+                por sección · si no hay ninguno, lo indica explícitamente. */}
+            {protectedItems !== undefined && (
+              <SummaryBlock title="Lo que la IA NO reemplazará">
+                {protectedItems.length === 0 ? (
+                  <p className="ai-summary-protected-empty">
+                    No has marcado nada para proteger. La IA reemplazará todo el
+                    contenido de «{scopeOption?.label ?? 'lo seleccionado'}».
+                  </p>
+                ) : (
+                  (['menu', 'compra', 'entrenos'] as AffectedSection[]).map((sec) => {
+                    const labels = protectedItems
+                      .filter((it) => it.section === sec)
+                      .map((it) => it.label);
+                    if (labels.length === 0) return null;
+                    return (
+                      <SummaryChips
+                        key={sec}
+                        label={PROTECTED_SECTION_LABEL[sec]}
+                        items={labels}
+                        color="violet"
+                      />
+                    );
+                  })
                 )}
               </SummaryBlock>
             )}

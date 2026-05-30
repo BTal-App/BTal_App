@@ -4,6 +4,14 @@
   max-width: 520px;
 }
 
+/* Mensaje "no has protegido nada" del bloque "lo que la IA NO reemplazará". */
+.ai-summary-protected-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--btal-t-3);
+}
+
 .ai-summary-head {
   display: flex;
   gap: 14px;

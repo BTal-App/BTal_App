@@ -14,6 +14,8 @@ import { blurAndRun } from '../utils/focus';
 import {
   getAffectedItems,
   initialExcludedIds,
+  isProtected,
+  type AffectedItem,
 } from '../utils/aiAffectedItems';
 import { AiAffectedItemsStep } from './AiAffectedItemsStep';
 import { AiPromptSummaryModal } from './AiPromptSummaryModal';
@@ -140,6 +142,14 @@ export function AiGenerateModal({
     setTrackedAllow(allowUserItems);
     setExcludedIds(allowUserItems ? new Set() : initialExcludedIds(items));
   }
+
+  // Items que la IA NO va a reemplazar (protegidos): los excluidos a mano +
+  // los del usuario auto-protegidos cuando el toggle está OFF. Se muestran en
+  // el resumen final para que el user confirme qué se mantiene intacto.
+  const protectedItems: AffectedItem[] = useMemo(
+    () => items.filter((it) => isProtected(it, excludedIds, allowUserItems)),
+    [items, excludedIds, allowUserItems],
+  );
 
   // Reset al abrir · evita arrastrar selección de la sesión anterior si
   // el user cierra y reabre el mismo modal.
@@ -381,6 +391,7 @@ export function AiGenerateModal({
           isOpen={showSummary}
           onClose={() => setShowSummary(false)}
           scope={selected}
+          protectedItems={protectedItems}
           onConfirm={handleConfirmGenerate}
           onModify={handleModify}
           // "Atrás" · cierra solo el resumen y deja al user en el paso 2
