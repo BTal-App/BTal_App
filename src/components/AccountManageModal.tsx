@@ -461,13 +461,14 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
         onDidDismiss={() => setSignOutAlertOpen(false)}
         header="Cerrar sesión en otros dispositivos"
         message={
-          'Se cerrará la sesión en todos los demás dispositivos donde hayas entrado. ' +
-          'Esta sesión se mantiene activa. Útil si perdiste un dispositivo o crees que alguien accedió a tu cuenta.'
+          'Se cerrará la sesión en todos los demás dispositivos donde tengas iniciada tu cuenta. ' +
+          'La sesión actual permanecerá activa. Esta opción es útil si has perdido un dispositivo ' +
+          'o sospechas que alguien ha accedido a tu cuenta sin autorización.'
         }
         buttons={[
           { text: 'Cancelar', role: 'cancel' },
           {
-            text: 'Cerrar otras sesiones',
+            text: 'Cerrar sesión en otros dispositivos',
             role: 'destructive',
             handler: () => {
               handleRevokeOtherSessions();
