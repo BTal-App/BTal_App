@@ -18,6 +18,12 @@
   letter-spacing: 0.04em;
   white-space: nowrap;
   flex-shrink: 0;
+  /* Ahora es un <button> clicable (abre el alert con la fecha+hora de
+     generación) · reset de estilos nativos. El press-in lo da la regla
+     global button:active. */
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .ai-generated-badge ion-icon {
