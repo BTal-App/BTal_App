@@ -17,7 +17,7 @@ import { getIconEntry } from './iconRegistry';
 //
 // La API expuesta:
 //   loadTablerModule()      → Promise<TablerModule>  (fuerza la carga · útil para prefetch)
-//   loadTablerIcon(id)      → Promise<ComponentType> (resuelve un icono específico)
+//   getTablerIconSync(id, m) → componente o null     (sync · tras la carga)
 // ─────────────────────────────────────────────────────────────────────
 
 // Tipo aproximado del módulo · cada export es un componente de icono

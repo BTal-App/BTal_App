@@ -1,6 +1,6 @@
 // Helpers de la tab Registro · Sub-fase 2E. Réplica de las funciones
 // del v1 (`getRegPlanDay`, `regBadgesCombined`, `regPlanLabel`,
-// `regPlanShortLabel`, `regSeriesCount`) adaptadas al schema React de
+// `regSeriesCount`) adaptadas al schema React de
 // la app v2: leen `entrenos.planes` directamente del UserDocument
 // (mismo origen que EntrenoPage / TrainSheet) en lugar del DOM o
 // localStorage como hacía el v1.

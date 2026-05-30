@@ -1,11 +1,11 @@
 // Primitivas compartidas para "confirmar cambios" antes de guardar
 // (réplica del v1 confirmSave). Cualquier modal que edite datos del
-// schema puede importar `ChangeEntry` + `formatChangesHtml` y mostrar
-// la lista antes/después en un IonAlert.
+// schema usa `ChangeEntry` + `pushDiff` para construir la lista de
+// cambios antes/después y mostrarla en un IonAlert.
 //
 // Las funciones específicas de diff (diffPlan, diffDia, diffComida,
 // etc.) viven cerca de su modal o en utils/<feature>Diff.ts; este
-// archivo solo contiene los tipos y el formateo HTML común.
+// archivo solo contiene los tipos y helpers comunes.
 
 export interface ChangeEntry {
   label: string;

@@ -108,13 +108,6 @@
   flex: 1 1 auto;
 }
 
-.account-info-uid {
-  font-family: 'Inter', sans-serif;
-  font-size: 0.72rem;
-  color: var(--btal-t-2);
-  user-select: all;
-}
-
 .account-info-providers {
   display: flex;
   flex-wrap: wrap;

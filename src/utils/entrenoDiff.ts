@@ -292,5 +292,5 @@ export function diffPlan(
   return out;
 }
 
-// (formatChangesHtml + ChangeEntry + safeStr/SAFE viven en confirmDiff
-// y se re-exportan al inicio de este archivo · evitamos duplicar.)
+// (ChangeEntry vive en confirmDiff y se re-exporta al inicio de este
+// archivo · safeStr/SAFE se importan de ahí · evitamos duplicar.)

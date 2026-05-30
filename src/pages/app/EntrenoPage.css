@@ -4,17 +4,6 @@
    La lógica viene del v1 (planes builtIn 1..7 + custom, recomendación
    según diasEntreno del perfil, badges 1-3 por día). */
 
-/* IonAlert "¿Confirmar cambios?" · preserva los saltos de línea del
-   diff antes/después y limita el alto para que se pueda hacer scroll
-   cuando hay muchos cambios. Réplica visual del v1 confirmSave. */
-ion-alert.entreno-confirm-alert .alert-message {
-  white-space: pre-wrap;
-  font-size: 0.85rem;
-  line-height: 1.45;
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
 /* ── Plan switcher · scroll horizontal de mini-cards ─────────────── */
 .plan-cards {
   display: flex;
