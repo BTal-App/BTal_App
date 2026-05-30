@@ -177,7 +177,10 @@ export function mapAllBuiltInPlans(
 // únicas (la IA puede escribir "lunes"/"Lun"/"lun" o inventar días). Se
 // aplica a suplementos.daysWithBatido / daysWithCreatina vía dot-path en
 // generatePlan, preservando config/stock/contadores del user.
-export function mapSuplementosDias(gen: GeneratedSuplementos): {
+export function mapSuplementosDias(
+  gen: GeneratedSuplementos,
+  includeCreatina: boolean,
+): {
   daysWithBatido: DayKey[];
   daysWithCreatina: DayKey[];
 } {
@@ -190,10 +193,16 @@ export function mapSuplementosDias(gen: GeneratedSuplementos): {
     // Orden lun..dom estable (orden de DAY_KEYS).
     return DAY_KEYS.filter((d) => seen.has(d));
   };
-  return {
-    daysWithBatido: norm(gen.batidoDias),
-    daysWithCreatina: norm(gen.creatinaDias),
-  };
+  const daysWithBatido = norm(gen.batidoDias);
+  let daysWithCreatina = norm(gen.creatinaDias);
+  // Si el batido del user ya incluye la creatina (su check includeCreatina),
+  // un día con batido NO debe llevar además creatina suelta · sería doble
+  // dosis. Quitamos de la lista de creatina los días que ya tienen batido.
+  if (includeCreatina) {
+    const batidoSet = new Set(daysWithBatido);
+    daysWithCreatina = daysWithCreatina.filter((d) => !batidoSet.has(d));
+  }
+  return { daysWithBatido, daysWithCreatina };
 }
 
 // Validación post-Zod adicional: coherencia de macros. Si las kcal de una

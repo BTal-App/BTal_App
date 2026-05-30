@@ -262,7 +262,10 @@ export const generatePlan = onCall(
     // stock y contadores del user. Sustituye al error de meter batidos como
     // comidas del menú.
     if (parsed.suplementos) {
-      const dias = mapSuplementosDias(parsed.suplementos);
+      // Si el batido del user ya lleva creatina (su check), no se duplica la
+      // creatina suelta en los días que ya tienen batido (lo aplica mapSuplementosDias).
+      const includeCreatina = userDoc.suplementos?.batidoConfig?.includeCreatina ?? false;
+      const dias = mapSuplementosDias(parsed.suplementos, includeCreatina);
       updates['suplementos.daysWithBatido'] = dias.daysWithBatido;
       updates['suplementos.daysWithCreatina'] = dias.daysWithCreatina;
     }

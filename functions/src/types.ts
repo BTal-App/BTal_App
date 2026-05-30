@@ -174,12 +174,20 @@ export interface Compra {
   items: Record<string, ItemCompra[]>;
 }
 
+// Suplementos · las funciones solo necesitan leer el flag includeCreatina
+// del batido al generar: si el batido ya lleva la creatina (check del user),
+// un día con batido NO necesita además creatina suelta (sería doble dosis).
+export interface SuplementosDoc {
+  batidoConfig?: { includeCreatina?: boolean };
+}
+
 // UserDocument · solo los campos que las funciones leen/escriben.
 export interface UserDocument {
   profile: UserProfile;
   menu: Menu;
   entrenos: Entrenos;
   compra: Compra;
+  suplementos?: SuplementosDoc;
   plan: PlanIA;
   generaciones: GeneracionesIA;
   plan_pro?: boolean;
