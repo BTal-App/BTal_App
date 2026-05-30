@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
-import { getRegistrosRecientes } from '../services/db';
+import { getRegistrosRecientes, REGISTROS_MAX } from '../services/db';
 import {
   defaultRegistroStats,
   type ExerciseHistoryEntry,
@@ -26,14 +26,32 @@ import { previousDayKey, todayDateStr } from '../utils/dateKeys';
 // (`refresh()`) tras guardar/borrar para reflejar la nueva racha sin
 // esperar al re-mount del componente.
 
-// Tope práctico de docs a leer para el cálculo de racha. Subido de 60 a
-// 999 · cubre rachas de hasta ~2.7 años consecutivos · poco probable que
-// nadie llegue, pero el cap a 60 limitaba el número visible a 60 incluso
-// si el user tenía más días seguidos. Firestore `limit()` es un máximo ·
-// users con menos registros no consumen reads extra (solo lee los que
-// existen). Cost · gratis hasta 50K reads/día en free tier, irrelevante
-// para Blaze con budgets bajos.
-const RACHA_FETCH_LIMIT = 999;
+// Ventana INICIAL de docs a leer para la racha. 90 días seguidos
+// entrenando ya es excepcional, así que en la práctica con esto basta y
+// leemos lo MÍNIMO en cada apertura (antes 999 · una racha de 5 días leía
+// igualmente hasta 999 docs en el camino crítico del login → coste + lentitud).
+// Si la racha llenara la ventana entera (podría ser más larga), se amplía
+// dinámicamente en `fetchRegistrosParaRacha` hasta REGISTROS_MAX. La racha
+// es el ÚNICO consumidor de estos docs (el resto de stats salen del
+// UserDocument), así que reducir la ventana no afecta a nada más.
+const RACHA_WINDOW = 90;
+
+// Lee los registros necesarios para la racha con ventana creciente: pide
+// RACHA_WINDOW; solo si TODOS los leídos resultaron ser racha consecutiva
+// (la racha llega al doc más antiguo leído y aún hay más posibles) amplía.
+// Caso normal: una sola lectura pequeña. Caso rarísimo (racha > 90): 1-2
+// lecturas más. Cota dura en REGISTROS_MAX.
+async function fetchRegistrosParaRacha(uid: string): Promise<RegistroDia[]> {
+  let limit = RACHA_WINDOW;
+  let arr = await getRegistrosRecientes(uid, limit);
+  while (arr.length === limit && limit < REGISTROS_MAX) {
+    // Si la racha NO consumió toda la ventana, ya tenemos suficiente.
+    if (calcRacha(arr).actual < arr.length) break;
+    limit = Math.min(limit * 3, REGISTROS_MAX);
+    arr = await getRegistrosRecientes(uid, limit);
+  }
+  return arr;
+}
 
 export interface UseRegistroStatsResult {
   totalEntrenos: number;
@@ -136,7 +154,7 @@ export function useRegistroStats(): UseRegistroStatsResult {
     }
     setLoading(true);
     try {
-      const arr = await getRegistrosRecientes(uid, RACHA_FETCH_LIMIT);
+      const arr = await fetchRegistrosParaRacha(uid);
       setRecientes(arr);
     } catch (err) {
       console.warn('[useRegistroStats] fetch failed', err);
@@ -159,7 +177,7 @@ export function useRegistroStats(): UseRegistroStatsResult {
     }
     setLoading(true);
     /* eslint-enable react-hooks/set-state-in-effect */
-    getRegistrosRecientes(uid, RACHA_FETCH_LIMIT)
+    fetchRegistrosParaRacha(uid)
       .then((arr) => {
         if (mounted) setRecientes(arr);
       })
