@@ -169,3 +169,60 @@ ion-modal.settings-modal {
   letter-spacing: 0.3em;
   padding: 14px 16px;
 }
+
+/* ChangeModeModal · bloque informativo al elegir modo IA (sustituye al
+   antiguo selector de scope · el scope ahora se elige al generar). */
+.change-mode-ai-info {
+  margin: 12px 0 4px;
+  padding: 12px 14px;
+  background: rgba(181, 240, 55, 0.06);
+  border: 1px solid rgba(181, 240, 55, 0.22);
+  border-radius: 12px;
+}
+
+.change-mode-ai-info-intro {
+  margin: 0 0 8px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--btal-t-2);
+}
+
+.change-mode-ai-info-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.change-mode-ai-info-list li {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--btal-t-2);
+  padding-left: 14px;
+  position: relative;
+}
+
+.change-mode-ai-info-list li::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--btal-lime);
+  opacity: 0.8;
+}
+
+.change-mode-ai-info-list strong {
+  color: var(--btal-t-1);
+}
+
+.change-mode-ai-info-note {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--btal-t-3);
+}

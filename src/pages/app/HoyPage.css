@@ -1529,6 +1529,19 @@
   font-weight: 600;
   line-height: 1;
   border: 1px solid transparent;
+  /* Ahora los 3 chips son botones clicables · reset de estilos nativos del
+     <button> + affordance. El press-in lo aporta la regla global
+     `button:active` de animations.css. */
+  font-family: inherit;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  max-width: 100%;
+}
+
+.hoy-ai-status span {
+  white-space: nowrap;
 }
 
 .hoy-ai-status--ready {
@@ -1541,4 +1554,11 @@
   background: var(--btal-bg-2, #161b18);
   color: var(--btal-t-2, #aab3a8);
   border-color: var(--btal-border-2, #2e3530);
+}
+
+/* PRO · ilimitado · dorado. */
+.hoy-ai-status--pro {
+  background: rgba(240, 168, 56, 0.12);
+  color: var(--btal-gold, #f0a838);
+  border-color: rgba(240, 168, 56, 0.34);
 }

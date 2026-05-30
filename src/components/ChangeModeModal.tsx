@@ -73,10 +73,9 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
   const dirty =
     selected.modo !== currentModo || selected.aiScope !== currentScope;
 
-  // Validación: manual no necesita scope. ai necesita scope elegido.
-  const valid =
-    selected.modo === 'manual'
-    || (selected.modo === 'ai' && selected.aiScope !== null);
+  // Validación: ambos modos son válidos. El scope ya NO se elige aquí (se
+  // elige al generar en cada tab), así que activar IA no requiere scope.
+  const valid = selected.modo === 'manual' || selected.modo === 'ai';
 
   // ¿Es un cambio que activa IA por primera vez (manual → ai)?
   const isEnablingAi = currentModo === 'manual' && selected.modo === 'ai';
@@ -158,7 +157,35 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
                 value={selected}
                 onChange={setSelected}
                 variant="compact"
+                hideScope
               />
+
+              {/* Al elegir IA explicamos qué se habilita en cada menú · el
+                  scope ya no se elige aquí, sino al pulsar «Generar con IA»
+                  en cada tab. */}
+              {selected.modo === 'ai' && (
+                <div className="change-mode-ai-info">
+                  <p className="change-mode-ai-info-intro">
+                    Aparecerá un botón <strong>«Generar con IA»</strong> en cada
+                    menú. Al pulsarlo eliges qué generar:
+                  </p>
+                  <ul className="change-mode-ai-info-list">
+                    <li>
+                      <strong>Hoy</strong> · todo: Todo el plan, Menú + lista de
+                      compra, Solo menú o Solo entrenos.
+                    </li>
+                    <li>
+                      <strong>Menú</strong> · Menú + lista de compra, o Solo menú.
+                    </li>
+                    <li>
+                      <strong>Entreno</strong> · tu plan de entrenamiento.
+                    </li>
+                  </ul>
+                  <p className="change-mode-ai-info-note">
+                    En el plan Free tienes 1 generación al mes (completa o parcial).
+                  </p>
+                </div>
+              )}
 
               {error && <div className="landing-msg error">{error}</div>}
 

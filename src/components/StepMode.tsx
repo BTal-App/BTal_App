@@ -26,6 +26,11 @@ interface Props {
   value: StepModeValue;
   onChange: (val: StepModeValue) => void;
   variant?: 'onboarding' | 'compact';
+  // Oculta el sub-selector "¿qué quieres generar?". En Ajustes (cambiar
+  // modo) NO se elige scope: activar IA solo desbloquea los botones · el
+  // scope se elige al generar de verdad en cada tab. En onboarding sí se
+  // muestra (ahí la elección dispara la primera generación).
+  hideScope?: boolean;
 }
 
 // Componente reusable para elegir entre IA y manual + (si IA) qué
@@ -35,7 +40,7 @@ interface Props {
 //
 // La validación externa de "está completo" es:
 //   value.modo === 'manual' || (value.modo === 'ai' && value.aiScope !== null)
-export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
+export function StepMode({ value, onChange, variant = 'onboarding', hideScope = false }: Props) {
   const handleModoClick = (modo: Modo) => {
     if (modo === 'manual') {
       // Pasar a manual resetea el aiScope (no aplica).
@@ -95,8 +100,9 @@ export function StepMode({ value, onChange, variant = 'onboarding' }: Props) {
         </div>
       </button>
 
-      {/* Sub-bloque · solo aparece si elige IA. Pregunta qué scope quiere. */}
-      {value.modo === 'ai' && (
+      {/* Sub-bloque · solo aparece si elige IA y NO se ocultó el scope
+          (en Ajustes se oculta · el scope se elige al generar). */}
+      {!hideScope && value.modo === 'ai' && (
         <div className="step-mode-scope">
           <span className="step-mode-scope-label">
             ¿Qué quieres generar con la IA?

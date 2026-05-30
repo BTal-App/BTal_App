@@ -38,7 +38,7 @@ import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiGeneratedBadge } from '../../components/AiGeneratedBadge';
 import { blurAndRun } from '../../utils/focus';
 import { greetingName } from '../../utils/userDisplay';
-import { canGenerateAi, formatCountdown } from '../../utils/ia';
+import { canGenerateAi, formatCountdown, formatUnlockDate } from '../../utils/ia';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
 import './HoyPage.css';
 
@@ -95,6 +95,8 @@ const HoyPage: React.FC = () => {
   const { user, loading } = useAuth();
   const { profile: userDoc, loading: profileLoading } = useProfile();
   const [aiGenOpen, setAiGenOpen] = useState(false);
+  // Alert informativo al pulsar los chips de estado IA (tiempo restante / Pro).
+  const [aiInfo, setAiInfo] = useState<{ header: string; message: string } | null>(null);
   // MealSheet · null = cerrado · al pulsar una comida del día se
   // abre con el detalle (mismo modal que en MenuPage). Las acciones
   // de Editar / Duplicar viven en MenuPage; aquí solo lectura.
@@ -238,23 +240,62 @@ const HoyPage: React.FC = () => {
           {showAiButton && (() => {
             const elig = canGenerateAi(userDoc, user.isAnonymous);
             let chip: ReactNode = null;
-            if (elig.allowed) {
+            if (elig.allowed && elig.reason === 'ok_pro') {
+              // PRO · ilimitado · dorado · al pulsar muestra hasta cuándo
+              // está activo el Pro (vence_en).
+              const vence = userDoc?.plan?.vence_en ?? null;
               chip = (
-                <div className="hoy-ai-status hoy-ai-status--ready">
+                <button
+                  type="button"
+                  className="hoy-ai-status hoy-ai-status--pro"
+                  onClick={blurAndRun(() =>
+                    setAiInfo({
+                      header: 'Pro · generaciones ilimitadas',
+                      message: vence
+                        ? `Tienes Pro activo: puedes generar con IA sin límite. Tu suscripción está activa hasta el ${formatUnlockDate(vence)}.`
+                        : 'Tienes Pro activo: puedes generar con IA sin límite.',
+                    }),
+                  )}
+                >
+                  <MealIcon value="tb:sparkles" size={16} />
+                  <span>Generación IA - ILIMITADO</span>
+                </button>
+              );
+            } else if (elig.allowed) {
+              // LISTA (Free/pago único disponible) · verde · al pulsar abre
+              // el modal de generación (selector de las 4 opciones → wizard
+              // completo, igual que Menú/Entreno).
+              chip = (
+                <button
+                  type="button"
+                  className="hoy-ai-status hoy-ai-status--ready"
+                  onClick={blurAndRun(() => setAiGenOpen(true))}
+                >
                   <MealIcon value="tb:sparkles" size={16} />
                   <span>Generación IA - LISTA</span>
-                </div>
+                </button>
               );
             } else if (elig.reason === 'limit_reached' && elig.unlocksAt) {
-              // Cuenta atrás en vivo (días + horas) hasta que vuelve la
-              // generación gratuita · se refresca con nowTick (30 s). La
-              // fecha exacta de desbloqueo vive en Ajustes.
-              const left = formatCountdown(elig.unlocksAt, nowTick);
+              // TIEMPO RESTANTE · cuenta atrás en vivo (nowTick 30 s) · al
+              // pulsar muestra la fecha exacta de desbloqueo.
+              const unlocksAt = elig.unlocksAt;
+              const left = formatCountdown(unlocksAt, nowTick);
               chip = left ? (
-                <div className="hoy-ai-status hoy-ai-status--locked">
+                <button
+                  type="button"
+                  className="hoy-ai-status hoy-ai-status--locked"
+                  onClick={blurAndRun(() =>
+                    setAiInfo({
+                      header: 'Próxima generación con IA',
+                      message:
+                        `Tu generación gratuita se desbloquea el ${formatUnlockDate(unlocksAt)} ` +
+                        `(faltan ${left}). Si quieres generar antes, pásate a Pro para hacerlo sin límites.`,
+                    }),
+                  )}
+                >
                   <MealIcon value="tb:lock" size={15} />
-                  <span>IA en {left}</span>
-                </div>
+                  <span>Generación IA - TIEMPO RESTANTE: {left}</span>
+                </button>
               ) : null;
             }
             // Alineado a la derecha (bajo el avatar/racha).
@@ -624,6 +665,15 @@ const HoyPage: React.FC = () => {
             defaultScope={userDoc?.profile?.aiScope ?? undefined}
           />
         )}
+
+        {/* Info al pulsar los chips de estado IA (tiempo restante / Pro). */}
+        <IonAlert
+          isOpen={!!aiInfo}
+          onDidDismiss={() => setAiInfo(null)}
+          header={aiInfo?.header}
+          message={aiInfo?.message}
+          buttons={['Entendido']}
+        />
 
         {/* Reservamos referencia al profileLoading para silenciar el lint
             (todavía no la usamos pero la queremos disponible para skeletons
