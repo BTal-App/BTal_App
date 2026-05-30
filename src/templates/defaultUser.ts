@@ -1441,7 +1441,7 @@ export const AI_SCOPE_OPTIONS: {
 }[] = [
   {
     value: 'all',
-    label: 'Plan completo',
+    label: 'Generación completa',
     sub: 'Menú semanal con su lista de la compra y planes de entreno.',
     emoji: '✨',
   },

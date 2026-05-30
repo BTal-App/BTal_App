@@ -659,7 +659,7 @@ const HoyPage: React.FC = () => {
           <AiGenerateModal
             isOpen={aiGenOpen}
             onClose={() => setAiGenOpen(false)}
-            title="Generar mi plan con IA"
+            title="Generar con IA"
             description="Elige qué quieres que genere la IA esta vez."
             availableScopes={['all', 'menu_compra', 'menu_only', 'entrenos_only']}
             defaultScope={userDoc?.profile?.aiScope ?? undefined}
