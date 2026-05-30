@@ -13,35 +13,6 @@ export interface ChangeEntry {
   to: string;
 }
 
-const escapeHtml = (s: string): string =>
-  s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-
-// Renderiza la lista de cambios como HTML con "antes" en naranja y
-// "después" en verde · réplica visual del v1 confirmSave (#f0a040 /
-// #7ee87e). Para usar en IonAlert se envuelve en `IonicSafeString`.
-// Si la lista está vacía, muestra "Sin cambios detectados".
-export function formatChangesHtml(changes: ChangeEntry[]): string {
-  if (changes.length === 0) {
-    return '<span style="color:#8d9491">Sin cambios detectados</span>';
-  }
-  return changes
-    .map((c) => {
-      const label = escapeHtml(c.label);
-      const from = escapeHtml(c.from);
-      const to = escapeHtml(c.to);
-      return (
-        `<strong>${label}</strong><br>`
-        + `· Antes: <span style="color:#f0a040">${from}</span><br>`
-        + `· Después: <span style="color:#7ee87e">${to}</span>`
-      );
-    })
-    .join('<br><br>');
-}
 
 // Helper para campos opcionales · convierte null/undefined/'' en "—"
 // para que el diff lea "Antes: — / Después: 5" en vez de "Antes:

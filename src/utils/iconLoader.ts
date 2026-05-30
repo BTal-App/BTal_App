@@ -66,24 +66,6 @@ export function loadTablerModule(): Promise<TablerModule> {
 }
 
 /**
- * Resuelve un icono específico por su id `"tb:<slug>"`. Si el id no
- * existe en el registry · devuelve null. Si el `importName` del
- * registry no aparece en el módulo cargado · devuelve null (registry
- * desincronizado del paquete instalado, edge case).
- *
- * El caller decide qué hacer con `null`: `MealIcon` cae a su fallback
- * (otro id Tabler) o renderiza un placeholder vacío.
- */
-export async function loadTablerIcon(
-  id: string,
-): Promise<TablerIconComponent | null> {
-  const entry = getIconEntry(id);
-  if (!entry) return null;
-  const mod = await loadTablerModule();
-  return mod[entry.importName] ?? null;
-}
-
-/**
  * Versión SYNC que solo funciona si el módulo ya está cargado.
  * `MealIcon` la usa después de Suspense · evita layout shift en
  * renders sucesivos del mismo icono.

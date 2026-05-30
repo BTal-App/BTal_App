@@ -18,7 +18,6 @@ import {
 import { formatTiempoEstimado } from './timeParser';
 
 export type { ChangeEntry } from './confirmDiff';
-export { formatChangesHtml, pushDiff } from './confirmDiff';
 
 const formatBadge = (
   badge: EjercicioBadge | '',

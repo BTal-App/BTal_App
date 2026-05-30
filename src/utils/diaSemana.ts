@@ -8,7 +8,6 @@
 
 import {
   DAY_LABEL_FULL,
-  DAY_LABEL_SHORT,
   type DayKey,
 } from '../templates/defaultUser';
 
@@ -17,10 +16,6 @@ export function formatDiaSemana(d: DayKey | null): string {
   return DAY_LABEL_FULL[d];
 }
 
-export function formatDiaSemanaShort(d: DayKey | null): string {
-  if (!d) return '';
-  return DAY_LABEL_SHORT[d].toUpperCase();
-}
 
 // Lista ordenada de DayKey + label · útil para los <select> de día
 // semana en los editores de plan/día.

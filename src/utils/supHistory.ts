@@ -53,17 +53,3 @@ export function applySupHistoryDelta(
   return next;
 }
 
-// Cuenta total de tomas en un rango [startInc, endInc] · ambos
-// inclusive en formato 'YYYY-MM-DD'. Ignora entries fuera del rango.
-export function sumSupHistoryRange(
-  history: SupHistoryEntry[] | undefined,
-  startInc: string,
-  endInc: string,
-): number {
-  if (!history?.length) return 0;
-  let total = 0;
-  for (const e of history) {
-    if (e.fecha >= startInc && e.fecha <= endInc) total += e.count;
-  }
-  return total;
-}

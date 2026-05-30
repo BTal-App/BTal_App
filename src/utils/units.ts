@@ -102,16 +102,3 @@ export function formatHeight(cm: number | null | undefined, system: UnitsSystem)
 
 // ── Días de la semana ─────────────────────────────────────────
 
-// Devuelve los 7 nombres de la semana ordenados según preferencia.
-// Útil para renderizar headers de calendario / planes. Locale fijo en
-// español por ahora — cuando soportemos i18n añadiremos parámetro y un
-// mapa de etiquetas por idioma. Hoy no merece la pena.
-export function weekDays(start: WeekStart): string[] {
-  const labels = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-  const offset = start === 'monday' ? 1 : 0;
-  const ordered: string[] = [];
-  for (let i = 0; i < 7; i++) {
-    ordered.push(labels[(i + offset) % 7]);
-  }
-  return ordered.map((d) => d.charAt(0).toUpperCase() + d.slice(1));
-}

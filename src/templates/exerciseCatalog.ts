@@ -259,26 +259,6 @@ export const EXERCISES_BY_TYPE: Record<Exclude<EjercicioBadge, 'custom'>, string
   ],
 };
 
-// Devuelve la lista de ejercicios sugeridos para un día según sus
-// badges (1-3). Concatena sin duplicar y omite 'custom'.
-export function getSuggestedExercises(
-  badges: ReadonlyArray<EjercicioBadge | ''>,
-): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const b of badges) {
-    if (!b || b === 'custom') continue;
-    const list = EXERCISES_BY_TYPE[b as Exclude<EjercicioBadge, 'custom'>];
-    if (!list) continue;
-    for (const ex of list) {
-      if (seen.has(ex)) continue;
-      seen.add(ex);
-      out.push(ex);
-    }
-  }
-  return out;
-}
-
 // Versión agrupada · réplica del v1 `peExerciseSelectHTML` · devuelve
 // los ejercicios agrupados por badge para usar en `<optgroup>`. Si no
 // hay badges válidos (todos 'custom' o vacíos), devuelve TODAS las

@@ -69,18 +69,6 @@ export function regPlanLabel(
   return badges ? `${parts.join(' · ')} (${badges})` : parts.join(' · ');
 }
 
-// Etiqueta corta · solo los badges combinados. Útil para celdas del
-// calendar o badges resumen rápido.
-export function regPlanShortLabel(
-  planValue: string,
-  entrenos: Entrenos | undefined | null,
-): string {
-  if (planValue === 'rest') return 'DESCANSO';
-  const info = getRegPlanDay(planValue, entrenos);
-  if (!info) return '';
-  return regBadgesCombined(info.day);
-}
-
 // Parsea el campo `series` de un Ejercicio ("4×6-8" / "3x10" / "5 X 5"
 // / "30 min") y devuelve el número de series. Si no se puede extraer,
 // usa 3 como default (mismo fallback que el v1).
@@ -187,22 +175,6 @@ export function enumeratePlanOptions(
   }
 
   return result;
-}
-
-// Fecha 'YYYY-MM-DD' formateada legible · "Sábado 9 de mayo de 2026".
-// Locale fijo español (la app no soporta i18n todavía).
-export function formatFechaLarga(fecha: string): string {
-  const [y, m, d] = fecha.split('-').map(Number);
-  if (!y || !m || !d) return fecha;
-  const dt = new Date(y, m - 1, d);
-  const meses = [
-    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-  ];
-  const dows = [
-    'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado',
-  ];
-  return `${dows[dt.getDay()]} ${d} de ${meses[m - 1]} de ${y}`;
 }
 
 // Fecha 'YYYY-MM-DD' formateada corta · "Sáb 9 may". Para títulos de

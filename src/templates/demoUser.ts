@@ -1534,9 +1534,6 @@ export function demoUserDocument(): UserDocument {
   };
 }
 
-// Re-export del listado de claves para componentes que iteren los días
-// del menú demo sin tener que mirar Object.keys (TS inferiría string).
-export const DEMO_DAY_ORDER: DayKey[] = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom'];
 
 // Devuelve una copia del menú demo para un día concreto. Usado al
 // "Resetear día" desde MenuPage en cuentas invitadas (Sub-fase 2B.6) ·

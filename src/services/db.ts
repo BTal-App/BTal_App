@@ -1016,21 +1016,6 @@ export async function clearGuestExpiration(uid: string): Promise<void> {
   await mod.updateDoc(ref, { expiresAt: mod.deleteField() });
 }
 
-// Actualiza solo el campo `profile.modo` (paso usado por Settings →
-// "Cambiar modo de generación"). No toca el resto del doc — el menú/
-// entrenos/compra que el user ya tenga siguen intactos.
-export async function updateUserMode(
-  uid: string,
-  modo: UserProfile['modo'],
-): Promise<void> {
-  const { mod, db } = await getDb();
-  const ref = mod.doc(db, 'users', uid);
-  await mod.updateDoc(ref, {
-    'profile.modo': modo,
-    lastActive: Date.now(),
-  });
-}
-
 // Actualiza solo `lastActive` (cada vez que el user abre el dashboard).
 // No-op si el doc todavía no existe — el onboarding lo creará.
 //
@@ -1608,21 +1593,9 @@ function applyRegistroDelete(
   return out;
 }
 
-// Lee un registro concreto (un día) · null si no existe.
-export async function getRegistroDia(
-  uid: string,
-  fecha: string,
-): Promise<RegistroDia | null> {
-  const { mod, db } = await getDb();
-  const ref = mod.doc(db, ...registroDocPath(uid, fecha));
-  const snap = await mod.getDoc(ref);
-  if (!snap.exists()) return null;
-  return snap.data() as RegistroDia;
-}
-
 // Devuelve el primer día (inclusive) y el último (exclusivo) en formato
 // 'YYYY-MM-DD' para la query por id de un mes concreto. Útil para
-// `getRegistroMes` y `subscribeRegistroMes`. month0 es 0-11.
+// `subscribeRegistroMes`. month0 es 0-11.
 function monthRangeKeys(year: number, month0: number): { startInc: string; endExc: string } {
   const pad = (n: number) => String(n).padStart(2, '0');
   const startInc = `${year}-${pad(month0 + 1)}-01`;
@@ -1632,28 +1605,6 @@ function monthRangeKeys(year: number, month0: number): { startInc: string; endEx
   return { startInc, endExc };
 }
 
-// Lee TODOS los registros de un mes concreto · devuelve map fecha → reg.
-// Una sola query (~31 docs máx) usando documentId() como filtro.
-export async function getRegistroMes(
-  uid: string,
-  year: number,
-  month0: number,
-): Promise<Record<string, RegistroDia>> {
-  const { mod, db } = await getDb();
-  const col = mod.collection(db, 'users', uid, 'registros');
-  const { startInc, endExc } = monthRangeKeys(year, month0);
-  const q = mod.query(
-    col,
-    mod.where(mod.documentId(), '>=', startInc),
-    mod.where(mod.documentId(), '<', endExc),
-  );
-  const snap = await mod.getDocs(q);
-  const out: Record<string, RegistroDia> = {};
-  snap.forEach((d) => {
-    out[d.id] = d.data() as RegistroDia;
-  });
-  return out;
-}
 
 // Suscripción reactiva a los registros de un mes · onSnapshot. El cb
 // recibe el map completo (re-emitido en cada cambio). Devuelve la

@@ -512,7 +512,6 @@ export const COMPRA_BUILTIN_IDS = [
   'suplementacion',
 ] as const;
 
-export type CompraBuiltInId = (typeof COMPRA_BUILTIN_IDS)[number];
 
 // Genera un id único para una categoría custom (no choca con builtIn).
 export function newCompraCategoriaId(): string {
@@ -848,9 +847,6 @@ export interface RegistroDia {
   updatedAt: number;        // ms epoch · última escritura
 }
 
-export function defaultRegistroDia(fecha: string): RegistroDia {
-  return { fecha, plan: '', exercises: {}, notes: '', updatedAt: Date.now() };
-}
 
 // ── Stats agregados sobre el histórico de /registros ──────────────────
 //
@@ -959,7 +955,6 @@ export interface PlanIA {
 
 // Scope de una regeneración IA. La compra NO está aquí porque no se
 // regenera con IA, se deriva del menú.
-export type ScopeIA = 'all' | 'menu' | 'entrenos';
 
 export interface GeneracionesIA {
   // Última generación de cada scope · ms epoch o null si nunca.
@@ -1467,9 +1462,6 @@ export const AI_SCOPE_OPTIONS: {
 
 // Helper: filtra AI_SCOPE_OPTIONS por las opciones disponibles en un
 // contexto concreto (Hoy = todas, Menú = 2, Entreno = 1).
-export function aiScopeOptions(values: AiScopeChoice[]) {
-  return AI_SCOPE_OPTIONS.filter((o) => values.includes(o.value));
-}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Catálogos para los selectores de alergias / intolerancias del paso 4 del

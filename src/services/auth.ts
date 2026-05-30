@@ -1,6 +1,5 @@
 import {
   createUserWithEmailAndPassword,
-  deleteUser as fbDeleteUser,
   EmailAuthProvider,
   GoogleAuthProvider,
   getRedirectResult,
@@ -319,13 +318,3 @@ export async function syncAuthDisplayName(name: string | null | undefined): Prom
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Eliminación de cuenta
-//
-// Por ahora solo borra el usuario de Firebase Auth. Cuando integremos
-// Firestore + Stripe se moverá a una Cloud Function `deleteAccount` que:
-//   1. Cancela la suscripción Stripe si existe
-//   2. Borra /users/{uid} de Firestore
-//   3. Llama a admin.auth().deleteUser(uid)
-// (ver paso 5-7 del roadmap)
-export const deleteAccount = (user: User) => fbDeleteUser(user);
