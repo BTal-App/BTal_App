@@ -42,6 +42,14 @@ function translateAuthError(code: string): string {
     'auth/too-many-requests': 'Se han producido demasiados intentos. Espera un momento y vuelve a intentarlo.',
     'auth/network-request-failed': 'Sin conexión. Comprueba tu red.',
     'auth/missing-password': 'No se ha indicado una contraseña.',
+    // App Check · si el token de verificación de la app falla (p.ej. en la
+    // app nativa si Play Integrity / DeviceCheck no produce un token válido),
+    // la API de Auth rechaza con estos códigos · mensaje propio para no
+    // confundirlo con un fallo de credenciales.
+    'auth/firebase-app-check-token-is-invalid':
+      'No se ha podido verificar la app. Reinténtalo en unos segundos; si persiste, reinstala la app.',
+    'auth/missing-app-check-token':
+      'No se ha podido verificar la app. Reinténtalo en unos segundos; si persiste, reinstala la app.',
   };
   return map[code] ?? 'Algo ha salido mal. Inténtalo de nuevo.';
 }
@@ -105,6 +113,10 @@ const Landing: React.FC = () => {
       }
     } catch (err) {
       const code = errorCode(err);
+      // Log del código + mensaje REALES (visibles en logcat / chrome://inspect)
+      // · el mensaje al usuario es genérico, pero esto permite diagnosticar
+      // fallos de Auth en la app nativa (App Check, 403, internal-error…).
+      console.error('[BTal] login error:', code, (err as { message?: string })?.message ?? '', err);
       // Si la cuenta tiene MFA activado, Firebase lanza este código.
       // Sacamos el resolver del error y abrimos el modal de TOTP.
       if (code === 'auth/multi-factor-auth-required') {
