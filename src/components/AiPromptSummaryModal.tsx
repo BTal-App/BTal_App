@@ -31,9 +31,9 @@ import './AiPromptSummaryModal.css';
 // Etiqueta de sección para el bloque "lo que la IA NO reemplazará".
 // Orden de uso: menú → compra → entreno (mismo que el paso 2).
 const PROTECTED_SECTION_LABEL: Record<AffectedSection, string> = {
-  menu: 'Menú',
-  compra: 'Lista de la compra',
-  entrenos: 'Entreno',
+  menu: 'Menú:',
+  compra: 'Lista de la compra:',
+  entrenos: 'Entreno:',
 };
 
 // Mismo mapping de scope → Ionicon que en AiGenerateModal · sustituye

@@ -171,14 +171,14 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
                   </p>
                   <ul className="change-mode-ai-info-list">
                     <li>
-                      <strong>Hoy</strong> · todo: Todo el plan, Menú + lista de
+                      <strong>Hoy</strong>: Generación completa, Menú + lista de
                       compra, Solo menú o Solo entrenos.
                     </li>
                     <li>
-                      <strong>Menú</strong> · Menú + lista de compra, o Solo menú.
+                      <strong>Menú</strong>: Menú + lista de compra, o Solo menú.
                     </li>
                     <li>
-                      <strong>Entreno</strong> · tu plan de entrenamiento.
+                      <strong>Entreno</strong>: tu programa de entrenamiento.
                     </li>
                   </ul>
                   <p className="change-mode-ai-info-note">
