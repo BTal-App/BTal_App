@@ -50,7 +50,7 @@ export function diffRegistroDia(
   const oldPlan = old?.plan ?? '';
   if (oldPlan !== next.plan) {
     out.push({
-      label: 'Plan del día',
+      label: 'Programa del día',
       from: oldPlan ? regPlanLabel(oldPlan, entrenos) : '—',
       to: next.plan ? regPlanLabel(next.plan, entrenos) : '—',
     });

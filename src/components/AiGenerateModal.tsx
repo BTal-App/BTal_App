@@ -453,12 +453,12 @@ export function AiGenerateModal({
 function summaryToSubtitle(scope: AiScopeChoice): string {
   switch (scope) {
     case 'all':
-      return 'Generando tu menú semanal, tu lista de la compra y tu plan de entreno. No cierres la app — esto puede tardar unos segundos.';
+      return 'Generando tu menú semanal, tu lista de la compra y tu programa de entreno. No cierres la app — esto puede tardar unos segundos.';
     case 'menu_compra':
       return 'Generando tu menú semanal y la lista de la compra. No cierres la app — esto puede tardar unos segundos.';
     case 'menu_only':
       return 'Generando tu menú semanal. No cierres la app — esto puede tardar unos segundos.';
     case 'entrenos_only':
-      return 'Generando tu plan de entreno. No cierres la app — esto puede tardar unos segundos.';
+      return 'Generando tu programa de entreno. No cierres la app — esto puede tardar unos segundos.';
   }
 }

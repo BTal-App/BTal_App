@@ -457,6 +457,28 @@ export async function ensureUserDocumentSchema(
   if (entrenos && entrenosNeedsSourceMigration(entrenos)) {
     updates.entrenos = withDefaultSourceInEntrenos(entrenos);
   }
+  // Migración rename "Plan N Días" → "Programa N Días" en los planes builtin
+  // (decisión copy: el entreno se llama "Programa" para no chocar con "tu
+  // plan" = el conjunto nutrición+entreno). Idempotente: solo renombra los
+  // builtin cuyo nombre sigue siendo el default antiguo "Plan N Día(s)".
+  const entrenosFinal = (updates.entrenos ?? rawEntrenos) as Entrenos | undefined;
+  if (entrenosFinal?.planes) {
+    const willReplaceEntrenos = updates.entrenos !== undefined;
+    for (let n = 1; n <= 7; n++) {
+      const id = `${n}dias`;
+      const p = entrenosFinal.planes[id];
+      if (!p) continue;
+      if (p.nombre === `Plan ${n} Día${n === 1 ? '' : 's'}`) {
+        const newName = `Programa ${n} Día${n === 1 ? '' : 's'}`;
+        if (willReplaceEntrenos) {
+          // entrenosFinal === updates.entrenos (objeto fresco) · mutamos directo.
+          p.nombre = newName;
+        } else {
+          updates[`entrenos.planes.${id}.nombre`] = newName;
+        }
+      }
+    }
+  }
   // Migración Sub-fase 2C · doc viejo `{proteinas: [], lacteos: [], ...}`
   // → nuevo shape `{categorias: CategoriaCompra[], items: Record<id,
   // ItemCompra[]>}`. Se hace ANTES de las migraciones de source/id

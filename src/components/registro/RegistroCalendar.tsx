@@ -402,7 +402,7 @@ export function RegistroCalendar({
         header="Código de colores del calendario"
         message={
           '• AZUL · día con descanso registrado.\n'
-          + '• LIMA · día con plan de entreno registrado.\n'
+          + '• LIMA · día con programa de entreno registrado.\n'
           + '• BORDE CYAN · día de hoy.\n'
           + '• FONDO LIMA · día seleccionado actualmente.\n'
           + '• Sin color · día sin registro · pulsa para añadir uno.'

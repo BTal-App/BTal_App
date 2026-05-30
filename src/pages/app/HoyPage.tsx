@@ -364,9 +364,9 @@ const HoyPage: React.FC = () => {
               type="button"
               className="app-section-more"
               onClick={blurAndRun(() => router.push('/app/entreno', 'forward'))}
-              aria-label="Abrir plan de entreno completo"
+              aria-label="Abrir programa de entreno completo"
             >
-              Ver plan
+              Ver programa
               <MealIcon value="tb:chevron-right" size={16} />
             </button>
           </div>
@@ -1125,7 +1125,7 @@ function EntrenoHoyCard({ activePlan, diaHoy, onClick }: EntrenoHoyCardProps) {
           + (isAlert ? ' hoy-train-card--alert' : '')
         }
         aria-label={
-          isAlert ? 'Sin plan asignado' : 'Día de descanso'
+          isAlert ? 'Sin programa asignado' : 'Día de descanso'
         }
       >
         <div
@@ -1143,7 +1143,7 @@ function EntrenoHoyCard({ activePlan, diaHoy, onClick }: EntrenoHoyCardProps) {
             {isAlert ? 'Atención' : 'Día de descanso'}
           </div>
           <h3 className="hoy-train-title">
-            {isAlert ? 'Sin plan asignado' : 'No hay entrenamiento programado para hoy'}
+            {isAlert ? 'Sin programa asignado' : 'No hay entrenamiento programado para hoy'}
           </h3>
         </div>
         {/* Sin chevron · la card es informativa, no clickable. */}

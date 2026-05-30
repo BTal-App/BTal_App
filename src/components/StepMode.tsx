@@ -92,7 +92,7 @@ export function StepMode({ value, onChange, variant = 'onboarding', hideScope = 
         <div className="step-mode-info">
           <div className="step-mode-title">Rellenar manualmente</div>
           <div className="step-mode-sub">
-            Empiezas con una estructura vacía (7 días, 4 comidas, 7 planes de
+            Empiezas con una estructura vacía (7 días, 4 comidas, 7 programas de
             entrenamiento y la lista de compra por categorías) y la rellenas a
             tu ritmo. Puedes activar la IA en cualquier momento desde Ajustes.
           </div>

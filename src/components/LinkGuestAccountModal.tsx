@@ -146,7 +146,7 @@ export function LinkGuestAccountModal({ isOpen, onClose }: Props) {
               <p className="settings-modal-text">
                 Se creará tu cuenta sin perder nada.{' '}
                 <strong>Todos los cambios que has hecho como invitado se conservarán</strong> en
-                tu nueva cuenta — el menú, el plan de entreno, la lista de la
+                tu nueva cuenta — el menú, el programa de entreno, la lista de la
                 compra y cualquier ajuste que hayas tocado.
               </p>
 
