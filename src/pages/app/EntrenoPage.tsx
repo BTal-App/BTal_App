@@ -349,7 +349,7 @@ const EntrenoPage: React.FC = () => {
       <IonContent ref={contentRef} fullscreen>
         <div className="app-tab-content">
           <TabHeader
-            title="Plan de "
+            title="Planes de "
             accent="entreno"
             subtitle={<AiGeneratedBadge userDoc={userDoc} scope="entrenos" />}
             right={
