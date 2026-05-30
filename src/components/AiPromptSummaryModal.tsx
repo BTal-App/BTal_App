@@ -300,8 +300,8 @@ export function AiPromptSummaryModal({
             {topPRs.length > 0 && (
               <SummaryBlock title="Tus récords actuales">
                 <p className="ai-summary-block-note">
-                  La IA los usa para ajustar el nivel del plan (reps, intensidad
-                  y notas de progresión), no para fijar un peso concreto.
+                  Si hay registros, la IA los usará para ajustar el nivel de los
+                  planes de entrenamiento (reps, intensidad y notas de progresión).
                 </p>
                 {topPRs.map((pr) => (
                   <SummaryRow
