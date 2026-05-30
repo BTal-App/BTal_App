@@ -368,7 +368,7 @@ export function AiPromptSummaryModal({
                 onboarding es undefined). Lista los items protegidos agrupados
                 por sección · si no hay ninguno, lo indica explícitamente. */}
             {protectedItems !== undefined && (
-              <SummaryBlock title="Lo que la IA NO reemplazará">
+              <SummaryBlock title="La IA NO reemplazará">
                 {protectedItems.length === 0 ? (
                   <p className="ai-summary-protected-empty">
                     No has marcado nada para proteger. La IA reemplazará todo el
