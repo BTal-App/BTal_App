@@ -423,7 +423,7 @@ export function AiGenerateModal({
       <IonToast
         isOpen={successToast}
         onDidDismiss={() => setSuccessToast(false)}
-        message="¡Listo! Tu plan se ha generado con IA."
+        message="¡Listo! Tu programa se ha generado con IA."
         duration={3000}
         position="bottom"
         color="success"

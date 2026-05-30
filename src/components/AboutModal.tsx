@@ -38,7 +38,7 @@ export function AboutModal({ isOpen, onClose }: Props) {
           <img src="/logo.png" alt="BTal" className="about-logo" />
 
           <div className="about-tagline">
-            Tu plan de nutrición y entreno, en un solo sitio.
+            Tu programa de nutrición y entreno, en un solo sitio.
           </div>
           <div className="about-version">v{APP_VERSION}</div>
 

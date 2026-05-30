@@ -321,16 +321,16 @@ const HoyPage: React.FC = () => {
             <div className="hoy-hero hoy-hero--empty">
               <div className="hoy-hero-label">
                 <span className="hoy-hero-dot" />
-                Tu plan diario
+                Tu programa diario
                 <AiGeneratedBadge userDoc={userDoc} scope="any" />
               </div>
-              <h2 className="hoy-hero-title">Aún sin plan generado</h2>
+              <h2 className="hoy-hero-title">Aún sin programa generado</h2>
               <p className="hoy-hero-sub">
                 {userDoc?.profile?.completed
-                  ? 'Genera tu plan con IA y crearé tu menú, tu lista de la compra y tu entreno a partir de tu perfil.'
+                  ? 'Genera tu programa con IA y crearé tu menú, tu lista de la compra y tu entreno a partir de tu perfil.'
                   : user.isAnonymous
-                  ? 'Crea una cuenta y completa el onboarding para generar tu plan personalizado.'
-                  : 'Completa tu perfil para generar tu plan personalizado.'}
+                  ? 'Crea una cuenta y completa el onboarding para generar tu programa personalizado.'
+                  : 'Completa tu perfil para generar tu programa personalizado.'}
               </p>
               {showAiButton ? (
                 <button
@@ -339,14 +339,14 @@ const HoyPage: React.FC = () => {
                   onClick={blurAndRun(() => setAiGenOpen(true))}
                 >
                   <MealIcon value="tb:sparkles" size={18} />
-                  Generar mi plan con IA
+                  Generar mi programa con IA
                 </button>
               ) : (
                 <div className="hoy-hero-tag">
                   <MealIcon value="tb:sparkles" size={16} />
                   {user.isAnonymous
                     ? 'Datos de ejemplo · Regístrate para personalizar'
-                    : 'Cambia a "Modo IA" en Ajustes → Administrar cuenta → Modo de generación para generar tu plan'}
+                    : 'Cambia a "Modo IA" en Ajustes → Administrar cuenta → Modo de generación para generar tu programa'}
                 </div>
               )}
             </div>

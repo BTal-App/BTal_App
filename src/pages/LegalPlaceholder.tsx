@@ -99,8 +99,8 @@ function PrivacyPolicy() {
       </p>
       <ul>
         <li>
-          <strong>Google Gemini</strong> (generación de tu plan con inteligencia artificial): cuando pulses
-          "Generar con IA" se le envían tus datos de perfil para que pueda elaborar el plan (edad, peso, altura,
+          <strong>Google Gemini</strong> (generación de tu programa con inteligencia artificial): cuando pulses
+          "Generar con IA" se le envían tus datos de perfil para que pueda elaborar el programa (edad, peso, altura,
           sexo biológico, nivel de actividad, objetivo, días de entreno e intolerancias). <strong>NO</strong> se
           le envía tu email, tu nombre, tu foto ni nada que permita identificarte personalmente.
         </li>
@@ -113,7 +113,7 @@ function PrivacyPolicy() {
         <li>
           <strong>Firebase Analytics</strong> (servicio de Google que nos ayuda a entender qué pantallas se
           usan más, dónde se atascan los usuarios y detectar problemas): registra acciones anónimas como qué
-          tab abres, cuándo terminas el onboarding, si generas un plan con IA, etc. <strong>En la app
+          tab abres, cuándo terminas el onboarding, si generas un programa con IA, etc. <strong>En la app
           nativa</strong> (iOS y Android) este registro es completamente anónimo y no usa cookies. <strong>En
           la versión web</strong>, Firebase Analytics usa pequeñas cookies (<code>_ga</code> y similares) para
           distinguir sesiones · por eso al entrar por web te preguntamos primero con un banner si lo aceptas o
@@ -126,7 +126,7 @@ function PrivacyPolicy() {
           publicación en App Store y Play Store): si la app se cierra inesperadamente o lanza un error, se
           envía un informe técnico para que podamos arreglarlo. El informe incluye únicamente: identificador
           anónimo de tu dispositivo, el tipo de error, el modelo del móvil, la versión del sistema operativo y
-          la pantalla donde ocurrió. <strong>NO</strong> se envía nada de tu plan, comidas, entrenos ni datos
+          la pantalla donde ocurrió. <strong>NO</strong> se envía nada de tu programa, comidas, entrenos ni datos
           que te identifiquen.
         </li>
         <li>
@@ -261,7 +261,7 @@ function TermsOfService() {
 
       <h2>1. Qué es BTal</h2>
       <p>
-        BTal es una aplicación de fitness que te ayuda a organizar tu plan de nutrición, entrenamientos,
+        BTal es una aplicación de fitness que te ayuda a organizar tu programa de nutrición, entrenamientos,
         suplementación y lista de la compra. El canal principal es la <strong>app nativa para iOS y Android</strong>{' '}
         (próximamente disponible en App Store y Google Play). De forma complementaria, también puedes
         utilizar BTal como aplicación web (PWA) en{' '}
@@ -327,7 +327,7 @@ function TermsOfService() {
       <ul>
         <li>El precio y las funcionalidades incluidas se mostrarán claramente antes de aceptar.</li>
         <li>La suscripción se cobrará a través de la pasarela correspondiente al canal: App Store o Google Play en la app nativa, y Stripe en la versión web. Se aplicarán también los términos del proveedor utilizado.</li>
-        <li>No hay derecho de desistimiento sobre los recursos digitales ya consumidos (por ejemplo, generaciones de plan con IA ya emitidas), conforme al art. 103 m) del Texto Refundido de la Ley General para la Defensa de Consumidores. Sí podrás cancelar la renovación en cualquier momento.</li>
+        <li>No hay derecho de desistimiento sobre los recursos digitales ya consumidos (por ejemplo, generaciones de programa con IA ya emitidas), conforme al art. 103 m) del Texto Refundido de la Ley General para la Defensa de Consumidores. Sí podrás cancelar la renovación en cualquier momento.</li>
         <li>Los detalles concretos se incluirán en estos términos cuando el plan Pro esté activo. Si se introduce después del lanzamiento, se aplicará la cláusula de cambios materiales (sección 10).</li>
       </ul>
 

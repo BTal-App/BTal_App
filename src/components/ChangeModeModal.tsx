@@ -149,7 +149,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
               </button>
               <h2 className="settings-modal-title">Modo de generación</h2>
               <p className="settings-modal-text">
-                Elige cómo se construye tu plan. Puedes cambiar de modo en
+                Elige cómo se construye tu programa. Puedes cambiar de modo en
                 cualquier momento sin perder los datos que ya tengas.
               </p>
 
@@ -178,7 +178,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
                       <strong>Menú</strong>: Menú + lista de compra, o Solo menú.
                     </li>
                     <li>
-                      <strong>Entreno</strong>: tu programa de entrenamiento.
+                      <strong>Entreno</strong>: tu plan de entrenamiento.
                     </li>
                   </ul>
                   <p className="change-mode-ai-info-note">
@@ -219,7 +219,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
         header="¿Activar la generación con IA?"
         message={
           'El botón «Generar con IA» estará disponible en los menús Hoy, Menú y Entreno. ' +
-          'Podrás generar tu plan en cualquier momento sin perder los datos que ya tengas. ' +
+          'Podrás generar tu programa en cualquier momento sin perder los datos que ya tengas. ' +
           'Recuerda: en el plan Free tienes 1 generación al mes, ya sea completa (Menú, Compra y Entreno) o parcial (solo uno o dos de ellos).'
         }
         buttons={[

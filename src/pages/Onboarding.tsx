@@ -274,7 +274,7 @@ const Onboarding: React.FC = () => {
               <>
                 <h1 className="onboarding-title">Cuéntanos sobre ti</h1>
                 <p className="onboarding-text">
-                  Se necesitan algunos datos para ajustar tu plan a tu cuerpo y objetivo.
+                  Se necesitan algunos datos para ajustar tu programa a tu cuerpo y objetivo.
                 </p>
 
                 <label className="onboarding-field">
@@ -478,7 +478,7 @@ const Onboarding: React.FC = () => {
             {/* ───────── PASO 3 — PERSONALIZACIÓN PARA LA IA (opcional) ───────── */}
             {step === 3 && (
               <>
-                <h1 className="onboarding-title">Personaliza tu plan</h1>
+                <h1 className="onboarding-title">Personaliza tu programa</h1>
                 <p className="onboarding-text">
                   Todo este paso es <strong>opcional</strong>. Cuanta más
                   información nos des, mejor podrá la IA personalizar tu menú
@@ -645,7 +645,7 @@ const Onboarding: React.FC = () => {
               <>
                 <h1 className="onboarding-title">¿Cómo quieres empezar?</h1>
                 <p className="onboarding-text">
-                  Permite que la IA genere tu plan a partir de tus datos o
+                  Permite que la IA genere tu programa a partir de tus datos o
                   empezar con plantillas vacías y rellenarlas por tu cuenta.
                   Podrás cambiar esta decisión en cualquier momento desde
                   Ajustes.
@@ -762,8 +762,8 @@ const Onboarding: React.FC = () => {
             la redirección a /app con el plan ya generado. */}
         <GeneratingScreen
           isOpen={submitting && modeChoice.modo === 'ai'}
-          title="Generando tu plan inicial…"
-          subtitle="Guardando tu perfil y preparando tu plan personalizado. No cierres la app."
+          title="Generando tu programa inicial…"
+          subtitle="Guardando tu perfil y preparando tu programa personalizado. No cierres la app."
         />
       </IonContent>
     </IonPage>
