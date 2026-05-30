@@ -8,6 +8,7 @@ import {
   IonSpinner,
   IonToast,
 } from '@ionic/react';
+import { Capacitor } from '@capacitor/core';
 import { MealIcon } from '../components/MealIcon';
 import { useAuth } from '../hooks/useAuth';
 import { useError } from '../hooks/useError';
@@ -285,8 +286,12 @@ const Settings: React.FC = () => {
 
           {/* Privacidad · permite revocar el consent de cookies dado al
               banner inferior · sin sección si el user nunca decidió (el
-              banner sigue visible y desde ahí gestiona). */}
-          {consentState !== 'undecided' && (
+              banner sigue visible y desde ahí gestiona).
+              NO se muestra en la app NATIVA: ahí no hay banner de cookies
+              (Analytics nativo usa IDFV/GAID sin cookies · privacy se
+              gestiona desde los ajustes del SO / App Store Privacy), así
+              que "revocar consentimiento de cookies" no aplica. */}
+          {!Capacitor.isNativePlatform() && consentState !== 'undecided' && (
             <section className="settings-section">
               <h2 className="settings-section-title">Privacidad</h2>
               <button
