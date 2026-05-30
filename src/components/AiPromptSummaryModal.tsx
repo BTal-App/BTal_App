@@ -368,11 +368,11 @@ export function AiPromptSummaryModal({
                 onboarding es undefined). Lista los items protegidos agrupados
                 por sección · si no hay ninguno, lo indica explícitamente. */}
             {protectedItems !== undefined && (
-              <SummaryBlock title="La IA NO reemplazará">
+              <SummaryBlock title="Modificaciones de IA">
                 {protectedItems.length === 0 ? (
                   <p className="ai-summary-protected-empty">
-                    No has marcado nada para proteger. La IA reemplazará todo el
-                    contenido de «{scopeOption?.label ?? 'lo seleccionado'}».
+                    No se ha seleccionado ningún elemento para conservar. La IA
+                    reemplazará todo el contenido de «{scopeOption?.label ?? 'lo seleccionado'}».
                   </p>
                 ) : (
                   (['menu', 'compra', 'entrenos'] as AffectedSection[]).map((sec) => {
