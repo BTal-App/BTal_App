@@ -23,6 +23,7 @@ import { enforceGlobalDailyCap } from './globalQuota.js';
 import {
   mapAllBuiltInPlans,
   mapMenu,
+  mapSuplementosDias,
   reconcileMealMacros,
 } from './persist.js';
 import { deriveShoppingList } from './shoppingList.js';
@@ -254,6 +255,16 @@ export const generatePlan = onCall(
     if (wantEntreno && parsed.entrenos) {
       // Rellena los 7 planes builtin · activo = el que coincide con diasEntreno.
       updates.entrenos = mapAllBuiltInPlans(userDoc.entrenos, parsed.entrenos, profile.diasEntreno);
+    }
+
+    // Suplementos · solo si la IA los recomendó (scope 'all'). Activa los días
+    // de batido/creatina (los "botones") con dot-path para preservar config,
+    // stock y contadores del user. Sustituye al error de meter batidos como
+    // comidas del menú.
+    if (parsed.suplementos) {
+      const dias = mapSuplementosDias(parsed.suplementos);
+      updates['suplementos.daysWithBatido'] = dias.daysWithBatido;
+      updates['suplementos.daysWithCreatina'] = dias.daysWithCreatina;
     }
 
     // ── 10. Timestamps de generación · la CUOTA ya se reservó en la

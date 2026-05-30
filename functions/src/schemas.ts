@@ -121,8 +121,19 @@ export type GeneratedEntrenos = z.infer<typeof generatedEntrenosSchema>;
 //
 // La IA NUNCA genera nombres de plan: los 7 builtin conservan su "Plan N
 // Días" (ver persist.mapAllBuiltInPlans). Por eso aquí no hay planNombre.
+// Recomendación de suplementos · días (lun..dom) en que tomar batido de
+// proteína y creatina. LENIENTE: strings libres (persist los normaliza a
+// DayKey con normalizeDiaSemana y descarta los inválidos). Solo llega en
+// scope 'all'.
+const generatedSuplementosSchema = z.object({
+  batidoDias: z.array(z.string()).max(10),
+  creatinaDias: z.array(z.string()).max(10),
+});
+export type GeneratedSuplementos = z.infer<typeof generatedSuplementosSchema>;
+
 export const geminiResponseSchema = z.object({
   menu: generatedMenuSchema.optional(),
   entrenos: generatedEntrenosSchema.optional(),
+  suplementos: generatedSuplementosSchema.optional(),
 });
 export type GeminiResponse = z.infer<typeof geminiResponseSchema>;

@@ -203,6 +203,28 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
       'Incluye los alimentos obligatorios a lo largo de la semana y prioriza los ingredientes favoritos del usuario. ' +
       'Varía los platos entre días (no repitas el mismo plato a diario).',
     );
+    lines.push(
+      '- IMPORTANTE: NO incluyas batidos de proteína, creatina ni otros suplementos como COMIDAS del menú. ' +
+      'Las 4 comidas (desayuno/comida/merienda/cena) son COMIDA REAL. Los suplementos se gestionan aparte (ver SUPLEMENTOS).',
+    );
+  }
+
+  // Recomendación de suplementos · solo en la generación completa ('all'),
+  // donde la IA tiene la foto entera (nutrición + entreno) para decidir.
+  if (opts.scope === 'all') {
+    lines.push(
+      'SUPLEMENTOS (campo "suplementos"): recomienda en qué días de la semana conviene tomar el batido ' +
+      'de proteína y la creatina, según el objetivo y el nivel de actividad. NO son comidas del menú.',
+    );
+    lines.push(
+      `- batidoDias: días (lun..dom) en los que un batido de proteína ayuda a alcanzar la proteína objetivo ` +
+      `(unos ${Math.round(p.peso * PROT_FACTOR[p.objetivo])} g/día). Útil sobre todo en ` +
+      `${OBJETIVO_LABEL[p.objetivo]}; normalmente coincide con los ~${p.diasEntreno} días de entreno. Si no aporta, deja [].`,
+    );
+    lines.push(
+      '- creatinaDias: la creatina se toma A DIARIO · si la recomiendas (habitual en volumen/fuerza), ' +
+      'pon los 7 días ["lun","mar","mie","jue","vie","sab","dom"]; si no procede, deja [].',
+    );
   }
 
   if (opts.wantEntreno) {
@@ -258,6 +280,9 @@ function buildJsonSkeleton(opts: BuildPromptOpts): string {
       `"entrenos":{"1":[${diaEntreno}],"2":[${diaEntreno}],"3":[${diaEntreno}],` +
       `"4":[${diaEntreno}],"5":[${diaEntreno}],"6":[${diaEntreno}],"7":[${diaEntreno}]}`,
     );
+  }
+  if (opts.scope === 'all') {
+    parts.push('"suplementos":{"batidoDias":["lun","mie","vie"],"creatinaDias":["lun","mar","mie","jue","vie","sab","dom"]}');
   }
   return `{${parts.join(',')}}`;
 }

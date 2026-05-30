@@ -48,6 +48,7 @@ import type {
   GeneratedEntrenos,
   GeneratedMeal,
   GeneratedMenu,
+  GeneratedSuplementos,
   GeneratedTrainingDay,
 } from './schemas.js';
 
@@ -170,6 +171,29 @@ export function mapAllBuiltInPlans(
     planes[activeId] = { ...planes[activeId], activo: true };
   }
   return { activePlan: activeId, planes };
+}
+
+// Normaliza la recomendación de suplementos de la IA a DayKeys válidas y
+// únicas (la IA puede escribir "lunes"/"Lun"/"lun" o inventar días). Se
+// aplica a suplementos.daysWithBatido / daysWithCreatina vía dot-path en
+// generatePlan, preservando config/stock/contadores del user.
+export function mapSuplementosDias(gen: GeneratedSuplementos): {
+  daysWithBatido: DayKey[];
+  daysWithCreatina: DayKey[];
+} {
+  const norm = (arr: string[]): DayKey[] => {
+    const seen = new Set<DayKey>();
+    for (const d of arr) {
+      const k = normalizeDiaSemana(d);
+      if (k) seen.add(k);
+    }
+    // Orden lun..dom estable (orden de DAY_KEYS).
+    return DAY_KEYS.filter((d) => seen.has(d));
+  };
+  return {
+    daysWithBatido: norm(gen.batidoDias),
+    daysWithCreatina: norm(gen.creatinaDias),
+  };
 }
 
 // Validación post-Zod adicional: coherencia de macros. Si las kcal de una
