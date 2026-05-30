@@ -92,9 +92,9 @@ export function StepMode({ value, onChange, variant = 'onboarding', hideScope = 
         <div className="step-mode-info">
           <div className="step-mode-title">Rellenar manualmente</div>
           <div className="step-mode-sub">
-            Empiezas con una estructura vacía (7 días, 4 comidas, 7 planes de
-            entrenamiento y la lista de compra por categorías) y la rellenas a
-            tu ritmo. Puedes activar la IA en cualquier momento desde Ajustes.
+            {variant === 'onboarding'
+              ? 'Empiezas con una estructura vacía (7 días, 4 comidas, 7 planes de entrenamiento y la lista de compra por categorías) y la rellenas a tu ritmo. Puedes activar la IA en cualquier momento desde Ajustes.'
+              : 'Rellenas tú el menú, los planes de entreno y la lista de la compra a tu ritmo, sin que la IA los toque. Puedes volver a la generación con IA cuando quieras.'}
           </div>
           <div className="step-mode-meta">Sin coste · sin límites de uso</div>
         </div>
