@@ -178,7 +178,7 @@ export function ChangeModeModal({ isOpen, onClose }: Props) {
                       <strong>Menú</strong>: Menú + lista de compra, o Solo menú.
                     </li>
                     <li>
-                      <strong>Entreno</strong>: tu plan de entrenamiento.
+                      <strong>Entreno</strong>: tus planes de entrenamiento.
                     </li>
                   </ul>
                   <p className="change-mode-ai-info-note">
