@@ -26,15 +26,16 @@ import { previousDayKey, todayDateStr } from '../utils/dateKeys';
 // (`refresh()`) tras guardar/borrar para reflejar la nueva racha sin
 // esperar al re-mount del componente.
 
-// Ventana INICIAL de docs a leer para la racha. 90 días seguidos
-// entrenando ya es excepcional, así que en la práctica con esto basta y
+// Ventana INICIAL de docs a leer para la racha. Una racha de >30 días
+// seguidos entrenando es de récord, así que en la práctica con 30 basta y
 // leemos lo MÍNIMO en cada apertura (antes 999 · una racha de 5 días leía
 // igualmente hasta 999 docs en el camino crítico del login → coste + lentitud).
 // Si la racha llenara la ventana entera (podría ser más larga), se amplía
-// dinámicamente en `fetchRegistrosParaRacha` hasta REGISTROS_MAX. La racha
-// es el ÚNICO consumidor de estos docs (el resto de stats salen del
+// dinámicamente en `fetchRegistrosParaRacha` (×3 cada vez) hasta REGISTROS_MAX
+// · solo el usuario con racha >30 paga una lectura extra, el resto una mínima.
+// La racha es el ÚNICO consumidor de estos docs (el resto de stats salen del
 // UserDocument), así que reducir la ventana no afecta a nada más.
-const RACHA_WINDOW = 90;
+const RACHA_WINDOW = 30;
 
 // Lee los registros necesarios para la racha con ventana creciente: pide
 // RACHA_WINDOW; solo si TODOS los leídos resultaron ser racha consecutiva
