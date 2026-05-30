@@ -324,7 +324,7 @@ const HoyPage: React.FC = () => {
                 Tu programa diario
                 <AiGeneratedBadge userDoc={userDoc} scope="any" />
               </div>
-              <h2 className="hoy-hero-title">Aún sin programa generado</h2>
+              <h2 className="hoy-hero-title">Sin programa generado aún</h2>
               <p className="hoy-hero-sub">
                 {userDoc?.profile?.completed
                   ? 'Genera tu programa con IA y crearé tu menú, tu lista de la compra y tu entreno a partir de tu perfil.'
