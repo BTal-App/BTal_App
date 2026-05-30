@@ -1240,7 +1240,7 @@ export function emptyDiaEntreno(): DiaEntreno {
 function emptyPlan(n: number): PlanEntreno {
   return {
     id: `${n}dias`,
-    nombre: `Programa ${n} ${n === 1 ? 'Día' : 'Días'}`,
+    nombre: `Plan ${n} ${n === 1 ? 'Día' : 'Días'}`,
     estructura: `${n} ${n === 1 ? 'día' : 'días'}/semana`,
     estructura2: '',
     dias: Array.from({ length: n }, (_, i) => ({

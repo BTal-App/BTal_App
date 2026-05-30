@@ -108,9 +108,7 @@ const EntrenoPage: React.FC = () => {
   // frase ("el plan de 7 días" lee mejor que "el plan de 7 Días"). En
   // custom respetamos el casing del user (puede ser un nombre propio).
   const planShortName = (p: PlanEntreno): string => {
-    // Quita el prefijo "Programa " (o "Plan " legacy) para no duplicar en
-    // frases como "el programa de Programa 7 Días".
-    const stripped = p.nombre.replace(/^(?:programa|plan)\s+/i, '');
+    const stripped = p.nombre.replace(/^plan\s+/i, '');
     return p.builtIn ? stripped.toLowerCase() : stripped;
   };
 
@@ -351,7 +349,7 @@ const EntrenoPage: React.FC = () => {
       <IonContent ref={contentRef} fullscreen>
         <div className="app-tab-content">
           <TabHeader
-            title="Programa de "
+            title="Plan de "
             accent="entreno"
             subtitle={<AiGeneratedBadge userDoc={userDoc} scope="entrenos" />}
             right={
@@ -488,7 +486,7 @@ const EntrenoPage: React.FC = () => {
                   //     el sistema no se atreve a llamarlo "recomendado")
                   planActivo.activo ? (
                     <>
-                      Estás viendo tu programa activo:{' '}
+                      Estás viendo tu plan activo:{' '}
                       <b className="entreno-banner-rec">
                         {planShortName(planActivo)}
                       </b>.{' '}
@@ -498,14 +496,14 @@ const EntrenoPage: React.FC = () => {
                     </>
                   ) : !hasCustomPlans ? (
                     <>
-                      Estás viendo tu programa recomendado según los días de entreno indicados:{' '}
+                      Estás viendo tu plan recomendado según los días de entreno indicados:{' '}
                       <b className="entreno-banner-rec">
                         {planShortName(planActivo)}
                       </b>.
                     </>
                   ) : (
                     <>
-                      Estás viendo el programa de{' '}
+                      Estás viendo el plan de{' '}
                       <b className="entreno-banner-rec">{planShortName(planActivo)}</b>.
                     </>
                   )
@@ -517,13 +515,13 @@ const EntrenoPage: React.FC = () => {
                   //   - Implícito + con customs → no segundo parte
                   <>
                     {activePlan.builtIn ? (
-                      <>Estás viendo el programa de <b>{planShortName(activePlan)}</b>.</>
+                      <>Estás viendo el plan de <b>{planShortName(activePlan)}</b>.</>
                     ) : (
-                      <>Estás viendo tu programa creado <b>{planShortName(activePlan)}</b>.</>
+                      <>Estás viendo tu plan creado <b>{planShortName(activePlan)}</b>.</>
                     )}
                     {planActivo.activo ? (
                       <>
-                        {' '}Tu programa activo es{' '}
+                        {' '}Tu plan activo es{' '}
                         <button
                           type="button"
                           className="entreno-banner-link"
@@ -534,7 +532,7 @@ const EntrenoPage: React.FC = () => {
                       </>
                     ) : !hasCustomPlans ? (
                       <>
-                        {' '}Tu programa recomendado es{' '}
+                        {' '}Tu plan recomendado es{' '}
                         <button
                           type="button"
                           className="entreno-banner-link"
@@ -551,9 +549,9 @@ const EntrenoPage: React.FC = () => {
                   // custom) para coherencia con el resto de casos.
                   <>
                     {activePlan.builtIn ? (
-                      <>Estás viendo el programa de <b>{planShortName(activePlan)}</b>.</>
+                      <>Estás viendo el plan de <b>{planShortName(activePlan)}</b>.</>
                     ) : (
-                      <>Estás viendo tu programa creado <b>{planShortName(activePlan)}</b>.</>
+                      <>Estás viendo tu plan creado <b>{planShortName(activePlan)}</b>.</>
                     )}
                     {' '}No has seleccionado ningún día de entrenamiento.{' '}
                     <b className="entreno-banner-rec">
@@ -567,7 +565,7 @@ const EntrenoPage: React.FC = () => {
                   // está en un estado raro (sin builtIn recomendado).
                   // Texto mínimo para no romper el render.
                   <>
-                    Estás viendo el programa de{' '}
+                    Estás viendo el plan de{' '}
                     <b className="entreno-banner-rec">{planShortName(activePlan)}</b>.
                   </>
                 )}
@@ -597,8 +595,8 @@ const EntrenoPage: React.FC = () => {
                   onClick={blurAndRun(() =>
                     setPlanEditorMode({ mode: 'edit', plan: activePlan }),
                   )}
-                  aria-label="Editar programa"
-                  title="Editar programa"
+                  aria-label="Editar plan"
+                  title="Editar plan"
                 >
                   <MealIcon value="tb:edit" size={18} />
                 </button>
@@ -607,8 +605,8 @@ const EntrenoPage: React.FC = () => {
                     type="button"
                     className="entreno-action-btn entreno-action-btn--danger"
                     onClick={blurAndRun(() => setConfirmDeletePlan(true))}
-                    aria-label="Eliminar programa"
-                    title="Eliminar programa"
+                    aria-label="Eliminar plan"
+                    title="Eliminar plan"
                   >
                     <MealIcon value="tb:trash" size={18} />
                   </button>
@@ -689,7 +687,7 @@ const EntrenoPage: React.FC = () => {
         <IonAlert
           isOpen={confirmDeletePlan}
           onDidDismiss={() => setConfirmDeletePlan(false)}
-          header="¿Eliminar programa?"
+          header="¿Eliminar plan?"
           message={
             `Se eliminará "${activePlan?.nombre ?? ''}" y todos sus días. `
             + `Podrás deshacer la acción durante 5 segundos.`
@@ -710,8 +708,8 @@ const EntrenoPage: React.FC = () => {
           <AiGenerateModal
             isOpen={aiGenOpen}
             onClose={() => setAiGenOpen(false)}
-            title="Generar el programa de entreno con IA"
-            description="Se creará un programa adaptado a tus días disponibles, equipamiento y objetivo."
+            title="Generar el plan de entreno con IA"
+            description="Se creará un plan adaptado a tus días disponibles, equipamiento y objetivo."
             availableScopes={['entrenos_only']}
           />
         )}
@@ -721,7 +719,7 @@ const EntrenoPage: React.FC = () => {
         <IonToast
           isOpen={undoToast !== null}
           onDidDismiss={() => setUndoToast(null)}
-          message={undoToast ? `Programa "${undoToast.plan.nombre}" eliminado` : ''}
+          message={undoToast ? `Plan "${undoToast.plan.nombre}" eliminado` : ''}
           duration={5000}
           position="bottom"
           color="medium"

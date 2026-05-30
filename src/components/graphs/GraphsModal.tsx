@@ -255,7 +255,7 @@ function TabEntrenos({
     <div className="graphs-tab">
       <div className="graphs-tab-head">
         <h3>Entrenamientos por semana</h3>
-        <p>Últimas 12 semanas · Solo cuenta días con programa de entreno (los descansos se excluyen).</p>
+        <p>Últimas 12 semanas · Solo cuenta días con plan de entreno (los descansos se excluyen).</p>
       </div>
       {loading && <div className="graphs-loading">Cargando datos…</div>}
       {!loading && (

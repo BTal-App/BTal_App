@@ -477,7 +477,7 @@ function demoDia(
 function demoBuiltIn(n: number, dias: PlanEntreno['dias']): PlanEntreno {
   return {
     id: `${n}dias`,
-    nombre: `Programa ${n} ${n === 1 ? 'Día' : 'Días'}`,
+    nombre: `Plan ${n} ${n === 1 ? 'Día' : 'Días'}`,
     estructura: `${n} ${n === 1 ? 'día' : 'días'}/semana`,
     estructura2: '',
     builtIn: true,

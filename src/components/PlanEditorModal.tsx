@@ -184,7 +184,7 @@ export function PlanEditorModal({
     // semana) es opcional. La estructura/sub-estructura ya no se editan
     // desde la UI (se preservan del plan original si existían).
     const missing: string[] = [];
-    if (!trimmedNombre) missing.push('Nombre del programa');
+    if (!trimmedNombre) missing.push('Nombre del plan');
     if (dias.length === 0) {
       missing.push('Al menos un día de entrenamiento');
     } else {
@@ -285,24 +285,24 @@ export function PlanEditorModal({
               <MealIcon value="tb:x" size={22} />
             </button>
             <h2 className="settings-modal-title">
-              {isEdit ? 'Editar programa' : 'Nuevo programa'}
+              {isEdit ? 'Editar plan' : 'Nuevo plan'}
             </h2>
             <p className="settings-modal-text">
               {isEdit
-                ? 'Edita el nombre y los días del programa. Para cambiar los ejercicios de un día, ciérralo y púlsalo en la lista.'
-                : 'Crea un programa personalizado con tus propios días y ejercicios. Después podrás editarlos uno por uno.'}
+                ? 'Edita el nombre y los días del plan. Para cambiar los ejercicios de un día, ciérralo y púlsalo en la lista.'
+                : 'Crea un plan personalizado con tus propios días y ejercicios. Después podrás editarlos uno por uno.'}
             </p>
 
             <div className="sup-form-group">
               <label className="sup-label">
-                Nombre del programa
+                Nombre del plan
                 <span className="plan-editor-required">*</span>
               </label>
               <input
                 className="sup-input"
                 type="text"
                 maxLength={NOMBRE_MAX}
-                placeholder='ej. "Programa 5 Días — Push/Pull/Legs"'
+                placeholder='ej. "Plan 5 Días — Push/Pull/Legs"'
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 autoFocus={!isEdit}
@@ -325,7 +325,7 @@ export function PlanEditorModal({
                 }
                 title={
                   isCurrentlyActive
-                    ? 'Para desactivar este programa, activa otro desde su editor.'
+                    ? 'Para desactivar este plan, activa otro desde su editor.'
                     : undefined
                 }
               >
@@ -335,7 +335,7 @@ export function PlanEditorModal({
                   disabled={isCurrentlyActive}
                   title={
                     isCurrentlyActive
-                      ? 'Para desactivar este programa, activa otro desde su editor.'
+                      ? 'Para desactivar este plan, activa otro desde su editor.'
                       : undefined
                   }
                   onChange={(e) => {
@@ -359,12 +359,12 @@ export function PlanEditorModal({
                   }}
                 />
                 <span className="plan-editor-toggle-label">
-                  Activar este programa
+                  Activar este plan
                 </span>
                 <span className="plan-editor-toggle-hint">
                   {isCurrentlyActive
-                    ? 'Este es tu programa activo. Para cambiar a otro, márcalo desde su editor (lo reemplazará automáticamente).'
-                    : 'Se marcará como tu programa principal en la pestaña Entreno y reemplazará al actual.'}
+                    ? 'Este es tu plan activo. Para cambiar a otro, márcalo desde su editor (lo reemplazará automáticamente).'
+                    : 'Se marcará como tu plan principal en la pestaña Entreno y reemplazará al actual.'}
                 </span>
               </label>
             </div>
@@ -460,7 +460,7 @@ export function PlanEditorModal({
                   dias.length >= planMaxDias
                     ? `Has alcanzado el máximo de ${planMaxDias} ${
                       planMaxDias === 1 ? 'día' : 'días'
-                    } para este programa`
+                    } para este plan`
                     : 'Añadir día'
                 }
               >
@@ -499,7 +499,7 @@ export function PlanEditorModal({
                 }}
                 disabled={!canSave}
               >
-                {isEdit ? 'Guardar' : 'Crear programa'}
+                {isEdit ? 'Guardar' : 'Crear plan'}
               </IonButton>
             </div>
           </div>
@@ -514,7 +514,7 @@ export function PlanEditorModal({
         header="Faltan campos obligatorios"
         message={
           missingAlert
-            ? `Para guardar el programa necesitas rellenar:\n\n${missingAlert
+            ? `Para guardar el plan necesitas rellenar:\n\n${missingAlert
                 .map((m) => `• ${m}`)
                 .join('\n')}`
             : ''
@@ -529,10 +529,10 @@ export function PlanEditorModal({
       <IonAlert
         isOpen={confirmReplaceActivo}
         onDidDismiss={() => setConfirmReplaceActivo(false)}
-        header="¿Reemplazar el programa activo?"
+        header="¿Reemplazar el plan activo?"
         message={
           existingActivo
-            ? `Tu programa activo actualmente es «${existingActivo.nombre}». Al activar este programa, el actual se desactivará (solo puede haber un programa activo a la vez).`
+            ? `Tu plan activo actualmente es «${existingActivo.nombre}». Al activar este plan, el actual se desactivará (solo puede haber un plan activo a la vez).`
             : ''
         }
         cssClass="alert-multiline"

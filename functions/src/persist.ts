@@ -153,7 +153,7 @@ export function mapAllBuiltInPlans(
     const prev = planes[id];
     planes[id] = {
       id,
-      nombre: prev?.nombre ?? `Programa ${n} Día${n === 1 ? '' : 's'}`,
+      nombre: prev?.nombre ?? `Plan ${n} Día${n === 1 ? '' : 's'}`,
       estructura: prev?.estructura ?? `${n} día${n === 1 ? '' : 's'}/semana`,
       estructura2: prev?.estructura2 ?? '',
       // Ajusta al número exacto de días del builtin · trunca si la IA dio

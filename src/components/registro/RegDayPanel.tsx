@@ -319,7 +319,7 @@ export function RegDayPanel({
   // propio modal lo indica con "Sin cambios detectados".
   function handleRequestSave() {
     if (!planValue) {
-      setErrorMsg('Selecciona un programa o "Descanso" antes de guardar.');
+      setErrorMsg('Selecciona un plan o "Descanso" antes de guardar.');
       return;
     }
     setErrorMsg(null);
@@ -406,7 +406,7 @@ export function RegDayPanel({
 
       <div className="reg-day-panel-field">
         <label className="reg-day-panel-label" htmlFor={`reg-plan-${fecha}`}>
-          Programa del día
+          Plan del día
         </label>
         <select
           id={`reg-plan-${fecha}`}
@@ -431,7 +431,7 @@ export function RegDayPanel({
             prefijo: alineados en X=0 del option.
           */}
           {planOptions.predeterminados.length > 0 && (
-            <optgroup label="PROGRAMAS POR DEFECTO">
+            <optgroup label="PLANES POR DEFECTO">
               {planOptions.predeterminados.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {(opt.isRecommended ? '★ ' : '') + opt.label}
@@ -440,7 +440,7 @@ export function RegDayPanel({
             </optgroup>
           )}
           {planOptions.personalizados.length > 0 && (
-            <optgroup label="PROGRAMAS CREADOS">
+            <optgroup label="PLANES CREADOS">
               {planOptions.personalizados.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {(opt.isRecommended ? '★ ' : '') + opt.label}
@@ -462,7 +462,7 @@ export function RegDayPanel({
 
       {isVacio && (
         <p className="reg-day-panel-empty">
-          Selecciona el programa que has realizado hoy o marca «Descanso».
+          Selecciona el plan que has realizado hoy o marca «Descanso».
         </p>
       )}
 

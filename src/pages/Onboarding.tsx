@@ -482,7 +482,7 @@ const Onboarding: React.FC = () => {
                 <p className="onboarding-text">
                   Todo este paso es <strong>opcional</strong>. Cuanta más
                   información nos des, mejor podrá la IA personalizar tu menú
-                  y tu programa de entreno. Puedes dejar lo que no quieras rellenar
+                  y tu plan de entreno. Puedes dejar lo que no quieras rellenar
                   y editarlo después en Ajustes.
                 </p>
 
