@@ -293,13 +293,16 @@ export function AiPromptSummaryModal({
             )}
 
             {/* ── Récords personales ──
-                Solo si hay alguno. Top 3 por kg desc · informativo
-                para que el user vea que la IA "conoce" sus PRs. La
-                IA real (Fase 6) usará estos datos para sugerir
-                progresiones realistas (ej. no proponer cargas por
-                debajo del PR ya alcanzado). */}
+                Solo si hay alguno. Top 3 por kg desc. La IA los recibe
+                para calibrar el nivel del plan (reps, intensidad y notas
+                de progresión). No fija un peso objetivo · el plan no
+                guarda kg por ejercicio (esos los registra el user). */}
             {topPRs.length > 0 && (
               <SummaryBlock title="Tus récords actuales">
+                <p className="ai-summary-block-note">
+                  La IA los usa para ajustar el nivel del plan (reps, intensidad
+                  y notas de progresión), no para fijar un peso concreto.
+                </p>
                 {topPRs.map((pr) => (
                   <SummaryRow
                     key={pr.exercise}

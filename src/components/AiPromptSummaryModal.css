@@ -12,6 +12,14 @@
   color: var(--btal-t-3);
 }
 
+/* Nota aclaratoria dentro de un bloque (ej. cómo usa la IA los récords). */
+.ai-summary-block-note {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--btal-t-3);
+}
+
 .ai-summary-head {
   display: flex;
   gap: 14px;
