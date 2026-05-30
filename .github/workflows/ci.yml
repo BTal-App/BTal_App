@@ -66,6 +66,19 @@ jobs:
         # producción.
         run: npm run build
 
+      # ── Cloud Functions (subproyecto npm independiente en functions/) ──
+      # Tests unitarios de la lógica pura del backend (eligibility = el gate
+      # de monetización, base del fix TOCTOU). No requieren emulador.
+      - name: Install functions dependencies
+        run: npm ci
+        working-directory: functions
+
+      - name: Typecheck + test functions
+        run: |
+          npm run build
+          npm test
+        working-directory: functions
+
   e2e:
     name: E2E · Playwright (Chromium)
     runs-on: ubuntu-latest
