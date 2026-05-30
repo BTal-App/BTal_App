@@ -150,7 +150,7 @@ export function getAffectedItems(
   if (!userDoc) return [];
   switch (scope) {
     case 'all':
-      return [...menuItems(userDoc), ...entrenosItems(userDoc), ...compraItems(userDoc)];
+      return [...menuItems(userDoc), ...compraItems(userDoc), ...entrenosItems(userDoc)];
     case 'menu_compra':
       return [...menuItems(userDoc), ...compraItems(userDoc)];
     case 'menu_only':

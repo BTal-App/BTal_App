@@ -51,12 +51,14 @@ export function AiAffectedItemsStep({
   allowUserItems,
   onToggleAllowUserItems,
 }: Props) {
-  // Agrupamos por sección · orden estable: menú → entreno → compra
+  // Agrupamos por sección · orden visual: menú → compra → entreno.
+  // (El render itera Object.keys(grouped), así que este orden de claves
+  // define el orden en pantalla.)
   const grouped = useMemo(() => {
     const out: Record<AffectedSection, AffectedItem[]> = {
       menu: [],
-      entrenos: [],
       compra: [],
+      entrenos: [],
     };
     for (const it of items) {
       out[it.section].push(it);
