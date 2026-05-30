@@ -209,9 +209,10 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
     );
   }
 
-  // Recomendación de suplementos · solo en la generación completa ('all'),
-  // donde la IA tiene la foto entera (nutrición + entreno) para decidir.
-  if (opts.scope === 'all') {
+  // Recomendación de suplementos · SIEMPRE que se genere menú (all /
+  // menu_compra / menu_only). El batido es nutrición y sustituye a meterlo
+  // como comida; la creatina la recomienda según objetivo.
+  if (opts.wantMenu) {
     lines.push(
       'SUPLEMENTOS (campo "suplementos"): recomienda en qué días de la semana conviene tomar el batido ' +
       'de proteína y la creatina, según el objetivo y el nivel de actividad. NO son comidas del menú.',
@@ -281,7 +282,7 @@ function buildJsonSkeleton(opts: BuildPromptOpts): string {
       `"4":[${diaEntreno}],"5":[${diaEntreno}],"6":[${diaEntreno}],"7":[${diaEntreno}]}`,
     );
   }
-  if (opts.scope === 'all') {
+  if (opts.wantMenu) {
     parts.push('"suplementos":{"batidoDias":["lun","mie","vie"],"creatinaDias":["lun","mar","mie","jue","vie","sab","dom"]}');
   }
   return `{${parts.join(',')}}`;
