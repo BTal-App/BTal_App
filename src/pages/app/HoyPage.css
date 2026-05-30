@@ -1514,9 +1514,9 @@
      horizontal (cada hijo se lo pone), sin esto el chip se iba al borde
      y "se salía" por la derecha respecto al avatar del header. */
   padding-right: 16px;
-  /* Margen negativo arriba para acercarlo al header · bottom reducido
-     para que el aire hasta la sección de abajo sea discreto. */
-  margin: -8px 0 8px;
+  /* Mismo aire arriba y abajo del chip (8px) · simétrico respecto al
+     header y a la sección de abajo. */
+  margin: 8px 0;
 }
 
 .hoy-ai-status {

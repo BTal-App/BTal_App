@@ -293,7 +293,7 @@ const HoyPage: React.FC = () => {
                   )}
                 >
                   <MealIcon value="tb:lock" size={15} />
-                  <span>Generación IA - TIEMPO RESTANTE: {left}</span>
+                  <span>Generación IA - Tiempo restante: {left}</span>
                 </button>
               ) : null;
             }
