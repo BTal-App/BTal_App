@@ -111,13 +111,23 @@ function bootstrapAppCheck(): void {
   // App Check rechazará a TODOS los users reales con 403. Quitar antes
   // de cada release. La forma canónica en BTal es tenerla en .env.local
   // (gitignored) solo para dev y nunca en .env (que es el "release").
-  if (import.meta.env.VITE_APPCHECK_DEBUG === 'true') {
+  // VITE_APPCHECK_DEBUG admite dos formas:
+  //   - 'true'  → el SDK auto-genera un UUID y lo imprime en consola (hay
+  //               que registrarlo en Console · CAMBIA en cada reinstalación).
+  //   - <UUID>  → token debug FIJO · determinista, sobrevive a
+  //               reinstalaciones · se registra UNA sola vez en Console para
+  //               la app correspondiente (en Capacitor es la app **Web**,
+  //               porque el SDK web es quien adjunta el token de App Check).
+  // En NATIVO esto reemplaza al CustomProvider/Play Integrity para pruebas.
+  const appCheckDebug = import.meta.env.VITE_APPCHECK_DEBUG as string | undefined;
+  if (appCheckDebug && appCheckDebug !== 'false') {
     (globalThis as { FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string })
-      .FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      .FIREBASE_APPCHECK_DEBUG_TOKEN = appCheckDebug === 'true' ? true : appCheckDebug;
     if (import.meta.env.DEV) {
       console.info(
-        '[BTal] App Check DEBUG mode activo · el SDK imprimirá un UUID ' +
-        'al inicializar. Regístralo en Firebase Console > App Check.',
+        '[BTal] App Check DEBUG mode activo' +
+        (appCheckDebug === 'true' ? ' · el SDK imprimirá un UUID al inicializar.' : ' · token fijo.') +
+        ' Regístralo en Firebase Console > App Check.',
       );
     }
   }
