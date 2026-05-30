@@ -101,9 +101,14 @@ function mapError(err: unknown): GenerateError {
 export async function generatePlan(
   payload: GeneratePlanPayload,
 ): Promise<GeneratePlanResult> {
+  // timeout 120s · iguala el timeoutSeconds del server (generatePlan.ts).
+  // El default del SDK son 70s · la generación de los 7 builtin con Gemini
+  // puede acercarse o pasar de ahí, y en el WebView nativo una espera larga
+  // se cortaba y el cliente creía que fallaba aunque el server completara.
   const callable = httpsCallable<GeneratePlanPayload, GeneratePlanResult>(
     fns(),
     'generatePlan',
+    { timeout: 120_000 },
   );
   try {
     const res = await callable(payload);

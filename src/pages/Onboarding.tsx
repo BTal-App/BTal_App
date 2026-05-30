@@ -213,10 +213,17 @@ const Onboarding: React.FC = () => {
       if (modoToTrack === 'ai' && aiScopeToTrack) {
         try {
           await generatePlan({ scope: aiScopeToTrack, allowUserItems: true });
-          await refresh();
         } catch (err) {
-          console.warn('[BTal] generación inicial del onboarding falló (reintentable):', err);
+          // La generación pudo COMPLETARSE en el servidor aunque el cliente
+          // perdiera la respuesta (el WebView nativo corta peticiones largas
+          // de ~40s+). No bloqueamos el onboarding · refrescamos igual abajo
+          // para recoger lo que la IA haya escrito en Firestore.
+          console.warn('[BTal] generación inicial del onboarding (cliente) no confirmó OK:', err);
         }
+        // Refresca SIEMPRE (éxito o fallo del cliente) · si la IA escribió el
+        // plan —caso típico aunque el cliente creyera que falló— aparece ya
+        // poblado en /app en vez de mostrarse vacío como si fuera manual.
+        await refresh();
       }
       history.replace('/app');
     } catch (err) {
