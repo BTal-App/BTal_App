@@ -1460,7 +1460,7 @@ export const AI_SCOPE_OPTIONS: {
   {
     value: 'entrenos_only',
     label: 'Solo entrenos',
-    sub: 'Plan de entrenamiento. La nutrición la rellenas tú.',
+    sub: 'Planes de entreno. La nutrición la rellenas tú.',
     emoji: '🏋️',
   },
 ];
