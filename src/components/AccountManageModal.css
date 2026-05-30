@@ -136,23 +136,6 @@
   font-weight: 600;
 }
 
-/* Badge "próximamente" en filas no implementadas */
-.account-manage-soon {
-  display: inline-block;
-  font-size: 0.6rem;
-  font-family: 'Inter', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(240, 168, 56, 0.12);
-  color: var(--btal-gold);
-  border: 1px solid rgba(240, 168, 56, 0.32);
-  font-weight: 600;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
 /* IonContent · transparenta el background para que se vea el bg con gradiente */
 ion-modal.settings-modal ion-content {
   --background: transparent;
