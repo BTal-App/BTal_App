@@ -15,5 +15,8 @@ export { generatePlan } from './generatePlan.js';
 // Borrado RGPD completo de cuenta (doc + subcolecciones + Auth user).
 export { deleteAccount } from './deleteAccount.js';
 
+// Cerrar sesión en otros dispositivos (revoca refresh tokens · mantiene esta).
+export { revokeOtherSessions } from './revokeOtherSessions.js';
+
 // Fase 6C · limpieza en cascada de invitados expirados (TTL deja huérfanos).
 export { cleanupExpiredGuests } from './cleanupGuests.js';

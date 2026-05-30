@@ -8,7 +8,8 @@
 // y generatePlan tiene enforceAppCheck:true · sin token válido → 403).
 
 import { getFunctions, httpsCallable, type Functions } from 'firebase/functions';
-import { app } from './firebase';
+import { signInWithCustomToken } from 'firebase/auth';
+import { app, auth } from './firebase';
 
 const REGION = 'europe-west1';
 
@@ -133,4 +134,18 @@ export async function deleteAccountFull(): Promise<void> {
     }
     throw err;
   }
+}
+
+// Cierra la sesión en TODOS los demás dispositivos manteniendo este. La
+// Cloud Function revoca todos los refresh tokens y devuelve un custom token;
+// re-iniciamos sesión con él para que ESTE dispositivo obtenga un refresh
+// token nuevo (post-revocación) y no se cierre a sí mismo. Las demás sesiones
+// quedan invalidadas y se cerrarán en su próximo refresh (~1h máx).
+export async function revokeOtherSessions(): Promise<void> {
+  const callable = httpsCallable<Record<string, never>, { token: string }>(
+    fns(),
+    'revokeOtherSessions',
+  );
+  const res = await callable({});
+  await signInWithCustomToken(auth, res.data.token);
 }

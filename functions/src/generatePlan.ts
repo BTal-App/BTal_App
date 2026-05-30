@@ -136,6 +136,9 @@ export const generatePlan = onCall(
     try {
       const reserved = await db.runTransaction(async (tx) => {
         const s = await tx.get(ref);
+        if (!s.exists) {
+          throw new HttpsError('failed-precondition', 'Perfil no encontrado. Completa el onboarding.');
+        }
         const doc = s.data() as UserDocument;
         const { reset, next } = maybeResetCycle(doc.generaciones, now);
         const dec = checkEligibility(doc.plan, next, now);

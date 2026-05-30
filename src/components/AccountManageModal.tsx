@@ -5,6 +5,7 @@ import {
   IonContent,
   IonIcon,
   IonModal,
+  IonToast,
 } from '@ionic/react';
 import { logoGoogle } from 'ionicons/icons';
 import { MealIcon } from './MealIcon';
@@ -19,6 +20,7 @@ import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { VerifyEmailRow } from './VerifyEmailRow';
 import { useProfile } from '../hooks/useProfile';
 import { canGenerateAi, formatUnlockDate } from '../utils/ia';
+import { revokeOtherSessions } from '../services/functions';
 import { blurAndRun } from '../utils/focus';
 import {
   getEnrolledTotpFactor,
@@ -49,8 +51,24 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
   const [confirmDisableTotpOpen, setConfirmDisableTotpOpen] = useState(false);
   const [confirmUnlinkGoogleOpen, setConfirmUnlinkGoogleOpen] = useState(false);
   const [signOutAlertOpen, setSignOutAlertOpen] = useState(false);
+  const [revokeBusy, setRevokeBusy] = useState(false);
+  const [revokeToast, setRevokeToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [linkGoogleError, setLinkGoogleError] = useState('');
+
+  // Cierra sesión en otros dispositivos (mantiene este) · Cloud Function
+  // revoca refresh tokens + custom token con el que re-iniciamos sesión aquí.
+  const handleRevokeOtherSessions = async () => {
+    setRevokeBusy(true);
+    try {
+      await revokeOtherSessions();
+      setRevokeToast({ msg: 'Se ha cerrado la sesión en los demás dispositivos.', ok: true });
+    } catch {
+      setRevokeToast({ msg: 'No se ha podido cerrar las otras sesiones. Inténtalo de nuevo.', ok: false });
+    } finally {
+      setRevokeBusy(false);
+    }
+  };
 
   // refreshUser viene del AuthContext: hace user.reload() y propaga el cambio
   // a todos los consumidores (Dashboard, AccountInfoModal, VerifyEmailRow, etc.).
@@ -318,14 +336,16 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
                 type="button"
                 className="settings-row settings-row--link"
                 onClick={blurAndRun(() => setSignOutAlertOpen(true))}
+                disabled={revokeBusy}
               >
                 <div className="settings-row-info">
                   <span className="settings-row-label">
                     Cerrar sesión en otros dispositivos
-                    <span className="account-manage-soon">Próximamente</span>
                   </span>
                   <span className="settings-row-value settings-row-sub">
-                    Mantiene esta sesión y cierra el resto.
+                    {revokeBusy
+                      ? 'Cerrando las demás sesiones…'
+                      : 'Mantiene esta sesión y cierra el resto.'}
                   </span>
                 </div>
                 <MealIcon value="tb:logout" size={20} className="settings-row-chevron" />
@@ -440,12 +460,29 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
         isOpen={signOutAlertOpen}
         onDidDismiss={() => setSignOutAlertOpen(false)}
         header="Cerrar sesión en otros dispositivos"
-        // ADMIN: requiere activar las Cloud Functions del backend (Fase 6 del roadmap) · hasta entonces solo está el workaround del cambio de contraseña.
         message={
-          'Esta función estará disponible próximamente. ' +
-          'Mientras tanto, si cambias tu contraseña se cerrarán automáticamente todas las demás sesiones.'
+          'Se cerrará la sesión en todos los demás dispositivos donde hayas entrado. ' +
+          'Esta sesión se mantiene activa. Útil si perdiste un dispositivo o crees que alguien accedió a tu cuenta.'
         }
-        buttons={[{ text: 'Entendido', role: 'cancel' }]}
+        buttons={[
+          { text: 'Cancelar', role: 'cancel' },
+          {
+            text: 'Cerrar otras sesiones',
+            role: 'destructive',
+            handler: () => {
+              handleRevokeOtherSessions();
+            },
+          },
+        ]}
+      />
+
+      <IonToast
+        isOpen={!!revokeToast}
+        onDidDismiss={() => setRevokeToast(null)}
+        message={revokeToast?.msg ?? ''}
+        duration={4000}
+        position="bottom"
+        color={revokeToast?.ok ? 'success' : 'danger'}
       />
     </>
   );
