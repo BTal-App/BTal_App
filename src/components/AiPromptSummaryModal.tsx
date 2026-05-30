@@ -372,7 +372,7 @@ export function AiPromptSummaryModal({
                 {protectedItems.length === 0 ? (
                   <p className="ai-summary-protected-empty">
                     No se ha seleccionado ningún elemento para conservar. La IA
-                    reemplazará todo el contenido actual.
+                    reemplazará todos los elementos indicados en el paso anterior.
                   </p>
                 ) : (
                   (['menu', 'compra', 'entrenos'] as AffectedSection[]).map((sec) => {
