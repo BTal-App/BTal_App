@@ -74,10 +74,6 @@ interface Props {
   // Mientras el caller hace el async submit (ej. saveOnboarding), bloquea
   // el botón confirmar y muestra spinner.
   submitting?: boolean;
-  // Cuando true, el modal NO muestra el resumen sino la pantalla "Generando…"
-  // DENTRO del mismo IonModal (sin presentar un segundo modal encima, que
-  // provocaba el "carga dos veces"). El caller lo activa al confirmar.
-  generating?: boolean;
 }
 
 // Modal que muestra al usuario TODO lo que se enviará al modelo de IA
@@ -103,7 +99,6 @@ export function AiPromptSummaryModal({
   onBack,
   confirmLabel = 'Confirmar y generar',
   submitting = false,
-  generating = false,
 }: Props) {
   const { user } = useAuth();
   const { profile: userDoc } = useProfile();
@@ -140,43 +135,6 @@ export function AiPromptSummaryModal({
   if (!profile) {
     // Edge case · nunca debería ocurrir en la práctica.
     return null;
-  }
-
-  // Modo "Generando…" · MISMO IonModal, solo cambia el contenido. Así NO se
-  // presenta un segundo modal (la GeneratingScreen) encima del resumen, que
-  // era lo que provocaba el "carga dos veces". El resumen se presentó animado
-  // y aquí solo se intercambia su contenido (sin transición de modal).
-  // backdropDismiss/keyboardClose false para que no se cierre mientras genera.
-  if (generating) {
-    return (
-      <IonModal
-        isOpen={isOpen}
-        onDidDismiss={onClose}
-        className="settings-modal"
-        backdropDismiss={false}
-        keyboardClose={false}
-      >
-        <IonContent>
-          <div className="settings-modal-bg">
-            <div className="settings-modal-card ai-summary-card ai-summary-generating">
-              <div className="ai-summary-generating-icon">
-                <MealIcon value="tb:sparkles" size={30} />
-              </div>
-              <IonSpinner name="crescent" className="ai-summary-generating-spinner" />
-              <h2 className="ai-summary-generating-title">Generando tu programa…</h2>
-              <p className="ai-summary-generating-sub">
-                Estamos creando tu menú, tu lista de la compra y tus planes de
-                entreno. No cierres la app — puede tardar unos segundos.
-              </p>
-              <div className="ai-summary-generating-tip">
-                <MealIcon value="tb:sparkles" size={13} />
-                Procesando tu perfil · alergias, objetivos y preferencias
-              </div>
-            </div>
-          </div>
-        </IonContent>
-      </IonModal>
-    );
   }
 
   // Helpers de presentación · todos devuelven string vacío para "no hay

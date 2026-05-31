@@ -17,6 +17,7 @@ import { waitForGenerationComplete } from '../services/db';
 import { AiPromptSummaryModal } from '../components/AiPromptSummaryModal';
 import { ChipsInput } from '../components/ChipsInput';
 import { CollapsibleSection } from '../components/CollapsibleSection';
+import { GeneratingScreen } from '../components/GeneratingScreen';
 import { LegalLink } from '../components/LegalLink';
 import { StepMode, type StepModeValue } from '../components/StepMode';
 import {
@@ -274,7 +275,14 @@ const Onboarding: React.FC = () => {
     }
   };
 
-  if (authLoading || profileLoading || !user) {
+  // OJO: NO mostrar esta pantalla de carga mientras `submitting`. Durante la
+  // generación, saveOnboarding/refresh llaman a load() que pone profileLoading
+  // a true · sin este `!submitting` el onboarding entero se reemplazaba por
+  // este spinner, DESMONTANDO la GeneratingScreen y volviéndola a montar al
+  // acabar el load → eso era el "carga dos veces" (y el desmontaje a media
+  // animación dejaba el backdrop grisáceo pegado). Con submitting=true
+  // seguimos renderizando el onboarding + la GeneratingScreen encima.
+  if (!submitting && (authLoading || profileLoading || !user)) {
     return (
       <IonPage>
         <IonContent fullscreen>
@@ -777,7 +785,7 @@ const Onboarding: React.FC = () => {
             usuario eligió modo='ai' en el paso 4 al pulsar Finalizar.
             En "Modificar" cierra el modal · el user puede usar Atrás para
             cambiar lo que necesite. */}
-        {modeChoice.modo === 'ai' && modeChoice.aiScope !== null && (
+        {aiSummaryOpen && modeChoice.modo === 'ai' && modeChoice.aiScope !== null && (
           <AiPromptSummaryModal
             isOpen={aiSummaryOpen}
             onClose={() => setAiSummaryOpen(false)}
@@ -791,11 +799,17 @@ const Onboarding: React.FC = () => {
             onModify={() => setAiSummaryOpen(false)}
             confirmLabel="Confirmar y generar"
             submitting={submitting}
-            // Mientras se genera, el propio modal muestra "Generando…" en
-            // sitio (mismo IonModal) · no se presenta una pantalla aparte.
-            generating={submitting && modeChoice.modo === 'ai'}
           />
         )}
+
+        {/* GeneratingScreen a pantalla completa mientras se persiste el perfil
+            y la IA genera (submitting=true). Ya NO se desmonta a media
+            generación (ver guard `!submitting` arriba), así que no parpadea. */}
+        <GeneratingScreen
+          isOpen={submitting && modeChoice.modo === 'ai'}
+          title="Generando tu programa inicial…"
+          subtitle="Guardando tu perfil y preparando tu programa personalizado. No cierres la app."
+        />
       </IonContent>
     </IonPage>
   );
