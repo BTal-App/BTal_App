@@ -113,6 +113,12 @@ export interface UserProfile {
   // Texto libre con chips (ej. "aguacate", "huevos", "espinacas").
   ingredientesFavoritos: string[];
 
+  // Supermercados donde compra el user (opcional · multi-select). La IA
+  // propone marcas blancas reales de esos súper (ej. "Hummus Hacendado" si
+  // compra en Mercadona). Vacío = cualquier supermercado (sin preferencia).
+  // Valores = nombres de SUPERMERCADOS (lo que el prompt inyecta tal cual).
+  supermercados: string[];
+
   // Objetivo calórico diario en kcal. Comportamiento:
   //   null → la app calcula automáticamente con Mifflin-St Jeor +
   //          factor de actividad + ajuste por objetivo (ver utils/calorias.ts).
@@ -1076,6 +1082,7 @@ export function defaultProfile(): UserProfile {
     alimentosProhibidos: [],
     alimentosObligatorios: [],
     ingredientesFavoritos: [],
+    supermercados: [],
     objetivoKcal: null,
     modo: 'manual',
     aiScope: null,
@@ -1360,6 +1367,39 @@ export const RESTRICCIONES: { value: Restriccion; label: string }[] = [
   { value: 'sin_gluten', label: 'Sin gluten' },
   { value: 'sin_frutos_secos', label: 'Sin frutos secos' },
 ];
+
+// Supermercados ofrecidos en el form (Fase 6B). La lista se corresponde con
+// las cadenas con buena cobertura de marca blanca en el cache `foods/`
+// (verificado contra la BD: Hacendado 2082, Carrefour 1842, Dia 330, Consum
+// 313, Lidl/Milbona/Sondey ~528, Alcampo/Auchan 263, Eroski 167, Aldi 88).
+// El `value` (nombre del súper) es lo que el prompt de la IA inyecta tal cual.
+// Vacío en el perfil = sin preferencia (cualquier supermercado).
+export const SUPERMERCADOS: { value: string; label: string }[] = [
+  { value: 'Mercadona', label: 'Mercadona' },
+  { value: 'Carrefour', label: 'Carrefour' },
+  { value: 'Lidl', label: 'Lidl' },
+  { value: 'Dia', label: 'Dia' },
+  { value: 'Consum', label: 'Consum' },
+  { value: 'Alcampo', label: 'Alcampo' },
+  { value: 'Eroski', label: 'Eroski' },
+  { value: 'Aldi', label: 'Aldi' },
+  { value: 'El Corte Inglés', label: 'El Corte Inglés' },
+];
+
+// Mapeo supermercado → marcas blancas (las que aparecen en `foods/.brand`).
+// Lo usa la IA (sabe que Hacendado=Mercadona) y, en 6B-B, el resolver/buscador
+// para priorizar productos de la marca del súper que elija el user. Iterativo.
+export const SUPERMERCADO_BRANDS: Record<string, string[]> = {
+  Mercadona: ['Hacendado'],
+  Carrefour: ['Carrefour'],
+  Lidl: ['Milbona', 'Sondey', 'Vitafit', 'Pilos', 'Lidl'],
+  Dia: ['Dia'],
+  Consum: ['Consum'],
+  Alcampo: ['Auchan', 'Alcampo'],
+  Eroski: ['Eroski'],
+  Aldi: ['Cucina Nobile', 'Cien', 'Aldi'],
+  'El Corte Inglés': ['Aliada', 'Hipercor'],
+};
 
 // Opciones de scope IA — etiquetas humanas + descripción.
 // Reusadas en StepMode (onboarding y modal de cambio) y en AiGenerateModal

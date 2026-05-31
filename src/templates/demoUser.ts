@@ -1031,6 +1031,7 @@ const DEMO_PROFILE: UserProfile = {
   alimentosProhibidos: ['bebidas azucaradas', 'bollería industrial'],
   alimentosObligatorios: ['1 fruta al día', 'verdura en la cena'],
   ingredientesFavoritos: ['aguacate', 'salmón', 'avena', 'pollo a la plancha'],
+  supermercados: ['Mercadona', 'Lidl'],
   objetivoKcal: 2200, // calculado: hombre 28a · 75kg · 178cm · moderado · volumen
   modo: 'manual', // el invitado no puede usar IA por diseño
   aiScope: null,

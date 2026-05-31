@@ -400,6 +400,7 @@ export async function ensureUserDocumentSchema(
     if (profile.alimentosProhibidos === undefined) profileUpdates['profile.alimentosProhibidos'] = [];
     if (profile.alimentosObligatorios === undefined) profileUpdates['profile.alimentosObligatorios'] = [];
     if (profile.ingredientesFavoritos === undefined) profileUpdates['profile.ingredientesFavoritos'] = [];
+    if (profile.supermercados === undefined) profileUpdates['profile.supermercados'] = [];
     // objetivoKcal · null por defecto → se calcula al vuelo desde el resto
     // de campos del perfil (utils/calorias.ts).
     if (profile.objetivoKcal === undefined) profileUpdates['profile.objetivoKcal'] = null;

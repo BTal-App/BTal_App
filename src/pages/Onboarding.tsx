@@ -27,6 +27,7 @@ import {
   NIVELES_ACTIVIDAD,
   OBJETIVOS,
   RESTRICCIONES,
+  SUPERMERCADOS,
   defaultProfile,
   type Equipamiento,
   type NivelActividad,
@@ -160,6 +161,18 @@ const Onboarding: React.FC = () => {
         restricciones: has
           ? d.restricciones.filter((x) => x !== r)
           : [...d.restricciones, r],
+      };
+    });
+  };
+
+  const toggleSupermercado = (s: string) => {
+    setData((d) => {
+      const has = d.supermercados.includes(s);
+      return {
+        ...d,
+        supermercados: has
+          ? d.supermercados.filter((x) => x !== s)
+          : [...d.supermercados, s],
       };
     });
   };
@@ -514,6 +527,30 @@ const Onboarding: React.FC = () => {
                       >
                         {active && <MealIcon value="tb:circle-check-filled" size={16} />}
                         {r.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <span className="onboarding-field-label">
+                  Supermercados <span className="onboarding-optional">opcional</span>
+                </span>
+                <p className="onboarding-hint">
+                  ¿Dónde compras? La IA propondrá marcas reales de esos súper. Déjalo vacío si
+                  compras en cualquiera.
+                </p>
+                <div className="onboarding-pills">
+                  {SUPERMERCADOS.map((s) => {
+                    const active = data.supermercados.includes(s.value);
+                    return (
+                      <button
+                        key={s.value}
+                        type="button"
+                        className={'onboarding-pill' + (active ? ' active' : '')}
+                        onClick={() => toggleSupermercado(s.value)}
+                      >
+                        {active && <MealIcon value="tb:circle-check-filled" size={16} />}
+                        {s.label}
                       </button>
                     );
                   })}

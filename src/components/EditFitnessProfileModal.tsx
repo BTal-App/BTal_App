@@ -25,6 +25,7 @@ import {
   NIVELES_ACTIVIDAD,
   OBJETIVOS,
   RESTRICCIONES,
+  SUPERMERCADOS,
   defaultProfile,
   type Equipamiento,
   type NivelActividad,
@@ -94,6 +95,7 @@ function profileToEditable(p: UserProfile): EditableProfile {
     alimentosProhibidos: [...(p.alimentosProhibidos ?? [])],
     alimentosObligatorios: [...(p.alimentosObligatorios ?? [])],
     ingredientesFavoritos: [...(p.ingredientesFavoritos ?? [])],
+    supermercados: [...(p.supermercados ?? [])],
     objetivoKcal: p.objetivoKcal ?? null,
   };
 }
@@ -107,6 +109,7 @@ const ARRAY_KEYS: (keyof EditableProfile)[] = [
   'alimentosProhibidos',
   'alimentosObligatorios',
   'ingredientesFavoritos',
+  'supermercados',
 ];
 
 // Diff superficial: solo emite los campos que han cambiado. Para los
@@ -156,6 +159,7 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
     alimentosProhibidos: [],
     alimentosObligatorios: [],
     ingredientesFavoritos: [],
+    supermercados: [],
     objetivoKcal: null,
   };
   const [original, setOriginal] = useState<EditableProfile>(empty);
@@ -221,6 +225,18 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
         restricciones: has
           ? d.restricciones.filter((x) => x !== r)
           : [...d.restricciones, r],
+      };
+    });
+  };
+
+  const toggleSupermercado = (s: string) => {
+    setData((d) => {
+      const has = d.supermercados.includes(s);
+      return {
+        ...d,
+        supermercados: has
+          ? d.supermercados.filter((x) => x !== s)
+          : [...d.supermercados, s],
       };
     });
   };
@@ -300,6 +316,12 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
       'Restricciones',
       original.restricciones.join(', '),
       data.restricciones.join(', '),
+    );
+    pushDiff(
+      changes,
+      'Supermercados',
+      original.supermercados.join(', '),
+      data.supermercados.join(', '),
     );
     pushDiff(changes, 'Notas', original.notas, data.notas);
     setConfirmChanges({ changes, cleaned: { partial, data } });
@@ -566,6 +588,30 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                     >
                       {active && <MealIcon value="tb:circle-check-filled" size={16} />}
                       {r.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <span className="onboarding-field-label">
+                Supermercados <span className="onboarding-optional">opcional</span>
+              </span>
+              <p className="onboarding-hint">
+                ¿Dónde compras? La IA propondrá marcas reales de esos súper. Déjalo vacío si compras
+                en cualquiera.
+              </p>
+              <div className="onboarding-pills">
+                {SUPERMERCADOS.map((s) => {
+                  const active = data.supermercados.includes(s.value);
+                  return (
+                    <button
+                      key={s.value}
+                      type="button"
+                      className={'onboarding-pill' + (active ? ' active' : '')}
+                      onClick={() => toggleSupermercado(s.value)}
+                    >
+                      {active && <MealIcon value="tb:circle-check-filled" size={16} />}
+                      {s.label}
                     </button>
                   );
                 })}
