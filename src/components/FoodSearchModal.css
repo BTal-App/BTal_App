@@ -35,12 +35,34 @@
   color: var(--btal-coral, #ff6b6b);
 }
 
+.food-search-brands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 2px;
+}
+.food-search-brand-chip {
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 5px 11px;
+  border: 1px solid var(--btal-border, rgba(255, 255, 255, 0.12));
+  background: var(--btal-surface-2, rgba(255, 255, 255, 0.04));
+  color: var(--btal-t-2, #cfcfcf);
+  cursor: pointer;
+}
+.food-search-brand-chip.active {
+  border-color: var(--btal-lime, #b5f037);
+  color: var(--btal-lime, #b5f037);
+  background: color-mix(in srgb, var(--btal-lime, #b5f037) 14%, transparent);
+}
+
 .food-search-results {
   display: flex;
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
-  max-height: 48vh;
+  max-height: 42vh;
 }
 .food-search-result {
   display: flex;
@@ -78,8 +100,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--btal-lima, #b6e23a);
-  background: color-mix(in srgb, var(--btal-lima, #b6e23a) 16%, transparent);
+  color: var(--btal-lime, #b5f037);
+  background: color-mix(in srgb, var(--btal-lime, #b5f037) 16%, transparent);
   border-radius: 6px;
   padding: 1px 6px;
 }
@@ -111,8 +133,14 @@
   font-weight: 700;
   border-radius: 8px;
   padding: 4px 10px;
+  border: 1px solid transparent;
   background: var(--btal-surface-2, rgba(255, 255, 255, 0.06));
 }
+/* Mismos colores de macro que el resto de la app (MenuPage). */
+.food-search-macro--kcal { color: var(--btal-gold); border-color: rgba(240, 168, 56, 0.35); background: rgba(240, 168, 56, 0.08); }
+.food-search-macro--prot { color: var(--btal-lime); border-color: rgba(181, 240, 55, 0.35); background: rgba(181, 240, 55, 0.08); }
+.food-search-macro--carb { color: var(--btal-blue); border-color: rgba(90, 168, 255, 0.35); background: rgba(90, 168, 255, 0.08); }
+.food-search-macro--fat  { color: var(--btal-coral); border-color: rgba(255, 107, 107, 0.35); background: rgba(255, 107, 107, 0.08); }
 
 .food-search-pick-actions {
   display: flex;

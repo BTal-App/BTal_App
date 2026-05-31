@@ -74,9 +74,13 @@ function toFoodDoc(p: OffProduct): FoodDoc | null {
   };
 }
 
+// Muestra máxima de nombres a registrar en el log (bound al tamaño del doc).
+const SAMPLE_CAP = 500;
+
 async function processDelta(
   db: FirebaseFirestore.Firestore,
   file: string,
+  collected: string[],
 ): Promise<number> {
   const res = await fetch(DELTA_BASE + file);
   if (!res.ok || !res.body) throw new Error(`fetch ${res.status}`);
@@ -101,6 +105,11 @@ async function processDelta(
     batch.set(col.doc(doc.key), doc.data, { merge: true });
     inBatch += 1;
     count += 1;
+    // Guarda el nombre (+ marca) para el log de "qué se ha añadido".
+    if (collected.length < SAMPLE_CAP) {
+      const brand = (doc.data.brand as string) || '';
+      collected.push(brand ? `${doc.data.name as string} · ${brand}` : (doc.data.name as string));
+    }
     if (inBatch >= 450) {
       await batch.commit();
       batch = db.batch();
@@ -143,9 +152,10 @@ export const syncOffDeltas = onSchedule(
     }
 
     let upserts = 0;
+    const collected: string[] = [];
     for (const file of newFiles) {
       try {
-        upserts += await processDelta(db, file);
+        upserts += await processDelta(db, file, collected);
         processedSet.add(file);
       } catch (e) {
         logger.warn('[syncOffDeltas] delta falló', { file, err: String(e) });
@@ -157,6 +167,21 @@ export const syncOffDeltas = onSchedule(
       { processed: [...processedSet].slice(-60), lastRun: Date.now(), lastUpserts: upserts },
       { merge: true },
     );
+
+    // LOG VISIBLE para el owner · un doc por ejecución en `offSyncLog/{fecha}`
+    // con la muestra de productos añadidos/actualizados (verlo en Firestore
+    // Console). Solo se crea si hubo cambios.
+    if (upserts > 0) {
+      const id = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-'); // 2026-06-01-04-00
+      await db.collection('offSyncLog').doc(id).set({
+        ranAt: Date.now(),
+        newFiles: newFiles.length,
+        upserts,
+        muestra: collected,
+        nota: 'Productos de OpenFoodFacts anadidos o actualizados en foods/ esta ejecucion (muestra, max 500).',
+      });
+    }
+
     logger.info('[syncOffDeltas] OK', { newFiles: newFiles.length, upserts });
   },
 );

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { IonModal, IonContent, IonButton } from '@ionic/react';
 import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
@@ -28,6 +28,8 @@ export function FoodSearchModal({ isOpen, onClose, onSelect }: Props) {
   // Producto elegido (paso de cantidad). null = en la lista.
   const [picked, setPicked] = useState<FoodSearchResult | null>(null);
   const [gramos, setGramos] = useState('100');
+  // Filtro por marca(s) · chips sobre los resultados (multi-select).
+  const [brandFilter, setBrandFilter] = useState<string[]>([]);
 
   const reqId = useRef(0);
 
@@ -38,8 +40,26 @@ export function FoodSearchModal({ isOpen, onClose, onSelect }: Props) {
     setError('');
     setPicked(null);
     setGramos('100');
+    setBrandFilter([]);
     setLoading(false);
   };
+
+  const toggleBrand = (b: string) =>
+    setBrandFilter((prev) => (prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]));
+
+  // Marcas presentes en los resultados (por frecuencia) + lista filtrada.
+  const brands = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of results) {
+      if (r.brand) counts.set(r.brand, (counts.get(r.brand) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([b]) => b);
+  }, [results]);
+
+  const visible =
+    brandFilter.length > 0
+      ? results.filter((r) => r.brand && brandFilter.includes(r.brand))
+      : results;
 
   // Búsqueda con debounce 400 ms · ignora respuestas obsoletas (reqId).
   // Todo el setState va DENTRO del timeout (no síncrono en el cuerpo del effect).
@@ -133,7 +153,10 @@ export function FoodSearchModal({ isOpen, onClose, onSelect }: Props) {
                     aria-label="Buscar alimento"
                     maxLength={60}
                     autoFocus
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                      setQuery(e.target.value);
+                      setBrandFilter([]);
+                    }}
                   />
                 </div>
 
@@ -143,8 +166,31 @@ export function FoodSearchModal({ isOpen, onClose, onSelect }: Props) {
                   <p className="food-search-status">Sin resultados. Prueba otro nombre.</p>
                 )}
 
+                {/* Filtro por marca · chips de las marcas presentes (multi). */}
+                {brands.length > 1 && (
+                  <div className="food-search-brands">
+                    {brands.map((b) => {
+                      const active = brandFilter.includes(b);
+                      return (
+                        <button
+                          key={b}
+                          type="button"
+                          className={'food-search-brand-chip' + (active ? ' active' : '')}
+                          onClick={() => toggleBrand(b)}
+                        >
+                          {b}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {!loading && results.length > 0 && visible.length === 0 && (
+                  <p className="food-search-status">Ningún resultado de esa marca.</p>
+                )}
+
                 <div className="food-search-results">
-                  {results.map((r, i) => (
+                  {visible.map((r, i) => (
                     <button
                       key={`${r.code ?? r.nombre}-${i}`}
                       type="button"
