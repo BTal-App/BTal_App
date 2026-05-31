@@ -12,17 +12,17 @@
   justify-content: center;
   gap: 6px;
   width: 100%;
-  padding: 9px 12px;
-  border: 1px dashed var(--btal-border);
+  padding: 10px 12px;
+  border: 1px solid var(--btal-lime, #b5f037);
   border-radius: 12px;
-  background: transparent;
-  color: var(--btal-t-2);
+  background: color-mix(in srgb, var(--btal-lime, #b5f037) 14%, transparent);
+  color: var(--btal-lime, #b5f037);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 .alimentos-search-btn:active {
-  background: var(--btal-bg-2);
+  background: color-mix(in srgb, var(--btal-lime, #b5f037) 26%, transparent);
 }
 
 .alimentos-list-rows {
