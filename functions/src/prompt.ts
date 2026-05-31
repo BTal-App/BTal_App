@@ -47,6 +47,22 @@ const OBJETIVO_LABEL: Record<ValidatedProfile['objetivo'], string> = {
   mantenimiento: 'mantener su composición actual',
 };
 
+// Supermercado → su(s) MARCA(S) BLANCA(S) propia(s). Espejo de
+// SUPERMERCADO_BRANDS del frontend (defaultUser.ts) · mantener en sync. Sirve
+// para que la IA proponga la marca propia del súper que elige el user (no
+// marcas ajenas ni líderes). El user puede seleccionar varios.
+const SUPERMERCADO_BRANDS: Record<string, string[]> = {
+  Mercadona: ['Hacendado'],
+  Carrefour: ['Carrefour'],
+  Lidl: ['Milbona', 'Sondey', 'Vitafit', 'Pilos'],
+  Dia: ['Dia'],
+  Consum: ['Consum'],
+  Alcampo: ['Auchan', 'Alcampo'],
+  Eroski: ['Eroski'],
+  Aldi: ['Cucina Nobile', 'Cien'],
+  'El Corte Inglés': ['Aliada', 'Hipercor'],
+};
+
 // Guía de reparto de macros según objetivo.
 function macroSplitGuidance(objetivo: ValidatedProfile['objetivo']): string {
   switch (objetivo) {
@@ -151,9 +167,14 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
   if (obligatorios.length) lines.push(`- Alimentos obligatorios (incluir durante la semana): ${obligatorios.join(', ')}`);
   if (favoritos.length) lines.push(`- Ingredientes favoritos (priorizar): ${favoritos.join(', ')}`);
   if (supermercados.length) {
+    const marcas = [...new Set(supermercados.flatMap((s) => SUPERMERCADO_BRANDS[s] ?? []))];
+    const marcasTxt = marcas.length ? ` (marca blanca: ${marcas.join(', ')})` : '';
     lines.push(
-      `- Compra habitualmente en: ${supermercados.join(', ')}. Cuando sea natural, ` +
-      'propon marcas reales de esos supermercados (p.ej. marcas blancas españolas).',
+      `- Compra en: ${supermercados.join(', ')}${marcasTxt}. PREFERENCIA SUAVE (para que pueda comprar ` +
+      'todo en su supermercado y le sea cómodo): propon productos que se encuentren en esos supermercados, ' +
+      'dando preferencia a su marca blanca. Si la marca blanca no aplica o no encaja, usa OTRAS marcas que ' +
+      'también se vendan en esos supermercados (no marcas de otros sitios). Es una preferencia, no una ' +
+      'obligación. Los alimentos genéricos (arroz, pollo, huevos, verduras) no necesitan marca.',
     );
   }
   if (notas) lines.push(`- Notas adicionales del usuario: "${notas}"`);
