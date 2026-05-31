@@ -46,20 +46,24 @@ const ACTIVITY_FACTOR: Record<ValidatedProfile['actividad'], number> = {
   muy_activo: 1.9,
 };
 
-const OBJETIVO_ADJUST: Record<ValidatedProfile['objetivo'], number> = {
-  volumen: 1.1, // superávit ~10%
-  definicion: 0.8, // déficit ~20%
-  recomposicion: 0.95, // ligero déficit
-  mantenimiento: 1.0,
+// Ajuste ADITIVO sobre el TDEE (±500 kcal) · DEBE coincidir EXACTO con el
+// frontend (utils/calorias.ts AJUSTE_OBJETIVO), que es lo que el user ve en
+// el anillo "Aporte del día" y en Editar perfil. Si no coincide, la IA genera
+// para un objetivo y el anillo mide contra otro → el % sale descuadrado.
+const AJUSTE_OBJETIVO: Record<ValidatedProfile['objetivo'], number> = {
+  volumen: 500, // superávit ~0,5 kg/semana
+  definicion: -500, // déficit ~0,5 kg/semana
+  recomposicion: 0, // sin ajuste de kcal (más proteína, no más kcal)
+  mantenimiento: 0,
 };
 
 function calcKcalObjetivo(p: ValidatedProfile): number {
   if (p.objetivoKcal !== null) return p.objetivoKcal;
-  // Mifflin-St Jeor
+  // Mifflin-St Jeor → TDEE → objetivo (mismo cálculo que el frontend).
   const base =
     10 * p.peso + 6.25 * p.altura - 5 * p.edad + (p.sexo === 'm' ? 5 : -161);
   const tdee = base * ACTIVITY_FACTOR[p.actividad];
-  const target = tdee * OBJETIVO_ADJUST[p.objetivo];
+  const target = tdee + AJUSTE_OBJETIVO[p.objetivo];
   return Math.round(target / 10) * 10; // redondeo a 10 kcal
 }
 
@@ -201,7 +205,11 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
       'cantidad (g/ml/unidades), y macros (kcal, prot, carb, fat).',
     );
     lines.push(`OBJETIVO NUTRICIONAL del menú (para ${OBJETIVO_LABEL[p.objetivo]}):`);
-    lines.push(`- Total diario ≈ ${kcal} kcal · Proteína ≈ ${protTarget} g/día (clave para el objetivo).`);
+    lines.push(
+      `- OBLIGATORIO: el TOTAL de kcal de CADA día debe quedar MUY CERCA de ${kcal} kcal (margen ±5%, es decir ${Math.round(kcal * 0.95)}-${Math.round(kcal * 1.05)} kcal). ` +
+      `NO te quedes corto: ajusta cantidades/raciones de las comidas para LLEGAR al objetivo, no lo dejes a la mitad.`,
+    );
+    lines.push(`- Proteína ≈ ${protTarget} g/día (clave para el objetivo).`);
     lines.push(`- ${macroSplitGuidance(p.objetivo)}`);
     lines.push('- Reparto orientativo de kcal: desayuno ~25%, comida ~35%, merienda ~15%, cena ~25%.');
     // El batido cuenta en el total del día · la IA debe cuadrar las 4 comidas
