@@ -597,8 +597,8 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
                 Supermercados <span className="onboarding-optional">opcional</span>
               </span>
               <p className="onboarding-hint">
-                ¿Dónde compras? La IA propondrá marcas reales de esos súper. Déjalo vacío si compras
-                en cualquiera.
+                ¿Dónde sueles comprar? La IA tendrá en cuenta sus productos y marcas. Déjalo vacío
+                si no tienes preferencia.
               </p>
               <div className="onboarding-pills">
                 {SUPERMERCADOS.map((s) => {
