@@ -158,6 +158,15 @@
   color: var(--btal-t-1);
 }
 
+/* Exceso del objetivo (>100%) · el aro y el % se pintan en coral para que
+   se distinga de un día que cuadra (lima). El aro queda lleno (máx 100%). */
+.menu-day-ring-fg--over {
+  stroke: var(--btal-coral);
+}
+.menu-day-ring-text--over {
+  color: var(--btal-coral);
+}
+
 .menu-day-summary-info {
   flex: 1;
   min-width: 0;

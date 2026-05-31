@@ -1477,17 +1477,20 @@ interface DaySummaryProps {
 // el objetivo efectivo (manual o calculado). Si no hay objetivo, muestra
 // solo el total absoluto sin ring.
 function DaySummary({ day, totales, objetivoKcal }: DaySummaryProps) {
-  // Progreso 0-100 · clampeado para que ringos > 100% no se desborden.
-  // El ring es siempre visible aunque haya 0 comidas (queda vacío).
+  // Porcentaje REAL (sin tope) · puede pasar de 100% para que se vea si te
+  // has excedido del objetivo. El ANILLO sí se llena máx 100% (no se desborda
+  // ni da varias vueltas). `over` marca el exceso para colorearlo distinto.
   const progress = objetivoKcal && objetivoKcal > 0
-    ? Math.min(100, Math.round((totales.kcal / objetivoKcal) * 100))
+    ? Math.round((totales.kcal / objetivoKcal) * 100)
     : 0;
+  const over = progress > 100;
+  const ringPct = Math.min(100, progress);
 
   // SVG · radio 26, perímetro = 2π·26 ≈ 163.36. Stroke dasharray controla
   // cuánto del círculo se rellena. Animación CSS suaviza el cambio.
   const RADIUS = 26;
   const CIRC = 2 * Math.PI * RADIUS;
-  const dashArray = `${(progress / 100) * CIRC} ${CIRC}`;
+  const dashArray = `${(ringPct / 100) * CIRC} ${CIRC}`;
 
   return (
     <div className="menu-day-summary">
@@ -1500,7 +1503,7 @@ function DaySummary({ day, totales, objetivoKcal }: DaySummaryProps) {
             r={RADIUS}
           />
           <circle
-            className="menu-day-ring-fg"
+            className={'menu-day-ring-fg' + (over ? ' menu-day-ring-fg--over' : '')}
             cx="32"
             cy="32"
             r={RADIUS}
@@ -1508,7 +1511,7 @@ function DaySummary({ day, totales, objetivoKcal }: DaySummaryProps) {
             strokeDashoffset="0"
           />
         </svg>
-        <div className="menu-day-ring-text">
+        <div className={'menu-day-ring-text' + (over ? ' menu-day-ring-text--over' : '')}>
           {objetivoKcal ? `${progress}%` : '—'}
         </div>
       </div>
