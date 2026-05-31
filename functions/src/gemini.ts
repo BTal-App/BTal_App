@@ -1,7 +1,11 @@
 // Cliente Gemini · @google/genai (SDK unificado de Google GenAI).
 //
-// Modelo: gemini-2.5-flash-lite · el más barato + rápido de la familia
-// 2.5, suficiente para generación estructurada de planes.
+// Modelo: gemini-3.5-flash · flash de última generación (gama flash, no
+// lite). Subido desde gemini-2.5-flash-lite (31-may): el lite tenía un
+// sesgo fuerte a infra-dimensionar las raciones (~73% del objetivo kcal)
+// que el prompt no corregía. Un modelo más capaz dimensiona mejor las
+// raciones por sí mismo (sin normalización artificial). Sigue siendo gama
+// flash → coste bajo. Revertir = cambiar esta constante + redeploy.
 //
 // SALIDA JSON SIN responseSchema (decisión 29-may-2026):
 //   Inicialmente usábamos `responseSchema` (structured output) con el
@@ -19,7 +23,7 @@
 
 import { GoogleGenAI } from '@google/genai';
 
-const MODEL = 'gemini-2.5-flash-lite';
+const MODEL = 'gemini-3.5-flash';
 
 export interface CallGeminiArgs {
   apiKey: string;
