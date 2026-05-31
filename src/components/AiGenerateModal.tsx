@@ -414,22 +414,23 @@ export function AiGenerateModal({
         </IonContent>
       </IonModal>
 
-      {/* Paso 3 del wizard · resumen del perfil + confirmar/modificar */}
-      {showSummary && (
-        <AiPromptSummaryModal
-          isOpen={showSummary}
-          onClose={() => setShowSummary(false)}
-          scope={selected}
-          protectedItems={protectedItems}
-          onConfirm={handleConfirmGenerate}
-          onModify={handleModify}
-          // "Atrás" · cierra solo el resumen y deja al user en el paso 2
-          // (items) del wizard, que sigue montado debajo · puede ajustar
-          // exclusiones/scope y volver a Continuar sin salir del flujo.
-          onBack={() => setShowSummary(false)}
-          confirmLabel="Generar con IA"
-        />
-      )}
+      {/* Paso 3 del wizard · resumen del perfil + confirmar/modificar.
+          Se controla SOLO con isOpen (sin gate `showSummary &&`) para que al
+          cerrarse se ANIME y limpie su backdrop · si se desmontara de golpe
+          dejaría el backdrop grisáceo pegado (mismo bug que en onboarding). */}
+      <AiPromptSummaryModal
+        isOpen={showSummary}
+        onClose={() => setShowSummary(false)}
+        scope={selected}
+        protectedItems={protectedItems}
+        onConfirm={handleConfirmGenerate}
+        onModify={handleModify}
+        // "Atrás" · cierra solo el resumen y deja al user en el paso 2
+        // (items) del wizard, que sigue montado debajo · puede ajustar
+        // exclusiones/scope y volver a Continuar sin salir del flujo.
+        onBack={() => setShowSummary(false)}
+        confirmLabel="Generar con IA"
+      />
 
       {/* "Editar perfil" del resumen · mismo modal que abre el avatar
           (ProfileSheet → "Editar datos del perfil"). En cascada sobre el
