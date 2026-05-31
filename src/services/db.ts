@@ -117,6 +117,40 @@ export async function getUserDocument(uid: string): Promise<UserDocument | null>
   return snap.data() as UserDocument;
 }
 
+// Sondea el doc del user hasta que la IA haya ESCRITO el resultado de la
+// generación (o se agote el timeout). Necesario porque en nativo el WebView
+// corta la respuesta larga del callable `generatePlan`: el `await` del cliente
+// "termina" antes de tiempo aunque el server siga generando. El server SÍ
+// completa y escribe `generaciones.menu_at` / `entrenos_at` al final, así que
+// nos basamos en esos marcadores en lugar de en la resolución del callable.
+//
+// `since` = valor de esos timestamps ANTES de generar (en onboarding son null
+// → 0). Devuelve true al detectar el resultado, false si vence el timeout.
+export async function waitForGenerationComplete(
+  uid: string,
+  opts: { wantMenu: boolean; wantEntreno: boolean; since?: number },
+  timeoutMs = 120_000,
+  pollMs = 2500,
+): Promise<boolean> {
+  const { mod, db } = await getDb();
+  const ref = mod.doc(db, 'users', uid);
+  const since = opts.since ?? 0;
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const snap = await mod.getDoc(ref);
+      const g = (snap.data() as UserDocument | undefined)?.generaciones;
+      const menuOk = !opts.wantMenu || (g?.menu_at ?? 0) > since;
+      const entrenoOk = !opts.wantEntreno || (g?.entrenos_at ?? 0) > since;
+      if (snap.exists() && menuOk && entrenoOk) return true;
+    } catch {
+      // Error transitorio de red · reintentamos en el siguiente tick.
+    }
+    await new Promise((r) => setTimeout(r, pollMs));
+  }
+  return false;
+}
+
 // Guarda el perfil completo al terminar el onboarding. Si el documento no
 // existía, lo crea con los defaults (plan_pro=false, createdAt, etc.); si ya
 // existía (re-onboarding o doc parcial), actualiza profile + lastActive y

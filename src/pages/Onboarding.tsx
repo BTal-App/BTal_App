@@ -12,7 +12,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { signOut } from '../services/auth';
 import { trackEvent } from '../services/analytics';
-import { generatePlan } from '../services/functions';
+import { generatePlan, type GenerateError } from '../services/functions';
+import { waitForGenerationComplete } from '../services/db';
 import { AiPromptSummaryModal } from '../components/AiPromptSummaryModal';
 import { ChipsInput } from '../components/ChipsInput';
 import { CollapsibleSection } from '../components/CollapsibleSection';
@@ -210,19 +211,39 @@ const Onboarding: React.FC = () => {
       // el plan ya poblado. Si la generación falla (Gemini caído, límite,
       // etc.) entramos igual a /app · el user puede reintentar desde el
       // botón "Generar con IA" (no bloqueamos el onboarding por esto).
-      if (modoToTrack === 'ai' && aiScopeToTrack) {
+      if (modoToTrack === 'ai' && aiScopeToTrack && user) {
+        // Qué partes genera el scope (espejo de scopeParts del backend).
+        const wantMenu = aiScopeToTrack !== 'entrenos_only';
+        const wantEntreno = aiScopeToTrack === 'all' || aiScopeToTrack === 'entrenos_only';
+        // Errores DEFINITIVOS (el server NO generó nada · no tiene sentido
+        // esperar a que aparezcan datos). El resto se tratan como "puede que
+        // el server siga generando" (típico en nativo: el WebView corta la
+        // respuesta larga y el callable "falla" en 1-2s aunque Gemini siga).
+        const DEFINITIVE = new Set<GenerateError['kind']>([
+          'limit_reached', 'rate_limited', 'needs_account', 'needs_ai_mode', 'bad_profile',
+        ]);
         try {
+          // Éxito del callable → datos ya escritos · seguimos al refresh.
           await generatePlan({ scope: aiScopeToTrack, allowUserItems: true });
         } catch (err) {
-          // La generación pudo COMPLETARSE en el servidor aunque el cliente
-          // perdiera la respuesta (el WebView nativo corta peticiones largas
-          // de ~40s+). No bloqueamos el onboarding · refrescamos igual abajo
-          // para recoger lo que la IA haya escrito en Firestore.
-          console.warn('[BTal] generación inicial del onboarding (cliente) no confirmó OK:', err);
+          const kind = (err as GenerateError)?.kind;
+          if (kind && DEFINITIVE.has(kind)) {
+            console.warn('[BTal] generación inicial bloqueada:', kind);
+          } else {
+            // No nos fiamos del fallo del cliente · MANTENEMOS la pantalla
+            // "Generando…" (submitting sigue true) y sondeamos el doc hasta
+            // que la IA escriba el resultado (o timeout 120s). Así el usuario
+            // ve la pantalla de carga hasta que el plan está realmente listo,
+            // en vez de entrar a /app vacío y que se rellene de golpe luego.
+            await waitForGenerationComplete(
+              user.uid,
+              { wantMenu, wantEntreno },
+              120_000,
+            );
+          }
         }
-        // Refresca SIEMPRE (éxito o fallo del cliente) · si la IA escribió el
-        // plan —caso típico aunque el cliente creyera que falló— aparece ya
-        // poblado en /app en vez de mostrarse vacío como si fuera manual.
+        // Tras éxito o tras detectar el resultado (o timeout), refrescamos el
+        // doc para entrar a /app con el plan ya poblado.
         await refresh();
       }
       history.replace('/app');
