@@ -10,6 +10,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { canGenerateAi } from '../utils/ia';
 import { generatePlan, type GenerateError } from '../services/functions';
+import { waitForGenerationComplete } from '../services/db';
 import { blurAndRun } from '../utils/focus';
 import {
   getAffectedItems,
@@ -194,29 +195,57 @@ export function AiGenerateModal({
   const handleConfirmGenerate = async () => {
     setShowSummary(false);
     setGenerating(true);
+    // Qué partes genera el scope (espejo de scopeParts del backend) + marca
+    // temporal previa · sondeamos hasta que aparezca una generación MÁS NUEVA.
+    const wantMenu = selected !== 'entrenos_only';
+    const wantEntreno = selected === 'all' || selected === 'entrenos_only';
+    const g = userDoc?.generaciones;
+    const since = Math.max(g?.menu_at ?? 0, g?.entrenos_at ?? 0);
+    const uid = user?.uid;
+    // Errores DEFINITIVOS (el server NO generó · no esperamos datos).
+    const DEFINITIVE = new Set<GenerateError['kind']>([
+      'limit_reached', 'rate_limited', 'needs_account', 'needs_ai_mode', 'bad_profile',
+    ]);
+
+    // Cierre ESCALONADO de modales · GeneratingScreen y el wizard son dos
+    // IonModal · cerrarlos en el mismo tick deja un backdrop negro pegado en
+    // iOS WebKit. Por eso siempre: setGenerating(false) → 450 ms → onClose().
+    const finishOk = async () => {
+      await refresh();
+      setGenerating(false);
+      setSuccessToast(true);
+      window.setTimeout(() => onClose(), 450);
+    };
+    const finishErr = (msg: string) => {
+      setGenerating(false);
+      setErrorToast(msg);
+      window.setTimeout(() => onClose(), 450);
+    };
+
     try {
       await generatePlan({
         scope: selected,
         excludedIds: Array.from(excludedIds),
         allowUserItems,
       });
-      // Recargamos el UserDocument · el menú/entrenos/compra recién
-      // generados aparecen en cuanto el provider re-emite.
-      await refresh();
-      // Cierre ESCALONADO de modales · GeneratingScreen y el wizard son
-      // dos IonModal. Cerrarlos en el mismo tick deja un backdrop negro
-      // pegado en iOS WebKit (modales solapados). Cerramos primero la
-      // GeneratingScreen, esperamos su animación de salida (~300ms) y
-      // después cerramos el wizard.
-      setGenerating(false);
-      setSuccessToast(true);
-      window.setTimeout(() => onClose(), 450);
     } catch (err) {
-      setGenerating(false);
-      const ge = err as GenerateError;
-      setErrorToast(ge?.message || 'No se ha podido generar. Inténtalo de nuevo.');
-      window.setTimeout(() => onClose(), 450);
+      const kind = (err as GenerateError)?.kind;
+      if (!uid || (kind && DEFINITIVE.has(kind))) {
+        finishErr((err as GenerateError)?.message || 'No se ha podido generar. Inténtalo de nuevo.');
+        return;
+      }
+      // Posible corte del WebView · el server puede seguir generando. NO nos
+      // fiamos del fallo del cliente: MANTENEMOS "Generando…" y sondeamos el
+      // doc hasta que la IA escriba el resultado (o timeout). Así no se cierra
+      // la pantalla de carga antes de que el contenido esté listo.
+      const ok = await waitForGenerationComplete(uid, { wantMenu, wantEntreno, since }, 120_000);
+      if (!ok) {
+        finishErr('La generación está tardando más de lo normal. Vuelve a abrir en unos segundos.');
+        return;
+      }
     }
+    // Éxito del callable o resultado detectado por el sondeo.
+    await finishOk();
   };
 
   // "Editar perfil" desde el summary · abre EditFitnessProfileModal (la
