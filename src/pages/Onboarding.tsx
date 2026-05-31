@@ -17,7 +17,6 @@ import { waitForGenerationComplete } from '../services/db';
 import { AiPromptSummaryModal } from '../components/AiPromptSummaryModal';
 import { ChipsInput } from '../components/ChipsInput';
 import { CollapsibleSection } from '../components/CollapsibleSection';
-import { GeneratingScreen } from '../components/GeneratingScreen';
 import { LegalLink } from '../components/LegalLink';
 import { StepMode, type StepModeValue } from '../components/StepMode';
 import {
@@ -194,11 +193,10 @@ const Onboarding: React.FC = () => {
     if (!stepValid || modeChoice.modo === null) return;
     setError('');
     setSubmitting(true);
-    // Cerramos el resumen al arrancar. La GeneratingScreen se presenta SIN
-    // animación (animated={false}), así cubre al instante y oculta el cierre
-    // del resumen → no se ve el "doble". Y al navegar queda 1 solo IonModal
-    // (la GeneratingScreen) → sin backdrop grisáceo huérfano.
-    setAiSummaryOpen(false);
+    // NO cerramos el resumen: el propio AiPromptSummaryModal cambia su
+    // contenido a "Generando…" (prop generating) dentro del MISMO IonModal.
+    // Así no se presenta un segundo modal encima (lo que causaba el "carga
+    // dos veces") y al navegar solo hay 1 modal (sin backdrop huérfano).
     // Capturamos fuera del closure async · el narrowing de `modeChoice.modo !== null`
     // no se propaga después del await.
     const modoToTrack = modeChoice.modo;
@@ -793,21 +791,11 @@ const Onboarding: React.FC = () => {
             onModify={() => setAiSummaryOpen(false)}
             confirmLabel="Confirmar y generar"
             submitting={submitting}
+            // Mientras se genera, el propio modal muestra "Generando…" en
+            // sitio (mismo IonModal) · no se presenta una pantalla aparte.
+            generating={submitting && modeChoice.modo === 'ai'}
           />
         )}
-
-        {/* GeneratingScreen mientras se persiste el perfil Y se llama a la
-            Cloud Function `generatePlan` (la generación inicial real para
-            users en modo IA). Submitting=true cubre todo el proceso hasta
-            la redirección a /app con el plan ya generado. */}
-        <GeneratingScreen
-          isOpen={submitting && modeChoice.modo === 'ai'}
-          // Sin animación · se presenta ENCIMA del modal de resumen · animarlo
-          // hacía que se viera "cargar dos veces". Así cubre al instante.
-          animated={false}
-          title="Generando tu programa inicial…"
-          subtitle="Guardando tu perfil y preparando tu programa personalizado. No cierres la app."
-        />
       </IonContent>
     </IonPage>
   );
