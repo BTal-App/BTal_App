@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
 import { MealIcon } from './MealIcon';
+import { FoodSearchModal } from './FoodSearchModal';
 import type { Alimento } from '../templates/defaultUser';
 import './AlimentosListInput.css';
 
@@ -26,6 +27,7 @@ export function AlimentosListInput({
 }: Props) {
   const [draftNombre, setDraftNombre] = useState('');
   const [draftCantidad, setDraftCantidad] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Mutación de un alimento existente (cambia nombre o cantidad).
   const updateAt = (idx: number, key: keyof Alimento, val: string) => {
@@ -124,6 +126,22 @@ export function AlimentosListInput({
           <MealIcon value="tb:plus" size={18} />
         </button>
       </div>
+
+      {/* Buscar en OpenFoodFacts · trae macros reales (6B-B). */}
+      <button
+        type="button"
+        className="alimentos-search-btn"
+        onClick={() => setSearchOpen(true)}
+      >
+        <MealIcon value="tb:search" size={16} />
+        Buscar alimento (macros reales)
+      </button>
+
+      <FoodSearchModal
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSelect={(alimento) => onChange([...value, alimento])}
+      />
     </div>
   );
 }

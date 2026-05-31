@@ -83,6 +83,15 @@ export interface GeneracionesIA {
 export interface Alimento {
   nombre: string;
   cantidad: string;
+  // 6B-B · solo si el alimento viene del buscador/barcode (OFF). Macros por
+  // 100 g + marca, para recalcular el total de la comida al cambiar la
+  // cantidad. La IA no los rellena (su path resuelve macros aparte).
+  source?: 'off' | 'manual';
+  brand?: string;
+  kcalPer100?: number;
+  protPer100?: number;
+  carbPer100?: number;
+  fatPer100?: number;
 }
 
 export interface Comida {

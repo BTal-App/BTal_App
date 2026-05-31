@@ -24,3 +24,7 @@ export { cleanupExpiredGuests } from './cleanupGuests.js';
 // Fase 6B · sync incremental del cache de alimentos (foods/) con los deltas
 // diarios de Open Food Facts · mantiene macros reales al día.
 export { syncOffDeltas } from './syncOffDeltas.js';
+
+// Fase 6B-B · buscador de alimentos (cache-first + OFF en vivo) para el editor
+// de comidas · macros reales por nombre o código de barras.
+export { searchFood } from './nutrition/searchFood.js';

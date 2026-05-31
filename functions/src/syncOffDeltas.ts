@@ -16,7 +16,7 @@ import { logger } from 'firebase-functions/v2';
 import { Readable } from 'stream';
 import readline from 'readline';
 import zlib from 'zlib';
-import { normalizeFoodKey } from './nutrition/foodCache.js';
+import { normalizeFoodKey, tokenize } from './nutrition/foodCache.js';
 
 const DELTA_INDEX = 'https://static.openfoodfacts.org/data/delta/index.txt';
 const DELTA_BASE = 'https://static.openfoodfacts.org/data/delta/';
@@ -59,6 +59,8 @@ function toFoodDoc(p: OffProduct): FoodDoc | null {
   return {
     key,
     data: {
+      name,
+      tokens: tokenize(name),
       kcalPer100: Math.round(kcal * 10) / 10,
       protPer100: Math.round(prot * 10) / 10,
       carbPer100: Math.round(carb * 10) / 10,

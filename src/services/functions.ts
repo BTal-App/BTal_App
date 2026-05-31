@@ -141,6 +141,37 @@ export async function deleteAccountFull(): Promise<void> {
   }
 }
 
+// Resultado del buscador de alimentos (6B-B) · macros reales por 100 g.
+export interface FoodSearchResult {
+  nombre: string;
+  brand?: string;
+  code?: string;
+  kcalPer100: number;
+  protPer100: number;
+  carbPer100: number;
+  fatPer100: number;
+  source: 'off';
+}
+
+export interface SearchFoodInput {
+  query?: string;
+  barcode?: string;
+  supermercados?: string[];
+}
+
+// Busca alimentos (nombre o código de barras) vía Cloud Function searchFood.
+// Cache-first en el server (foods/) + OFF en vivo solo en cache-miss. Devuelve
+// [] si no hay resultados. Lanza el error crudo del SDK si la llamada falla.
+export async function searchFood(input: SearchFoodInput): Promise<FoodSearchResult[]> {
+  const callable = httpsCallable<SearchFoodInput, { results: FoodSearchResult[] }>(
+    fns(),
+    'searchFood',
+    { timeout: 20_000 },
+  );
+  const res = await callable(input);
+  return res.data.results ?? [];
+}
+
 // Cierra la sesión en TODOS los demás dispositivos manteniendo este. La
 // Cloud Function revoca todos los refresh tokens y devuelve un custom token;
 // re-iniciamos sesión con él para que ESTE dispositivo obtenga un refresh

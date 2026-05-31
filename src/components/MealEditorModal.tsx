@@ -16,6 +16,8 @@ import { blockNonInteger, clampInt } from '../utils/numericInput';
 import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { AlimentosListInput } from './AlimentosListInput';
+import { macrosFromAlimentos } from '../utils/mealMacros';
+import type { Alimento } from '../templates/defaultUser';
 import { IconPicker } from './IconPicker';
 import { MealIcon } from './MealIcon';
 import {
@@ -106,6 +108,24 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
   // Mutador genérico · cualquier setter del form pasa por aquí.
   const change = <K extends keyof Comida>(key: K, value: Comida[K]) => {
     setLocal((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // Cambio de la lista de alimentos · 6B-B: si los alimentos con macros reales
+  // (del buscador/barcode) cambian, ajusta el total de la comida por la DIFERENCIA
+  // de su contribución, preservando lo que el user tecleó a mano en los macros.
+  const changeAlimentos = (next: Alimento[]) => {
+    setLocal((prev) => {
+      const before = macrosFromAlimentos(prev.alimentos);
+      const after = macrosFromAlimentos(next);
+      return {
+        ...prev,
+        alimentos: next,
+        kcal: Math.max(0, prev.kcal + (after.kcal - before.kcal)),
+        prot: Math.max(0, prev.prot + (after.prot - before.prot)),
+        carb: Math.max(0, prev.carb + (after.carb - before.carb)),
+        fat: Math.max(0, prev.fat + (after.fat - before.fat)),
+      };
+    });
   };
 
   // Detección de "dirty" superficial · comparamos cada campo relevante.
@@ -303,7 +323,7 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
                 <span className="onboarding-field-label">Alimentos</span>
                 <AlimentosListInput
                   value={local.alimentos}
-                  onChange={(next) => change('alimentos', next)}
+                  onChange={changeAlimentos}
                   ariaLabelPrefix="Alimento"
                 />
               </div>

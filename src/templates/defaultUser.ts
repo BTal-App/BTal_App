@@ -159,6 +159,18 @@ export type MealKey = 'desayuno' | 'comida' | 'merienda' | 'cena';
 export interface Alimento {
   nombre: string;
   cantidad: string; // ej "60 g", "250 ml", "1", "1 cdta", "" (sin cantidad)
+  // ── 6B-B · macros reales por 100 g (solo si viene del buscador/barcode) ──
+  // Cuando el user añade un alimento desde el buscador de OpenFoodFacts o
+  // escaneando un código de barras, se guardan sus macros por 100 g + la
+  // marca + el origen. Sirve para RECALCULAR el total de la comida al cambiar
+  // la cantidad (utils/mealMacros.ts). Los alimentos tecleados a mano no los
+  // llevan (undefined) y no aportan al recálculo automático.
+  source?: 'off' | 'manual';
+  brand?: string;
+  kcalPer100?: number;
+  protPer100?: number;
+  carbPer100?: number;
+  fatPer100?: number;
 }
 
 export interface Comida {

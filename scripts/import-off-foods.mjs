@@ -63,6 +63,26 @@ function normalizeFoodKey(name) {
   return tokens.join('_');
 }
 
+// Tokens normalizados (NO ordenados, dedup, cap 12) para búsqueda por nombre.
+// COPIA EXACTA de functions/src/nutrition/foodCache.ts → tokenize.
+function tokenize(name) {
+  if (!name) return [];
+  const base = stripAccents(String(name).toLowerCase())
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const out = [];
+  const seen = new Set();
+  for (const t of base.split(' ')) {
+    if (t.length > 1 && !STRIP_WORDS.has(t) && !seen.has(t)) {
+      seen.add(t);
+      out.push(t);
+      if (out.length >= 12) break;
+    }
+  }
+  return out;
+}
+
 // ── auth ──
 let TOKEN;
 try {
@@ -165,6 +185,8 @@ for await (const line of rl) {
   best.set(key, {
     scans,
     fields: {
+      name: { stringValue: name },
+      tokens: { arrayValue: { values: tokenize(name).map((t) => ({ stringValue: t })) } },
       kcalPer100: { doubleValue: Math.round(kcal * 10) / 10 },
       protPer100: { doubleValue: Math.round(prot * 10) / 10 },
       carbPer100: { doubleValue: Math.round(carb * 10) / 10 },

@@ -13,6 +13,7 @@
 import type { ValidatedProfile } from './schemas.js';
 import type { AiScopeChoice } from './types.js';
 import { calcKcalObjetivo, PROT_FACTOR, FAT_FACTOR } from './nutrition/macroTargets.js';
+import { SUPERMERCADO_BRANDS } from './nutrition/supermercados.js';
 
 // Sanitiza texto libre del usuario antes de meterlo en el prompt:
 // reemplaza por espacio los caracteres de control (códigos 0-31), el DEL
@@ -47,21 +48,6 @@ const OBJETIVO_LABEL: Record<ValidatedProfile['objetivo'], string> = {
   mantenimiento: 'mantener su composición actual',
 };
 
-// Supermercado → su(s) MARCA(S) BLANCA(S) propia(s). Espejo de
-// SUPERMERCADO_BRANDS del frontend (defaultUser.ts) · mantener en sync. Sirve
-// para que la IA proponga la marca propia del súper que elige el user (no
-// marcas ajenas ni líderes). El user puede seleccionar varios.
-const SUPERMERCADO_BRANDS: Record<string, string[]> = {
-  Mercadona: ['Hacendado'],
-  Carrefour: ['Carrefour'],
-  Lidl: ['Milbona', 'Sondey', 'Vitafit', 'Pilos'],
-  Dia: ['Dia'],
-  Consum: ['Consum'],
-  Alcampo: ['Auchan', 'Alcampo'],
-  Eroski: ['Eroski'],
-  Aldi: ['Cucina Nobile', 'Cien'],
-  'El Corte Inglés': ['Aliada', 'Hipercor'],
-};
 
 // Guía de reparto de macros según objetivo.
 function macroSplitGuidance(objetivo: ValidatedProfile['objetivo']): string {

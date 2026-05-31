@@ -15,6 +15,7 @@ import { blockNonInteger, clampInt } from '../utils/numericInput';
 import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { AlimentosListInput } from './AlimentosListInput';
+import { macrosFromAlimentos } from '../utils/mealMacros';
 import { IconPicker } from './IconPicker';
 import { MealIcon } from './MealIcon';
 import {
@@ -127,6 +128,23 @@ export function MealExtraEditorModal({
     value: ComidaExtra[K],
   ) => {
     setLocal((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // 6B-B · ajusta el total por la diferencia de macros de los alimentos con
+  // datos reales (buscador/barcode), preservando lo tecleado a mano.
+  const changeAlimentos = (next: ComidaExtra['alimentos']) => {
+    setLocal((prev) => {
+      const before = macrosFromAlimentos(prev.alimentos);
+      const after = macrosFromAlimentos(next);
+      return {
+        ...prev,
+        alimentos: next,
+        kcal: Math.max(0, prev.kcal + (after.kcal - before.kcal)),
+        prot: Math.max(0, prev.prot + (after.prot - before.prot)),
+        carb: Math.max(0, prev.carb + (after.carb - before.carb)),
+        fat: Math.max(0, prev.fat + (after.fat - before.fat)),
+      };
+    });
   };
 
   // En modo editar, "isDirty" = hay diferencia con el snapshot.
@@ -446,7 +464,7 @@ export function MealExtraEditorModal({
                 <span className="onboarding-field-label">Alimentos</span>
                 <AlimentosListInput
                   value={local.alimentos}
-                  onChange={(next) => change('alimentos', next)}
+                  onChange={changeAlimentos}
                   ariaLabelPrefix="Alimento"
                 />
               </div>
