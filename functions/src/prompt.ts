@@ -228,20 +228,21 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
       `Mismos días cada semana. Si no aporta, deja [].`,
     );
     lines.push(
-      '- creatinaEnBatido (true/false): decide TÚ si conviene meter la creatina DENTRO del batido (un solo ' +
-      'gesto, lo habitual si se toma batido casi siempre). Esto define cómo rellenar creatinaDias para que ' +
-      'NO haya doble dosis ni huecos:',
+      '- La CREATINA, si la recomiendas, se toma SIEMPRE A DIARIO (saturación · entreno y descanso). ' +
+      'NUNCA la pongas en un solo día ni solo en descanso · eso es incoherente.',
     );
     lines.push(
-      '   · Si creatinaEnBatido=true: los días con batido YA llevan la creatina. En creatinaDias pon SOLO ' +
-      'los días que NO tienen batido, para completar la toma diaria. Resultado: creatina todos los días, sin repetir.',
+      '- creatinaEnBatido (true/false): decide CÓMO se toma esa creatina diaria. Si el usuario toma batido ' +
+      'casi todos los días, pon true (la creatina va DENTRO del batido · un solo gesto, lo más cómodo). ' +
+      'Si toma batido pocos días o ninguno, pon false (creatina suelta). La distribución diaria por días la ' +
+      'completa el sistema automáticamente · tú solo eliges el método.',
     );
     lines.push(
-      '   · Si creatinaEnBatido=false: la creatina va siempre suelta. En creatinaDias pon todos los días que ' +
-      'toque (la creatina se toma A DIARIO por saturación, entreno o descanso → normalmente los 7 días).',
+      '- creatinaDias: si recomiendas creatina, pon los 7 días ["lun","mar","mie","jue","vie","sab","dom"] ' +
+      '(el sistema ajusta para no duplicar con el batido). Si NO recomiendas creatina, déjalo [] y creatinaEnBatido false.',
     );
     lines.push(
-      '- Si NO recomiendas creatina, deja creatinaDias [] y creatinaEnBatido false. Si NO recomiendas batido, deja batidoDias [].',
+      '- Si NO recomiendas batido, deja batidoDias [].',
     );
   }
 
@@ -314,7 +315,7 @@ function buildJsonSkeleton(opts: BuildPromptOpts): string {
     );
   }
   if (opts.wantMenu) {
-    parts.push('"suplementos":{"batidoDias":["lun","mar","mie","jue","vie"],"creatinaDias":["sab","dom"],"creatinaEnBatido":true}');
+    parts.push('"suplementos":{"batidoDias":["lun","mar","mie","jue","vie"],"creatinaDias":["lun","mar","mie","jue","vie","sab","dom"],"creatinaEnBatido":true}');
   }
   return `{${parts.join(',')}}`;
 }

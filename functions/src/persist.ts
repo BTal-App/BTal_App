@@ -192,15 +192,29 @@ export function mapSuplementosDias(gen: GeneratedSuplementos): {
     return DAY_KEYS.filter((d) => seen.has(d));
   };
   const daysWithBatido = norm(gen.batidoDias);
-  let daysWithCreatina = norm(gen.creatinaDias);
-  // La IA decide el "check": si la creatina va DENTRO del batido. Cuando es
-  // true, un día con batido YA lleva la creatina · quitamos esos días de la
-  // creatina suelta para no duplicar dosis (red de seguridad aunque la IA ya
-  // debería mandar en creatinaDias solo los días sin batido).
+  const rawCreatina = norm(gen.creatinaDias);
+  // La IA decide el "check" (creatina DENTRO del batido) y SI recomienda
+  // creatina. Pero la DISTRIBUCIÓN por días la imponemos nosotros para
+  // garantizar coherencia: la creatina, si se toma, es DIARIA (saturación) ·
+  // no nos fiamos de los días sueltos que mande la IA (devolvía cosas como
+  // "creatina solo el domingo", incoherente). El check solo cambia CÓMO se
+  // reparte la toma diaria (dentro del batido vs suelta), no en qué días.
   const includeCreatina = gen.creatinaEnBatido;
-  if (includeCreatina) {
+  // ¿La IA recomienda creatina? Sí si la mete en el batido o da algún día.
+  const recommendsCreatina = includeCreatina || rawCreatina.length > 0;
+
+  let daysWithCreatina: DayKey[];
+  if (!recommendsCreatina) {
+    // No se recomienda creatina · nada.
+    daysWithCreatina = [];
+  } else if (includeCreatina) {
+    // Check ON: la creatina va dentro del batido en sus días · la suelta solo
+    // cubre los días SIN batido → creatina los 7 días, sin doble dosis.
     const batidoSet = new Set(daysWithBatido);
-    daysWithCreatina = daysWithCreatina.filter((d) => !batidoSet.has(d));
+    daysWithCreatina = DAY_KEYS.filter((d) => !batidoSet.has(d));
+  } else {
+    // Check OFF: el batido no lleva creatina · la creatina suelta es DIARIA.
+    daysWithCreatina = [...DAY_KEYS];
   }
   return { daysWithBatido, daysWithCreatina, includeCreatina };
 }
