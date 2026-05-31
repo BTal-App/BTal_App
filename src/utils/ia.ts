@@ -136,7 +136,7 @@ export function formatCountdown(targetMs: number, now: number = Date.now()): str
   const days = Math.floor(totalMin / 1440);
   const hours = Math.floor((totalMin % 1440) / 60);
   const mins = totalMin % 60;
-  if (days >= 1) return `${days} d ${hours} h`;
-  if (hours >= 1) return `${hours} h ${mins} m`;
-  return `${Math.max(1, mins)} m`;
+  if (days >= 1) return `${days}d ${hours}h`;
+  if (hours >= 1) return `${hours}h ${mins}m`;
+  return `${Math.max(1, mins)}m`;
 }
