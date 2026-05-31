@@ -268,28 +268,6 @@ export function formatAlimento(a: Alimento): string {
   return `${a.nombre} · ${a.cantidad}`;
 }
 
-// Parsea un string suelto como "Avena 60 g" en { nombre, cantidad }.
-// Heurística: captura del final "número (decimal opcional) + unidad de
-// letras opcional". Si no encaja, todo va a nombre y cantidad queda
-// vacía. Usado por la migración de docs viejos que tenían alimentos
-// como string[] (Sub-fases 2B.0-2B.3) al nuevo schema Alimento[].
-export function parseAlimentoString(raw: string): Alimento {
-  const trimmed = raw.trim();
-  if (!trimmed) return { nombre: '', cantidad: '' };
-  // Patrón: ".+ {espacio} {número con opcional .,} {opcional unidad}"
-  // Ej: "Avena 60 g" → "Avena" + "60 g"
-  //     "Yogur griego 200g" → "Yogur griego" + "200g"
-  //     "Miel 1 cdta" → "Miel" + "1 cdta"
-  //     "Brócoli al vapor" → "Brócoli al vapor" + ""
-  //     "1 plátano mediano" → "1 plátano mediano" + "" (cantidad al inicio
-  //          no se extrae · es difícil decidir cuánto del resto es nombre)
-  const m = trimmed.match(/^(.+?)\s+(\d+(?:[.,]\d+)?(?:\s*[a-zA-Zñü.]+)?)$/);
-  if (m) {
-    return { nombre: m[1].trim(), cantidad: m[2].trim() };
-  }
-  return { nombre: trimmed, cantidad: '' };
-}
-
 export type Menu = Record<DayKey, ComidasDelDia>;
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -446,20 +424,6 @@ export function getEffectiveRecommendedPlanId(
 // añadir/eliminar/renombrar categorías custom; las "builtIn" son las 7
 // que vienen por defecto y NO se pueden eliminar (sí renombrar/cambiar
 // emoji/color · estilo v1). Items con id estable para edits concurrentes.
-//
-// LEGACY (pre-2C) · `CategoriaCompraKey` y `Compra = Record<...>` se
-// mantienen exportados para retrocompat con docs viejos durante la
-// migración (`ensureUserDocumentSchema` los traduce al nuevo schema).
-
-/** @deprecated solo para migración legacy → schema 2C. */
-export type CategoriaCompraKey =
-  | 'proteinas'
-  | 'lacteos'
-  | 'hidratos'
-  | 'frutas_verduras'
-  | 'despensa'
-  | 'grasas'
-  | 'suplementacion';
 
 export interface ItemCompra {
   // ID estable · permite editar items concurrentemente sin que un index
@@ -1171,16 +1135,6 @@ export const HORA_DEFECTO: Record<MealKey, string> = {
   merienda: '17:30',
   cena: '21:00',
 };
-
-export const CATEGORIAS_COMPRA: { key: CategoriaCompraKey; label: string; emoji: string }[] = [
-  { key: 'proteinas', label: 'Proteínas', emoji: '💪' },
-  { key: 'lacteos', label: 'Lácteos', emoji: '🥛' },
-  { key: 'hidratos', label: 'Hidratos', emoji: '🌾' },
-  { key: 'frutas_verduras', label: 'Frutas y verduras', emoji: '🥦' },
-  { key: 'despensa', label: 'Despensa', emoji: '🛒' },
-  { key: 'grasas', label: 'Grasas', emoji: '🥑' },
-  { key: 'suplementacion', label: 'Suplementación', emoji: '🧪' },
-];
 
 function emptyComida(meal: MealKey): Comida {
   return {

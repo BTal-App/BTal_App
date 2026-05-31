@@ -4,12 +4,9 @@ import { app } from './firebase';
 import { syncAuthDisplayName } from './auth';
 import { toTitleCase } from '../utils/userDisplay';
 import {
-  COMPRA_BUILTIN_IDS,
   DAY_KEYS,
-  DEFAULT_COMPRA_CATEGORIAS,
   HORA_DEFECTO,
   MAX_EXERCISE_HISTORY,
-  MEAL_KEYS,
   defaultBatidoConfig,
   defaultCompra,
   defaultCreatinaConfig,
@@ -23,10 +20,7 @@ import {
   defaultSuplementos,
   defaultUserDocument,
   maxKgEjercicio,
-  newCompraItemId,
   normalizeExerciseName,
-  parseAlimentoString,
-  type Alimento,
   type BatidoConfig,
   type CategoriaCompra,
   type Comida,
@@ -36,15 +30,11 @@ import {
   type CreatinaConfig,
   type DayKey,
   type DiaEntreno,
-  type Ejercicio,
-  type Entrenos,
   type ItemCompra,
-  type Menu,
   type MealKey,
   type PlanEntreno,
   type RegistroDia,
   type RegistroStats,
-  type SourceTag,
   type SupDayOverride,
   type Suplementos,
   type UserDocument,
@@ -364,41 +354,12 @@ export async function ensureUserDocumentSchema(
     if (sup.creatina_anio_inicio === undefined) {
       updates['suplementos.creatina_anio_inicio'] = null;
     }
-    // Migración stock dosis → stock gramos (Sub-fase 2B.5.b · v1 fidelity).
-    // Docs creados antes de este cambio tienen `batidos_restantes` (dosis)
-    // y `creatina_dosis_restantes` (dosis). Los convertimos a gramos
-    // multiplicando por la dosis configurada y, ahora también, marcamos
-    // los campos legacy para borrado con `DELETE_FIELD` · al traducirse a
-    // `mod.deleteField()` justo antes del updateDoc, Firestore los elimina
-    // del doc atomicamente con el resto de la migración. Solo los marcamos
-    // si realmente existen en el doc (`'k' in obj`) — evita escrituras
-    // innecesarias en docs ya migrados o nuevos.
-    const supLegacy = raw.suplementos as Partial<Suplementos> &
-      Record<string, unknown> & {
-        batidos_restantes?: number | null;
-        creatina_dosis_restantes?: number | null;
-      };
+    // Stock en gramos · null si falta el campo.
     if (sup.batido_stock_gramos === undefined) {
-      const dosis = supLegacy.batidos_restantes ?? null;
-      const grPerDose = sup.batidoConfig?.gr_prot ?? 35;
-      updates['suplementos.batido_stock_gramos'] =
-        dosis === null ? null : Math.max(0, dosis * grPerDose);
+      updates['suplementos.batido_stock_gramos'] = null;
     }
     if (sup.creatina_stock_gramos === undefined) {
-      const dosis = supLegacy.creatina_dosis_restantes ?? null;
-      const grPerDose = sup.creatinaConfig?.gr_dose ?? 3;
-      updates['suplementos.creatina_stock_gramos'] =
-        dosis === null ? null : Math.max(0, dosis * grPerDose);
-    }
-    // Borrado explícito de los campos legacy huérfanos. Idempotente: si
-    // ya no están en el doc (porque ya pasaron por esta migración antes
-    // o el doc nunca los tuvo), no entramos al if y no se añade nada al
-    // payload de update.
-    if ('batidos_restantes' in supLegacy) {
-      updates['suplementos.batidos_restantes'] = DELETE_FIELD;
-    }
-    if ('creatina_dosis_restantes' in supLegacy) {
-      updates['suplementos.creatina_dosis_restantes'] = DELETE_FIELD;
+      updates['suplementos.creatina_stock_gramos'] = null;
     }
   }
   // Plan granular + generaciones (Fase 2A) · si faltan los sembramos
@@ -464,67 +425,6 @@ export async function ensureUserDocumentSchema(
         updates[`menu.${day}.extras`] = [];
       }
     }
-  }
-
-  // ── Migración del flag `source` en items (Fase 2A.1) ──
-  // Los items legacy (Comida/Ejercicio/ItemCompra/DiaEntreno) no tenían
-  // `source`. Ahora la lógica "la IA no toca lo del user" lo necesita.
-  // Sample-based: comprobamos un item; si le falta source, regeneramos
-  // ese bloque entero marcando todos los items como 'default'. Esto NO
-  // pisa los items que ya tengan source ni los datos del user.
-  const menu = (raw.menu ?? updates.menu) as Menu | undefined;
-  if (menu && menuNeedsSourceMigration(menu)) {
-    updates.menu = withDefaultSourceInMenu(menu);
-  }
-  // Migración Sub-fase 2D · doc viejo con `planes: {1..7}` numérico,
-  // `planActivo: number`, ejercicios con `setsReps/pesoKg/tipo`, días
-  // con `letra/nombre/tags/duracionMin` → nuevo shape con `planes:
-  // Record<string, PlanEntreno>`, `activePlan: string`, badges, etc.
-  // Se hace ANTES de la migración de source/id.
-  const rawEntrenos = (raw.entrenos ?? updates.entrenos) as unknown;
-  if (isLegacyEntrenosShape(rawEntrenos)) {
-    updates.entrenos = migrateLegacyEntrenos(
-      rawEntrenos as Record<string, unknown>,
-    );
-  }
-  const entrenos = (updates.entrenos ?? rawEntrenos) as Entrenos | undefined;
-  if (entrenos && entrenosNeedsSourceMigration(entrenos)) {
-    updates.entrenos = withDefaultSourceInEntrenos(entrenos);
-  }
-  // Migración CORRECTORA "Programa N Días" → "Plan N Días" en los builtin.
-  // Hubo un cambio de naming efímero (los entrenos se llamaron "Programa")
-  // que se revirtió: el entreno se llama "Plan N Días" y "Programa" se
-  // reserva para el conjunto. Algún doc que abrió la web durante ese rato
-  // pudo quedar con "Programa N Días" guardado · lo devolvemos a "Plan N
-  // Días". Idempotente: solo toca builtin con el nombre exacto del rename.
-  const entrenosFinal = (updates.entrenos ?? rawEntrenos) as Entrenos | undefined;
-  if (entrenosFinal?.planes) {
-    const willReplaceEntrenos = updates.entrenos !== undefined;
-    for (let n = 1; n <= 7; n++) {
-      const id = `${n}dias`;
-      const p = entrenosFinal.planes[id];
-      if (!p) continue;
-      if (p.nombre === `Programa ${n} Día${n === 1 ? '' : 's'}`) {
-        const fixed = `Plan ${n} Día${n === 1 ? '' : 's'}`;
-        if (willReplaceEntrenos) {
-          p.nombre = fixed;
-        } else {
-          updates[`entrenos.planes.${id}.nombre`] = fixed;
-        }
-      }
-    }
-  }
-  // Migración Sub-fase 2C · doc viejo `{proteinas: [], lacteos: [], ...}`
-  // → nuevo shape `{categorias: CategoriaCompra[], items: Record<id,
-  // ItemCompra[]>}`. Se hace ANTES de las migraciones de source/id
-  // porque el shape tiene que ser correcto antes de iterar `items`.
-  const rawCompra = (raw.compra ?? updates.compra) as unknown;
-  if (isLegacyCompraShape(rawCompra)) {
-    updates.compra = migrateLegacyCompra(rawCompra as Record<string, unknown>);
-  }
-  const compra = (updates.compra ?? rawCompra) as Compra | undefined;
-  if (compra && compraNeedsSourceMigration(compra)) {
-    updates.compra = withDefaultSourceInCompra(compra);
   }
 
   if (Object.keys(updates).length === 0) return doc;
@@ -600,365 +500,6 @@ function applyDotPathUpdates(
     }
   }
   return result;
-}
-
-// ── Helpers de migración del flag `source` ──
-// Sample-based: solo regeneramos un bloque (menu/entrenos/compra) si
-// detectamos que algún item le falta source. Si todos lo tienen, no
-// tocamos. La función es idempotente — llamada repetida no hace nada.
-
-const ensureSource = <T extends Partial<{ source: SourceTag }>>(
-  item: T,
-): T & { source: SourceTag } => ({ ...item, source: item.source ?? 'default' });
-
-function menuNeedsSourceMigration(menu: Menu): boolean {
-  for (const day of DAY_KEYS) {
-    for (const meal of MEAL_KEYS) {
-      const c = menu[day]?.[meal] as Partial<Comida> | undefined;
-      if (!c) continue;
-      if (c.source === undefined) return true;
-      // Detectar también el viejo formato de alimentos como string[]
-      // (Sub-fases 2B.0-2B.3) — en ese caso necesitamos remigrar para
-      // convertirlos a Alimento[] con {nombre, cantidad}.
-      const arr = c.alimentos as unknown[] | undefined;
-      if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'string') {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-function withDefaultSourceInMenu(menu: Menu): Menu {
-  const out = {} as Menu;
-  for (const day of DAY_KEYS) {
-    const dayMenu = menu[day] as Partial<ComidasDelDia> | undefined;
-    out[day] = {
-      desayuno: migrateComida(dayMenu?.desayuno, 'desayuno'),
-      comida: migrateComida(dayMenu?.comida, 'comida'),
-      merienda: migrateComida(dayMenu?.merienda, 'merienda'),
-      cena: migrateComida(dayMenu?.cena, 'cena'),
-      // Preservamos los extras existentes · esta función solo hace
-      // migración de `source` en las 4 fijas, no toca los extras.
-      extras: dayMenu?.extras ?? [],
-    };
-  }
-  return out;
-}
-
-// Asegura que una comida tenga source y alimentos en el formato actual
-// (Alimento[]). Si los alimentos vienen como string[] (formato viejo),
-// los parsea con parseAlimentoString para extraer cantidad del final.
-function migrateComida(c: Partial<Comida> | undefined, meal: MealKey): Comida {
-  if (!c) return emptyMigrationComida(meal);
-  let alimentos = (c.alimentos ?? []) as unknown[];
-  // Migración formato viejo · alimentos era string[]
-  if (alimentos.length > 0 && typeof alimentos[0] === 'string') {
-    alimentos = (alimentos as string[]).map(parseAlimentoString);
-  }
-  return {
-    alimentos: alimentos as Alimento[],
-    hora: c.hora ?? null,
-    kcal: c.kcal ?? 0,
-    prot: c.prot ?? 0,
-    carb: c.carb ?? 0,
-    fat: c.fat ?? 0,
-    source: c.source ?? 'default',
-  };
-}
-
-// Comida vacía generada durante la migración cuando un día/comida no existe
-// en el doc viejo. No exportamos `emptyComida` desde defaultUser porque es
-// implementación interna de su factory · aquí lo replicamos a propósito.
-function emptyMigrationComida(meal: MealKey): Comida {
-  return {
-    alimentos: [],
-    hora: HORA_DEFECTO[meal],
-    kcal: 0,
-    prot: 0,
-    carb: 0,
-    fat: 0,
-    source: 'default',
-  };
-}
-
-// Detecta el shape LEGACY (pre-Sub-fase 2D) · `planes` indexado por
-// 1..7 numérico + `planActivo: number | null` + `Ejercicio.setsReps` /
-// `pesoKg` / `tipo` + `DiaEntreno.letra` / `nombre` / `tags` /
-// `duracionMin`. El nuevo shape tiene `planes: Record<string, ...>` +
-// `activePlan: string` + `Ejercicio.series` / `desc` + `DiaEntreno.titulo`
-// / `descripcion` / badges.
-function isLegacyEntrenosShape(e: unknown): boolean {
-  if (!e || typeof e !== 'object') return false;
-  const obj = e as Record<string, unknown>;
-  // El nuevo shape tiene activePlan (string). Si tiene planActivo
-  // (numeric/null) o solo planes con keys "1".."7" → legacy.
-  if (typeof obj.activePlan === 'string' && obj.activePlan) return false;
-  if ('planActivo' in obj) return true;
-  const planes = obj.planes as Record<string, unknown> | undefined;
-  if (!planes) return false;
-  // Si todas las keys son números 1..7, es legacy.
-  return Object.keys(planes).every((k) => /^[1-7]$/.test(k));
-}
-
-// Convierte un doc entrenos LEGACY al nuevo shape. Réplica del
-// `migrateLegacyCompra` · siembra los 7 builtIn limpios y rellena con
-// los datos del legacy lo que pueda mapear (titulo<-letra+nombre,
-// descripcion<-tags, series<-setsReps, desc<-nota).
-function migrateLegacyEntrenos(legacy: Record<string, unknown>): Entrenos {
-  const fresh = defaultEntrenos();
-  const legacyPlanes = legacy.planes as Record<string, unknown> | undefined;
-  if (!legacyPlanes) return fresh;
-  // Mapeo numérico → builtIn id.
-  const NUMS = ['1', '2', '3', '4', '5', '6', '7'] as const;
-  for (const num of NUMS) {
-    const oldPlan = legacyPlanes[num] as
-      | { dias?: unknown[]; nombre?: string }
-      | undefined;
-    if (!oldPlan?.dias?.length) continue;
-    const planId = `${num}dias`;
-    const oldDias = Array.isArray(oldPlan.dias) ? oldPlan.dias : [];
-    const newDias: DiaEntreno[] = oldDias.map((d) => {
-      const old = d as {
-        letra?: string;
-        nombre?: string;
-        tags?: string[];
-        diaSemana?: DayKey | null;
-        ejercicios?: unknown[];
-        source?: SourceTag;
-      };
-      const titulo = old.letra
-        ? `Día ${old.letra}${old.nombre ? ` · ${old.nombre}` : ''}`
-        : old.nombre || 'Día';
-      const ejercicios: Ejercicio[] = Array.isArray(old.ejercicios)
-        ? old.ejercicios.map((rawEj) => {
-            const e = rawEj as {
-              nombre?: string;
-              setsReps?: string;
-              series?: string;
-              nota?: string;
-              desc?: string;
-              source?: SourceTag;
-            };
-            return {
-              nombre: e.nombre ?? '',
-              desc: e.desc ?? e.nota ?? '',
-              series: e.series ?? e.setsReps ?? '',
-              source: e.source ?? 'default',
-            };
-          })
-        : [];
-      return {
-        titulo,
-        descripcion: Array.isArray(old.tags) ? old.tags.join(' · ') : '',
-        // Sub-fase 2D · tiempo estimado · null (no existía en legacy).
-        tiempoEstimadoMin: null,
-        diaSemana: old.diaSemana ?? null,
-        // No teníamos badges en legacy · campos vacíos.
-        badge: '',
-        badgeCustom: '',
-        badge2: '',
-        badgeCustom2: '',
-        badge3: '',
-        badgeCustom3: '',
-        ejercicios,
-        comentario: '',
-        source: old.source ?? 'default',
-      };
-    });
-    if (fresh.planes[planId]) {
-      fresh.planes[planId] = {
-        ...fresh.planes[planId],
-        nombre: oldPlan.nombre ?? fresh.planes[planId].nombre,
-        dias: newDias,
-      };
-    }
-  }
-  // activePlan derivado de planActivo legacy (number | null) · si no
-  // existe o es null, mantenemos el default '4dias'.
-  const oldActive = legacy.planActivo as number | null | undefined;
-  if (typeof oldActive === 'number' && oldActive >= 1 && oldActive <= 7) {
-    fresh.activePlan = `${oldActive}dias`;
-  }
-  return fresh;
-}
-
-// Convierte un valor que debería ser DiaEntreno[] pero puede llegar
-// como objeto `{ '0': dia, '1': dia, ... }` (corrupción Firestore tras
-// dot-path con índice numérico). El bug anterior de setUserDiaEntreno
-// dejó docs así · al detectarlos los reconstruimos como array
-// ordenado por las keys numéricas.
-function coerceDiasArray(dias: unknown): DiaEntreno[] {
-  if (Array.isArray(dias)) return dias as DiaEntreno[];
-  if (dias && typeof dias === 'object') {
-    const obj = dias as Record<string, DiaEntreno>;
-    const numericKeys = Object.keys(obj)
-      .filter((k) => /^\d+$/.test(k))
-      .sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-    return numericKeys.map((k) => obj[k]).filter(Boolean);
-  }
-  return [];
-}
-
-// Devuelve el número de días esperado para un plan builtIn según su
-// id (`4dias` → 4). Para custom plans, devuelve null (no hay número
-// esperado, el user define cuántos días tiene).
-function expectedDiasForBuiltIn(planId: string): number | null {
-  const m = /^([1-7])dias$/.exec(planId);
-  return m ? parseInt(m[1], 10) : null;
-}
-
-function entrenosNeedsSourceMigration(entrenos: Entrenos): boolean {
-  if (!entrenos?.planes) return false;
-  for (const [id, plan] of Object.entries(entrenos.planes)) {
-    if (!plan) continue;
-    // Detectamos `dias` no-array (corrupción Firestore) · forzamos
-    // la migración para reconstruir el array desde el map.
-    if (!Array.isArray(plan.dias)) return true;
-    // Detectamos builtIn plans con número de días incorrecto · el
-    // bug del dot-path numérico borró días al sobreescribir, así
-    // que un plan builtIn que ahora tenga ≠N días es recuperable
-    // con re-seed (sólo lo hacemos si BIDIRECCIONALMENTE faltan
-    // días, no si el user simplemente cambió el plan).
-    const expected = expectedDiasForBuiltIn(id);
-    if (
-      expected !== null
-      && plan.builtIn
-      && plan.dias.length !== expected
-    ) {
-      return true;
-    }
-    for (const dia of plan.dias) {
-      const d = dia as Partial<DiaEntreno>;
-      if (d.source === undefined) return true;
-      // Sub-fase 2D · campo nuevo `tiempoEstimadoMin` en DiaEntreno.
-      // Si falta en docs viejos, forzamos migración.
-      if ((d as Partial<DiaEntreno>).tiempoEstimadoMin === undefined) return true;
-      if (!Array.isArray(dia.ejercicios)) continue;
-      for (const ej of dia.ejercicios) {
-        if ((ej as Partial<Ejercicio>).source === undefined) return true;
-      }
-    }
-  }
-  return false;
-}
-
-function withDefaultSourceInEntrenos(entrenos: Entrenos): Entrenos {
-  const defaults = defaultEntrenos();
-  const planesOut: Record<string, PlanEntreno> = {};
-  for (const [id, plan] of Object.entries(entrenos.planes)) {
-    if (!plan) continue;
-    // coerceDiasArray repara el array si Firestore lo dejó como
-    // `{0: dia, 1: dia, …}` por el bug del dot-path numérico.
-    const dias = coerceDiasArray(plan.dias);
-    const expected = expectedDiasForBuiltIn(id);
-    // Recuperación de plans builtIn corruptos · si el plan dice ser
-    // builtIn (1dias..7dias) pero le faltan días, lo re-sembramos
-    // desde defaultEntrenos. Esto cubre el caso donde el bug del
-    // dot-path borró días al editar (la única forma de que un
-    // builtIn tenga ≠N días es por corrupción · v2 nunca permite
-    // añadir/quitar días en un builtIn sin pasar por save full).
-    if (
-      expected !== null
-      && plan.builtIn
-      && dias.length !== expected
-      && defaults.planes[id]
-    ) {
-      console.warn(
-        `[BTal] Plan builtIn corrupto · ${id} tenía ${dias.length} día(s),`
-        + ` esperados ${expected}. Restaurando a default.`,
-      );
-      planesOut[id] = defaults.planes[id];
-      continue;
-    }
-    planesOut[id] = {
-      ...plan,
-      dias: dias.map((d) => ({
-        ...ensureSource(d),
-        // Sub-fase 2D · `tiempoEstimadoMin` puede no existir en docs
-        // viejos · default null (sin tiempo definido).
-        tiempoEstimadoMin:
-          (d as Partial<DiaEntreno>).tiempoEstimadoMin ?? null,
-        ejercicios: Array.isArray(d.ejercicios)
-          ? d.ejercicios.map((ej) => ensureSource(ej))
-          : [],
-      })),
-    };
-  }
-  return { ...entrenos, planes: planesOut };
-}
-
-function compraNeedsSourceMigration(compra: Compra): boolean {
-  if (!compra || !compra.items) return false;
-  for (const items of Object.values(compra.items)) {
-    if (!Array.isArray(items)) continue;
-    for (const item of items) {
-      if ((item as Partial<ItemCompra>).source === undefined) return true;
-      if ((item as Partial<ItemCompra>).id === undefined) return true;
-    }
-  }
-  return false;
-}
-
-function withDefaultSourceInCompra(compra: Compra): Compra {
-  const itemsOut: Record<string, ItemCompra[]> = {};
-  for (const [catId, items] of Object.entries(compra.items)) {
-    itemsOut[catId] = Array.isArray(items)
-      ? items.map((item) => {
-          const withSource = ensureSource(item);
-          // ID estable · si el item viene de un doc viejo sin id, lo
-          // generamos ahora (idempotente: si ya tiene id, lo respeta).
-          if (!withSource.id) {
-            return { ...withSource, id: newCompraItemId() };
-          }
-          return withSource;
-        })
-      : [];
-  }
-  return { categorias: compra.categorias, items: itemsOut };
-}
-
-// Detecta el shape LEGACY (pre-Sub-fase 2C) · objeto plano con keys
-// `proteinas`, `lacteos`, ... cada uno apuntando a un array de items.
-// El nuevo shape tiene `categorias` (array) + `items` (record).
-function isLegacyCompraShape(c: unknown): boolean {
-  if (!c || typeof c !== 'object') return false;
-  const obj = c as Record<string, unknown>;
-  // Si tiene `categorias` array O `items` object, ya es nuevo shape.
-  if (Array.isArray(obj.categorias) || (obj.items && typeof obj.items === 'object')) {
-    return false;
-  }
-  // Si tiene al menos una de las 7 keys builtIn como array → legacy.
-  return COMPRA_BUILTIN_IDS.some((cat) => Array.isArray(obj[cat]));
-}
-
-// Convierte un doc compra LEGACY (shape de pre-2C) al nuevo shape.
-// Las 7 categorías builtIn se siembran con sus defaults; los items
-// existentes se preservan (con id generado si no lo tienen).
-function migrateLegacyCompra(legacy: Record<string, unknown>): Compra {
-  const itemsOut: Record<string, ItemCompra[]> = {};
-  for (const cat of COMPRA_BUILTIN_IDS) {
-    const arr = legacy[cat];
-    if (!Array.isArray(arr)) {
-      itemsOut[cat] = [];
-      continue;
-    }
-    itemsOut[cat] = arr.map((it) => {
-      const partial = (it ?? {}) as Partial<ItemCompra>;
-      return {
-        id: partial.id ?? newCompraItemId(),
-        nombre: partial.nombre ?? '',
-        cantidad: partial.cantidad ?? '',
-        comprado: partial.comprado ?? false,
-        precio: partial.precio ?? null,
-        source: partial.source ?? 'default',
-      };
-    });
-  }
-  return {
-    categorias: DEFAULT_COMPRA_CATEGORIAS.map((c) => ({ ...c })),
-    items: itemsOut,
-  };
 }
 
 // Siembra el documento de un usuario invitado (sesión anónima) con el
