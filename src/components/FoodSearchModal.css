@@ -5,7 +5,13 @@
   max-height: 80vh;
 }
 
+.food-search-input-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
 .food-search-input {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -14,6 +20,24 @@
   border-radius: 12px;
   background: var(--btal-surface-2, rgba(255, 255, 255, 0.04));
   color: var(--btal-t-3);
+}
+.food-search-scan {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  border: 1px solid var(--btal-blue, #5aa8ff);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--btal-blue, #5aa8ff) 16%, transparent);
+  color: var(--btal-blue, #5aa8ff);
+  cursor: pointer;
+}
+.food-search-scan:active {
+  background: color-mix(in srgb, var(--btal-blue, #5aa8ff) 28%, transparent);
+}
+.food-search-scan:disabled {
+  opacity: 0.5;
 }
 .food-search-input input {
   flex: 1;

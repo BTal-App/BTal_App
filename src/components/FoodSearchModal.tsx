@@ -3,6 +3,7 @@ import { IonModal, IonContent, IonButton } from '@ionic/react';
 import { MealIcon } from './MealIcon';
 import { useProfile } from '../hooks/useProfile';
 import { searchFood, type FoodSearchResult } from '../services/functions';
+import { barcodeAvailable, scanBarcode } from '../services/barcode';
 import type { Alimento } from '../templates/defaultUser';
 import './FoodSearchModal.css';
 
@@ -30,6 +31,7 @@ export function FoodSearchModal({ isOpen, onClose, onSelect }: Props) {
   const [gramos, setGramos] = useState('100');
   // Filtro por marca(s) · chips sobre los resultados (multi-select).
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
+  const [scanning, setScanning] = useState(false);
 
   const reqId = useRef(0);
 
@@ -41,7 +43,27 @@ export function FoodSearchModal({ isOpen, onClose, onSelect }: Props) {
     setPicked(null);
     setGramos('100');
     setBrandFilter([]);
+    setScanning(false);
     setLoading(false);
+  };
+
+  // Escanea un código de barras (solo nativo) → busca el producto por EAN.
+  const handleScan = async () => {
+    setError('');
+    setScanning(true);
+    try {
+      const code = await scanBarcode();
+      if (!code) return;
+      const res = await searchFood({ barcode: code, supermercados });
+      if (res.length > 0) setPicked(res[0]);
+      else setError('Producto no encontrado en Open Food Facts.');
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code === 'denied') setError('Necesitas dar permiso de cámara para escanear.');
+      else if (code !== 'cancelled') setError('No se pudo escanear. Inténtalo de nuevo.');
+    } finally {
+      setScanning(false);
+    }
   };
 
   const toggleBrand = (b: string) =>
@@ -144,22 +166,36 @@ export function FoodSearchModal({ isOpen, onClose, onSelect }: Props) {
 
             {!picked && (
               <>
-                <div className="food-search-input">
-                  <MealIcon value="tb:search" size={18} />
-                  <input
-                    type="text"
-                    value={query}
-                    placeholder="ej. yogur griego, arroz, atún…"
-                    aria-label="Buscar alimento"
-                    maxLength={60}
-                    autoFocus
-                    onChange={(e) => {
-                      setQuery(e.target.value);
-                      setBrandFilter([]);
-                    }}
-                  />
+                <div className="food-search-input-row">
+                  <div className="food-search-input">
+                    <MealIcon value="tb:search" size={18} />
+                    <input
+                      type="text"
+                      value={query}
+                      placeholder="ej. yogur griego, arroz, atún…"
+                      aria-label="Buscar alimento"
+                      maxLength={60}
+                      autoFocus
+                      onChange={(e) => {
+                        setQuery(e.target.value);
+                        setBrandFilter([]);
+                      }}
+                    />
+                  </div>
+                  {barcodeAvailable() && (
+                    <button
+                      type="button"
+                      className="food-search-scan"
+                      onClick={handleScan}
+                      disabled={scanning}
+                      aria-label="Escanear código de barras"
+                    >
+                      <MealIcon value="tb:camera" size={22} />
+                    </button>
+                  )}
                 </div>
 
+                {scanning && <p className="food-search-status">Escaneando…</p>}
                 {loading && <p className="food-search-status">Buscando…</p>}
                 {error && <p className="food-search-status food-search-error">{error}</p>}
                 {!loading && !error && searched && results.length === 0 && (
