@@ -131,6 +131,19 @@ const generatedSuplementosSchema = z.object({
   // El "check" includeCreatina del batido · la IA decide si la creatina va
   // DENTRO del batido. Default false si la IA lo omite (no rompe la parse).
   creatinaEnBatido: z.boolean().default(false),
+  // Macros del batido que la IA propone (solo si recomienda batido y quiere
+  // ajustarlas). El menú se cuadra contando estas macros en los días con
+  // batido. Si se omite, se conserva la config actual del user. Rangos
+  // generosos · persist redondea.
+  batidoMacros: z
+    .object({
+      grProt: z.number().min(0).max(120),
+      kcal: z.number().min(0).max(2000),
+      prot: z.number().min(0).max(200),
+      carb: z.number().min(0).max(300),
+      fat: z.number().min(0).max(150),
+    })
+    .nullish(),
 });
 export type GeneratedSuplementos = z.infer<typeof generatedSuplementosSchema>;
 

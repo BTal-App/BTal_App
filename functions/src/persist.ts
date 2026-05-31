@@ -181,6 +181,9 @@ export function mapSuplementosDias(gen: GeneratedSuplementos): {
   daysWithBatido: DayKey[];
   daysWithCreatina: DayKey[];
   includeCreatina: boolean;
+  // Macros del batido que propone la IA (redondeadas) · solo si recomienda
+  // batido y las devolvió. null = conservar la config actual del user.
+  batidoMacros: { gr_prot: number; kcal: number; prot: number; carb: number; fat: number } | null;
 } {
   const norm = (arr: string[]): DayKey[] => {
     const seen = new Set<DayKey>();
@@ -216,7 +219,22 @@ export function mapSuplementosDias(gen: GeneratedSuplementos): {
     // Check OFF: el batido no lleva creatina · la creatina suelta es DIARIA.
     daysWithCreatina = [...DAY_KEYS];
   }
-  return { daysWithBatido, daysWithCreatina, includeCreatina };
+
+  // Macros del batido · solo si la IA recomienda batido (hay días) y propuso
+  // macros. Redondeamos. Si no, null → generatePlan conserva la config actual.
+  let batidoMacros: { gr_prot: number; kcal: number; prot: number; carb: number; fat: number } | null = null;
+  if (daysWithBatido.length > 0 && gen.batidoMacros) {
+    const m = gen.batidoMacros;
+    batidoMacros = {
+      gr_prot: Math.round(m.grProt),
+      kcal: Math.round(m.kcal),
+      prot: Math.round(m.prot),
+      carb: Math.round(m.carb),
+      fat: Math.round(m.fat),
+    };
+  }
+
+  return { daysWithBatido, daysWithCreatina, includeCreatina, batidoMacros };
 }
 
 // Validación post-Zod adicional: coherencia de macros. Si las kcal de una

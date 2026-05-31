@@ -217,7 +217,20 @@ export const generatePlan = onCall(
           .sort((a, b) => b.kg - a.kg)
           .slice(0, 8)
       : [];
-    const prompt = buildPrompt(profile, { scope, wantMenu, wantEntreno, topPRs });
+    // Referencia (ajustable) de lo que aporta el batido al total del día · la
+    // IA la usa para cuadrar el menú y puede proponer otra. Viene del doc del
+    // user (default de la app para uno nuevo) · NO es un valor fijo.
+    const bc = userDoc.suplementos?.batidoConfig;
+    const batidoRef = wantMenu
+      ? {
+          grProt: bc?.gr_prot ?? 35,
+          kcal: bc?.kcal ?? 145,
+          prot: bc?.prot ?? 30,
+          carb: bc?.carb ?? 4,
+          fat: bc?.fat ?? 1,
+        }
+      : undefined;
+    const prompt = buildPrompt(profile, { scope, wantMenu, wantEntreno, topPRs, batidoRef });
     const systemInstruction = buildSystemInstruction();
 
     let rawJson: string;
@@ -272,13 +285,23 @@ export const generatePlan = onCall(
     // stock y contadores del user. Sustituye al error de meter batidos como
     // comidas del menú.
     if (parsed.suplementos) {
-      // La IA recomienda los días de batido/creatina Y decide el check
-      // includeCreatina (creatina dentro del batido). Escribimos el flag con
-      // dot-path para preservar el resto de batidoConfig (gramos, producto…).
+      // La IA recomienda los días de batido/creatina, el check includeCreatina
+      // (creatina dentro del batido) y, si lo ve, las macros del batido.
+      // Escribimos con dot-path para preservar el resto de batidoConfig
+      // (producto/precio) + stock + contadores del user.
       const dias = mapSuplementosDias(parsed.suplementos);
       updates['suplementos.daysWithBatido'] = dias.daysWithBatido;
       updates['suplementos.daysWithCreatina'] = dias.daysWithCreatina;
       updates['suplementos.batidoConfig.includeCreatina'] = dias.includeCreatina;
+      // Macros del batido · solo si la IA las propuso (recomienda batido y
+      // quiso ajustarlas). Si no, se conserva la config actual del user.
+      if (dias.batidoMacros) {
+        updates['suplementos.batidoConfig.gr_prot'] = dias.batidoMacros.gr_prot;
+        updates['suplementos.batidoConfig.kcal'] = dias.batidoMacros.kcal;
+        updates['suplementos.batidoConfig.prot'] = dias.batidoMacros.prot;
+        updates['suplementos.batidoConfig.carb'] = dias.batidoMacros.carb;
+        updates['suplementos.batidoConfig.fat'] = dias.batidoMacros.fat;
+      }
     }
 
     // ── 10. Timestamps de generación · la CUOTA ya se reservó en la

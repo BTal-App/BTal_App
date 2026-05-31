@@ -188,12 +188,26 @@ export interface RegistroStats {
   prs?: Record<string, PRStat>;
 }
 
+// Config del batido que las funciones leen como REFERENCIA (ajustable) para
+// que la IA cuadre las macros del día y, si lo ve, proponga otras. No son
+// valores fijos · vienen del doc del user (default de la app para uno nuevo).
+export interface SuplementosDoc {
+  batidoConfig?: {
+    gr_prot?: number;
+    kcal?: number;
+    prot?: number;
+    carb?: number;
+    fat?: number;
+  };
+}
+
 // UserDocument · solo los campos que las funciones leen/escriben.
 export interface UserDocument {
   profile: UserProfile;
   menu: Menu;
   entrenos: Entrenos;
   compra: Compra;
+  suplementos?: SuplementosDoc;
   plan: PlanIA;
   generaciones: GeneracionesIA;
   // Historial de PRs · lo lee el prompt de entreno (progresiones realistas).

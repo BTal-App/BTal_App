@@ -152,6 +152,9 @@ export interface BuildPromptOpts {
   // registro. Vacío en la primera generación (sin entrenos registrados).
   // Se inyectan en el bloque de entreno para progresiones realistas.
   topPRs?: { exercise: string; kg: number }[];
+  // Referencia (ajustable) de las macros del batido actual del user · la IA
+  // las usa para cuadrar el menú y puede proponer otras. Solo si wantMenu.
+  batidoRef?: { grProt: number; kcal: number; prot: number; carb: number; fat: number };
 }
 
 export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string {
@@ -198,10 +201,22 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
       'cantidad (g/ml/unidades), y macros (kcal, prot, carb, fat).',
     );
     lines.push(`OBJETIVO NUTRICIONAL del menú (para ${OBJETIVO_LABEL[p.objetivo]}):`);
-    lines.push(`- Total diario ≈ ${kcal} kcal (suma de las 4 comidas, con ligera variación entre días).`);
-    lines.push(`- Proteína ≈ ${protTarget} g/día como referencia (clave para el objetivo).`);
+    lines.push(`- Total diario ≈ ${kcal} kcal · Proteína ≈ ${protTarget} g/día (clave para el objetivo).`);
     lines.push(`- ${macroSplitGuidance(p.objetivo)}`);
     lines.push('- Reparto orientativo de kcal: desayuno ~25%, comida ~35%, merienda ~15%, cena ~25%.');
+    // El batido cuenta en el total del día · la IA debe cuadrar las 4 comidas
+    // restándolo en los días con batido, para no pasarse de kcal/proteína.
+    if (opts.batidoRef) {
+      const b = opts.batidoRef;
+      lines.push(
+        `- IMPORTANTE (batido): el TOTAL de cada día = las 4 comidas + el batido (en los días que lo lleve, ver SUPLEMENTOS). ` +
+        `El batido aporta ~${b.kcal} kcal y ~${b.prot} g de proteína (referencia AJUSTABLE · puedes proponer otras macros en "batidoMacros"). ` +
+        `En los días CON batido, diseña las 4 comidas para que (4 comidas + batido) ≈ objetivo del día: resta el batido, NO te pases de kcal/proteína. ` +
+        `En los días SIN batido, las 4 comidas solas alcanzan el objetivo. Usa SIEMPRE las macros del batido que tú decidas.`,
+      );
+    } else {
+      lines.push(`- Total diario = suma de las 4 comidas (≈ objetivo), con ligera variación entre días.`);
+    }
     lines.push(
       '- RESPETA estrictamente alergias, intolerancias y alimentos prohibidos (no deben aparecer NUNCA). ' +
       'Incluye los alimentos obligatorios a lo largo de la semana y prioriza los ingredientes favoritos del usuario. ' +
@@ -218,14 +233,18 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
   // como comida; la creatina la recomienda según objetivo.
   if (opts.wantMenu) {
     lines.push(
-      'SUPLEMENTOS (campo "suplementos"): recomienda un esquema COHERENTE de batido de proteína y ' +
-      'creatina según el objetivo y la actividad. NO son comidas del menú. Sé sensato y estable, ' +
-      'no alternes batido un día y creatina otro sin lógica.',
+      'SUPLEMENTOS (campo "suplementos"): decide SI tiene sentido recomendar batido de proteína y/o ' +
+      'creatina para ESTE usuario (según objetivo, actividad y lo que ya aporta el menú). NO son comidas ' +
+      'del menú. Sé sensato y estable, no alternes batido un día y creatina otro sin lógica. Si no aportan, no los pongas.',
     );
     lines.push(
-      `- batidoDias: el batido de proteína ayuda a alcanzar la proteína objetivo (~${Math.round(p.peso * PROT_FACTOR[p.objetivo])} g/día). ` +
-      `Ponlo en los días que aporte (normalmente los ~${p.diasEntreno} de entreno, o a diario si hace falta para llegar a la proteína). ` +
-      `Mismos días cada semana. Si no aporta, deja [].`,
+      `- batidoDias: añade batido SOLO si ayuda a alcanzar la proteína objetivo (~${Math.round(p.peso * PROT_FACTOR[p.objetivo])} g/día). ` +
+      `Si con las comidas ya se llega holgado, NO hace falta (deja []). Si lo añades: ponlo en los días que aporte (normalmente los ~${p.diasEntreno} de entreno, o a diario), mismos días cada semana.`,
+    );
+    lines.push(
+      '- batidoMacros: si recomiendas batido, propón sus macros adecuadas para este usuario ' +
+      '(grProt, kcal, prot, carb, fat · un batido de proteína realista; puedes mantener la referencia o ' +
+      'ajustarla, p.ej. más proteína para ganancia). Usa ESTAS macros para cuadrar el menú (arriba). Si no recomiendas batido, omite batidoMacros.',
     );
     lines.push(
       '- La CREATINA, si la recomiendas, se toma SIEMPRE A DIARIO (saturación · entreno y descanso). ' +
@@ -315,7 +334,7 @@ function buildJsonSkeleton(opts: BuildPromptOpts): string {
     );
   }
   if (opts.wantMenu) {
-    parts.push('"suplementos":{"batidoDias":["lun","mar","mie","jue","vie"],"creatinaDias":["lun","mar","mie","jue","vie","sab","dom"],"creatinaEnBatido":true}');
+    parts.push('"suplementos":{"batidoDias":["lun","mar","mie","jue","vie"],"creatinaDias":["lun","mar","mie","jue","vie","sab","dom"],"creatinaEnBatido":true,"batidoMacros":{"grProt":35,"kcal":160,"prot":32,"carb":6,"fat":2}}');
   }
   return `{${parts.join(',')}}`;
 }
