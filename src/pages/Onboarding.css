@@ -334,9 +334,16 @@
   transition: all 0.18s;
 }
 
-.onboarding-pill:hover:not(.active) {
-  border-color: var(--btal-border-2);
-  color: var(--btal-t-1);
+/* Hover SOLO en dispositivos con puntero real · en táctil el :hover se
+   queda "pegado" tras tocar y, como esta regla tiene más especificidad que
+   .coral, le pisaba el borde/texto coral por gris → el alérgeno recién
+   seleccionado se veía "rosita" lavado hasta tocar fuera. Excluimos también
+   .coral (alergias activas) para que NUNCA le pise su color. */
+@media (hover: hover) {
+  .onboarding-pill:hover:not(.active):not(.coral) {
+    border-color: var(--btal-border-2);
+    color: var(--btal-t-1);
+  }
 }
 
 .onboarding-pill.active {
