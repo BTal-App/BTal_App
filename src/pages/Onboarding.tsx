@@ -98,11 +98,17 @@ const Onboarding: React.FC = () => {
       history.replace('/app');
       return;
     }
-    // Ya completado → directo al dashboard
-    if (userDoc?.profile?.completed) {
+    // Ya completado → directo al dashboard. PERO no mientras estamos
+    // generando (submitting): saveOnboarding marca completed=true ~2s antes
+    // de que la IA termine, y sin este guard este efecto saltaría a /app
+    // dejando al user en un Hoy vacío mientras la generación sigue por
+    // detrás. Durante el submit la navegación la hace persistAndExit, ya
+    // con el plan escrito. Este redirect solo aplica a quien entra a
+    // /onboarding teniendo el perfil YA completado de antes.
+    if (userDoc?.profile?.completed && !submitting) {
       history.replace('/app');
     }
-  }, [authLoading, profileLoading, isAuthed, user, userDoc, history]);
+  }, [authLoading, profileLoading, isAuthed, user, userDoc, history, submitting]);
 
   // ── Validación por paso ──────────────────────────────────────────────
   const stepValid = useMemo(() => {
