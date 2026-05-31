@@ -35,6 +35,7 @@ import { MealSheet } from '../../components/MealSheet';
 import { TrainSheet } from '../../components/TrainSheet';
 import { GuestBanner } from '../../components/GuestBanner';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
+import { AiCountdown } from '../../components/AiCountdown';
 import { blurAndRun } from '../../utils/focus';
 import { greetingName } from '../../utils/userDisplay';
 import { canGenerateAi, formatCountdown, formatUnlockDate } from '../../utils/ia';
@@ -180,6 +181,11 @@ const HoyPage: React.FC = () => {
     () => Math.floor(Date.now() / 30_000) * 30_000,
     () => 0,
   );
+  // Cuando la cuenta atrás en vivo (<AiCountdown>, tick 1 s) llega a 0,
+  // forzamos un re-render para reevaluar la elegibilidad y pasar el chip a
+  // "LISTA" al instante, sin esperar al tick lento de 30 s.
+  const [, setExpireBump] = useState(0);
+  const bumpExpire = () => setExpireBump((n) => n + 1);
 
   if (loading || !user) {
     return (
@@ -278,8 +284,10 @@ const HoyPage: React.FC = () => {
               // TIEMPO RESTANTE · cuenta atrás en vivo (nowTick 30 s) · al
               // pulsar muestra la fecha exacta de desbloqueo.
               const unlocksAt = elig.unlocksAt;
+              // `left` (cuenta atrás bucketizada a 30 s) solo para el texto del
+              // alert · el chip visible usa <AiCountdown> con tick de 1 s.
               const left = formatCountdown(unlocksAt, nowTick);
-              chip = left ? (
+              chip = (
                 <button
                   type="button"
                   className="hoy-ai-status hoy-ai-status--locked"
@@ -293,9 +301,12 @@ const HoyPage: React.FC = () => {
                   )}
                 >
                   <MealIcon value="tb:lock" size={15} />
-                  <span>Generación IA - Tiempo restante: {left}</span>
+                  <span>
+                    Generación IA - Tiempo restante:{' '}
+                    <AiCountdown unlocksAt={unlocksAt} onExpire={bumpExpire} />
+                  </span>
                 </button>
-              ) : null;
+              );
             }
             // Alineado a la derecha (bajo el avatar/racha).
             return chip ? <div className="hoy-ai-status-row">{chip}</div> : null;

@@ -1,0 +1,49 @@
+/* Cuenta atrás en vivo del chip de generación IA (HoyPage · estado
+   bloqueado). Dígitos tabulares para que el ancho no salte al tickear. */
+.ai-countdown {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.ai-countdown-seg {
+  display: inline-block;
+}
+
+/* Unidad (d/h/m/s) pegada al número · algo más pequeña y atenuada. */
+.ai-countdown-unit {
+  margin-left: 1px;
+  font-size: 0.78em;
+  font-weight: 600;
+  opacity: 0.65;
+}
+
+/* Los segundos se re-montan cada tick (key={secs}) · la animación "pop"
+   se vuelve a disparar en cada cambio: entra desde arriba con un pequeño
+   rebote de escala. */
+.ai-countdown-seg--sec {
+  animation: ai-cd-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ai-cd-pop {
+  0% {
+    transform: translateY(-3px) scale(1.3);
+    opacity: 0;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Respeta a quien pide menos movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  .ai-countdown-seg--sec {
+    animation: none;
+  }
+}
