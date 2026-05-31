@@ -291,7 +291,8 @@ const Onboarding: React.FC = () => {
                     placeholder="Tu nombre"
                     value={data.nombre}
                     onChange={(e) => setField('nombre', e.target.value)}
-                    autoComplete="given-name"
+                    autoComplete="name"
+                    autoCapitalize="words"
                     maxLength={32}
                   />
                 </label>
