@@ -100,8 +100,8 @@ function normalizeHora(v: string | null, fallback: string): string {
 }
 
 // Mapea una comida extra generada por la IA → ComidaExtra de Firestore.
-// source='ai' (regenerable + badge IA), esExtra=true (chip "EXTRA"),
-// deshabilitada=false. El user podrá deshabilitarla o borrarla.
+// source='ai' (regenerable + badge IA), deshabilitada=false. Toda extra se
+// renderiza con el chip "EXTRA". El user podrá deshabilitarla o borrarla.
 function mapExtra(gen: GeneratedExtra, idx: number): ComidaExtra {
   return {
     id: newAiExtraId(idx),
@@ -115,7 +115,6 @@ function mapExtra(gen: GeneratedExtra, idx: number): ComidaExtra {
     source: AI_SOURCE,
     emoji: null,
     nombrePlato: gen.nombrePlato,
-    esExtra: true,
     deshabilitada: false,
   };
 }

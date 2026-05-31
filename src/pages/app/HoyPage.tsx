@@ -509,7 +509,7 @@ const HoyPage: React.FC = () => {
                 // row.kind === 'extra'
                 const extra = row.extra;
                 const isEmpty = extra.alimentos.length === 0;
-                const isExtra = extra.esExtra ?? true;
+                const isExtra = true;
                 const plato = (extra.nombrePlato ?? '').trim();
                 const titulo = extra.nombre.trim() || 'Comida';
                 return (
@@ -652,7 +652,7 @@ const HoyPage: React.FC = () => {
             comida={openExtra}
             title={openExtra.nombre.trim() || 'Comida'}
             iconFallback={EXTRA_ICON_DEFAULT}
-            isExtra={openExtra.esExtra ?? true}
+            isExtra
             onEdit={() => {
               setOpenExtra(null);
               goToMenu(todayDay);

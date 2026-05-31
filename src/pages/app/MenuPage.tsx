@@ -901,7 +901,7 @@ const MenuPage: React.FC = () => {
             comida={openExtra}
             title={openExtra.nombre.trim() || 'Comida'}
             iconFallback={EXTRA_ICON_DEFAULT}
-            isExtra={openExtra.esExtra ?? true}
+            isExtra
             isDisabled={!!openExtra.deshabilitada}
             onEdit={() => {
               const e = openExtra;
@@ -1733,14 +1733,12 @@ interface ExtraMealCardProps {
   onClick: () => void;
 }
 
-// Card de una comida extra (custom). Si `esExtra !== false` (default
-// para retro-compat con docs antiguos) la card adopta el borde
-// dashed lima + chip "EXTRA" junto al nombre. Si el user creó la
-// comida desde el editor con el check "EXTRA" desmarcado, la card se
-// renderiza como una comida normal (sin dashed, sin chip).
+// Card de una comida extra (custom). TODA comida añadida es un EXTRA: la card
+// siempre adopta el borde dashed lima + chip "EXTRA" junto al nombre, para
+// distinguirla de las 4 fijas (desayuno/comida/merienda/cena).
 function ExtraMealCard({ extra, onClick }: ExtraMealCardProps) {
   const isEmpty = extra.alimentos.length === 0;
-  const isExtra = extra.esExtra ?? true;
+  const isExtra = true;
   const isDisabled = !!extra.deshabilitada;
   const plato = (extra.nombrePlato ?? '').trim();
   return (

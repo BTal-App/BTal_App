@@ -227,18 +227,6 @@ export interface ComidaExtra extends Comida {
   id: string;
   nombre: string;
   /**
-   * Marca visual "EXTRA" · cuando `true` la card en el menú aparece
-   * con borde discontinuo lima + chip "EXTRA" junto al nombre (forma
-   * de distinguirla de las 4 comidas fijas). Cuando `false`, la card
-   * se renderiza como una comida normal.
-   *
-   * Campo opcional por retro-compatibilidad · los docs anteriores a
-   * esta opción (sin el campo) se tratan como EXTRA por defecto
-   * (mismo aspecto que ya tenían en Firestore). Los nuevos se crean
-   * con `false` desde el editor salvo que el user marque el check.
-   */
-  esExtra?: boolean;
-  /**
    * Comida deshabilitada · cuando `true` la card se renderiza atenuada
    * en gris y NO suma sus macros al total del día ni a la media
    * semanal (igual que si no existiera). Pulsar la card sigue abriendo

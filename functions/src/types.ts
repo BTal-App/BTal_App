@@ -108,12 +108,11 @@ export interface Comida {
 
 // Comida extra · slot adicional a las 4 fijas. Mismo shape que el frontend
 // (defaultUser.ts ComidaExtra): id estable, nombre (título del slot),
-// esExtra (chip "EXTRA"), deshabilitada (pausada · no suma). La IA ahora
-// PUEDE generar extras (almuerzo/media mañana/recena) para repartir kcal.
+// deshabilitada (pausada · no suma). Toda extra se renderiza con el chip
+// "EXTRA". La IA puede generar extras (almuerzo/media mañana/recena).
 export interface ComidaExtra extends Comida {
   id: string;
   nombre: string;
-  esExtra?: boolean;
   deshabilitada?: boolean;
 }
 

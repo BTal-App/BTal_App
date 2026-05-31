@@ -65,16 +65,10 @@ export function MealExtraEditorModal({
   // con id nuevo. Al primer save haremos add con ese id. Si estamos
   // editando, snapshot = el extra que viene en props.
   const buildInitial = (): ComidaExtra => {
-    if (extra) {
-      // Edit mode · normaliza `esExtra` para que el check del editor
-      // coincida con lo que la card muestra hoy (legacy = sin campo =
-      // visualmente EXTRA → check marcado). Sin esto, abrir un extra
-      // antiguo mostraría el check desmarcado pero la card sí dashed.
-      return { ...extra, esExtra: extra.esExtra ?? true };
-    }
-    // Create mode · arranca con el check desmarcado · el user lo
-    // activa solo si quiere el aspecto diferenciado (borde dashed +
-    // chip EXTRA junto al nombre).
+    // Edit mode · el extra que viene en props. Create mode · comida vacía con
+    // id nuevo (al primer save se hace add). Toda comida añadida es un EXTRA
+    // (se renderiza siempre con borde lima + chip "EXTRA").
+    if (extra) return { ...extra };
     return {
       id: newExtraId(),
       nombre: '',
@@ -85,7 +79,6 @@ export function MealExtraEditorModal({
       carb: 0,
       fat: 0,
       source: 'user',
-      esExtra: false,
     };
   };
 
@@ -153,7 +146,6 @@ export function MealExtraEditorModal({
     if ((original.nombrePlato ?? '') !== (local.nombrePlato ?? '')) return true;
     if ((original.emoji ?? null) !== (local.emoji ?? null)) return true;
     if (original.hora !== local.hora) return true;
-    if ((original.esExtra ?? true) !== (local.esExtra ?? true)) return true;
     if (original.alimentos.length !== local.alimentos.length) return true;
     for (let i = 0; i < original.alimentos.length; i++) {
       if (original.alimentos[i].nombre !== local.alimentos[i].nombre) return true;
@@ -219,11 +211,6 @@ export function MealExtraEditorModal({
       if ((cleaned.nombrePlato ?? '').trim())
         changes.push({ label: 'Plato', from: '—', to: cleaned.nombrePlato ?? '—' });
       if (cleaned.hora) changes.push({ label: 'Hora', from: '—', to: cleaned.hora });
-      // Tipo · solo si el user marcó como EXTRA (el default es
-      // "Comida normal" · no merece línea de diff).
-      if (cleaned.esExtra) {
-        changes.push({ label: 'Tipo', from: '—', to: 'EXTRA' });
-      }
       // Alimentos · solo si añadió alguno.
       if (cleaned.alimentos.length > 0) {
         changes.push({
@@ -240,12 +227,6 @@ export function MealExtraEditorModal({
       pushDiff(changes, 'Nombre del bloque', original.nombre, cleaned.nombre);
       pushDiff(changes, 'Plato', original.nombrePlato ?? '', cleaned.nombrePlato ?? '');
       pushDiff(changes, 'Hora', original.hora ?? '', cleaned.hora ?? '');
-      pushDiff(
-        changes,
-        'Tipo',
-        (original.esExtra ?? true) ? 'EXTRA' : 'Comida normal',
-        cleaned.esExtra ? 'EXTRA' : 'Comida normal',
-      );
       pushDiff(
         changes,
         'Alimentos',
@@ -414,30 +395,6 @@ export function MealExtraEditorModal({
                   }
                 />
               </label>
-
-              {/* Check "Marcar como EXTRA" · cambia el aspecto visual
-                  de la card en el menú. Marcado = borde dashed +
-                  chip "EXTRA"; desmarcado = card normal como las
-                  fijas (desayuno/comida/...). El dato sigue
-                  guardándose en el array `extras` del día (no se
-                  convierte en una comida fija). */}
-              <label className="meal-editor-extra-check">
-                <input
-                  type="checkbox"
-                  checked={!!local.esExtra}
-                  onChange={(e) => change('esExtra', e.target.checked)}
-                />
-                <span className="meal-editor-extra-check-label">
-                  Marcar como EXTRA
-                </span>
-              </label>
-              <p className="meal-editor-extra-hint">
-                Si lo marcas, la comida aparece en el menú con un borde
-                discontinuo y una etiqueta <strong>EXTRA</strong> para
-                distinguirla de las comidas principales (desayuno,
-                comida, merienda, cena). Si lo dejas sin marcar, se
-                muestra como una comida más del día.
-              </p>
 
               <label className="onboarding-field">
                 <span>
