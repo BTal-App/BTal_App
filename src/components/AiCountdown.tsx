@@ -41,22 +41,32 @@ export function AiCountdown({ unlocksAt, onExpire }: Props) {
   const mins = Math.floor((totalSec % 3600) / 60);
   const secs = totalSec % 60;
 
-  // Mostramos desde la primera unidad no nula · las de la derecha se padean
-  // a 2 dígitos para que el ancho no salte (efecto contador estable).
-  const hasD = days > 0;
-  const hasH = hasD || hours > 0;
+  // Si queda 1 día o más, NO mostramos minutos ni segundos · solo "Xd Yh"
+  // (el chip sería demasiado ancho con la cuenta completa). Los segundos en
+  // vivo solo cuando queda menos de 1 día (< 24 h).
+  if (days >= 1) {
+    return (
+      <span className="ai-countdown">
+        <span className="ai-countdown-seg">
+          {days}<span className="ai-countdown-unit">d</span>
+        </span>
+        <span className="ai-countdown-seg">
+          {hours}<span className="ai-countdown-unit">h</span>
+        </span>
+      </span>
+    );
+  }
+
+  // Menos de 1 día · h (si la hay) + m + s, con las unidades de la derecha
+  // padeadas a 2 dígitos para que el ancho no salte (efecto contador).
+  const hasH = hours > 0;
   const hasM = hasH || mins > 0;
 
   return (
     <span className="ai-countdown">
-      {hasD && (
-        <span className="ai-countdown-seg">
-          {days}<span className="ai-countdown-unit">d</span>
-        </span>
-      )}
       {hasH && (
         <span className="ai-countdown-seg">
-          {hasD ? pad2(hours) : hours}<span className="ai-countdown-unit">h</span>
+          {hours}<span className="ai-countdown-unit">h</span>
         </span>
       )}
       {hasM && (
