@@ -56,6 +56,24 @@ function analyzeMeal(
   c: Comida | ComidaExtra,
   macrosMap: Map<string, MacrosPer100 | null>,
 ): MealAnalysis {
+  // Las comidas MANUALES del user (incluye alimentos del buscador 6B-B) NO se
+  // reajustan ni recalculan · cuentan como FIJAS (su kcal va al total del día
+  // pero sus gramos/macros no se tocan). Preserva el trabajo manual del user en
+  // una regeneración con "conservar lo mío".
+  if (c.source === 'user') {
+    return {
+      resolvedKcal: 0,
+      resolvedProt: 0,
+      resolvedCarb: 0,
+      resolvedFat: 0,
+      remKcal: c.kcal,
+      remProt: c.prot,
+      remCarb: c.carb,
+      remFat: c.fat,
+      scalables: [],
+    };
+  }
+
   let resolvedKcal = 0;
   let resolvedProt = 0;
   let resolvedCarb = 0;

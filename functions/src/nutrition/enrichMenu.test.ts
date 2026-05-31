@@ -110,6 +110,19 @@ describe('enrichAndAdjustMenu', () => {
     expect(menu.lun.comida.kcal).toBe(400);
   });
 
+  it('NO toca las comidas manuales del user (source=user)', () => {
+    const menu = emptyMenu();
+    menu.lun.desayuno = comida({
+      source: 'user',
+      alimentos: [{ nombre: 'Arroz', cantidad: '100 g' }],
+      kcal: 130,
+    });
+    const macros = new Map<string, MacrosPer100 | null>([[normalizeFoodKey('Arroz'), m100(130)]]);
+    enrichAndAdjustMenu(menu, prof(), macros);
+    expect(menu.lun.desayuno.alimentos[0].cantidad).toBe('100 g'); // sin escalar
+    expect(menu.lun.desayuno.kcal).toBe(130); // sin recalcular
+  });
+
   it('respeta el clamp (no escala más de 2x)', () => {
     const menu = emptyMenu();
     menu.lun.desayuno = comida({
