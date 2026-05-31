@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './AiCountdown.css';
 
 interface Props {
@@ -29,8 +29,15 @@ export function AiCountdown({ unlocksAt, onExpire }: Props) {
   const diff = unlocksAt - now;
   const expired = diff <= 0;
 
+  // Dispara onExpire UNA SOLA VEZ · `onExpire` (bumpExpire en HoyPage) no está
+  // memoizado, así que sin este ref el effect podría re-llamarlo en bucle
+  // mientras el componente siga montado con expired=true.
+  const firedExpire = useRef(false);
   useEffect(() => {
-    if (expired) onExpire?.();
+    if (expired && !firedExpire.current) {
+      firedExpire.current = true;
+      onExpire?.();
+    }
   }, [expired, onExpire]);
 
   if (expired) return null;

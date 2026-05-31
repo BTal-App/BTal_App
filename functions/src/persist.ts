@@ -202,9 +202,12 @@ export function mapSuplementosDias(gen: GeneratedSuplementos): {
   // no nos fiamos de los días sueltos que mande la IA (devolvía cosas como
   // "creatina solo el domingo", incoherente). El check solo cambia CÓMO se
   // reparte la toma diaria (dentro del batido vs suelta), no en qué días.
-  const includeCreatina = gen.creatinaEnBatido;
   // ¿La IA recomienda creatina? Sí si la mete en el batido o da algún día.
-  const recommendsCreatina = includeCreatina || rawCreatina.length > 0;
+  const recommendsCreatina = gen.creatinaEnBatido || rawCreatina.length > 0;
+  // El "check" (creatina dentro del batido) solo tiene sentido si HAY batido.
+  // Si la IA lo marca sin recomendar batido, lo clampamos a false → la
+  // creatina va suelta (no hay batido donde meterla).
+  const includeCreatina = gen.creatinaEnBatido && daysWithBatido.length > 0;
 
   let daysWithCreatina: DayKey[];
   if (!recommendsCreatina) {
