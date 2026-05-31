@@ -1,11 +1,13 @@
 // Cliente Gemini · @google/genai (SDK unificado de Google GenAI).
 //
-// Modelo: gemini-3.5-flash · flash de última generación (gama flash, no
-// lite). Subido desde gemini-2.5-flash-lite (31-may): el lite tenía un
-// sesgo fuerte a infra-dimensionar las raciones (~73% del objetivo kcal)
-// que el prompt no corregía. Un modelo más capaz dimensiona mejor las
-// raciones por sí mismo (sin normalización artificial). Sigue siendo gama
-// flash → coste bajo. Revertir = cambiar esta constante + redeploy.
+// Modelo: gemini-2.5-flash · flash COMPLETO (no lite) · sweet spot
+// capacidad/precio. Historia (31-may): se venía de gemini-2.5-flash-lite,
+// que infra-dimensionaba las raciones (~73% del objetivo kcal) sin que el
+// prompt lo corrigiera. Se probó gemini-3.5-flash pero su precio es
+// desproporcionado ($1,50/$9,00 por 1M · output ×22,5 vs lite, casi tarifa
+// premium). gemini-2.5-flash ($0,30/$2,50) es ~3,6× más barato que 3.5-flash
+// y mucho más capaz que el lite → mejor relación. Si aún se queda corto,
+// subir a 3.5-flash; revertir/cambiar = esta constante + redeploy.
 //
 // SALIDA JSON SIN responseSchema (decisión 29-may-2026):
 //   Inicialmente usábamos `responseSchema` (structured output) con el
@@ -23,7 +25,7 @@
 
 import { GoogleGenAI } from '@google/genai';
 
-const MODEL = 'gemini-3.5-flash';
+const MODEL = 'gemini-2.5-flash';
 
 export interface CallGeminiArgs {
   apiKey: string;
