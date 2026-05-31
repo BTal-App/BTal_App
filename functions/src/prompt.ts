@@ -83,6 +83,16 @@ const PROT_FACTOR: Record<ValidatedProfile['objetivo'], number> = {
   mantenimiento: 1.6,
 };
 
+// Factor de grasa g/kg según objetivo · cubre el suelo hormonal (no bajar de
+// ~0,8) y deja el resto de kcal para los carbohidratos. Así los 4 macros
+// tienen target numérico y cuadran con el objetivo (no solo la proteína).
+const FAT_FACTOR: Record<ValidatedProfile['objetivo'], number> = {
+  volumen: 1.0, // grasa moderada · carbos prioritarios (superávit)
+  definicion: 0.8, // grasa controlada sin bajar del suelo hormonal
+  recomposicion: 0.9,
+  mantenimiento: 0.9,
+};
+
 // Guía de reparto de macros según objetivo.
 function macroSplitGuidance(objetivo: ValidatedProfile['objetivo']): string {
   switch (objetivo) {
@@ -198,7 +208,11 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
   lines.push('=== QUÉ GENERAR ===');
 
   if (opts.wantMenu) {
+    // Targets numéricos de los 4 macros · cuadran con las kcal:
+    // prot×4 + fat×9 + carb×4 ≈ kcal. Carbos = lo que sobra tras prot y grasa.
     const protTarget = Math.round(p.peso * PROT_FACTOR[p.objetivo]);
+    const fatTarget = Math.round(p.peso * FAT_FACTOR[p.objetivo]);
+    const carbTarget = Math.max(0, Math.round((kcal - protTarget * 4 - fatTarget * 9) / 4));
     lines.push(
       'MENÚ: menú semanal completo (claves lun,mar,mie,jue,vie,sab,dom), cada día con desayuno, ' +
       'comida, merienda y cena. Cada comida: nombrePlato descriptivo (3-7 palabras), alimentos con ' +
@@ -209,7 +223,10 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
       `- OBLIGATORIO: el TOTAL de kcal de CADA día debe quedar MUY CERCA de ${kcal} kcal (margen ±5%, es decir ${Math.round(kcal * 0.95)}-${Math.round(kcal * 1.05)} kcal). ` +
       `NO te quedes corto: ajusta cantidades/raciones de las comidas para LLEGAR al objetivo, no lo dejes a la mitad.`,
     );
-    lines.push(`- Proteína ≈ ${protTarget} g/día (clave para el objetivo).`);
+    lines.push(
+      `- Macros objetivo del día (deben sumar ≈ las kcal): Proteína ≈ ${protTarget} g · Grasa ≈ ${fatTarget} g · Carbohidratos ≈ ${carbTarget} g. ` +
+      `Comprobación: prot×4 + carb×4 + grasa×9 ≈ ${kcal} kcal. Mantén los 3 cerca de su objetivo (margen ±10-15%), no solo la proteína.`,
+    );
     lines.push(`- ${macroSplitGuidance(p.objetivo)}`);
     lines.push('- Reparto orientativo de kcal: desayuno ~25%, comida ~35%, merienda ~15%, cena ~25%.');
     // El batido cuenta en el total del día · la IA debe cuadrar las 4 comidas
