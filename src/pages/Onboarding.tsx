@@ -194,6 +194,11 @@ const Onboarding: React.FC = () => {
     if (!stepValid || modeChoice.modo === null) return;
     setError('');
     setSubmitting(true);
+    // Cerramos el resumen al arrancar · la GeneratingScreen (opaca, full
+    // screen) lo tapa al instante, así NO quedan dos IonModal apilados (que
+    // dejaban el backdrop grisáceo pegado al navegar a /app). El resumen se
+    // cierra animando porque ya no se desmonta por condición de montaje.
+    setAiSummaryOpen(false);
     // Capturamos fuera del closure async · el narrowing de `modeChoice.modo !== null`
     // no se propaga después del await.
     const modoToTrack = modeChoice.modo;
@@ -774,7 +779,7 @@ const Onboarding: React.FC = () => {
             usuario eligió modo='ai' en el paso 4 al pulsar Finalizar.
             En "Modificar" cierra el modal · el user puede usar Atrás para
             cambiar lo que necesite. */}
-        {aiSummaryOpen && modeChoice.modo === 'ai' && modeChoice.aiScope !== null && (
+        {modeChoice.modo === 'ai' && modeChoice.aiScope !== null && (
           <AiPromptSummaryModal
             isOpen={aiSummaryOpen}
             onClose={() => setAiSummaryOpen(false)}
