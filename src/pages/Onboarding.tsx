@@ -194,10 +194,10 @@ const Onboarding: React.FC = () => {
     if (!stepValid || modeChoice.modo === null) return;
     setError('');
     setSubmitting(true);
-    // Cerramos el resumen al arrancar · la GeneratingScreen (opaca, full
-    // screen) lo tapa al instante, así NO quedan dos IonModal apilados (que
-    // dejaban el backdrop grisáceo pegado al navegar a /app). El resumen se
-    // cierra animando porque ya no se desmonta por condición de montaje.
+    // Cerramos el resumen al arrancar. La GeneratingScreen se presenta SIN
+    // animación (animated={false}), así cubre al instante y oculta el cierre
+    // del resumen → no se ve el "doble". Y al navegar queda 1 solo IonModal
+    // (la GeneratingScreen) → sin backdrop grisáceo huérfano.
     setAiSummaryOpen(false);
     // Capturamos fuera del closure async · el narrowing de `modeChoice.modo !== null`
     // no se propaga después del await.
@@ -802,6 +802,9 @@ const Onboarding: React.FC = () => {
             la redirección a /app con el plan ya generado. */}
         <GeneratingScreen
           isOpen={submitting && modeChoice.modo === 'ai'}
+          // Sin animación · se presenta ENCIMA del modal de resumen · animarlo
+          // hacía que se viera "cargar dos veces". Así cubre al instante.
+          animated={false}
           title="Generando tu programa inicial…"
           subtitle="Guardando tu perfil y preparando tu programa personalizado. No cierres la app."
         />

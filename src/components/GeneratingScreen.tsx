@@ -10,6 +10,10 @@ interface Props {
   title?: string;
   // Sub-mensaje opcional (línea más pequeña debajo).
   subtitle?: string;
+  // Animar present/dismiss del modal. En el onboarding se presenta ENCIMA
+  // del modal de resumen · animarlo hace que Ionic encadene cierre+apertura
+  // y se vea un "doble". Con `animated={false}` cubre al instante (sin doble).
+  animated?: boolean;
 }
 
 // Pantalla a tamaño completo con spinner + mensaje · se muestra mientras
@@ -29,10 +33,12 @@ export function GeneratingScreen({
   isOpen,
   title = 'Generando con IA…',
   subtitle = 'Se está generando tu programa personalizado. No cierres la app — esto puede tardar unos segundos.',
+  animated = true,
 }: Props) {
   return (
     <IonModal
       isOpen={isOpen}
+      animated={animated}
       backdropDismiss={false}
       keyboardClose={false}
       className="generating-screen"
