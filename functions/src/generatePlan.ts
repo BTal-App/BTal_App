@@ -27,6 +27,8 @@ import {
   reconcileMealMacros,
 } from './persist.js';
 import { deriveShoppingList } from './shoppingList.js';
+import { resolveMenuMacros } from './nutrition/resolve.js';
+import { enrichAndAdjustMenu } from './nutrition/enrichMenu.js';
 
 const geminiKey = defineSecret('GEMINI_API_KEY');
 
@@ -267,8 +269,27 @@ export const generatePlan = onCall(
     // ── 9. Mapear a Firestore aplicando contratos ──
     const updates: Record<string, unknown> = {};
 
+    // Suplementos mapeados UNA vez · los reusan el ajuste del menú (para contar
+    // el batido en el total del día) y los updates de más abajo. La IA
+    // recomienda días de batido/creatina, el check includeCreatina y, si lo ve,
+    // las macros del batido.
+    const supDias = parsed.suplementos ? mapSuplementosDias(parsed.suplementos) : null;
+
     if (wantMenu && parsed.menu) {
-      const menu = reconcileMealMacros(mapMenu(parsed.menu, userDoc.menu, !allowUserItems));
+      const base = reconcileMealMacros(mapMenu(parsed.menu, userDoc.menu, !allowUserItems));
+      // Fase 6B: macros REALES desde el cache OFF (foods/) + ajuste de gramos
+      // para que cada día alcance el objetivo de kcal. Lee SOLO Firestore (sin
+      // llamar a la API de OFF en caliente). Lo no cacheado conserva la
+      // estimación de la IA (no rompe · solo no se ajusta tan fino).
+      const macrosMap = await resolveMenuMacros(db, base);
+      const batidoInfo =
+        supDias && supDias.daysWithBatido.length > 0
+          ? {
+              days: supDias.daysWithBatido,
+              kcal: supDias.batidoMacros?.kcal ?? userDoc.suplementos?.batidoConfig?.kcal ?? 145,
+            }
+          : undefined;
+      const menu = enrichAndAdjustMenu(base, profile, macrosMap, batidoInfo);
       updates.menu = menu;
       if (deriveCompra) {
         updates.compra = deriveShoppingList(userDoc.compra, menu, 'ai');
@@ -280,27 +301,20 @@ export const generatePlan = onCall(
       updates.entrenos = mapAllBuiltInPlans(userDoc.entrenos, parsed.entrenos, profile.diasEntreno);
     }
 
-    // Suplementos · solo si la IA los recomendó (scope 'all'). Activa los días
-    // de batido/creatina (los "botones") con dot-path para preservar config,
+    // Suplementos · escribe días/flags con dot-path para preservar config,
     // stock y contadores del user. Sustituye al error de meter batidos como
     // comidas del menú.
-    if (parsed.suplementos) {
-      // La IA recomienda los días de batido/creatina, el check includeCreatina
-      // (creatina dentro del batido) y, si lo ve, las macros del batido.
-      // Escribimos con dot-path para preservar el resto de batidoConfig
-      // (producto/precio) + stock + contadores del user.
-      const dias = mapSuplementosDias(parsed.suplementos);
-      updates['suplementos.daysWithBatido'] = dias.daysWithBatido;
-      updates['suplementos.daysWithCreatina'] = dias.daysWithCreatina;
-      updates['suplementos.batidoConfig.includeCreatina'] = dias.includeCreatina;
-      // Macros del batido · solo si la IA las propuso (recomienda batido y
-      // quiso ajustarlas). Si no, se conserva la config actual del user.
-      if (dias.batidoMacros) {
-        updates['suplementos.batidoConfig.gr_prot'] = dias.batidoMacros.gr_prot;
-        updates['suplementos.batidoConfig.kcal'] = dias.batidoMacros.kcal;
-        updates['suplementos.batidoConfig.prot'] = dias.batidoMacros.prot;
-        updates['suplementos.batidoConfig.carb'] = dias.batidoMacros.carb;
-        updates['suplementos.batidoConfig.fat'] = dias.batidoMacros.fat;
+    if (supDias) {
+      updates['suplementos.daysWithBatido'] = supDias.daysWithBatido;
+      updates['suplementos.daysWithCreatina'] = supDias.daysWithCreatina;
+      updates['suplementos.batidoConfig.includeCreatina'] = supDias.includeCreatina;
+      // Macros del batido · solo si la IA las propuso. Si no, conserva la del user.
+      if (supDias.batidoMacros) {
+        updates['suplementos.batidoConfig.gr_prot'] = supDias.batidoMacros.gr_prot;
+        updates['suplementos.batidoConfig.kcal'] = supDias.batidoMacros.kcal;
+        updates['suplementos.batidoConfig.prot'] = supDias.batidoMacros.prot;
+        updates['suplementos.batidoConfig.carb'] = supDias.batidoMacros.carb;
+        updates['suplementos.batidoConfig.fat'] = supDias.batidoMacros.fat;
       }
     }
 

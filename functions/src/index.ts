@@ -20,3 +20,7 @@ export { revokeOtherSessions } from './revokeOtherSessions.js';
 
 // Fase 6C · limpieza en cascada de invitados expirados (TTL deja huérfanos).
 export { cleanupExpiredGuests } from './cleanupGuests.js';
+
+// Fase 6B · sync incremental del cache de alimentos (foods/) con los deltas
+// diarios de Open Food Facts · mantiene macros reales al día.
+export { syncOffDeltas } from './syncOffDeltas.js';

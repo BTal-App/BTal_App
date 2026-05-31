@@ -12,6 +12,7 @@
 
 import type { ValidatedProfile } from './schemas.js';
 import type { AiScopeChoice } from './types.js';
+import { calcKcalObjetivo, PROT_FACTOR, FAT_FACTOR } from './nutrition/macroTargets.js';
 
 // Sanitiza texto libre del usuario antes de meterlo en el prompt:
 // reemplaza por espacio los caracteres de control (códigos 0-31), el DEL
@@ -35,62 +36,15 @@ function sanitizeList(items: string[]): string[] {
   return items.map(sanitize).filter((s) => s.length > 0);
 }
 
-// ── Cálculo de calorías objetivo (Mifflin-St Jeor) ──
-// Espejo simplificado de utils/calorias.ts del frontend · si el user no
-// fijó objetivoKcal, calculamos un objetivo razonable para guiar a la IA.
-const ACTIVITY_FACTOR: Record<ValidatedProfile['actividad'], number> = {
-  sedentario: 1.2,
-  ligero: 1.375,
-  moderado: 1.55,
-  activo: 1.725,
-  muy_activo: 1.9,
-};
-
-// Ajuste ADITIVO sobre el TDEE (±500 kcal) · DEBE coincidir EXACTO con el
-// frontend (utils/calorias.ts AJUSTE_OBJETIVO), que es lo que el user ve en
-// el anillo "Aporte del día" y en Editar perfil. Si no coincide, la IA genera
-// para un objetivo y el anillo mide contra otro → el % sale descuadrado.
-const AJUSTE_OBJETIVO: Record<ValidatedProfile['objetivo'], number> = {
-  volumen: 500, // superávit ~0,5 kg/semana
-  definicion: -500, // déficit ~0,5 kg/semana
-  recomposicion: 0, // sin ajuste de kcal (más proteína, no más kcal)
-  mantenimiento: 0,
-};
-
-function calcKcalObjetivo(p: ValidatedProfile): number {
-  if (p.objetivoKcal !== null) return p.objetivoKcal;
-  // Mifflin-St Jeor → TDEE → objetivo (mismo cálculo que el frontend).
-  const base =
-    10 * p.peso + 6.25 * p.altura - 5 * p.edad + (p.sexo === 'm' ? 5 : -161);
-  const tdee = base * ACTIVITY_FACTOR[p.actividad];
-  const target = tdee + AJUSTE_OBJETIVO[p.objetivo];
-  return Math.round(target / 10) * 10; // redondeo a 10 kcal
-}
-
+// ── Objetivo de calorías + macros ──
+// Los factores y el cálculo viven en nutrition/macroTargets.ts (ÚNICA fuente,
+// importada arriba) para que el target que se pide a la IA y el target contra
+// el que se ajustan las raciones (enrichMenu.ts) sean el mismo.
 const OBJETIVO_LABEL: Record<ValidatedProfile['objetivo'], string> = {
   volumen: 'ganar masa muscular (volumen)',
   definicion: 'perder grasa manteniendo músculo (definición)',
   recomposicion: 'recomposición corporal (ganar músculo y perder grasa a la vez)',
   mantenimiento: 'mantener su composición actual',
-};
-
-// Factor de proteína g/kg según objetivo · da a Gemini un target concreto
-// en vez de "macros realistas" genérico.
-const PROT_FACTOR: Record<ValidatedProfile['objetivo'], number> = {
-  volumen: 1.8,
-  definicion: 2.2, // más alta para preservar músculo en déficit
-  recomposicion: 2.0,
-  mantenimiento: 1.6,
-};
-
-// Factor de grasa g/kg según objetivo · cubre el suelo hormonal (no bajar de
-// ~0,8) y deja el resto de kcal para los carbohidratos. Así los 4 macros
-// tienen target numérico y cuadran con el objetivo (no solo la proteína).
-const FAT_FACTOR: Record<ValidatedProfile['objetivo'], number> = {
-  volumen: 1.0, // grasa moderada · carbos prioritarios (superávit)
-  definicion: 0.8, // grasa controlada sin bajar del suelo hormonal
-  recomposicion: 0.9,
-  mantenimiento: 0.9,
 };
 
 // Guía de reparto de macros según objetivo.
@@ -382,5 +336,3 @@ function buildJsonSkeleton(opts: BuildPromptOpts): string {
   }
   return `{${parts.join(',')}}`;
 }
-
-export { calcKcalObjetivo };
