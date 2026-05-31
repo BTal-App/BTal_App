@@ -9,10 +9,13 @@
 //   4. source: items IA = 'ai' (el SourceTag del frontend es
 //      'default'|'ai'|'user'). El distintivo de macros estimadas vs
 //      reales llegará en 6B (FatSecret) añadiendo 'ai-estimated'/'fatsecret'.
-//   5. extras del menú: NO las toca la IA · se preservan las del user.
+//   5. extras del menú: la IA PUEDE generarlas (almuerzo/recena) para
+//      repartir kcal en objetivos altos · las del user (source!=='ai') se
+//      preservan, las IA previas se regeneran. El user puede borrarlas.
 
 import type {
   Comida,
+  ComidaExtra,
   ComidasDelDia,
   DayKey,
   DiaEntreno,
@@ -46,6 +49,7 @@ function normalizeDiaSemana(v: string | null): DayKey | null {
 }
 import type {
   GeneratedEntrenos,
+  GeneratedExtra,
   GeneratedMeal,
   GeneratedMenu,
   GeneratedSuplementos,
@@ -74,10 +78,52 @@ function mapMeal(gen: GeneratedMeal, meal: keyof typeof MEAL_DEFAULT_HORA): Comi
   };
 }
 
-// Construye el menú nuevo. Preserva SIEMPRE las extras de cada día (la IA
-// no las genera). Si `preserveUser` (toggle "permitir tocar lo mío" en
-// OFF), conserva también las comidas fijas con source='user' en vez de
-// pisarlas con la generación IA · respeta el contrato de protección.
+// Id estable para una ComidaExtra generada · base36(timestamp)+idx+random ·
+// el idx evita colisiones al crear varias extras en el mismo ms. Mismo
+// formato que newExtraId del frontend (base36, sin guiones).
+function newAiExtraId(idx: number): string {
+  const t = Date.now().toString(36);
+  const r = Math.random().toString(36).slice(2, 6);
+  return `${t}${idx.toString(36)}${r}`;
+}
+
+// "HH:mm" válida (00:00-23:59) o null → fallback. Evita que una hora rara
+// del LLM rompa el orden por hora del menú.
+function normalizeHora(v: string | null, fallback: string): string {
+  if (!v) return fallback;
+  const m = /^(\d{1,2}):(\d{2})$/.exec(v.trim());
+  if (!m) return fallback;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return fallback;
+  return `${String(h).padStart(2, '0')}:${m[2]}`;
+}
+
+// Mapea una comida extra generada por la IA → ComidaExtra de Firestore.
+// source='ai' (regenerable + badge IA), esExtra=true (chip "EXTRA"),
+// deshabilitada=false. El user podrá deshabilitarla o borrarla.
+function mapExtra(gen: GeneratedExtra, idx: number): ComidaExtra {
+  return {
+    id: newAiExtraId(idx),
+    nombre: gen.nombre,
+    alimentos: gen.alimentos.map((a) => ({ nombre: a.nombre, cantidad: a.cantidad })),
+    hora: normalizeHora(gen.hora, '11:00'),
+    kcal: Math.round(gen.kcal),
+    prot: Math.round(gen.prot),
+    carb: Math.round(gen.carb),
+    fat: Math.round(gen.fat),
+    source: AI_SOURCE,
+    emoji: null,
+    nombrePlato: gen.nombrePlato,
+    esExtra: true,
+    deshabilitada: false,
+  };
+}
+
+// Construye el menú nuevo. Las comidas fijas: si `preserveUser` (toggle
+// "permitir tocar lo mío" en OFF), conserva las fijas con source='user'.
+// Las extras: las del user (source!=='ai') SIEMPRE se preservan · las extras
+// IA anteriores se reemplazan por las nuevas (regeneración).
 export function mapMenu(gen: GeneratedMenu, existing: Menu, preserveUser: boolean): Menu {
   const out = {} as Menu;
   for (const day of Object.keys(gen) as (keyof GeneratedMenu)[]) {
@@ -88,13 +134,16 @@ export function mapMenu(gen: GeneratedMenu, existing: Menu, preserveUser: boolea
       if (preserveUser && prev && prev.source === 'user') return prev;
       return mapMeal(genDay[meal], meal);
     };
+    // Extras del user (manuales) · se conservan siempre. Las IA previas se
+    // descartan (se sustituyen por las nuevas que genere la IA).
+    const userExtras = (prevDay?.extras ?? []).filter((e) => e.source !== 'ai');
+    const aiExtras = (genDay.extras ?? []).map((e, i) => mapExtra(e, i));
     const comidas: ComidasDelDia = {
       desayuno: pick('desayuno'),
       comida: pick('comida'),
       merienda: pick('merienda'),
       cena: pick('cena'),
-      // Preservar extras del user (la IA no las genera).
-      extras: prevDay?.extras ?? [],
+      extras: [...userExtras, ...aiExtras],
     };
     out[day] = comidas;
   }
@@ -244,14 +293,16 @@ export function mapSuplementosDias(gen: GeneratedSuplementos): {
 // comida se desvían >40% de la suma de macros (prot×4+carb×4+fat×9), las
 // recalculamos desde los macros (más fiables que el número suelto de la IA).
 export function reconcileMealMacros(menu: Menu): Menu {
-  for (const day of Object.keys(menu) as (keyof Menu)[]) {
-    for (const meal of MEAL_KEYS) {
-      const c = menu[day][meal];
-      const fromMacros = c.prot * 4 + c.carb * 4 + c.fat * 9;
-      if (fromMacros > 0 && Math.abs(c.kcal - fromMacros) / fromMacros > 0.4) {
-        c.kcal = Math.round(fromMacros);
-      }
+  const fix = (c: Comida): void => {
+    const fromMacros = c.prot * 4 + c.carb * 4 + c.fat * 9;
+    if (fromMacros > 0 && Math.abs(c.kcal - fromMacros) / fromMacros > 0.4) {
+      c.kcal = Math.round(fromMacros);
     }
+  };
+  for (const day of Object.keys(menu) as (keyof Menu)[]) {
+    for (const meal of MEAL_KEYS) fix(menu[day][meal]);
+    // También las extras generadas por la IA.
+    for (const extra of menu[day].extras) fix(extra);
   }
   return menu;
 }

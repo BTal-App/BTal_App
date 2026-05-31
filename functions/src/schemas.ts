@@ -56,11 +56,24 @@ const generatedMealSchema = z.object({
 });
 export type GeneratedMeal = z.infer<typeof generatedMealSchema>;
 
+// Comida extra generada · una comida normal + un título de slot (nombre,
+// ej. "Media mañana", "Recena") y una hora orientativa "HH:mm". La IA las
+// añade SOLO cuando ayuda a repartir las kcal (objetivos altos). LENIENTE
+// con la hora · persist la valida/normaliza.
+const generatedExtraSchema = generatedMealSchema.extend({
+  nombre: z.string().min(1).max(40),
+  hora: z.string().max(8).nullable(),
+});
+export type GeneratedExtra = z.infer<typeof generatedExtraSchema>;
+
 const generatedDaySchema = z.object({
   desayuno: generatedMealSchema,
   comida: generatedMealSchema,
   merienda: generatedMealSchema,
   cena: generatedMealSchema,
+  // Extras opcionales que la IA puede añadir (0-4) para no inflar las 4
+  // fijas en objetivos altos. Si la IA las omite, día = solo 4 fijas.
+  extras: z.array(generatedExtraSchema).max(4).optional(),
 });
 
 // El menú generado · objeto con las 7 claves de día.

@@ -232,18 +232,24 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
     );
     lines.push(`- ${macroSplitGuidance(p.objetivo)}`);
     lines.push('- Reparto orientativo de kcal: desayuno ~25%, comida ~35%, merienda ~15%, cena ~25%.');
+    lines.push(
+      '- COMIDAS EXTRA (campo "extras" de cada día, opcional, 0-4): las 4 comidas fijas (desayuno/comida/merienda/cena) ' +
+      'son la BASE. Si el objetivo de kcal es alto y meterlo todo en 4 comidas daría raciones enormes, AÑADE 1-2 comidas ' +
+      'extra (p.ej. "Media mañana" ~11:00, "Recena" ~23:00, "Pre-entreno") con su nombre (título del slot), hora "HH:mm", ' +
+      'nombrePlato, alimentos y macros. Si con 4 comidas se reparte bien, deja "extras": []. NO uses las extras para meter ' +
+      'suplementos (eso va en SUPLEMENTOS). El TOTAL del día = 4 fijas + extras (+ batido si lo lleva) ≈ objetivo.');
     // El batido cuenta en el total del día · la IA debe cuadrar las 4 comidas
     // restándolo en los días con batido, para no pasarse de kcal/proteína.
     if (opts.batidoRef) {
       const b = opts.batidoRef;
       lines.push(
-        `- IMPORTANTE (batido): el TOTAL de cada día = las 4 comidas + el batido (en los días que lo lleve, ver SUPLEMENTOS). ` +
+        `- IMPORTANTE (batido): el TOTAL de cada día = las 4 comidas + las extras + el batido (en los días que lo lleve, ver SUPLEMENTOS). ` +
         `El batido aporta ~${b.kcal} kcal y ~${b.prot} g de proteína (referencia AJUSTABLE · puedes proponer otras macros en "batidoMacros"). ` +
         `En los días CON batido, diseña las 4 comidas para que (4 comidas + batido) ≈ objetivo del día: resta el batido, NO te pases de kcal/proteína. ` +
         `En los días SIN batido, las 4 comidas solas alcanzan el objetivo. Usa SIEMPRE las macros del batido que tú decidas.`,
       );
     } else {
-      lines.push(`- Total diario = suma de las 4 comidas (≈ objetivo), con ligera variación entre días.`);
+      lines.push(`- Total diario = suma de las 4 comidas + las extras (≈ objetivo), con ligera variación entre días.`);
     }
     lines.push(
       '- RESPETA estrictamente alergias, intolerancias y alimentos prohibidos (no deben aparecer NUNCA). ' +
@@ -257,7 +263,7 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
       'bocadillo, lácteo + fruta), NUNCA un "batido de proteína" para rellenar el hueco.',
     );
     lines.push(
-      '- AUTO-CHEQUEO antes de devolver: para CADA día, suma las kcal de las 4 comidas. Si el total NO está dentro del margen ±5% ' +
+      '- AUTO-CHEQUEO antes de devolver: para CADA día, suma las kcal de las 4 comidas + las extras. Si el total NO está dentro del margen ±5% ' +
       `del objetivo (${kcal} kcal), corrige las raciones (sube carbohidratos) y vuelve a comprobar hasta que cuadre. No devuelvas días por debajo del objetivo.`,
     );
   }
@@ -348,7 +354,11 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
 function buildJsonSkeleton(opts: BuildPromptOpts): string {
   const meal =
     '{"nombrePlato":"texto","alimentos":[{"nombre":"texto","cantidad":"60 g"}],"kcal":0,"prot":0,"carb":0,"fat":0}';
-  const day = `{"desayuno":${meal},"comida":${meal},"merienda":${meal},"cena":${meal}}`;
+  // Las extras llevan además "nombre" (título del slot) y "hora". El array
+  // puede ir vacío (la IA decide si añade extras o no).
+  const extra =
+    '{"nombre":"Media mañana","hora":"11:00","nombrePlato":"texto","alimentos":[{"nombre":"texto","cantidad":"60 g"}],"kcal":0,"prot":0,"carb":0,"fat":0}';
+  const day = `{"desayuno":${meal},"comida":${meal},"merienda":${meal},"cena":${meal},"extras":[${extra}]}`;
   const parts: string[] = [];
   if (opts.wantMenu) {
     parts.push(

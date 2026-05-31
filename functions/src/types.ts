@@ -97,13 +97,25 @@ export interface Comida {
   nombrePlato?: string | null;
 }
 
+// Comida extra · slot adicional a las 4 fijas. Mismo shape que el frontend
+// (defaultUser.ts ComidaExtra): id estable, nombre (título del slot),
+// esExtra (chip "EXTRA"), deshabilitada (pausada · no suma). La IA ahora
+// PUEDE generar extras (almuerzo/media mañana/recena) para repartir kcal.
+export interface ComidaExtra extends Comida {
+  id: string;
+  nombre: string;
+  esExtra?: boolean;
+  deshabilitada?: boolean;
+}
+
 export interface ComidasDelDia {
   desayuno: Comida;
   comida: Comida;
   merienda: Comida;
   cena: Comida;
-  // Las extras NO las genera la IA · se preservan las del user.
-  extras: unknown[];
+  // Extras: las del user (source!=='ai') SIEMPRE se preservan · las de la IA
+  // (source==='ai') se regeneran. El user puede deshabilitarlas/borrarlas.
+  extras: ComidaExtra[];
 }
 
 export type Menu = Record<DayKey, ComidasDelDia>;
