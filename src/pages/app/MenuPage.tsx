@@ -1513,14 +1513,14 @@ function DaySummary({ day, totales, objetivoKcal }: DaySummaryProps) {
         </div>
       </div>
       <div className="menu-day-summary-info">
-        <div className="menu-day-summary-label">Progreso del día</div>
+        <div className="menu-day-summary-label">Aporte del día</div>
         <div className="menu-day-summary-value">
           {totales.kcal.toLocaleString('es-ES')} kcal
           {totales.prot > 0 && ` · ${totales.prot}g prot`}
         </div>
         <div className="menu-day-summary-sub">
           {objetivoKcal
-            ? `${progress}% del objetivo (${objetivoKcal.toLocaleString('es-ES')} kcal)`
+            ? `${progress}% de tu objetivo (${objetivoKcal.toLocaleString('es-ES')} kcal)`
             : 'Define tu objetivo en Editar perfil'}
           {' · '}
           {totales.comidasConDatos === 0
