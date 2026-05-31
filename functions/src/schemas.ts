@@ -152,4 +152,3 @@ export const geminiResponseSchema = z.object({
   entrenos: generatedEntrenosSchema.optional(),
   suplementos: generatedSuplementosSchema.optional(),
 });
-export type GeminiResponse = z.infer<typeof geminiResponseSchema>;

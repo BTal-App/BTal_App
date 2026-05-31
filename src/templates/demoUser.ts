@@ -1515,9 +1515,6 @@ export function demoUserDocument(): UserDocument {
     // mismo schema sin sembrar nada extra.
     plan: defaultPlan(),
     generaciones: defaultGeneraciones(),
-    plan_pro: false,
-    fecha_expiracion: null,
-    fecha_ultima_generacion: null,
     createdAt: now,
     lastActive: now,
     medicalDisclaimerAcceptedAt: null,

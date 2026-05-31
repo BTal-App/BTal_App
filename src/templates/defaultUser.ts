@@ -1,7 +1,6 @@
 // Estructura del documento /users/{uid} en Firestore.
-// Solo el bloque `profile` se llena en el onboarding inicial; el resto
-// (plan_pro, fecha_expiracion, fecha_ultima_generacion) se gestionará desde
-// Cloud Functions cuando integremos Stripe + Gemini en Fase 6 y 7.
+// Solo el bloque `profile` se llena en el onboarding inicial; `plan` y
+// `generaciones` los gestiona la Cloud Function generatePlan (+ Stripe).
 
 import type { Preferences } from '../utils/units';
 
@@ -979,18 +978,6 @@ export interface UserDocument {
   // del ciclo de 30 días. La Cloud Function `generatePlan` lo gestiona.
   generaciones: GeneracionesIA;
 
-  // ── Campos legacy · DEPRECATED ──
-  // Se mantienen por retrocompatibilidad con docs anteriores a Fase 2A.
-  // La Cloud Function `generatePlan` los actualiza junto con los nuevos
-  // mientras existan docs migrándose. Eliminar en Fase 6 cuando todos
-  // los docs estén migrados con `plan` y `generaciones`.
-  /** @deprecated usar `plan.tipo === 'pro'` */
-  plan_pro: boolean;
-  /** @deprecated usar `plan.vence_en` */
-  fecha_expiracion: number | null;
-  /** @deprecated usar `generaciones.menu_at` o `generaciones.entrenos_at` */
-  fecha_ultima_generacion: number | null;
-
   // Metadata
   createdAt: number; // ms epoch — set en la primera escritura
   lastActive: number; // ms epoch — actualizado al entrar al dashboard
@@ -1335,9 +1322,6 @@ export function defaultUserDocument(): UserDocument {
     suplementos: defaultSuplementos(),
     plan: defaultPlan(),
     generaciones: defaultGeneraciones(),
-    plan_pro: false,
-    fecha_expiracion: null,
-    fecha_ultima_generacion: null,
     createdAt: now,
     lastActive: now,
     medicalDisclaimerAcceptedAt: null,

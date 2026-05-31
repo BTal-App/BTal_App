@@ -63,5 +63,3 @@ export async function callGemini(args: CallGeminiArgs): Promise<string> {
   }
   return stripCodeFences(text);
 }
-
-export { MODEL as GEMINI_MODEL };

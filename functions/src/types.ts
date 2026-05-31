@@ -212,8 +212,5 @@ export interface UserDocument {
   generaciones: GeneracionesIA;
   // Historial de PRs · lo lee el prompt de entreno (progresiones realistas).
   registroStats?: RegistroStats;
-  plan_pro?: boolean;
-  fecha_expiracion?: number | null;
-  fecha_ultima_generacion?: number | null;
   isDemo?: boolean;
 }

@@ -165,16 +165,13 @@ export async function saveOnboardingProfile(
   if (existing.exists()) {
     const data = existing.data() as Partial<UserDocument>;
     // Solo añadimos los campos que falten (no sobrescribimos los que ya
-    // tenga el doc — preserva preferences, plan_pro real, createdAt, y
-    // muy importante: el menu/entrenos/compra/suplementos que el user ya
-    // pueda haber rellenado, ya sea manual o por una generación anterior).
+    // tenga el doc — preserva preferences, plan, createdAt, y muy importante:
+    // el menu/entrenos/compra/suplementos que el user ya pueda haber
+    // rellenado, ya sea manual o por una generación anterior).
     const updates: Record<string, unknown> = {
       profile: completedProfile,
       lastActive: now,
     };
-    if (data.plan_pro === undefined) updates.plan_pro = false;
-    if (data.fecha_expiracion === undefined) updates.fecha_expiracion = null;
-    if (data.fecha_ultima_generacion === undefined) updates.fecha_ultima_generacion = null;
     if (data.createdAt === undefined) updates.createdAt = now;
     // Aviso médico: solo lo escribimos si aún no estaba — evita pisar
     // una aceptación previa más antigua si el user re-completa onboarding.
@@ -362,14 +359,10 @@ export async function ensureUserDocumentSchema(
       updates['suplementos.creatina_stock_gramos'] = null;
     }
   }
-  // Plan granular + generaciones (Fase 2A) · si faltan los sembramos
-  // con free/zero. La Cloud Function `generatePlan` los actualizará
-  // cuando llegue Fase 6 con la primera generación real.
+  // Plan granular + generaciones · si faltan los sembramos con free/zero.
+  // La Cloud Function `generatePlan` los actualiza con cada generación.
   if (raw.plan === undefined) updates.plan = defaultPlan();
   if (raw.generaciones === undefined) updates.generaciones = defaultGeneraciones();
-  if (raw.plan_pro === undefined) updates.plan_pro = false;
-  if (raw.fecha_expiracion === undefined) updates.fecha_expiracion = null;
-  if (raw.fecha_ultima_generacion === undefined) updates.fecha_ultima_generacion = null;
   if (raw.medicalDisclaimerAcceptedAt === undefined) updates.medicalDisclaimerAcceptedAt = null;
   // Metadata · `createdAt` y `lastActive` son campos obligatorios del
   // `UserDocument` (no opcionales). `saveOnboardingProfile` y

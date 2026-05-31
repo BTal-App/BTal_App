@@ -309,8 +309,6 @@ export const generatePlan = onCall(
     // el consumidas_ciclo / ciclo_inicio ya reservados. ──
     if (wantMenu) updates['generaciones.menu_at'] = now;
     if (wantEntreno) updates['generaciones.entrenos_at'] = now;
-    // Legacy (docs migrándose) · se elimina en limpieza futura.
-    updates.fecha_ultima_generacion = now;
     updates.lastActive = now;
 
     // ── 11. Persistir (Admin SDK · bypassa rules) ──
