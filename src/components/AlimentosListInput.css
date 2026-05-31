@@ -13,16 +13,16 @@
   gap: 6px;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--btal-lime, #b5f037);
+  border: 1px solid var(--btal-blue, #5aa8ff);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--btal-lime, #b5f037) 14%, transparent);
-  color: var(--btal-lime, #b5f037);
+  background: color-mix(in srgb, var(--btal-blue, #5aa8ff) 16%, transparent);
+  color: var(--btal-blue, #5aa8ff);
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
 }
 .alimentos-search-btn:active {
-  background: color-mix(in srgb, var(--btal-lime, #b5f037) 26%, transparent);
+  background: color-mix(in srgb, var(--btal-blue, #5aa8ff) 28%, transparent);
 }
 
 .alimentos-list-rows {
