@@ -221,11 +221,14 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
     lines.push(`OBJETIVO NUTRICIONAL del menú (para ${OBJETIVO_LABEL[p.objetivo]}):`);
     lines.push(
       `- OBLIGATORIO: el TOTAL de kcal de CADA día debe quedar MUY CERCA de ${kcal} kcal (margen ±5%, es decir ${Math.round(kcal * 0.95)}-${Math.round(kcal * 1.05)} kcal). ` +
-      `NO te quedes corto: ajusta cantidades/raciones de las comidas para LLEGAR al objetivo, no lo dejes a la mitad.`,
+      `NO te quedes corto: ajusta cantidades/raciones de las comidas para LLEGAR al objetivo, no lo dejes a la mitad. ` +
+      `ERROR FRECUENTE que debes EVITAR: generar un menú "fitness" bajo en calorías. Si la suma se queda por debajo del objetivo, ` +
+      `AUMENTA las raciones de CARBOHIDRATOS (arroz, pasta, patata, pan, avena, legumbre, fruta) y de grasas saludables hasta CUADRAR; NO añadas más proteína.`,
     );
     lines.push(
       `- Macros objetivo del día (deben sumar ≈ las kcal): Proteína ≈ ${protTarget} g · Grasa ≈ ${fatTarget} g · Carbohidratos ≈ ${carbTarget} g. ` +
-      `Comprobación: prot×4 + carb×4 + grasa×9 ≈ ${kcal} kcal. Mantén los 3 cerca de su objetivo (margen ±10-15%), no solo la proteína.`,
+      `Comprobación: prot×4 + carb×4 + grasa×9 ≈ ${kcal} kcal. Mantén los 3 cerca de su objetivo (margen ±10-15%). ` +
+      `La proteína NO debe superar mucho su objetivo (~${protTarget} g): más proteína NO es mejor. El que casi siempre se queda corto es el CARBOHIDRATO (objetivo ≈ ${carbTarget} g): asegúralo con raciones generosas de cereales/tubérculos/fruta.`,
     );
     lines.push(`- ${macroSplitGuidance(p.objetivo)}`);
     lines.push('- Reparto orientativo de kcal: desayuno ~25%, comida ~35%, merienda ~15%, cena ~25%.');
@@ -249,7 +252,13 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
     );
     lines.push(
       '- IMPORTANTE: NO incluyas batidos de proteína, creatina ni otros suplementos como COMIDAS del menú. ' +
-      'Las 4 comidas (desayuno/comida/merienda/cena) son COMIDA REAL. Los suplementos se gestionan aparte (ver SUPLEMENTOS).',
+      'Las 4 comidas (desayuno/comida/merienda/cena) son COMIDA REAL. Los suplementos se gestionan aparte (ver SUPLEMENTOS). ' +
+      'La MERIENDA en concreto debe ser un snack de comida real (p.ej. fruta + frutos secos, yogur con avena, tostada con aguacate, ' +
+      'bocadillo, lácteo + fruta), NUNCA un "batido de proteína" para rellenar el hueco.',
+    );
+    lines.push(
+      '- AUTO-CHEQUEO antes de devolver: para CADA día, suma las kcal de las 4 comidas. Si el total NO está dentro del margen ±5% ' +
+      `del objetivo (${kcal} kcal), corrige las raciones (sube carbohidratos) y vuelve a comprobar hasta que cuadre. No devuelvas días por debajo del objetivo.`,
     );
   }
 
