@@ -38,11 +38,13 @@ const usedGoogle = (user: User) =>
 
 export function ReauthModal({ isOpen, user, reason, onClose, onSuccess }: Props) {
   const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   const resetState = () => {
     setPassword('');
+    setShowPwd(false);
     setBusy(false);
     setError('');
   };
@@ -107,8 +109,8 @@ export function ReauthModal({ isOpen, user, reason, onClose, onSuccess }: Props)
               <div className="landing-input-wrap">
                 <MealIcon value="tb:lock" size={18} className="landing-input-icon" />
                 <input
-                  className="landing-input"
-                  type="password"
+                  className="landing-input landing-input--password"
+                  type={showPwd ? 'text' : 'password'}
                   placeholder="Tu contraseña actual"
                   autoComplete="current-password"
                   value={password}
@@ -117,6 +119,14 @@ export function ReauthModal({ isOpen, user, reason, onClose, onSuccess }: Props)
                   required
                   autoFocus
                 />
+                <button
+                  type="button"
+                  className="landing-input-toggle"
+                  onClick={() => setShowPwd((v) => !v)}
+                  aria-label={showPwd ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  <MealIcon value={showPwd ? 'tb:eye-off' : 'tb:eye'} size={18} />
+                </button>
               </div>
 
               {error && <div className="landing-msg error">{error}</div>}
