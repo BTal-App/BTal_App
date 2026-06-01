@@ -78,6 +78,12 @@ const EJ_SERIES_MAX = 10;
 const SERIES_OPTIONS = numOptions(100);
 const REPS_OPTIONS = numOptions(300);
 
+// Contador a nivel de módulo para ids estables de fila de ejercicio (key de
+// React · NO se persiste). Módulo en vez de useRef para no leer un ref
+// durante el render (regla react-hooks/refs) en el inicializador de useState.
+let ejRowSeq = 0;
+const nextEjRowId = (): string => `ejrow-${ejRowSeq++}`;
+
 export function DiaEditorModal({
   isOpen,
   onClose,
@@ -87,6 +93,14 @@ export function DiaEditorModal({
   onDelete,
 }: Props) {
   const [local, setLocal] = useState<DiaEntreno>(dia);
+  // Ids estables por fila de ejercicio · SOLO identidad de UI (no se
+  // persisten). Sin esto, `key={i}` (índice) hacía que al borrar un
+  // ejercicio intermedio la fila reusada heredara el estado interno
+  // (freeMode/customMode) de la fila borrada → ejercicio de catálogo
+  // mostrando el input libre "30 min" o el de "Personalizado…".
+  const [rowIds, setRowIds] = useState<string[]>(() =>
+    dia.ejercicios.map(nextEjRowId),
+  );
   // status del ciclo idle/saving/saved/error · alimenta SaveIndicator
   // y reemplaza al `submitting` boolean que solo bloqueaba botones.
   const { status, runSave, reset: resetSave } = useSaveStatus();
@@ -150,6 +164,7 @@ export function DiaEditorModal({
   // edits no guardados de un día anterior.
   const handleWillPresent = () => {
     setLocal(dia);
+    setRowIds(dia.ejercicios.map(nextEjRowId));
     // Reinicia el editor de duración con la heurística inicial.
     const ti = initialTiempoState();
     setTiempoMode(ti.mode);
@@ -173,6 +188,7 @@ export function DiaEditorModal({
         { nombre: '', desc: '', series: '', source: 'user' as const },
       ],
     }));
+    setRowIds((cur) => [...cur, nextEjRowId()]);
   };
 
   const updateEjercicio = (idx: number, partial: Partial<Ejercicio>) => {
@@ -194,6 +210,7 @@ export function DiaEditorModal({
       ...cur,
       ejercicios: cur.ejercicios.filter((_, i) => i !== idx),
     }));
+    setRowIds((cur) => cur.filter((_, i) => i !== idx));
     setConfirmDeleteEj(null);
   };
 
@@ -557,7 +574,7 @@ export function DiaEditorModal({
 
             {local.ejercicios.map((ej, i) => (
               <EjercicioRow
-                key={i}
+                key={rowIds[i] ?? i}
                 idx={i}
                 ej={ej}
                 groups={suggestedGroups}

@@ -39,8 +39,14 @@ const CompraPage: React.FC = () => {
   const { profile: userDoc, resetCompraChecks } = useProfile();
   const sup = userDoc?.suplementos;
   // La compra puede ser undefined en docs muy viejos · defaultCompra
-  // como fallback para no romper el render.
-  const compra: Compra = userDoc?.compra ?? defaultCompra();
+  // como fallback para no romper el render. useMemo · sin él, en un doc
+  // sin `compra` el `defaultCompra()` devolvía un objeto NUEVO cada render
+  // → invalidaba todos los useMemo dependientes ([compra]) y re-renderizaba
+  // todas las CategoriaCard en bucle (render thrash).
+  const compra: Compra = useMemo(
+    () => userDoc?.compra ?? defaultCompra(),
+    [userDoc?.compra],
+  );
 
   const [editingSup, setEditingSup] = useState<'batido' | 'creatina' | null>(
     null,

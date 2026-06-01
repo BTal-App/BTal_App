@@ -226,6 +226,9 @@ export function MealExtraEditorModal({
     } else {
       pushDiff(changes, 'Nombre del bloque', original.nombre, cleaned.nombre);
       pushDiff(changes, 'Plato', original.nombrePlato ?? '', cleaned.nombrePlato ?? '');
+      // Icono · está en isDirtyEdit y se persiste · sin esta línea, cambiar
+      // SOLO el icono daba "Sin cambios" y no se podía guardar.
+      pushDiff(changes, 'Icono', original.emoji ?? 'Por defecto', cleaned.emoji ?? 'Por defecto');
       pushDiff(changes, 'Hora', original.hora ?? '', cleaned.hora ?? '');
       pushDiff(
         changes,

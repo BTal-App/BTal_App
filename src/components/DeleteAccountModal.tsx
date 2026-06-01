@@ -82,7 +82,11 @@ export function DeleteAccountModal({ isOpen, user, onClose }: Props) {
       <IonModal
         isOpen={isOpen && !reauthOpen}
         onWillPresent={resetState}
-        onDidDismiss={onClose}
+        // No cerrar el padre cuando solo se oculta para mostrar el reauth
+        // (ver nota en EnableTotpModal).
+        onDidDismiss={() => {
+          if (!reauthOpen) onClose();
+        }}
         className="settings-modal"
       >
         <div className="settings-modal-bg">

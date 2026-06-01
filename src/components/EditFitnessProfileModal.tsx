@@ -324,6 +324,35 @@ export function EditFitnessProfileModal({ isOpen, onClose }: Props) {
       data.supermercados.join(', '),
     );
     pushDiff(changes, 'Notas', original.notas, data.notas);
+    // Campos de nutrición/dieta · también se persisten (diffEditable los
+    // incluye) · sin estas líneas, cambiar SOLO uno de ellos dejaba el
+    // diálogo en "Sin cambios" sin botón Guardar → no se podía guardar.
+    pushDiff(
+      changes,
+      'Objetivo de kcal',
+      original.objetivoKcal ?? 'Automático',
+      data.objetivoKcal ?? 'Automático',
+    );
+    pushDiff(changes, 'Intolerancias', original.intolerancias.join(', '), data.intolerancias.join(', '));
+    pushDiff(changes, 'Alergias', original.alergias.join(', '), data.alergias.join(', '));
+    pushDiff(
+      changes,
+      'Alimentos prohibidos',
+      original.alimentosProhibidos.join(', '),
+      data.alimentosProhibidos.join(', '),
+    );
+    pushDiff(
+      changes,
+      'Alimentos obligatorios',
+      original.alimentosObligatorios.join(', '),
+      data.alimentosObligatorios.join(', '),
+    );
+    pushDiff(
+      changes,
+      'Ingredientes favoritos',
+      original.ingredientesFavoritos.join(', '),
+      data.ingredientesFavoritos.join(', '),
+    );
     setConfirmChanges({ changes, cleaned: { partial, data } });
   };
 

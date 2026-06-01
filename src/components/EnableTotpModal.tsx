@@ -102,7 +102,13 @@ export function EnableTotpModal({ isOpen, user, onClose, onEnrolled }: Props) {
           // Arrancamos la enrollment al abrir
           startEnrollment();
         }}
-        onDidDismiss={onClose}
+        // Solo cerramos el modal padre en un cierre REAL · cuando se oculta
+        // porque abrimos el sub-modal de reauth (reauthOpen=true) NO debemos
+        // llamar a onClose (apagaría el estado del padre y, tras reautenticar,
+        // el QR ya no reaparecería · rompía activar 2FA con sesión vieja).
+        onDidDismiss={() => {
+          if (!reauthOpen) onClose();
+        }}
         className="settings-modal"
       >
         {/* IonContent: scroll nativo cuando el QR + form no caben en altura */}

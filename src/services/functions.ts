@@ -8,7 +8,7 @@
 // y generatePlan tiene enforceAppCheck:true · sin token válido → 403).
 
 import { getFunctions, httpsCallable, type Functions } from 'firebase/functions';
-import { signInWithCustomToken } from 'firebase/auth';
+import { signInWithCustomToken, signOut } from 'firebase/auth';
 import { app, auth } from './firebase';
 
 const REGION = 'europe-west1';
@@ -186,5 +186,19 @@ export async function revokeOtherSessions(): Promise<void> {
     'revokeOtherSessions',
   );
   const res = await callable({});
-  await signInWithCustomToken(auth, res.data.token);
+  try {
+    await signInWithCustomToken(auth, res.data.token);
+  } catch (err) {
+    // La revocación YA ocurrió en el servidor · el refresh token de ESTE
+    // device también quedó invalidado. Si no podemos re-emitir aquí, dejar
+    // la sesión viva sería un estado zombie (te expulsaría en ~1h sin avisar).
+    // Mejor cerrar sesión ya (best-effort) y que el caller pida re-login.
+    console.error('[BTal] revokeOtherSessions: re-sign-in con custom token falló:', err);
+    try {
+      await signOut(auth);
+    } catch {
+      /* best-effort · el listener de Auth acabará reflejando el estado */
+    }
+    throw err;
+  }
 }

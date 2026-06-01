@@ -157,6 +157,9 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
     const cleaned: Comida = local;
     const changes: ChangeEntry[] = [];
     pushDiff(changes, 'Plato', original.nombrePlato ?? '', cleaned.nombrePlato ?? '');
+    // El icono está en isDirty y se persiste · sin esta línea, cambiar SOLO
+    // el icono dejaba el diálogo en "Sin cambios" y no se podía guardar.
+    pushDiff(changes, 'Icono', original.emoji ?? 'Por defecto', cleaned.emoji ?? 'Por defecto');
     pushDiff(changes, 'Hora', original.hora ?? '', cleaned.hora ?? '');
     pushDiff(
       changes,

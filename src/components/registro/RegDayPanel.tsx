@@ -508,7 +508,9 @@ export function RegDayPanel({
             const staggerCls = exIdx < 8 ? `btal-stagger-${exIdx + 1}` : '';
             return (
               <div
-                key={ej.nombre}
+                // Composite con el índice · evita colisión de keys de React
+                // si un plan tiene dos ejercicios con el mismo nombre.
+                key={`${ej.nombre}-${exIdx}`}
                 className={`reg-ex-row btal-anim-fade-up ${staggerCls}`}
               >
                 <div className="reg-ex-head">

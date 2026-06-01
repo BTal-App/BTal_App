@@ -105,7 +105,12 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
       await unlinkProvider(user, 'google.com');
       await refreshUser();
     } catch (err) {
+      // Antes solo console.error · el usuario no sabía si había fallado.
       console.error('[BTal] unlink google error:', err);
+      setRevokeToast({
+        msg: 'No se ha podido desvincular Google. Inténtalo de nuevo.',
+        ok: false,
+      });
     }
   };
 
@@ -115,6 +120,10 @@ export function AccountManageModal({ isOpen, user, onClose }: Props) {
       await refreshUser();
     } catch (err) {
       console.error('[BTal] unenroll error:', err);
+      setRevokeToast({
+        msg: 'No se ha podido desactivar la verificación en dos pasos. Inténtalo de nuevo.',
+        ok: false,
+      });
     }
   };
 

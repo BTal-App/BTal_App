@@ -128,7 +128,13 @@ function calcRacha(
   const ultimaFecha = cursor;
   let actual = 0;
   // Hacia atrás · solo 'training' continúa · 'rest'/'empty' rompen igual.
-  while (statusOf(cursor) === 'training') {
+  // Cota de seguridad · la racha no puede superar el nº de días con entreno.
+  // Sin ella, una `fecha` malformada (NaN) que entrara en `trainingSet` haría
+  // que `previousDayKey` devolviera siempre el mismo cursor inválido → bucle
+  // infinito. Las fechas vienen del id del doc (YYYY-MM-DD) y son válidas, es
+  // defensa pura.
+  const maxIter = trainingSet.size + 1;
+  while (statusOf(cursor) === 'training' && actual < maxIter) {
     actual++;
     cursor = previousDayKey(cursor);
   }
