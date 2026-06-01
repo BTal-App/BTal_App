@@ -661,10 +661,12 @@ export async function updateUserMeal(
   for (const [key, value] of Object.entries(partial)) {
     updates[`menu.${day}.${meal}.${key}`] = value;
   }
-  // Marca automática como 'user' si el caller no especifica source.
-  if (!('source' in partial)) {
-    updates[`menu.${day}.${meal}.source`] = 'user';
-  }
+  // NO forzamos `source='user'` aquí · el caller que edita CONTENIDO
+  // (MealEditorModal) ya pasa `source:'user'` explícito en su partial.
+  // Las llamadas que solo togglean `deshabilitada` (pausar/reactivar una
+  // comida) NO deben alterar la procedencia: una comida de IA pausada debe
+  // seguir siendo regenerable por la IA. Mismo criterio que `updateMealExtra`
+  // (que nunca forzó source). Antes el `?? 'user'` la congelaba frente a la IA.
   await mod.updateDoc(ref, updates);
 }
 
@@ -748,6 +750,9 @@ export async function clearUserMeal(
     [`menu.${day}.${meal}.carb`]: 0,
     [`menu.${day}.${meal}.fat`]: 0,
     [`menu.${day}.${meal}.source`]: 'default',
+    // Vaciar = volver a un slot limpio · si estaba pausada, la
+    // reactivamos (no dejar una comida vacía Y oculta sin pista visual).
+    [`menu.${day}.${meal}.deshabilitada`]: false,
     lastActive: Date.now(),
   });
 }
@@ -805,6 +810,9 @@ export async function duplicateUserMeal(
     updates[`menu.${day}.${meal}.carb`] = comidaSrc.carb;
     updates[`menu.${day}.${meal}.fat`] = comidaSrc.fat;
     updates[`menu.${day}.${meal}.source`] = 'user';
+    // El destino recibe contenido nuevo → visible aunque su slot
+    // estuviera pausado (si no, "dupliqué pero no aparece en ese día").
+    updates[`menu.${day}.${meal}.deshabilitada`] = false;
   }
   await mod.updateDoc(ref, updates);
 }

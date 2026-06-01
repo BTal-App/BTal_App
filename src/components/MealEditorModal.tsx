@@ -419,10 +419,14 @@ export function MealEditorModal({ isOpen, onClose, day, meal, comida }: Props) {
 
 // ─── Helpers locales ───────────────────────────────────────────────────────
 
-// Construye el partial que se enviará a Firestore (excluye `source` para
-// que ProfileProvider lo marque como 'user' automático).
+// Construye el partial que se enviará a Firestore. Incluye `source:'user'`
+// EXPLÍCITO · editar el contenido de una comida la marca como propia del
+// usuario (la IA no la tocará en regeneraciones). El forzado ya no vive en
+// el provider/db: así un toggle de `deshabilitada` (que no pasa source) no
+// congela una comida de IA frente a futuras regeneraciones.
 function buildPartial(data: Comida): Partial<Comida> {
   return {
+    source: 'user',
     alimentos: data.alimentos,
     hora: data.hora,
     kcal: data.kcal,

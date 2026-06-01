@@ -357,9 +357,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     async (day: DayKey, meal: MealKey, partial: Partial<Comida>) => {
       if (!uid) throw new Error('No hay usuario autenticado.');
       // Optimistic update local · aplicamos al state INMEDIATAMENTE para
-      // que la UI responda sin esperar a Firestore. La marca source='user'
-      // automática (cuando el partial no la incluye) la replicamos también
-      // en local para que el badge "Tuyo" aparezca al instante.
+      // que la UI responda sin esperar a Firestore. El `source` lo decide
+      // el caller (el editor pasa 'user'; un toggle no lo toca · ver abajo).
       // Snapshot solo de la comida modificada (no del doc entero) para
       // que un revert por error NO pise cambios concurrentes en otras
       // comidas/secciones. Si el user edita Lunes-Desayuno y mientras
@@ -369,10 +368,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setProfile((prev) => {
         if (!prev) return prev;
         mealSnapshot = prev.menu[day][meal];
+        // NO forzamos source='user' · el editor de contenido pasa
+        // `source:'user'` explícito en su partial; un toggle de
+        // `deshabilitada` no trae source y debe preservar el original
+        // (IA/default) para que la IA pueda regenerar una comida pausada.
+        // Espejo de db.updateUserMeal y de updateMealExtra.
         const nextMeal: Comida = {
           ...mealSnapshot,
           ...partial,
-          source: partial.source ?? 'user',
         };
         return {
           ...prev,
@@ -432,7 +435,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       setProfile((prev) => {
         if (!prev) return prev;
         const src = prev.menu[srcDay][meal];
-        nextMeal = { ...src, source: 'user' };
+        // source='user' (duplicar es manual) y deshabilitada:false · el
+        // destino recibe contenido nuevo y debe quedar visible aunque la
+        // origen estuviera pausada (espejo de db.duplicateUserMeal).
+        nextMeal = { ...src, source: 'user', deshabilitada: false };
         const nextMenu = { ...prev.menu };
         for (const day of targets) {
           snapshots.set(day, prev.menu[day][meal]);
