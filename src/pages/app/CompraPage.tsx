@@ -128,6 +128,22 @@ const CompraPage: React.FC = () => {
     return total;
   }, [compra]);
 
+  // ¿Hay items normales (no suplementación) SIN precio? La IA genera la
+  // compra con `precio: null` siempre — no inventa precios (no hay fuente
+  // fiable de precios de súper · ver decisión 1-jun). Mientras queden items
+  // sin precio mostramos un aviso de que se añaden a mano. Desaparece solo
+  // cuando todos tienen precio.
+  const hayItemsSinPrecio = useMemo(() => {
+    for (const cat of compra.categorias) {
+      if (cat.id === 'suplementacion') continue;
+      const items = compra.items[cat.id] ?? [];
+      for (const item of items) {
+        if (item.precio === null || item.precio === undefined) return true;
+      }
+    }
+    return false;
+  }, [compra]);
+
   // Disparado al pulsar el botón 🔄 "Reiniciar". v1 hace dos pasos:
   //   1. Si no hay nada marcado → aviso "Carrito vacío" (info-only).
   //   2. Si hay items marcados → confirm "Desmarcar todos los X..."
@@ -392,6 +408,17 @@ const CompraPage: React.FC = () => {
                 {fmtPrice(totalSemanal)}
               </span>
             </div>
+          )}
+
+          {/* Aviso · los precios no se rellenan automáticamente (la IA no
+              inventa precios · no hay fuente fiable de precios de súper).
+              El user los añade tocando cada producto. Se oculta en búsqueda
+              y cuando ya todos los items tienen precio. */}
+          {!queryNorm && hayItemsSinPrecio && (
+            <p className="compra-precio-hint">
+              Los precios no se rellenan automáticamente. Toca un producto para
+              añadir su precio y se sumará al total.
+            </p>
           )}
 
           {/* ─── COSTE SUPLEMENTACIÓN · siempre al final ───

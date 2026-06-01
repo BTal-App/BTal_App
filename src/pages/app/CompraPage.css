@@ -283,6 +283,17 @@
   line-height: 1.5;
 }
 
+/* Aviso "los precios se añaden a mano" · bajo el Total semanal. Mismo gris
+   terciario que las notas, centrado y algo más sutil. */
+.compra-precio-hint {
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  text-align: center;
+  margin: 6px 4px 0;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
 .compra-sup-badge-icon {
   font-size: 0.95rem;
   flex-shrink: 0;
