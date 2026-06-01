@@ -55,6 +55,17 @@ export async function callGemini(args: CallGeminiArgs): Promise<string> {
       // lo guía el esqueleto del prompt + lo valida Zod.
       responseMimeType: 'application/json',
       temperature: 0.8,
+      // THINKING OFF (1-jun-2026) · gemini-2.5-flash trae razonamiento
+      // ("thinking") ACTIVADO por defecto con presupuesto dinámico (puede
+      // gastar miles de tokens razonando ANTES de responder). El -lite no lo
+      // hacía → al migrar, scope "Todo" pasó de ~40s a +120s y la función
+      // moría con 504 (timeout). No necesitamos que el modelo razone los
+      // macros: el sistema 6B (resolveMenuMacros + enrichAndAdjustMenu) ajusta
+      // los gramos al objetivo server-side DESPUÉS. El modelo solo arma la
+      // estructura y elige alimentos/ejercicios coherentes, para lo que
+      // 2.5-flash es sobrado sin thinking. budget 0 = desactivado. Si en
+      // algún momento se nota peor calidad estructural, subir a ~256-512.
+      thinkingConfig: { thinkingBudget: 0 },
       // Scope 'all' genera menú (7×4) + los 7 planes builtin (28 días) +
       // suplementos en un solo JSON · eso supera con holgura los 16k tokens
       // y se truncaba ("Unterminated string in JSON" → JSON.parse falla →

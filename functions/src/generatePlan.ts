@@ -64,7 +64,11 @@ export const generatePlan = onCall(
     secrets: [geminiKey],
     enforceAppCheck: true,
     region: 'europe-west1',
-    timeoutSeconds: 120,
+    // 300s de margen (Gen2 permite hasta 3600). Con thinking OFF la
+    // generación "Todo" vuelve a ~30-60s, pero damos colchón para no volver
+    // a morir en 504 si Gemini tiene un mal momento. Solo factura el tiempo
+    // REAL usado · un timeout alto no encarece las llamadas normales.
+    timeoutSeconds: 300,
     memory: '512MiB',
   },
   async (request) => {
