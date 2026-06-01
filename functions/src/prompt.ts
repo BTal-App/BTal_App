@@ -278,7 +278,7 @@ export function buildPrompt(p: ValidatedProfile, opts: BuildPromptOpts): string 
     }
     lines.push(
       'Cada día (en cualquiera de los 7 planes) con: titulo (ej. "Día A · Empuje" o "Full Body"), ' +
-      'descripcion MUY BREVE (máximo ~6 palabras · solo los grupos musculares de ESE día, ej. ' +
+      'descripcion BREVE (máximo ~10 palabras aprox · solo los grupos musculares de ESE día, ej. ' +
       '"Pecho, hombros y tríceps" o "Tren inferior y core" · NADA de frases largas, consejos ni ' +
       'explicaciones), 1-3 badges que reflejen los grupos/tipo de ESE día (lista ' +
       'cerrada: pecho, espalda, piernas, hombros, biceps, triceps, core, fullbody, fuerza, hipertrofia, ' +
