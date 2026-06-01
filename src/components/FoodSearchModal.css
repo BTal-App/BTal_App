@@ -12,6 +12,11 @@
 }
 .food-search-input {
   flex: 1;
+  /* min-width:0 · sin esto un flex item NO se encoge por debajo de la
+     anchura intrínseca de su contenido (el <input> tiene un size por
+     defecto de ~20 chars) → la fila se desbordaba y empujaba el botón de
+     la cámara fuera del recuadro por la derecha. */
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -41,6 +46,7 @@
 }
 .food-search-input input {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   outline: none;
