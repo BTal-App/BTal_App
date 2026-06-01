@@ -386,6 +386,15 @@
   margin: 6px 0 8px;
 }
 
+/* Nota bajo "Macros por batido" · explica que se calculan de los
+   ingredientes y son editables. */
+.sup-macro-hint {
+  font-size: 0.72rem;
+  color: var(--btal-t-3);
+  line-height: 1.45;
+  margin: -2px 0 10px;
+}
+
 .sup-macro-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

@@ -18,8 +18,11 @@ import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { SaveIndicator } from './SaveIndicator';
 import { SupCountersInline } from './SupCountersInline';
+import { AlimentosListInput } from './AlimentosListInput';
+import { macrosFromAlimentos } from '../utils/mealMacros';
 import {
   DAY_LABEL_FULL,
+  type Alimento,
   type BatidoConfig,
   type DayKey,
 } from '../templates/defaultUser';
@@ -92,7 +95,9 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
 
   const enterEdit = () => {
     if (!config) return;
-    setForm({ ...config });
+    // `alimentos ?? []` · docs anteriores a la migración pueden no tenerlo
+    // todavía (el heal de db.ts lo añade, pero protegemos por si acaso).
+    setForm({ ...config, alimentos: config.alimentos ?? [] });
     resetSave();
     setView('edit');
   };
@@ -107,6 +112,26 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
     value: BatidoConfig[K],
   ) => {
     setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+  };
+
+  // Cambio de ingredientes · igual que MealEditorModal: ajusta el total
+  // del batido por la DIFERENCIA de la contribución de los alimentos con
+  // macros reales (buscador/barcode), preservando lo que el user haya
+  // tecleado a mano en los macros totales. Los alimentos sin macros suman 0.
+  const changeAlimentos = (next: Alimento[]) => {
+    setForm((prev) => {
+      if (!prev) return prev;
+      const before = macrosFromAlimentos(prev.alimentos);
+      const after = macrosFromAlimentos(next);
+      return {
+        ...prev,
+        alimentos: next,
+        kcal: Math.max(0, prev.kcal + (after.kcal - before.kcal)),
+        prot: Math.max(0, prev.prot + (after.prot - before.prot)),
+        carb: Math.max(0, prev.carb + (after.carb - before.carb)),
+        fat: Math.max(0, prev.fat + (after.fat - before.fat)),
+      };
+    });
   };
 
   // Formatea precio para diff · "12,90 €" o "—" si null/0.
@@ -135,7 +160,12 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
       config.includeCreatina ? 'Sí' : 'No',
       cleaned.includeCreatina ? 'Sí' : 'No',
     );
-    pushDiff(changes, 'Extras', config.extras, cleaned.extras);
+    pushDiff(
+      changes,
+      'Ingredientes',
+      `${(config.alimentos ?? []).length} ingredientes`,
+      `${cleaned.alimentos.length} ingredientes`,
+    );
     pushDiff(changes, 'Kcal', config.kcal, cleaned.kcal);
     pushDiff(changes, 'Proteína', config.prot, cleaned.prot);
     pushDiff(changes, 'Carbos', config.carb, cleaned.carb);
@@ -276,10 +306,14 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                         {' '}de creatina
                       </>
                     )}
-                    {config.extras && (
+                    {(config.alimentos ?? []).length > 0 && (
                       <>
                         {' + '}
-                        <span className="sup-recipe-extras">{config.extras}</span>
+                        <span className="sup-recipe-extras">
+                          {(config.alimentos ?? [])
+                            .map((a) => (a.cantidad ? `${a.nombre} (${a.cantidad})` : a.nombre))
+                            .join(' · ')}
+                        </span>
                       </>
                     )}
                   </p>
@@ -367,20 +401,24 @@ export function BatidoInfoModal({ isOpen, onClose, day }: Props) {
                     </label>
 
                     <div className="sup-form-group">
-                      <label className="sup-label">Extras (texto libre)</label>
-                      <textarea
-                        className="sup-input sup-textarea"
-                        placeholder="ej: 1 plátano + 300 ml leche semi"
-                        rows={2}
-                        maxLength={200}
-                        value={form.extras}
-                        onChange={(e) => updateForm('extras', e.target.value)}
+                      <label className="sup-label">
+                        Ingredientes (leche, fruta, avena…)
+                      </label>
+                      <AlimentosListInput
+                        value={form.alimentos}
+                        onChange={changeAlimentos}
+                        ariaLabelPrefix="Ingrediente del batido"
                       />
                     </div>
 
                     <div className="sup-form-label-section">
                       Macros por batido
                     </div>
+                    <p className="sup-macro-hint">
+                      Se calculan a partir de los ingredientes con macros reales
+                      (buscador) · puedes ajustarlos a mano. La proteína del bote
+                      ({form.gr_prot} g) inclúyela aquí o como ingrediente.
+                    </p>
                     <div className="sup-macro-grid">
                       <div className="sup-form-group">
                         <label className="sup-label sup-label--kcal">

@@ -136,11 +136,15 @@ const HoyPage: React.FC = () => {
     | { kind: 'extra'; extra: ComidaExtra; sortMin: number };
   const orderedMealRows = useMemo<HoyRow[]>(() => {
     if (!comidasHoy) return [];
-    const rows: HoyRow[] = MEAL_KEYS.map((meal) => {
+    const rows: HoyRow[] = [];
+    for (const meal of MEAL_KEYS) {
       const comida = comidasHoy[meal];
+      // Fija deshabilitada · no aparece en el listado de HOY (igual que los
+      // extras deshabilitados). Se gestiona/rehabilita desde Menú.
+      if (comida.deshabilitada) continue;
       const hora = comida.hora ?? HORA_DEFECTO[meal];
-      return { kind: 'meal', meal, sortMin: horaToMinutes(hora) };
-    });
+      rows.push({ kind: 'meal', meal, sortMin: horaToMinutes(hora) });
+    }
     for (const extra of comidasHoy.extras) {
       if (extra.deshabilitada) continue;
       rows.push({

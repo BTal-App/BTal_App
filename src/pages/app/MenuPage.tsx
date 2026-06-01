@@ -87,6 +87,10 @@ function calcTotalesDia(
   for (const meal of MEAL_KEYS) {
     const c = comidas[meal];
     if (!c) continue;
+    // Fija deshabilitada · se salta igual que un extra deshabilitado (no
+    // suma al total ni cuenta como comida con datos · sigue visible
+    // atenuada en la card).
+    if (c.deshabilitada) continue;
     kcal += c.kcal;
     prot += c.prot;
     carb += c.carb;
@@ -230,7 +234,9 @@ function buildOrderedRows(
         + (c.includeCreatina
           ? ` + ${sup.creatinaConfig.gr_dose} g creatina`
           : '')
-        + (c.extras ? ` · ${c.extras}` : ''),
+        + ((c.alimentos ?? []).length > 0
+          ? ` · ${(c.alimentos ?? []).map((a) => a.nombre).join(', ')}`
+          : ''),
       kcal: c.kcal,
       prot: c.prot,
       carb: c.carb,
@@ -378,6 +384,7 @@ const MenuPage: React.FC = () => {
     restoreMeal,
     removeMealExtra,
     restoreMealExtra,
+    updateMeal,
     updateMealExtra,
     toggleDayExcludedFromAvg,
     toggleDayHidden,
@@ -452,6 +459,25 @@ const MenuPage: React.FC = () => {
       await updateMealExtra(day, extra.id, { deshabilitada: next });
     } catch (err) {
       console.error('[BTal] toggle deshabilitada error:', err);
+    }
+  };
+
+  // Toggle deshabilitar/habilitar de una comida FIJA · análogo al de
+  // extras pero keyed por MealKey (no por id) y vía updateMeal.
+  const [pendingMealToggle, setPendingMealToggle] = useState<{
+    day: DayKey;
+    meal: MealKey;
+    next: boolean;
+  } | null>(null);
+
+  const handleConfirmMealToggle = async () => {
+    if (!pendingMealToggle) return;
+    const { day, meal, next } = pendingMealToggle;
+    setPendingMealToggle(null);
+    try {
+      await updateMeal(day, meal, { deshabilitada: next });
+    } catch (err) {
+      console.error('[BTal] toggle deshabilitada (fija) error:', err);
     }
   };
 
@@ -862,12 +888,19 @@ const MenuPage: React.FC = () => {
             day={selectedDay}
             meal={openMeal}
             comida={comidasDelDia[openMeal]}
+            isDisabled={!!comidasDelDia[openMeal].deshabilitada}
             onEdit={() => {
               // Cerrar sheet + abrir editor · evitamos modales solapados
               // y el editor tiene contexto completo del meal a editar.
               const m = openMeal;
               setOpenMeal(null);
               setEditingMeal(m);
+            }}
+            onToggleDisabled={() => {
+              const m = openMeal;
+              const next = !(comidasDelDia[m].deshabilitada ?? false);
+              setOpenMeal(null);
+              setPendingMealToggle({ day: selectedDay, meal: m, next });
             }}
             onDuplicate={() => {
               // Cerrar sheet + abrir DuplicateMealModal · evitamos modales
@@ -1065,6 +1098,41 @@ const MenuPage: React.FC = () => {
               handler: () => {
                 handleConfirmExtraToggle().catch((err) => {
                   console.error('[BTal] handleConfirmExtraToggle unhandled:', err);
+                });
+              },
+            },
+          ]}
+        />
+
+        {/* Confirmación previa al toggle deshabilitar/habilitar de una
+            comida FIJA · mismo patrón que el de extras. */}
+        <IonAlert
+          isOpen={pendingMealToggle !== null}
+          onDidDismiss={() => setPendingMealToggle(null)}
+          header={
+            pendingMealToggle?.next
+              ? '¿Deshabilitar la comida?'
+              : '¿Habilitar la comida?'
+          }
+          message={
+            pendingMealToggle
+              ? pendingMealToggle.next
+                ? `${MEAL_LABEL[pendingMealToggle.meal]} se quedará atenuada en gris y dejará de sumar al total del día y a la media semanal. Puedes volver a habilitarla cuando quieras.`
+                : `${MEAL_LABEL[pendingMealToggle.meal]} volverá a contar al total del día y a la media semanal.`
+              : ''
+          }
+          buttons={[
+            {
+              text: 'Cancelar',
+              role: 'cancel',
+              handler: () => setPendingMealToggle(null),
+            },
+            {
+              text: pendingMealToggle?.next ? 'Deshabilitar' : 'Habilitar',
+              role: 'confirm',
+              handler: () => {
+                handleConfirmMealToggle().catch((err) => {
+                  console.error('[BTal] handleConfirmMealToggle unhandled:', err);
                 });
               },
             },
@@ -1547,13 +1615,21 @@ interface MealCardProps {
 
 function MealCard({ meal, comida, onClick }: MealCardProps) {
   const isEmpty = comida.alimentos.length === 0;
+  const isDisabled = !!comida.deshabilitada;
   const plato = (comida.nombrePlato ?? '').trim();
   return (
     <button
       type="button"
-      className={'menu-meal' + (isEmpty ? ' menu-meal--empty' : '')}
+      className={
+        'menu-meal'
+        + (isEmpty ? ' menu-meal--empty' : '')
+        + (isDisabled ? ' menu-meal--disabled' : '')
+      }
       onClick={blurAndRun(onClick)}
-      aria-label={`Abrir detalle de ${MEAL_LABEL[meal].toLowerCase()}`}
+      aria-label={
+        (isDisabled ? 'Comida deshabilitada · ' : '')
+        + `Abrir detalle de ${MEAL_LABEL[meal].toLowerCase()}`
+      }
     >
       <div className="menu-meal-emoji" aria-hidden="true">
         <MealIcon

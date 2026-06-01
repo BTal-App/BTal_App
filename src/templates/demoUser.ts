@@ -970,7 +970,26 @@ const DEMO_SUPLEMENTOS: Suplementos = {
   batidoConfig: {
     gr_prot: 35,
     includeCreatina: true,
-    extras: '300 ml leche semi + 1 plátano',
+    alimentos: [
+      {
+        nombre: 'Leche semidesnatada',
+        cantidad: '300 ml',
+        source: 'off',
+        kcalPer100: 46,
+        protPer100: 3.1,
+        carbPer100: 4.8,
+        fatPer100: 1.6,
+      },
+      {
+        nombre: 'Plátano',
+        cantidad: '1 plátano (120 g)',
+        source: 'off',
+        kcalPer100: 89,
+        protPer100: 1.1,
+        carbPer100: 23,
+        fatPer100: 0.3,
+      },
+    ],
     kcal: 285,
     prot: 38,
     carb: 35,

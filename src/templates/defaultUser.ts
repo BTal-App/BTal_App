@@ -214,6 +214,21 @@ export interface Comida {
   // null/undefined solo en items con source='default' o source='user'
   // antes de que el user lo edite · la UI muestra placeholder en ese caso.
   nombrePlato?: string | null;
+  /**
+   * Comida deshabilitada · cuando `true` la card se renderiza atenuada
+   * en gris y NO suma sus macros al total del día ni a la media semanal
+   * (igual que si no existiera). Pulsar la card sigue abriendo el sheet ·
+   * desde ahí se puede volver a habilitar.
+   *
+   * Pensado para "pausar" una comida sin perder los datos · vale tanto
+   * para las 4 fijas (desayuno/comida/merienda/cena) como para los extras
+   * (que la heredan vía `ComidaExtra extends Comida`). Caso de uso típico:
+   * hoy no desayuno lo de siempre → lo deshabilito y meto otro extra; más
+   * adelante rehabilito el original sin haberlo perdido. Distinto de
+   * vaciar (que borra los alimentos) y de borrar un extra (que lo saca del
+   * array). Una regeneración con IA reemplaza el menú y resetea el flag.
+   */
+  deshabilitada?: boolean;
 }
 
 // Comida extra · un slot custom que el user añade además de las 4 fijas.
@@ -226,17 +241,7 @@ export interface Comida {
 export interface ComidaExtra extends Comida {
   id: string;
   nombre: string;
-  /**
-   * Comida deshabilitada · cuando `true` la card se renderiza atenuada
-   * en gris y NO suma sus macros al total del día ni a la media
-   * semanal (igual que si no existiera). Pulsar la card sigue abriendo
-   * el sheet · desde ahí se puede volver a habilitar.
-   *
-   * Pensado para que el user pueda "pausar" una comida sin perder los
-   * datos (por ejemplo: hoy no la voy a comer pero la quiero conservar
-   * para mañana). Diferente de borrar (que elimina del array).
-   */
-  deshabilitada?: boolean;
+  // `deshabilitada` se hereda de Comida (vale para fijas y extras).
 }
 
 // Genera un id único para una ComidaExtra. Usamos base36 del timestamp +
@@ -507,9 +512,16 @@ export interface BatidoConfig {
   // Si true · al añadir el batido a un día el user ya tiene cubierta la
   // dosis de creatina · el bloque creatina suelto no hace falta ese día.
   includeCreatina: boolean;
-  extras: string; // texto libre · "+ 1 plátano + 300ml leche", opcional
-  // Macros TOTALES del batido completo (proteína suplementaria + extras).
-  // Lo introduce el user manualmente · lo mostramos en la mini-card del día.
+  // Ingredientes del batido además de la proteína (leche, plátano, avena…).
+  // Mismo tipo Alimento que las comidas → admite el buscador de alimentos
+  // con macros reales (source/brand/*Per100) y alimentos manuales. Sus
+  // macros se suman al total del batido (campos kcal/prot/carb/fat de
+  // abajo), recalculándose al añadir/quitar/editar cantidad · el user
+  // puede además ajustar el total a mano. Sustituye al antiguo texto libre.
+  alimentos: Alimento[];
+  // Macros TOTALES del batido completo (proteína suplementaria + ingredientes).
+  // Se calculan desde `alimentos` (los que tengan macros reales) y el user
+  // puede afinarlos a mano · es lo que se muestra en la mini-card del día.
   kcal: number;
   prot: number;
   carb: number;
@@ -1269,7 +1281,7 @@ export function defaultBatidoConfig(): BatidoConfig {
   return {
     gr_prot: 35,
     includeCreatina: true,
-    extras: '',
+    alimentos: [],
     kcal: 145,
     prot: 30,
     carb: 4,

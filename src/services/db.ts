@@ -267,6 +267,12 @@ export async function ensureUserDocumentSchema(
       if (bc.producto_precio === undefined) {
         updates['suplementos.batidoConfig.producto_precio'] = null;
       }
+      // Ingredientes del batido (leche, plátano…) con macros reales del
+      // buscador · sustituye al antiguo texto libre `extras`. Docs previos
+      // no lo tienen → array vacío.
+      if (bc.alimentos === undefined) {
+        updates['suplementos.batidoConfig.alimentos'] = [];
+      }
     }
     if (sup.creatinaConfig === undefined) {
       updates['suplementos.creatinaConfig'] = defaultCreatinaConfig();
