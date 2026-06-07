@@ -20,7 +20,7 @@ function fns(): Functions {
 }
 
 // Scope de generación · espejo de AiScopeChoice del schema.
-export type GenerateScope = 'all' | 'menu_compra' | 'menu_only' | 'entrenos_only';
+type GenerateScope = 'all' | 'menu_compra' | 'menu_only' | 'entrenos_only';
 
 export interface GeneratePlanPayload {
   scope: GenerateScope;

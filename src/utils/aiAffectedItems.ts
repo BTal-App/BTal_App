@@ -26,7 +26,7 @@ import {
 //   "menu:lun:desayuno"
 //   "entrenos:4:0"          (plan 4, día 0 — el día entero como unidad)
 //   "compra:proteinas:1"    (categoría proteínas, item índice 1)
-export type ItemRefId = string;
+type ItemRefId = string;
 
 export type AffectedSection = 'menu' | 'entrenos' | 'compra';
 

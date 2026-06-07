@@ -19,7 +19,7 @@ import type { MouseEvent, ReactEventHandler } from 'react';
 // ningún descendiente del modal-de-fondo retenga foco al abrirse el
 // nuevo modal. Es seguro llamarlo siempre — los blurs son no-ops si el
 // elemento no tiene foco.
-export function blurEverything(host: HTMLElement | null) {
+function blurEverything(host: HTMLElement | null) {
   // 1) Blur del host element (button nativo, IonButton host, etc.)
   if (host && typeof host.blur === 'function') host.blur();
 

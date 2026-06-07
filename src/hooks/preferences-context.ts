@@ -2,7 +2,6 @@ import { createContext } from 'react';
 import type { NavStyle, Preferences, RegistroCalPos, UnitsSystem, WeekStart } from '../utils/units';
 
 // Re-export por comodidad para los consumidores del hook.
-export type { Preferences } from '../utils/units';
 export { DEFAULT_PREFERENCES } from '../utils/units';
 
 export interface PreferencesState extends Preferences {

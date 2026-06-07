@@ -77,7 +77,7 @@ const generatedDaySchema = z.object({
 });
 
 // El menú generado · objeto con las 7 claves de día.
-export const generatedMenuSchema = z.object(
+const generatedMenuSchema = z.object(
   Object.fromEntries(DAY_KEYS.map((d) => [d, generatedDaySchema])) as Record<
     (typeof DAY_KEYS)[number],
     typeof generatedDaySchema
@@ -118,7 +118,7 @@ const trainingDaysArray = z.array(generatedTrainingDaySchema).min(1).max(8);
 // con el split apropiado. Decisión 29-may: la IA rellena TODOS los builtin
 // (no crea un plan nuevo suelto) · así el user puede cambiar de días y
 // tener siempre un plan IA listo.
-export const generatedEntrenosSchema = z.object({
+const generatedEntrenosSchema = z.object({
   '1': trainingDaysArray,
   '2': trainingDaysArray,
   '3': trainingDaysArray,

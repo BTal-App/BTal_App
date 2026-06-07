@@ -910,7 +910,7 @@ export function normalizeExerciseName(name: string): string {
 // Réplica de la heurística del v1 (RegistroPage acepta coma decimal por
 // localización española). Usado en el cliente al guardar el registro
 // para calcular max series y comparar contra PR existente.
-export function parseKgString(raw: string): number {
+function parseKgString(raw: string): number {
   if (!raw) return 0;
   const cleaned = String(raw).replace(',', '.').replace(/[^\d.]/g, '');
   const n = parseFloat(cleaned);
@@ -944,7 +944,7 @@ export function maxKgEjercicio(ej: EjercicioRegistrado): number {
 // (ingredientes agregados por categoría). El user puede añadir productos
 // extra a la lista (suplementos, despensa, etc.) que no provienen del menú.
 
-export type PlanTipo = 'free' | 'one_off' | 'pro';
+type PlanTipo = 'free' | 'one_off' | 'pro';
 
 export interface PlanIA {
   tipo: PlanTipo;
@@ -1420,21 +1420,6 @@ export const SUPERMERCADOS: { value: string; label: string }[] = [
   { value: 'Aldi', label: 'Aldi' },
   { value: 'El Corte Inglés', label: 'El Corte Inglés' },
 ];
-
-// Mapeo supermercado → marcas blancas (las que aparecen en `foods/.brand`).
-// Lo usa la IA (sabe que Hacendado=Mercadona) y, en 6B-B, el resolver/buscador
-// para priorizar productos de la marca del súper que elija el user. Iterativo.
-export const SUPERMERCADO_BRANDS: Record<string, string[]> = {
-  Mercadona: ['Hacendado'],
-  Carrefour: ['Carrefour'],
-  Lidl: ['Milbona', 'Sondey', 'Vitafit', 'Pilos', 'Lidl'],
-  Dia: ['Dia'],
-  Consum: ['Consum'],
-  Alcampo: ['Auchan', 'Alcampo'],
-  Eroski: ['Eroski'],
-  Aldi: ['Cucina Nobile', 'Cien', 'Aldi'],
-  'El Corte Inglés': ['Aliada', 'Hipercor'],
-};
 
 // Opciones de scope IA — etiquetas humanas + descripción.
 // Reusadas en StepMode (onboarding y modal de cambio) y en AiGenerateModal

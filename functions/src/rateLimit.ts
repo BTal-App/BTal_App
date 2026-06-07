@@ -42,5 +42,3 @@ export async function enforceRateLimit(
     tx.update(ref, { count: data.count + 1 });
   });
 }
-
-export { MAX_PER_HOUR };

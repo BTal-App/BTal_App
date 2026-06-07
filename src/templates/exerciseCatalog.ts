@@ -17,7 +17,7 @@ export interface BadgeMeta {
   cls: string;
 }
 
-export const BADGE_TYPES: BadgeMeta[] = [
+const BADGE_TYPES: BadgeMeta[] = [
   // Grupo muscular
   { val: 'pecho', label: 'PECHO', cls: 'b-pecho' },
   { val: 'espalda', label: 'ESPALDA', cls: 'b-espalda' },

@@ -17,7 +17,7 @@ import {
   type Suplementos,
 } from '../templates/defaultUser';
 
-export type SupAlertLevel = 'warn' | 'danger';
+type SupAlertLevel = 'warn' | 'danger';
 
 export interface SupAlert {
   level: SupAlertLevel;

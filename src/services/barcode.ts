@@ -9,7 +9,7 @@ export function barcodeAvailable(): boolean {
   return Capacitor.isNativePlatform();
 }
 
-export type BarcodeError = 'denied' | 'unavailable' | 'cancelled' | 'failed';
+type BarcodeError = 'denied' | 'unavailable' | 'cancelled' | 'failed';
 
 // Abre el escáner y devuelve el código (EAN/UPC) o null si no se leyó nada.
 // Lanza un Error con `.code: BarcodeError` en fallos esperables (permiso, etc.).

@@ -3,7 +3,7 @@
 // mes", etc. Auto-escala al max value y dibuja eje X con etiquetas
 // rotadas si hay muchos puntos.
 
-export interface BarChartDatum {
+interface BarChartDatum {
   label: string;   // texto bajo la barra (ej. "S20", "Mar", "2026")
   value: number;
   // Highlight opcional · pinta la barra en oro/coral en lugar de

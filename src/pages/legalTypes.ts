@@ -5,7 +5,7 @@
 
 export type LegalSlug = 'privacidad' | 'terminos' | 'aviso-medico';
 
-export const LEGAL_TITLES: Record<string, string> = {
+const LEGAL_TITLES: Record<string, string> = {
   privacidad: 'Política de privacidad',
   terminos: 'Términos de uso',
   'aviso-medico': 'Aviso médico',

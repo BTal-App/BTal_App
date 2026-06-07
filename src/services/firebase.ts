@@ -3,7 +3,6 @@ import {
   CustomProvider,
   initializeAppCheck,
   ReCaptchaEnterpriseProvider,
-  type AppCheck,
 } from 'firebase/app-check';
 import {
   browserLocalPersistence,
@@ -95,7 +94,6 @@ export const app = initializeApp(firebaseConfig);
 const RECAPTCHA_ENTERPRISE_SITE_KEY = import.meta.env
   .VITE_RECAPTCHA_ENTERPRISE_SITE_KEY as string | undefined;
 
-let appCheck: AppCheck | null = null;
 function bootstrapAppCheck(): void {
   if (typeof window === 'undefined') return; // SSR / vitest jsdom OK pero no hay window
 
@@ -154,7 +152,7 @@ function bootstrapAppCheck(): void {
     return;
   }
   try {
-    appCheck = initializeAppCheck(app, {
+    initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_ENTERPRISE_SITE_KEY),
       // isTokenAutoRefreshEnabled · App Check refresca el token antes de
       // que caduque (cada 30 min aprox). Sin esto las llamadas tras una
@@ -186,7 +184,7 @@ async function bootstrapAppCheckNative(): Promise<void> {
   });
 
   try {
-    appCheck = initializeAppCheck(app, {
+    initializeAppCheck(app, {
       // CustomProvider: el web SDK pide token via callback async · nosotros
       // delegamos al plugin nativo que devuelve un token producido por el
       // SO (Play Integrity / DeviceCheck). El web SDK lo inyecta en los
@@ -214,9 +212,6 @@ async function bootstrapAppCheckNative(): Promise<void> {
 }
 
 bootstrapAppCheck();
-// Re-exportamos por si alguna parte de la app necesita el handle (p.ej.
-// para `getToken(appCheck)` manual en debugging). Hoy nadie lo usa.
-export { appCheck };
 
 // Persistencia explícita de la sesión:
 //   1º indexedDBLocalPersistence — preferida; sobrevive al cierre del

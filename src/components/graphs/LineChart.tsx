@@ -2,7 +2,7 @@
 // (≤ 30 puntos). Más completo que el sparkline del RegDayPanel:
 // añade eje Y con grid, etiquetas X y puntos clickables (vía title).
 
-export interface LineChartDatum {
+interface LineChartDatum {
   label: string;   // ej. "5 may", "S20"
   value: number;
 }

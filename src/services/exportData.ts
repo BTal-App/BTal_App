@@ -21,7 +21,7 @@ import { getUserDocument, getAllRegistros } from './db';
 //   - Datos en backups internos de Firebase · si el user los quiere,
 //     debe contactar soporte (cuando exista la dirección oficial).
 
-export const EXPORT_SCHEMA_VERSION = 1;
+const EXPORT_SCHEMA_VERSION = 1;
 
 const LOCALSTORAGE_PREFIX = 'btal_';
 
@@ -71,7 +71,7 @@ function readLocalStorageSnapshot(): Record<string, string> {
   return out;
 }
 
-export interface ExportPayload {
+interface ExportPayload {
   meta: {
     schemaVersion: number;
     exportedAt: string; // ISO 8601
@@ -89,7 +89,7 @@ export interface ExportPayload {
 // Construye el payload completo · lee Firestore y arma el objeto sin
 // triggerar todavía la descarga (separado para poder testearlo o
 // mostrarlo en pantalla en el futuro si hace falta).
-export async function buildExportPayload(
+async function buildExportPayload(
   user: User,
   appVersion: string,
 ): Promise<ExportPayload> {

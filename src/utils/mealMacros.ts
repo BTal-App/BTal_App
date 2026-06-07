@@ -18,7 +18,7 @@ export interface Macros {
 }
 
 // Macros de UN alimento con datos (per100 + gramos). null si no aplica.
-export function alimentoMacros(a: Alimento): Macros | null {
+function alimentoMacros(a: Alimento): Macros | null {
   if (typeof a.kcalPer100 !== 'number') return null;
   const { grams } = parseQuantity(a.cantidad);
   if (grams == null) return null;

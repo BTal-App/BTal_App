@@ -19,7 +19,7 @@ function addTreintaDias(ms: number): number {
   return d.getTime();
 }
 
-export type CanGenerateReason =
+type CanGenerateReason =
   | 'guest' // sesión anónima · no aplica
   | 'manual_mode' // user eligió modo manual
   | 'limit_reached' // Free + ya consumió la gen del mes

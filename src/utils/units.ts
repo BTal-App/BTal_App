@@ -70,7 +70,7 @@ export const lbToKg = (lb: number): number => lb * KG_PER_LB;
 // ── Alturas ───────────────────────────────────────────────────
 const CM_PER_IN = 2.54;
 
-export const cmToIn = (cm: number): number => cm / CM_PER_IN;
+const cmToIn = (cm: number): number => cm / CM_PER_IN;
 export const inToCm = (inches: number): number => inches * CM_PER_IN;
 
 // Convierte cm a un par {feet, inches} para mostrar al estilo USA (5'10").

@@ -37,7 +37,7 @@ export function getRegPlanDay(
 // Combina los 1-3 badges de un día en un string "PECHO/TRICEPS/EMPUJE".
 // Réplica del v1 (`regBadgesCombined`). Solo añade el 3º si hay 2º (el
 // v1 lo hacía por compatibilidad con badges anidados).
-export function regBadgesCombined(day: DiaEntreno): string {
+function regBadgesCombined(day: DiaEntreno): string {
   const labels: string[] = [];
   const a = badgeLabel(day.badge, day.badgeCustom);
   const b = badgeLabel(day.badge2, day.badgeCustom2);
@@ -84,7 +84,7 @@ export function regSeriesCount(seriesStr: string): number {
 }
 
 // Una opción del selector de plan del RegDayPanel.
-export interface PlanOption {
+interface PlanOption {
   value: string;             // 'PLANID|DAYINDEX' o 'rest'
   label: string;             // texto humano
   isRest: boolean;

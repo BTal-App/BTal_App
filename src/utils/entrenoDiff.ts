@@ -37,7 +37,7 @@ const formatEjercicio = (ej: Ejercicio | undefined): string => {
 
 // Compara dos arrays de ejercicios y devuelve cambios por ejercicio
 // (nuevo / eliminado / modificado). Réplica del v1 `_peExerciseChanges`.
-export function diffEjercicios(
+function diffEjercicios(
   oldList: Ejercicio[] | undefined,
   newList: Ejercicio[] | undefined,
   diaIdx: number,

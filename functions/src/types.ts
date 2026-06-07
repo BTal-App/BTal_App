@@ -21,15 +21,15 @@ export const MEAL_DEFAULT_HORA: Record<MealKey, string> = {
   cena: '21:00',
 };
 
-export type Sexo = 'm' | 'f';
-export type NivelActividad =
+type Sexo = 'm' | 'f';
+type NivelActividad =
   | 'sedentario'
   | 'ligero'
   | 'moderado'
   | 'activo'
   | 'muy_activo';
-export type Equipamiento = 'gimnasio' | 'casa' | 'sin_material';
-export type Objetivo = 'volumen' | 'definicion' | 'recomposicion' | 'mantenimiento';
+type Equipamiento = 'gimnasio' | 'casa' | 'sin_material';
+type Objetivo = 'volumen' | 'definicion' | 'recomposicion' | 'mantenimiento';
 
 // Scope de generación que llega del cliente (AiGenerateModal).
 export type AiScopeChoice = 'all' | 'menu_compra' | 'menu_only' | 'entrenos_only';
@@ -37,10 +37,10 @@ export type AiScopeChoice = 'all' | 'menu_compra' | 'menu_only' | 'entrenos_only
 // Tag de origen de cada item (comida/ejercicio/plan).
 export type SourceTag = 'default' | 'user' | 'ai' | 'ai-estimated';
 
-export type PlanTipo = 'free' | 'one_off' | 'pro';
+type PlanTipo = 'free' | 'one_off' | 'pro';
 
 // ── Subconjunto del UserProfile que las funciones leen ──
-export interface UserProfile {
+interface UserProfile {
   nombre: string;
   edad: number | null;
   peso: number | null;
@@ -80,7 +80,7 @@ export interface GeneracionesIA {
 
 // ── Shapes de persistencia (lo que ESCRIBIMOS en Firestore) ──
 
-export interface Alimento {
+interface Alimento {
   nombre: string;
   cantidad: string;
   // 6B-B · solo si el alimento viene del buscador/barcode (OFF). Macros por
@@ -133,7 +133,7 @@ export type EjercicioBadge =
   | 'core' | 'fullbody' | 'fuerza' | 'hipertrofia' | 'resistencia'
   | 'cardio' | 'movilidad' | 'empuje' | 'tiron' | 'custom' | '';
 
-export interface Ejercicio {
+interface Ejercicio {
   nombre: string;
   desc: string;
   series: string;
@@ -180,7 +180,7 @@ export interface ItemCompra {
   source: SourceTag;
 }
 
-export interface CategoriaCompra {
+interface CategoriaCompra {
   id: string;
   nombre: string;
   emoji: string;
@@ -196,7 +196,7 @@ export interface Compra {
 
 // Récord por ejercicio · clave = nombre normalizado (minúsculas). Solo
 // necesitamos el kg máximo para guiar progresiones en el prompt de entreno.
-export interface PRStat {
+interface PRStat {
   kg: number;
   fecha?: string;
 }
@@ -204,14 +204,14 @@ export interface PRStat {
 // Stats del registro de pesos · las funciones solo leen los PRs (para que
 // la IA proponga cargas por encima de lo ya levantado). Optional · un user
 // recién registrado no tiene historial todavía.
-export interface RegistroStats {
+interface RegistroStats {
   prs?: Record<string, PRStat>;
 }
 
 // Config del batido que las funciones leen como REFERENCIA (ajustable) para
 // que la IA cuadre las macros del día y, si lo ve, proponga otras. No son
 // valores fijos · vienen del doc del user (default de la app para uno nuevo).
-export interface SuplementosDoc {
+interface SuplementosDoc {
   batidoConfig?: {
     gr_prot?: number;
     kcal?: number;

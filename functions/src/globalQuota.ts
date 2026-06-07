@@ -61,5 +61,3 @@ export async function enforceGlobalDailyCap(
     tx.set(ref, { count: count + 1, updatedAt: now }, { merge: true });
   });
 }
-
-export { DEFAULT_DAILY_CAP };

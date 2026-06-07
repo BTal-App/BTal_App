@@ -15,7 +15,7 @@ const ERROR_VISIBLE_MS = 3000;
 // valor" de "falló". Con el símbolo, la comparación `=== SAVE_FAILED`
 // es inequívoca incluso para funciones void.
 export const SAVE_FAILED = Symbol('SAVE_FAILED');
-export type SaveFailedSignal = typeof SAVE_FAILED;
+type SaveFailedSignal = typeof SAVE_FAILED;
 
 export interface UseSaveStatusResult {
   status: SaveStatus;

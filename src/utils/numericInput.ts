@@ -34,7 +34,7 @@ export function blockNonInteger(e: React.KeyboardEvent<HTMLInputElement>): void 
 // Sanea una string al pegar/escribir · deja solo dígitos. Útil cuando
 // el browser igualmente acepta caracteres raros (mobile keyboards a
 // veces no respetan onKeyDown). Usar en onChange como segunda capa.
-export function sanitizeIntegerString(s: string): string {
+function sanitizeIntegerString(s: string): string {
   return s.replace(/[^0-9]/g, '');
 }
 
