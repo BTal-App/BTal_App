@@ -13,7 +13,7 @@ import { defineSecret } from 'firebase-functions/params';
 import { logger } from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
 
-import type { AiScopeChoice, GeneracionesIA, UserDocument } from './types.js';
+import type { AiScopeChoice, GeneracionesIA, PlanIA, UserDocument } from './types.js';
 import { profileSchema, geminiResponseSchema } from './schemas.js';
 import { buildPrompt, buildSystemInstruction } from './prompt.js';
 import { callGemini } from './gemini.js';
@@ -147,8 +147,22 @@ export const generatePlan = onCall(
           throw new HttpsError('failed-precondition', 'Perfil no encontrado. Completa el onboarding.');
         }
         const doc = s.data() as UserDocument;
-        const { reset, next } = maybeResetCycle(doc.generaciones, now);
-        const dec = checkEligibility(doc.plan, next, now);
+        // Defensa · docs muy viejos (anteriores a monetización) podrían no
+        // tener `plan`/`generaciones` si el heal del cliente no llegó a
+        // correr. Sin guard, checkEligibility/maybeResetCycle revientan con
+        // TypeError → "internal" opaco al user. Caemos a un Free recién
+        // creado (ciclo fresco) · el peor caso es darle 1 generación, nunca
+        // saltarse el límite Pro (que requeriría plan.tipo='pro' explícito).
+        const plan: PlanIA =
+          doc.plan ?? { tipo: 'free', vence_en: null, one_off_consumido: false };
+        const gen: GeneracionesIA = doc.generaciones ?? {
+          menu_at: null,
+          entrenos_at: null,
+          consumidas_ciclo: 0,
+          ciclo_inicio: now,
+        };
+        const { reset, next } = maybeResetCycle(gen, now);
+        const dec = checkEligibility(plan, next, now);
         if (!dec.allowed) {
           const e = new Error('limit_reached') as Error & { unlocksAt?: number };
           e.name = 'EligibilityBlocked';
@@ -165,7 +179,7 @@ export const generatePlan = onCall(
           upd['plan.one_off_consumido'] = true;
         }
         tx.update(ref, upd);
-        return { dec, genPrev: next, oneOffPrev: doc.plan.one_off_consumido ?? false };
+        return { dec, genPrev: next, oneOffPrev: plan.one_off_consumido ?? false };
       });
       decision = reserved.dec;
       genBefore = reserved.genPrev;

@@ -69,12 +69,17 @@ export function regPlanLabel(
   return badges ? `${parts.join(' · ')} (${badges})` : parts.join(' · ');
 }
 
+// Tope defensivo de series por ejercicio. El registro pinta una fila de
+// inputs por serie, así que un plan corrupto/manual con "999x10" generaría
+// cientos de filas (hazard de render). Nadie hace >30 series de un ejercicio.
+const REG_SERIES_MAX = 30;
+
 // Parsea el campo `series` de un Ejercicio ("4×6-8" / "3x10" / "5 X 5"
 // / "30 min") y devuelve el número de series. Si no se puede extraer,
-// usa 3 como default (mismo fallback que el v1).
+// usa 3 como default (mismo fallback que el v1). Acotado a [1, 30].
 export function regSeriesCount(seriesStr: string): number {
   const m = /^(\d+)\s*[×xX*]/.exec((seriesStr || '').trim());
-  if (m) return Math.max(1, parseInt(m[1], 10));
+  if (m) return Math.min(REG_SERIES_MAX, Math.max(1, parseInt(m[1], 10)));
   return 3;
 }
 
