@@ -519,3 +519,38 @@ ion-picker::part(button):active {
     transition: none !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PRESS FIABLE en tarjetas tappables · el "hundido" debe verse SIEMPRE.
+
+   Problema: las tarjetas con animación de ENTRADA (btal-pop-in / btal-fade-up
+   con `fill: both`) RETIENEN el transform del último keyframe
+   (`translateY(0) scale(1)`) para siempre. En la cascada CSS, una animación
+   GANA a una regla normal de autor → el `:active { transform: scale(0.97) }`
+   quedaba "opacado" y el hundido salía a medias o solo con pulsación fuerte.
+   `.plan-mini` (Entreno) NO tiene animación de entrada → su press iba siempre.
+
+   Fix: `!important` en el transform del :active · en la cascada, "autor
+   importante" GANA a las animaciones → el hundido se impone SIEMPRE. La
+   transición base de cada tarjeta (que ya incluye `transform`) sigue dando el
+   ease suave de ida/vuelta. `transition-duration` corto al pulsar para que se
+   vea también en toques rápidos. */
+.hoy-meal-card:active,
+.hoy-train-card:active,
+.hoy-ai-status:active,
+.menu-meal:active,
+.train-day:active,
+.compra-item:active {
+  transform: scale(0.97) !important;
+  transition-duration: 0.06s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hoy-meal-card:active,
+  .hoy-train-card:active,
+  .hoy-ai-status:active,
+  .menu-meal:active,
+  .train-day:active,
+  .compra-item:active {
+    transform: none !important;
+  }
+}
