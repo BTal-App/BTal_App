@@ -1,6 +1,7 @@
 // Estructura del documento /users/{uid} en Firestore.
 // Solo el bloque `profile` se llena en el onboarding inicial; `plan` y
-// `generaciones` los gestiona la Cloud Function generatePlan (+ Stripe).
+// `generaciones` los gestiona la Cloud Function generatePlan (+ el webhook
+// de RevenueCat para el plan Pro vía IAP).
 
 import type { Preferences } from '../utils/units';
 
@@ -950,7 +951,7 @@ export interface PlanIA {
   // Para 'one_off' y 'pro': ms epoch en que caduca el beneficio.
   // - 'free': null (no caduca, siempre activo)
   // - 'one_off': now + 30 días al pagar
-  // - 'pro': now + 30 días, renovable mensualmente vía webhook Stripe
+  // - 'pro': now + 30 días, renovable mensualmente vía webhook RevenueCat (IAP)
   vence_en: number | null;
   // Solo aplica a 'one_off' · marca si ya gastó la gen extra del pago.
   one_off_consumido: boolean;
@@ -1011,8 +1012,8 @@ export interface UserDocument {
   suplementos: Suplementos;
 
   // ── Monetización + IA (gestionados desde Cloud Functions, no cliente) ──
-  // Estado del plan de pago. La Cloud Function `stripeWebhook` lo actualiza
-  // al recibir eventos de Stripe (compra única, suscripción nueva, cancelación).
+  // Estado del plan de pago. La Cloud Function del webhook de RevenueCat lo
+  // actualiza al recibir eventos de IAP (compra única, suscripción, cancelación).
   plan: PlanIA;
   // Rastreo granular de generaciones por scope (menú, entrenos) + contador
   // del ciclo de 30 días. La Cloud Function `generatePlan` lo gestiona.

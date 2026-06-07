@@ -7,8 +7,8 @@
 //   3. estructura/estructura2: campos ocultos pero preservados · se
 //      rellenan con valor descriptivo (no se dejan undefined).
 //   4. source: items IA = 'ai' (el SourceTag del frontend es
-//      'default'|'ai'|'user'). El distintivo de macros estimadas vs
-//      reales llegará en 6B (FatSecret) añadiendo 'ai-estimated'/'fatsecret'.
+//      'default'|'ai'|'user'). Las macros reales las aporta 6B
+//      (OpenFoodFacts): la BD propia /foods/ + ajuste de gramos al objetivo.
 //   5. extras del menú: la IA PUEDE generarlas (almuerzo/recena) para
 //      repartir kcal en objetivos altos · las del user (source!=='ai') se
 //      preservan, las IA previas se regeneran. El user puede borrarlas.
@@ -59,9 +59,9 @@ import type {
 // Source de los items generados por IA. Usamos 'ai' (no 'ai-estimated')
 // porque el SourceTag del frontend es 'default'|'ai'|'user' · 'ai' es lo
 // que dispara el badge "generado con IA" en las cards (MenuPage). El
-// distintivo de "macros estimadas vs reales" llegará en 6B (FatSecret),
-// momento en que se añadirá 'ai-estimated'/'fatsecret' al SourceTag del
-// frontend con su manejo · hoy rompería la UI (source desconocido).
+// distintivo de "macros estimadas vs reales" lo aporta 6B (OpenFoodFacts):
+// el ajuste de gramos usa macros reales de la BD propia /foods/ · el SourceTag
+// del frontend sigue siendo 'default'|'ai'|'user' (no se añadió 'ai-estimated').
 const AI_SOURCE = 'ai' as const;
 
 function mapMeal(gen: GeneratedMeal, meal: keyof typeof MEAL_DEFAULT_HORA): Comida {

@@ -31,10 +31,9 @@ function translateError(code: string): string {
   return map[code] ?? 'No se ha podido cambiar la contraseña. Inténtalo de nuevo.';
 }
 
-// Flujo en 2 pasos al estilo Instagram (sin el envío de código por email,
-// que requiere Cloud Functions; usamos la contraseña actual como gate
-// equivalente). Cuando se active el backend en la Fase 6 del roadmap se
-// puede insertar antes un paso de "código enviado a tu email".
+// Flujo en 2 pasos al estilo Instagram: usamos la contraseña actual como
+// gate (en lugar de enviar un código por email, que requeriría SMTP propio).
+// Es el patrón definitivo · no hay paso de "código por email" pendiente.
 type Stage = 'verify' | 'new' | 'done';
 
 export function ChangePasswordModal({ isOpen, user, onClose, onForgot }: Props) {

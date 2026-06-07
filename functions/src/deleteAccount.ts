@@ -12,7 +12,9 @@
 // hace reauth y reintenta (misma UX que antes). Evita que una sesión
 // robada/olvidada borre la cuenta.
 //
-// Stripe (cancelar suscripción antes de borrar) → se añadirá en Fase 7.
+// Cancelación de suscripción IAP: la gestiona la propia tienda (Apple/Google) ·
+// borrar la cuenta de BTal no cancela la suscripción de la store · se documentará
+// al implementar la monetización (RevenueCat).
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';

@@ -105,9 +105,9 @@ function PrivacyPolicy() {
           le envía tu email, tu nombre, tu foto ni nada que permita identificarte personalmente.
         </li>
         <li>
-          <strong>Plataformas de pago</strong> (App Store y Google Play en el móvil; Stripe en la web): si te
-          suscribes al plan Pro, los datos de tu tarjeta los procesa directamente la plataforma que uses para
-          pagar. <strong>BTal nunca ve ni guarda los datos de tu tarjeta</strong> — solo recibe el aviso de que
+          <strong>Plataformas de pago</strong> (App Store en iPhone y Google Play en Android, mediante compra
+          integrada · In-App Purchase): si te suscribes al plan Pro, los datos de tu tarjeta los procesa
+          directamente Apple o Google. <strong>BTal nunca ve ni guarda los datos de tu tarjeta</strong> — solo recibe el aviso de que
           el pago se ha completado para activarte el plan Pro.
         </li>
         <li>
@@ -326,7 +326,7 @@ function TermsOfService() {
       </p>
       <ul>
         <li>El precio y las funcionalidades incluidas se mostrarán claramente antes de aceptar.</li>
-        <li>La suscripción se cobrará a través de la pasarela correspondiente al canal: App Store o Google Play en la app nativa, y Stripe en la versión web. Se aplicarán también los términos del proveedor utilizado.</li>
+        <li>La suscripción se cobrará a través de la tienda correspondiente —App Store (iPhone) o Google Play (Android)— mediante su sistema de compra integrada (In-App Purchase). Se aplicarán también los términos del proveedor (Apple o Google).</li>
         <li>No hay derecho de desistimiento sobre los recursos digitales ya consumidos (por ejemplo, generaciones de programa con IA ya emitidas), conforme al art. 103 m) del Texto Refundido de la Ley General para la Defensa de Consumidores. Sí podrás cancelar la renovación en cualquier momento.</li>
         <li>Los detalles concretos se incluirán en estos términos cuando el plan Pro esté activo. Si se introduce después del lanzamiento, se aplicará la cláusula de cambios materiales (sección 10).</li>
       </ul>

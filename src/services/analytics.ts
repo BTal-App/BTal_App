@@ -41,8 +41,8 @@
 //   - onboarding_step        custom · cada paso (1-4)
 //   - plan_generated         custom · IA generó plan (Fase 6)
 //   - upgrade_to_pro         custom · click upgrade
-//   - subscription_started   custom · webhook Stripe confirmó (Fase 7)
-//   - subscription_cancelled custom · webhook Stripe (Fase 7)
+//   - subscription_started   custom · webhook RevenueCat (IAP) confirmó
+//   - subscription_cancelled custom · webhook RevenueCat (IAP)
 //   - meal_edited            custom · save de MealSheet
 //   - workout_logged         custom · save en RegistroPage
 //   - mode_changed           custom · IA↔manual

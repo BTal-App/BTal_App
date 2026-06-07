@@ -5,12 +5,12 @@ import { formatDate } from '../utils/userDisplay';
 import './SettingsModal.css';
 import './AccountManageModal.css';
 
-// Historial de pagos · UI lista, datos los popula la Cloud Function
-// `stripeWebhook` en Fase 6 al recibir eventos checkout.session.completed
-// (pago único 4,99€) y customer.subscription.created (Pro 9,99€/mes).
-// Por ahora muestra solo el estado actual del plan (userDoc.plan) como
-// referencia · cuando llegue Fase 6, este modal listará `userDoc.pagos`
-// (array de PagoRecord{ fecha, importe, concepto, stripePaymentId }).
+// Historial de pagos · UI lista, datos los popula la Cloud Function del
+// webhook de RevenueCat (IAP Apple/Google) al confirmar compra/renovación
+// (pago único 4,99€ y Pro 9,99€/mes). Por ahora muestra solo el estado
+// actual del plan (userDoc.plan) como referencia · cuando se implemente la
+// monetización, este modal listará `userDoc.pagos` (array de PagoRecord{
+// fecha, importe, concepto, transactionId }).
 
 interface Props {
   isOpen: boolean;
@@ -37,8 +37,8 @@ function currentPlanLabel(
 
 export function PaymentsHistoryModal({ isOpen, onClose }: Props) {
   const { profile: userDoc } = useProfile();
-  // Lista de pagos · vacía hasta Fase 6 (Stripe webhook). El array se
-  // poblará desde Firestore en `userDoc.pagos` (campo a añadir entonces).
+  // Lista de pagos · vacía hasta implementar la monetización (webhook
+  // RevenueCat). El array se poblará desde Firestore en `userDoc.pagos`.
   const pagos: Array<{ fecha: number; concepto: string; importe: string }> = [];
 
   return (
@@ -71,8 +71,8 @@ export function PaymentsHistoryModal({ isOpen, onClose }: Props) {
             </div>
           </div>
 
-          {/* Historial · vacío hasta Fase 6 · cuando Stripe webhook escriba
-              en userDoc.pagos, esta lista renderiza cada PagoRecord. */}
+          {/* Historial · vacío hasta implementar la monetización · cuando el
+              webhook de RevenueCat escriba en userDoc.pagos, se renderiza. */}
           <h3 className="settings-section-title" style={{ marginTop: 20 }}>
             Historial
           </h3>
