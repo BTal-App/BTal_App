@@ -19,6 +19,8 @@ html, body, #root {
 body {
   background: var(--btal-bg, #0a0e0c);
   color: var(--btal-t-1, #f0f4f0);
+  /* 'Inter' = fuente auto-hospedada (@fontsource/inter, importada en
+     main.tsx) · misma familia que antes, ya no se baja de Google Fonts. */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

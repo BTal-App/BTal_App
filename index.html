@@ -24,12 +24,9 @@
          porcentajes (93%) y precios sin necesidad de monoespacio. Una
          sola fuente = coherencia tipográfica total + bundle más ligero.
          ════════════════════════════════════════════════════════════════ -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    >
+    <!-- Inter ahora se AUTO-HOSPEDA vía @fontsource/inter (import en
+         src/main.tsx) · sin <link> a Google Fonts → sin flash de fuente
+         (FOUT) ni dependencia de red en el arranque (mejor "feel" nativo). -->
 
     <!-- ════════════════════════════════════════════════════════════════
          SPLASH SCREEN

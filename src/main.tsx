@@ -7,6 +7,18 @@ import './debug-appcheck'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Fuente Inter AUTO-HOSPEDADA (subset latin · pesos 400-900, los que usa la
+// app). Familia 'Inter' (igual que antes) → no hay que tocar ningún CSS.
+// Sustituye al <link> de Google Fonts de index.html · elimina el flash de
+// fuente (FOUT) y la dependencia de red en el arranque → la app pinta con su
+// tipografía definitiva al instante (clave para el "feel" nativo). El subset
+// latin cubre español (ñ, á, é, í, ó, ú, ü).
+import '@fontsource/inter/latin-400.css'
+import '@fontsource/inter/latin-500.css'
+import '@fontsource/inter/latin-600.css'
+import '@fontsource/inter/latin-700.css'
+import '@fontsource/inter/latin-800.css'
+import '@fontsource/inter/latin-900.css'
 import './index.css'
 import './styles/animations.css'
 import App from './App.tsx'

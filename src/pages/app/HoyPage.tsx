@@ -3,7 +3,6 @@ import {
   IonAlert,
   IonContent,
   IonPage,
-  IonSpinner,
   useIonRouter,
 } from '@ionic/react';
 import { useAuth } from '../../hooks/useAuth';
@@ -37,6 +36,7 @@ import { GuestBanner } from '../../components/GuestBanner';
 import { AiGenerateModal } from '../../components/AiGenerateModal';
 import { AiCountdown } from '../../components/AiCountdown';
 import { blurAndRun } from '../../utils/focus';
+import { hapticTap } from '../../utils/haptics';
 import { greetingName } from '../../utils/userDisplay';
 import { canGenerateAi, formatCountdown, formatUnlockDate } from '../../utils/ia';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
@@ -191,16 +191,12 @@ const HoyPage: React.FC = () => {
   const [, setExpireBump] = useState(0);
   const bumpExpire = () => setExpireBump((n) => n + 1);
 
-  if (loading || !user) {
-    return (
-      <IonPage className="app-tab-page">
-        <IonContent fullscreen>
-          <div className="app-shell-loading">
-            <IonSpinner name="dots" />
-          </div>
-        </IonContent>
-      </IonPage>
-    );
+  // Skeleton en vez de spinner · imita la silueta de la pantalla (header +
+  // anillo + tarjetas) con un shimmer, así el arranque "se siente" instantáneo
+  // y nativo (no un spinner genérico sobre fondo vacío). Se muestra mientras
+  // se resuelve Auth o mientras el doc del perfil aún está cargando.
+  if (loading || !user || (profileLoading && !userDoc)) {
+    return <HoySkeleton />;
   }
 
   // Saludo: preferimos el displayName de Auth (cuenta real con nombre o
@@ -278,7 +274,7 @@ const HoyPage: React.FC = () => {
                 <button
                   type="button"
                   className="hoy-ai-status hoy-ai-status--ready"
-                  onClick={blurAndRun(() => setAiGenOpen(true))}
+                  onClick={blurAndRun(() => { hapticTap(); setAiGenOpen(true); })}
                 >
                   <MealIcon value="tb:sparkles" size={16} />
                   <span>Generación IA - LISTA</span>
@@ -349,7 +345,7 @@ const HoyPage: React.FC = () => {
                 <button
                   type="button"
                   className="hoy-hero-cta"
-                  onClick={blurAndRun(() => setAiGenOpen(true))}
+                  onClick={blurAndRun(() => { hapticTap(); setAiGenOpen(true); })}
                 >
                   <MealIcon value="tb:sparkles" size={18} />
                   Generar mi programa con IA
@@ -393,6 +389,7 @@ const HoyPage: React.FC = () => {
             // mismo sitio desde la misma sección.
             onClick={() => {
               if (diaEntrenoHoy) {
+                hapticTap();
                 setTrainSheetOpen(true);
               }
             }}
@@ -453,7 +450,7 @@ const HoyPage: React.FC = () => {
                         'hoy-meal-card'
                         + (isEmpty ? ' hoy-meal-card--empty' : '')
                       }
-                      onClick={blurAndRun(() => setOpenMeal(meal))}
+                      onClick={blurAndRun(() => { hapticTap(); setOpenMeal(meal); })}
                       aria-label={`Ver detalle de ${MEAL_LABEL[meal]}`}
                     >
                       <div className="hoy-meal-emoji" aria-hidden="true">
@@ -524,7 +521,7 @@ const HoyPage: React.FC = () => {
                       'hoy-meal-card'
                       + (isEmpty ? ' hoy-meal-card--empty' : '')
                     }
-                    onClick={blurAndRun(() => setOpenExtra(extra))}
+                    onClick={blurAndRun(() => { hapticTap(); setOpenExtra(extra); })}
                     aria-label={`Ver detalle de ${titulo}${isExtra ? ' (extra)' : ''}`}
                   >
                     <div className="hoy-meal-emoji" aria-hidden="true">
@@ -688,16 +685,55 @@ const HoyPage: React.FC = () => {
           buttons={['Entendido']}
         />
 
-        {/* Reservamos referencia al profileLoading para silenciar el lint
-            (todavía no la usamos pero la queremos disponible para skeletons
-            cuando cableemos los datos reales en Fase 2). */}
-        {profileLoading ? null : null}
       </IonContent>
     </IonPage>
   );
 };
 
 export default HoyPage;
+
+// ──────────────────────────────────────────────────────────────────────────
+// HoySkeleton · placeholder con shimmer que imita la silueta de la pantalla
+// (header + anillo + tarjetas de comida) mientras carga Auth/perfil. Da la
+// sensación de arranque instantáneo/nativo en vez de un spinner sobre vacío.
+// ──────────────────────────────────────────────────────────────────────────
+function HoySkeleton() {
+  return (
+    <IonPage className="app-tab-page">
+      <IonContent fullscreen>
+        <div className="app-tab-content hoy-skel" aria-hidden="true">
+          {/* Header: saludo + avatar */}
+          <div className="hoy-skel-header">
+            <div className="hoy-skel-greet">
+              <span className="hoy-skel-line hoy-skel-line--title" />
+              <span className="hoy-skel-line hoy-skel-line--sub" />
+            </div>
+            <span className="hoy-skel-avatar" />
+          </div>
+          {/* Anillo de aporte */}
+          <div className="hoy-skel-ring-card">
+            <span className="hoy-skel-ring" />
+            <div className="hoy-skel-ring-side">
+              <span className="hoy-skel-line hoy-skel-line--wide" />
+              <span className="hoy-skel-line hoy-skel-line--mid" />
+              <span className="hoy-skel-line hoy-skel-line--narrow" />
+            </div>
+          </div>
+          {/* Tarjetas de comida */}
+          {[0, 1, 2, 3].map((i) => (
+            <div className="hoy-skel-meal" key={i}>
+              <span className="hoy-skel-meal-icon" />
+              <div className="hoy-skel-meal-body">
+                <span className="hoy-skel-line hoy-skel-line--mid" />
+                <span className="hoy-skel-line hoy-skel-line--wide" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </IonContent>
+    </IonPage>
+  );
+}
 
 // ──────────────────────────────────────────────────────────────────────────
 // SuplementacionBlock · Sub-fase 2B.5.b · bloque de cards en HoyPage que
