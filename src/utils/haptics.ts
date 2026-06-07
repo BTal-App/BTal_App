@@ -9,11 +9,20 @@
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
-const isNative = (): boolean => Capacitor.isNativePlatform();
+// Flag sincronizado desde PreferencesProvider · el háptico está DESACTIVADO
+// por defecto; el user lo activa en Ajustes → Preferencias. El util es una
+// función suelta (sin acceso a React), así que el provider empuja aquí el
+// valor actual via setHapticsEnabled cada vez que cambia/carga.
+let hapticsEnabled = false;
+export function setHapticsEnabled(on: boolean): void {
+  hapticsEnabled = on;
+}
+
+const active = (): boolean => hapticsEnabled && Capacitor.isNativePlatform();
 
 // Toque ligero · para abrir tarjetas, pulsar botones, seleccionar.
 export function hapticTap(): void {
-  if (!isNative()) return;
+  if (!active()) return;
   Haptics.impact({ style: ImpactStyle.Light }).catch(() => {
     /* no-op · el dispositivo puede no tener motor háptico */
   });
@@ -21,12 +30,12 @@ export function hapticTap(): void {
 
 // Toque medio · para acciones con algo más de peso (confirmar, generar).
 export function hapticMedium(): void {
-  if (!isNative()) return;
+  if (!active()) return;
   Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {});
 }
 
 // Notificación de éxito · para "marcar como hecho/tomado", guardar, completar.
 export function hapticSuccess(): void {
-  if (!isNative()) return;
+  if (!active()) return;
   Haptics.notification({ type: NotificationType.Success }).catch(() => {});
 }

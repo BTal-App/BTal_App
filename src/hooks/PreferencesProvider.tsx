@@ -10,6 +10,7 @@ import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { useError } from './useError';
 import { setUserPreferences } from '../services/db';
+import { setHapticsEnabled } from '../utils/haptics';
 import {
   DEFAULT_PREFERENCES,
   PreferencesContext,
@@ -86,6 +87,12 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   // tras el sync con Firestore — pero solo si el user no ha tocado las prefs
   // antes de que llegue el doc remoto (ver `userTouchedRef`).
   const [prefs, setPrefs] = useState<Preferences>(loadFromLocal);
+
+  // Empuja el flag de haptics al util suelto (utils/haptics.ts) cada vez que
+  // cambia · default OFF. Así hapticTap() respeta la preferencia del user.
+  useEffect(() => {
+    setHapticsEnabled(prefs.haptics ?? false);
+  }, [prefs.haptics]);
 
   // Track del UID con el que ya hemos sincronizado para no entrar en bucles
   // ni re-sobrescribir cuando el usuario cambia las prefs después.
@@ -309,6 +316,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       weekStart: prefs.weekStart,
       registroCal: prefs.registroCal ?? null,
       navStyle: prefs.navStyle ?? 'labeled',
+      haptics: prefs.haptics ?? false,
       setUnits,
       setWeekStart,
       setRegistroCal,
@@ -320,6 +328,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       prefs.weekStart,
       prefs.registroCal,
       prefs.navStyle,
+      prefs.haptics,
       setUnits,
       setWeekStart,
       setRegistroCal,

@@ -1671,19 +1671,23 @@
   }
 }
 
-/* Feedback de pulsación · scale sutil al tocar las tarjetas tappables. Es el
-   micro-detalle que hace que un elemento "se sienta" nativo (estilo iOS:
-   responde al dedo al instante). transform compositado en GPU = 60fps. */
+/* Feedback de pulsación · scale al tocar las tarjetas tappables (estilo iOS).
+   CLAVE: baja INSTANTÁNEO al pulsar (transition-duration casi 0 en :active) y
+   vuelve SUAVE al soltar (0.22s en el estado base). Así incluso un toque
+   rápido se ve hundirse · con una transición lenta simétrica, un tap corto no
+   daba tiempo a renderizar el scale (era lo que pasaba: solo se veía con
+   pulsación mantenida). transform en GPU = 60fps. */
 .hoy-meal-card,
 .hoy-train-card,
 .hoy-ai-status {
-  transition: transform 0.12s cubic-bezier(0.2, 0, 0.2, 1);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
 .hoy-meal-card:active,
 .hoy-train-card:active,
 .hoy-ai-status:active {
-  transform: scale(0.975);
+  transform: scale(0.96);
+  transition-duration: 0.02s;
 }
 @media (prefers-reduced-motion: reduce) {
   .hoy-meal-card:active,

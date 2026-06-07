@@ -47,6 +47,10 @@ export interface Preferences {
   // docs viejos sin este campo (o con los nombres legados
   // `'tiktok'`/`'ig'` antes de la migración).
   navStyle?: NavStyle;
+  // Vibración háptica al tocar (abrir comidas, botones…). Default OFF · el
+  // user la activa en Ajustes → Preferencias si la quiere. Optional para
+  // retrocompat con docs viejos.
+  haptics?: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -54,6 +58,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   weekStart: 'monday',
   registroCal: null,
   navStyle: 'labeled',
+  haptics: false,
 };
 
 // ── Pesos ─────────────────────────────────────────────────────

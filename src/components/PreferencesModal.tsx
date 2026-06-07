@@ -26,6 +26,8 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
     units: savedUnits,
     weekStart: savedWeekStart,
     navStyle: savedNavStyle,
+    haptics: savedHaptics,
+    registroCal: savedRegistroCal,
     setPreferences,
   } = usePreferences();
 
@@ -33,6 +35,7 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
   const [units, setUnits] = useState<UnitsSystem>(savedUnits);
   const [weekStart, setWeekStart] = useState<WeekStart>(savedWeekStart);
   const [navStyle, setNavStyle] = useState<NavStyle>(savedNavStyle ?? 'labeled');
+  const [haptics, setHaptics] = useState<boolean>(savedHaptics ?? false);
   const [savedToast, setSavedToast] = useState(false);
   const [errorToast, setErrorToast] = useState<string | null>(null);
   // Status del guardado · usado solo para deshabilitar el botón mientras
@@ -56,6 +59,7 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
     setUnits(savedUnits);
     setWeekStart(savedWeekStart);
     setNavStyle(savedNavStyle ?? 'labeled');
+    setHaptics(savedHaptics ?? false);
     setSavedToast(false);
     setErrorToast(null);
     resetSave();
@@ -65,7 +69,8 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
   const dirty =
     units !== savedUnits
     || weekStart !== savedWeekStart
-    || navStyle !== (savedNavStyle ?? 'labeled');
+    || navStyle !== (savedNavStyle ?? 'labeled')
+    || haptics !== (savedHaptics ?? false);
 
   const handleSave = async () => {
     if (!dirty || submitting) return;
@@ -77,8 +82,16 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
     } catch {
       /* private mode · best effort */
     }
+    // Objeto COMPLETO · setPreferences reemplaza (no mergea), así que
+    // incluimos registroCal y haptics para no perderlos al guardar.
     const result = await runSave(() =>
-      setPreferences({ units, weekStart, navStyle }),
+      setPreferences({
+        units,
+        weekStart,
+        navStyle,
+        haptics,
+        registroCal: savedRegistroCal,
+      }),
     );
     if (!mounted.current) return;
     if (result === SAVE_FAILED) {
@@ -206,6 +219,37 @@ export function PreferencesModal({ isOpen, onClose }: Props) {
                   onClick={() => setNavStyle('compact')}
                 >
                   Sólo iconos
+                </button>
+              </div>
+            </div>
+
+            {/* ── Vibración háptica ─────────────────────────
+                 Feedback táctil al tocar comidas/botones. OFF por
+                 defecto · solo tiene efecto en la app nativa (en web no
+                 hace nada). */}
+            <div className="prefs-row">
+              <div className="prefs-row-info">
+                <span className="prefs-row-label">Vibración al tocar</span>
+                <span className="prefs-row-sub">
+                  {haptics
+                    ? 'Vibración sutil al tocar comidas y botones (solo en la app del móvil).'
+                    : 'Sin vibración al tocar.'}
+                </span>
+              </div>
+              <div className="prefs-segment">
+                <button
+                  type="button"
+                  className={haptics ? 'active' : ''}
+                  onClick={() => setHaptics(true)}
+                >
+                  Activada
+                </button>
+                <button
+                  type="button"
+                  className={!haptics ? 'active' : ''}
+                  onClick={() => setHaptics(false)}
+                >
+                  Desactivada
                 </button>
               </div>
             </div>
