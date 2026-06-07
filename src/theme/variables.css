@@ -100,11 +100,14 @@ ion-tab-bar {
 ion-tab-bar::before {
   content: '';
   position: absolute;
-  top: 0;
+  /* ABAJO · justo bajo los iconos/labels, por encima del safe-area inferior
+     (home indicator). En móviles sin notch (env = 0) queda en el borde
+     inferior del bar. */
+  bottom: env(safe-area-inset-bottom, 0px);
   left: 8px;
   width: calc((100% - 16px) / 5);
   height: 3px;
-  border-radius: 0 0 4px 4px;
+  border-radius: 4px 4px 0 0;
   background: var(--btal-lime);
   box-shadow: 0 0 8px rgba(181, 240, 55, 0.5);
   transform: translateX(calc(var(--nav-index, 0) * 100%));
@@ -124,6 +127,12 @@ ion-tab-button {
      activa sigue en lima como acento principal de la app. */
   --color: #fff;
   --color-selected: var(--btal-lime);
+  /* Sin el "circulito" verde al pulsar/seleccionar · quitamos el ripple y
+     el highlight de fondo (focused). El indicador de color es la línea
+     deslizante de abajo (ion-tab-bar::before), no un círculo sobre el icono. */
+  --ripple-color: transparent;
+  --background-focused: transparent;
+  --background-focused-opacity: 0;
   /* Padding interno a 0 · Ionic mete `--padding-start/--padding-end: 2px`
      por defecto, lo que recorta el slot útil y agrava asimetrías
      visuales con icons que tienen whitespace asimétrico (p.ej.
