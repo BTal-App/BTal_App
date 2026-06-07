@@ -61,8 +61,10 @@
   font-weight: 600;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .cookie-banner-link:hover {
   text-decoration: underline;
+}
 }
 
 .cookie-banner-actions {
@@ -104,8 +106,10 @@
   border-color: var(--btal-border-2, #2e3530);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .cookie-banner-btn--reject:hover {
   background: rgba(255, 255, 255, 0.04);
+}
 }
 
 .cookie-banner-btn--accept {
@@ -113,8 +117,10 @@
   color: #0a0e0c;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .cookie-banner-btn--accept:hover {
   filter: brightness(1.05);
+}
 }
 
 @media (prefers-reduced-motion: reduce) {

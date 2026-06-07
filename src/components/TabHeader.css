@@ -101,9 +101,11 @@
   box-shadow: 0 4px 14px rgba(181, 240, 55, 0.22);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .tab-header-ia-btn:hover {
   background: var(--btal-lime-d);
   border-color: var(--btal-lime-d);
+}
 }
 
 .tab-header-ia-btn ion-icon {

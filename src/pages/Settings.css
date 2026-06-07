@@ -29,9 +29,11 @@
   flex-shrink: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .settings-back:hover {
   background: var(--btal-surface-2);
   color: var(--btal-t-1);
+}
 }
 
 .settings-title {

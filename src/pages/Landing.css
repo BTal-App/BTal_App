@@ -170,9 +170,11 @@
   border-radius: 8px;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .landing-input-toggle:hover {
   color: var(--btal-t-1);
   background: rgba(255, 255, 255, 0.04);
+}
 }
 
 .landing-msg {
@@ -256,8 +258,10 @@
   font-family: inherit;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .landing-link:hover {
   color: var(--btal-lime);
+}
 }
 
 .landing-guest {
@@ -273,8 +277,10 @@
   transition: color 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .landing-guest:hover:not(:disabled) {
   color: var(--btal-cyan);
+}
 }
 
 .landing-guest:disabled {
@@ -300,8 +306,10 @@
   font-size: inherit;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .landing-toggle button:hover {
   text-decoration: underline;
+}
 }
 
 .landing-version {

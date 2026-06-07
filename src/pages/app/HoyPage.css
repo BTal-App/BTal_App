@@ -147,11 +147,13 @@
   box-shadow: 0 6px 20px rgba(181, 240, 55, 0.25);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .hoy-hero-cta:hover {
   background: var(--btal-lime-d);
   border-color: var(--btal-lime-d);
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(181, 240, 55, 0.35);
+}
 }
 
 .hoy-hero-cta:active {
@@ -203,10 +205,12 @@
   transition: background 0.18s, border-color 0.18s, transform 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .hoy-empty-card--clickable:hover {
   background: var(--btal-surface-2);
   border-color: var(--btal-lime);
   border-style: solid;
+}
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -242,9 +246,11 @@
   transition: transform 0.18s, color 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .hoy-empty-card--clickable:hover .hoy-empty-arrow {
   color: var(--btal-lime);
   transform: translateX(2px);
+}
 }
 
 /* ── Lista compacta de comidas del día · HoyPage Sub-fase 2C ───────
@@ -667,10 +673,12 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .hoy-sup-config:hover {
   background: var(--btal-surface-2);
   border-color: var(--btal-border-2);
   color: var(--btal-t-1);
+}
 }
 
 /* Tomados / Restantes · dos columnas grandes · igual look que v1. */
@@ -841,9 +849,11 @@
 .hoy-sup-mark-btn--batido {
   background: var(--btal-gold);
 }
+@media (hover: hover) and (pointer: fine) {
 .hoy-sup-mark-btn--batido:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
+}
 }
 /* Halo dorado al pulsar Marcar batido · feedback "se acaba de
    contabilizar" antes de que el badge ✓ aparezca con pop-in. */
@@ -854,9 +864,11 @@
 .hoy-sup-mark-btn--creatina {
   background: #b07af0;
 }
+@media (hover: hover) and (pointer: fine) {
 .hoy-sup-mark-btn--creatina:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
+}
 }
 /* Halo violeta · variante para creatina (no hay clase global, lo
    declaramos inline aquí · misma curva ease-out 0.6s). */
@@ -889,9 +901,11 @@
   transition: background 0.15s, border-style 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .hoy-sup-cancel-btn:hover {
   background: rgba(240, 55, 55, 0.08);
   border-style: solid;
+}
 }
 
 .hoy-sup-cancel-btn ion-icon {
@@ -1015,9 +1029,11 @@
   border-radius: 9px;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .hoy-sup-stock-empty-btn:hover {
   color: var(--btal-lime);
   background: rgba(181, 240, 55, 0.06);
+}
 }
 
 /* Mensaje informativo (no clickable) cuando no hay stock definido ·
@@ -1315,8 +1331,10 @@
   }
 }
 
+@media (hover: hover) and (pointer: fine) {
 .hoy-train-card:hover {
   border-color: var(--btal-border-2);
+}
 }
 .hoy-train-card:active {
   background: var(--btal-bg-2);
@@ -1335,8 +1353,10 @@
 .hoy-train-card--static {
   cursor: default;
 }
+@media (hover: hover) and (pointer: fine) {
 .hoy-train-card--static:hover {
   border-color: var(--btal-border);
+}
 }
 .hoy-train-card--static:active {
   background: var(--btal-surface);

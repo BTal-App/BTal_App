@@ -76,10 +76,12 @@ ion-modal.confirm-diff-modal {
   transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .confirm-diff-close:hover {
   background: var(--btal-surface-3);
   color: var(--btal-t-1);
   border-color: var(--btal-border-2);
+}
 }
 
 .confirm-diff-body {

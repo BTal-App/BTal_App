@@ -36,9 +36,11 @@ button.meal-editor-emoji--clickable {
   position: relative;
   transition: border-color 0.15s, background 0.15s, transform 0.12s;
 }
+@media (hover: hover) and (pointer: fine) {
 button.meal-editor-emoji--clickable:hover {
   border-color: var(--btal-lime);
   background: var(--btal-surface);
+}
 }
 button.meal-editor-emoji--clickable:active {
   transform: scale(0.95);

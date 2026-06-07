@@ -28,9 +28,11 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .streak-badge:hover {
   background: rgba(255, 140, 60, 0.18);
   border-color: rgba(255, 140, 60, 0.5);
+}
 }
 
 .streak-badge:active {
@@ -46,9 +48,11 @@
   color: var(--btal-t-3);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .streak-badge--zero:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--btal-border-2);
+}
 }
 
 .streak-badge--zero svg {

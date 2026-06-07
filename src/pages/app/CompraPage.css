@@ -125,9 +125,11 @@
   transition: background 0.15s, border-color 0.15s, transform 0.13s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .compra-sup-row-edit:hover {
   background: rgba(90, 168, 255, 0.2);
   border-color: var(--btal-blue);
+}
 }
 
 .compra-sup-row-edit:active {
@@ -153,9 +155,11 @@
   transition: background 0.15s, border-style 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .compra-sup-row-empty-cta:hover {
   background: rgba(181, 240, 55, 0.18);
   border-style: solid;
+}
 }
 
 .compra-sup-row-empty-cta ion-icon {
@@ -448,9 +452,11 @@
   border-radius: 50%;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .compra-search-clear:hover {
   background: var(--btal-bg-2);
   color: var(--btal-t-1);
+}
 }
 
 .compra-toolbar-btn {
@@ -469,10 +475,12 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .compra-toolbar-btn:hover {
   background: var(--btal-surface-2);
   border-color: var(--btal-border-2);
   color: var(--btal-t-1);
+}
 }
 
 /* ── Card de categoría ─────────────────────────────────────────────── */
@@ -615,9 +623,11 @@
   transition: background 0.15s, color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .compra-cat-edit-btn:hover {
   background: var(--btal-bg-2);
   color: var(--btal-t-1);
+}
 }
 
 /* ── Items de la lista ─────────────────────────────────────────────── */
@@ -743,9 +753,11 @@
   transition: background 0.15s, color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .compra-item-edit:hover {
   background: var(--btal-bg-2);
   color: var(--btal-t-1);
+}
 }
 
 /* Botón "+ Añadir producto" debajo de la lista de items. */
@@ -768,9 +780,11 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .compra-add-item-btn:hover {
   background: rgba(181, 240, 55, 0.16);
   border-color: var(--btal-lime);
+}
 }
 
 /* Botón "+ Nueva categoría" · al final del listado. Más prominente
@@ -800,9 +814,11 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .compra-add-categoria-btn:hover {
   background: rgba(90, 168, 255, 0.16);
   border-color: var(--btal-blue);
+}
 }
 
 /* ── Total semanal · footer al final del listado ───────────────────── */

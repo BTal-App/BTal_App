@@ -195,11 +195,14 @@ button {
    Resultado: cada botón del app reacciona al tap/click aunque su
    estilo individual no lo declare. */
 
-button:not(:disabled):hover {
-  /* Sutil brillo en hover desktop · no dispara nada en mobile (no
-     hay :hover real). Botones con su propio bg en hover quedan
-     intactos: brightness solo aclara lo visible. */
-  filter: brightness(1.06);
+/* Brillo en hover · SOLO en punteros con hover (escritorio). En móvil el
+   `:hover` se queda PEGADO tras tocar (el WebView lo mantiene hasta el
+   siguiente tap), así que lo gateamos para que no ensucie el botón táctil.
+   El feedback de pulsación lo da `.is-pressed`/`:active`. */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled):hover {
+    filter: brightness(1.06);
+  }
 }
 
 /* ── Press-in con :active puro · estilo v1 ─────────────────────────

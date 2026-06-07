@@ -241,8 +241,10 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+@media (hover: hover) and (pointer: fine) {
 .entreno-banner-link:hover {
   filter: brightness(0.85);
+}
 }
 
 /* Recordatorio "Puedes cambiar los días en Editar datos del perfil"
@@ -303,8 +305,10 @@
   font-size: 0.95rem;
   transition: background 0.15s;
 }
+@media (hover: hover) and (pointer: fine) {
 .entreno-action-btn:hover {
   background: rgba(90, 168, 255, 0.2);
+}
 }
 
 .entreno-action-btn--danger {
@@ -312,8 +316,10 @@
   border-color: rgba(255, 107, 107, 0.35);
   color: var(--btal-coral);
 }
+@media (hover: hover) and (pointer: fine) {
 .entreno-action-btn--danger:hover {
   background: rgba(255, 107, 107, 0.16);
+}
 }
 
 /* ── Empty state cuando el plan no tiene días ────────────────────── */
@@ -453,9 +459,11 @@
   font-size: 0.95rem;
   transition: color 0.15s, background 0.15s;
 }
+@media (hover: hover) and (pointer: fine) {
 .train-day-edit:hover {
   background: var(--btal-bg-2);
   color: var(--btal-t-1);
+}
 }
 
 /* ── Tags de día · 1-3 chips coloreados según badge ──────────────── */

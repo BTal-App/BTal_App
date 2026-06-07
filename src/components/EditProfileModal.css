@@ -58,9 +58,11 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .profile-pic-btn:hover:not(:disabled) {
   background: var(--btal-surface-2);
   border-color: var(--btal-border-2);
+}
 }
 
 .profile-pic-btn:disabled {
@@ -77,6 +79,8 @@
   border-color: rgba(255, 107, 107, 0.32);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .profile-pic-btn--danger:hover:not(:disabled) {
   background: rgba(255, 107, 107, 0.08);
+}
 }

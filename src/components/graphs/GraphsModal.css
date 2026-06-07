@@ -62,10 +62,12 @@
   flex-shrink: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .graphs-modal-close:hover {
   background: var(--btal-surface-3);
   color: var(--btal-t-1);
   border-color: var(--btal-border-2);
+}
 }
 
 /* ── Tabs ─────────────────────────────────────────────────────────
@@ -120,9 +122,11 @@
   min-width: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .graphs-modal-tab:hover {
   border-color: var(--btal-border-2);
   color: var(--btal-t-1);
+}
 }
 
 .graphs-modal-tab.is-active {
@@ -369,9 +373,11 @@
   min-width: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .graphs-period-btn:hover {
   border-color: var(--btal-border-2);
   color: var(--btal-t-1);
+}
 }
 
 .graphs-period-btn.is-active {

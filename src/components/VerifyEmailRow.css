@@ -44,8 +44,10 @@
   transition: color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .verify-row-link:hover:not(:disabled) {
   color: var(--btal-t-1);
+}
 }
 
 .verify-row-link:disabled {

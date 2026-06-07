@@ -99,10 +99,12 @@
   transition: color 120ms ease, border-color 120ms ease;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .legal-body a:hover,
 .legal-body a:focus-visible {
   color: var(--btal-lime);
   border-bottom-color: var(--btal-lime);
+}
 }
 
 /* Código inline · referencia a paths o términos técnicos. */
@@ -129,6 +131,8 @@
   text-decoration: none;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .legal-note a:hover {
   color: var(--btal-lime);
+}
 }

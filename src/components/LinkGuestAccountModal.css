@@ -61,8 +61,10 @@
   transition: color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .link-guest-input-toggle:hover {
   color: var(--btal-t-1);
+}
 }
 
 

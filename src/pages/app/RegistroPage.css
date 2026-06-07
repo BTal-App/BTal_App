@@ -154,9 +154,11 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-cal-nav-btn:hover {
   background: var(--btal-surface-3);
   border-color: var(--btal-border-2);
+}
 }
 
 .reg-cal-month-label {
@@ -174,9 +176,11 @@
   transition: border-color 0.15s, background 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-cal-month-label:hover {
   border-color: var(--btal-lime);
   background: color-mix(in srgb, var(--btal-lime) 8%, var(--btal-surface-2));
+}
 }
 
 /* Wrapper del lado derecho de la nav · agrupa el botón ⓘ y "Hoy"
@@ -207,8 +211,10 @@
   flex-shrink: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-cal-info-btn:hover {
   color: var(--btal-lime);
+}
 }
 
 .reg-cal-info-btn:active {
@@ -230,9 +236,11 @@
   transition: border-color 0.15s, background 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-cal-today-btn:hover {
   border-color: var(--btal-cyan);
   color: var(--btal-cyan);
+}
 }
 
 .reg-cal-view-toggle {
@@ -338,8 +346,10 @@
   transition: all 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-cal-filter-close:hover {
   background: color-mix(in srgb, var(--btal-coral) 18%, transparent);
+}
 }
 
 /* ── Calendar grid ───────────────────────────────────────────────── */
@@ -513,10 +523,12 @@
   flex-shrink: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-day-panel-close:hover {
   background: var(--btal-surface-3);
   color: var(--btal-t-1);
   border-color: var(--btal-border-2);
+}
 }
 
 .reg-day-panel-field {
@@ -639,8 +651,10 @@
   transition: background 0.15s, transform 0.12s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-day-panel-save:hover {
   background: var(--btal-lime-d);
+}
 }
 
 .reg-day-panel-save:active {
@@ -668,8 +682,10 @@
   transition: background 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-day-panel-delete:hover {
   background: color-mix(in srgb, var(--btal-coral) 18%, transparent);
+}
 }
 
 /* ── Day panel · exercises list ──────────────────────────────────── */
@@ -783,8 +799,10 @@
   color: var(--btal-gold);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-ex-action-warn:hover {
   background: color-mix(in srgb, var(--btal-gold) 18%, transparent);
+}
 }
 
 .reg-ex-action-danger {
@@ -793,8 +811,10 @@
   color: var(--btal-coral);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .reg-ex-action-danger:hover {
   background: color-mix(in srgb, var(--btal-coral) 18%, transparent);
+}
 }
 
 .reg-ex-series {

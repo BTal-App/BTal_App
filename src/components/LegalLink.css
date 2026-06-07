@@ -18,9 +18,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .legal-inline-link:hover,
 .legal-inline-link:focus-visible {
   color: var(--btal-lime);
+}
 }
 
 /* Cuando el botón se usa en lugar de .about-link en AboutModal, hay que
@@ -91,8 +93,10 @@ button.about-link {
   -webkit-tap-highlight-color: transparent;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .legal-cross-link:hover,
 .legal-cross-link:focus-visible {
   color: var(--btal-lime);
   border-bottom-color: var(--btal-lime);
+}
 }

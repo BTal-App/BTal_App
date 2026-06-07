@@ -90,10 +90,12 @@ ion-modal.train-sheet::part(content) {
   transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .train-sheet-close:hover {
   background: var(--btal-surface-3);
   color: var(--btal-t-1);
   border-color: var(--btal-border-2);
+}
 }
 
 .train-sheet-title {
@@ -176,8 +178,10 @@ ion-modal.train-sheet::part(content) {
   cursor: pointer;
   transition: background 0.15s, transform 0.12s;
 }
+@media (hover: hover) and (pointer: fine) {
 .train-sheet-edit-btn:hover {
   background: var(--btal-lime-d, var(--btal-lime));
+}
 }
 .train-sheet-edit-btn:active {
   transform: scale(0.97);

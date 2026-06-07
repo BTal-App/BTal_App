@@ -46,10 +46,12 @@ ion-modal.settings-modal {
   z-index: 2;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .settings-modal-close:hover {
   background: var(--btal-surface-3);
   color: var(--btal-t-1);
   border-color: var(--btal-border-2);
+}
 }
 
 /* La variante --fixed se mantiene por compatibilidad pero ya no añade

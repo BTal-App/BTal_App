@@ -38,9 +38,11 @@
   font-family: inherit;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .menu-day-chip:hover:not(.active) {
   border-color: var(--btal-border-2);
   background: var(--btal-surface-2);
+}
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -250,9 +252,11 @@
   margin: -4px -4px 0 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .menu-day-total-menu-btn:hover {
   background: var(--btal-bg-2);
   color: var(--btal-t-1);
+}
 }
 
 .menu-day-total-menu-btn ion-icon {
@@ -771,8 +775,10 @@
   letter-spacing: 0.04em;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .menu-add-meal-btn:hover {
   background: rgba(181, 240, 55, 0.2);
+}
 }
 
 .menu-add-meal-btn:active {
@@ -930,10 +936,12 @@
   border-color: rgba(240, 192, 64, 0.45);
   color: var(--btal-gold);
 }
+@media (hover: hover) and (pointer: fine) {
 .menu-sup-btn--batido:hover {
   background: rgba(240, 192, 64, 0.22);
   border-color: var(--btal-gold);
   box-shadow: 0 0 0 3px rgba(240, 192, 64, 0.14);
+}
 }
 
 /* Variante creatina · violeta inactivo */
@@ -942,10 +950,12 @@
   border-color: rgba(176, 122, 240, 0.45);
   color: #b07af0;
 }
+@media (hover: hover) and (pointer: fine) {
 .menu-sup-btn--creatina:hover {
   background: rgba(176, 122, 240, 0.22);
   border-color: #b07af0;
   box-shadow: 0 0 0 3px rgba(176, 122, 240, 0.14);
+}
 }
 
 /* Estado "ya añadido al día activo": tinte verde + círculo flotante ✓
@@ -957,10 +967,12 @@
   border-color: rgba(55, 240, 168, 0.55);
   color: rgb(55, 240, 168);
 }
+@media (hover: hover) and (pointer: fine) {
 .menu-sup-btn--has-it:hover {
   background: rgba(55, 240, 168, 0.26);
   border-color: rgb(55, 240, 168);
   box-shadow: 0 0 0 3px rgba(55, 240, 168, 0.18);
+}
 }
 .menu-sup-btn--has-it::after {
   content: '✓';
@@ -1228,7 +1240,9 @@ ion-popover.menu-day-popover::part(content) {
   transition: background 0.18s, border-color 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .menu-day-hidden-btn:hover {
   background: rgba(181, 240, 55, 0.22);
   border-color: var(--btal-lime);
+}
 }

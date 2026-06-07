@@ -96,16 +96,20 @@
   transition: all 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .alimentos-row-remove:hover {
   background: rgba(255, 107, 107, 0.1);
   border-color: var(--btal-coral);
   color: var(--btal-coral);
 }
+}
 
+@media (hover: hover) and (pointer: fine) {
 .alimentos-row-add:hover:not(:disabled) {
   background: var(--btal-lime);
   border-color: var(--btal-lime);
   color: #0a0e0c;
+}
 }
 
 .alimentos-row-add:disabled {

@@ -71,8 +71,10 @@
   }
 }
 
+@media (hover: hover) and (pointer: fine) {
 .prefs-segment button:hover:not(.active) {
   color: var(--btal-t-1);
+}
 }
 
 .prefs-segment button.active {

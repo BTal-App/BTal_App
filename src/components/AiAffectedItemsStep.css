@@ -166,8 +166,10 @@
   transition: all 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .ai-item-checkbox:hover:not(:disabled):not(:checked) {
   border-color: var(--btal-lime);
+}
 }
 
 .ai-item-checkbox:checked {

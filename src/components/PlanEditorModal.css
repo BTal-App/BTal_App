@@ -35,8 +35,10 @@
   transition: border-color 0.15s, background 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .plan-editor-toggle:hover {
   border-color: var(--btal-border-2);
+}
 }
 
 .plan-editor-toggle input[type='checkbox'] {
@@ -63,8 +65,10 @@
   );
   cursor: default;
 }
+@media (hover: hover) and (pointer: fine) {
 .plan-editor-toggle--locked:hover {
   border-color: rgba(55, 240, 168, 0.6);
+}
 }
 .plan-editor-toggle--locked input[type='checkbox']:disabled {
   cursor: default;
@@ -223,8 +227,10 @@
   font-size: 1.05rem;
   transition: background 0.15s;
 }
+@media (hover: hover) and (pointer: fine) {
 .plan-editor-day-del:hover:not(:disabled) {
   background: rgba(255, 107, 107, 0.16);
+}
 }
 .plan-editor-day-del:disabled {
   opacity: 0.35;
@@ -250,9 +256,11 @@
   margin-bottom: 4px;
   transition: background 0.15s, border-color 0.15s;
 }
+@media (hover: hover) and (pointer: fine) {
 .plan-editor-add-btn:hover {
   background: rgba(90, 168, 255, 0.16);
   border-color: var(--btal-blue);
+}
 }
 
 /* Marcador "*" verde lima para campos obligatorios · diferencia

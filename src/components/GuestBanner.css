@@ -62,8 +62,10 @@
   min-width: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .guest-banner-toggle:hover {
   background: rgba(176, 122, 240, 0.06);
+}
 }
 
 .guest-banner-tag {
@@ -113,9 +115,11 @@
   transition: background 0.15s, color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .guest-banner-dismiss:hover {
   background: rgba(176, 122, 240, 0.1);
   color: var(--btal-t-1);
+}
 }
 
 /* ── Detail · solo visible cuando expanded ─── */
@@ -167,8 +171,10 @@
   transition: filter 0.15s, transform 0.1s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .guest-banner-cta:hover {
   filter: brightness(1.1);
+}
 }
 
 .guest-banner-cta svg {
@@ -186,12 +192,16 @@
   animation: btal-pulse-danger 2.4s ease-in-out infinite;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .guest-banner--urgent:hover {
   border-color: rgba(255, 107, 107, 0.75);
 }
+}
 
+@media (hover: hover) and (pointer: fine) {
 .guest-banner--urgent .guest-banner-toggle:hover {
   background: rgba(255, 107, 107, 0.06);
+}
 }
 
 .guest-banner--urgent .guest-banner-tag {

@@ -62,9 +62,11 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .icon-picker-reset:hover {
   background: rgba(90, 168, 255, 0.2);
   border-color: var(--btal-blue);
+}
 }
 
 /* ── Tabs ── */

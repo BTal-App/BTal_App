@@ -53,8 +53,10 @@
   transition: background 0.15s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .about-link:hover {
   background: var(--btal-surface-2);
+}
 }
 
 .about-link ion-icon {

@@ -83,9 +83,11 @@
   border-color: rgba(240, 192, 64, 0.55);
   color: var(--btal-gold);
 }
+@media (hover: hover) and (pointer: fine) {
 .sup-day-btn--batido:hover {
   background: rgba(240, 192, 64, 0.26);
   border-color: var(--btal-gold);
+}
 }
 
 /* Variante creatina · violeta */
@@ -94,9 +96,11 @@
   border-color: rgba(176, 122, 240, 0.55);
   color: #b07af0;
 }
+@media (hover: hover) and (pointer: fine) {
 .sup-day-btn--creatina:hover {
   background: rgba(176, 122, 240, 0.26);
   border-color: #b07af0;
+}
 }
 
 /* Variante "Quitar del día" · rojo suave */
@@ -105,10 +109,12 @@
   border-color: rgba(255, 107, 107, 0.45);
   color: var(--btal-coral);
 }
+@media (hover: hover) and (pointer: fine) {
 .sup-day-btn--remove:hover {
   background: rgba(255, 107, 107, 0.2);
   border-color: var(--btal-coral);
   color: var(--btal-coral);
+}
 }
 
 /* ── Sección "Receta diaria" / "Dosis" ──────────────────────────────── */
@@ -153,9 +159,11 @@
 .sup-config-btn:active {
   transform: scale(0.97);
 }
+@media (hover: hover) and (pointer: fine) {
 .sup-config-btn:hover {
   background: rgba(90, 168, 255, 0.2);
   border-color: var(--btal-blue);
+}
 }
 .sup-config-btn ion-icon {
   font-size: 1rem;
@@ -341,8 +349,10 @@
   margin-bottom: 12px;
   transition: border-color 0.15s, background 0.15s;
 }
+@media (hover: hover) and (pointer: fine) {
 .sup-checkbox-row:hover {
   background: var(--btal-surface);
+}
 }
 .sup-checkbox-row input[type='checkbox'] {
   appearance: none;
@@ -515,9 +525,11 @@
   transition: background 0.15s, border-style 0.15s, transform 0.13s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .sup-secondary-link:hover {
   background: rgba(90, 168, 255, 0.16);
   border-style: solid;
+}
 }
 
 .sup-secondary-link:active {
@@ -552,9 +564,11 @@
   transition: background 0.15s, border-color 0.15s, transform 0.13s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .sup-counter-btn:hover:not(:disabled) {
   background: var(--btal-surface-2);
   border-color: var(--btal-t-3);
+}
 }
 
 .sup-counter-btn:active:not(:disabled) {
@@ -572,10 +586,12 @@
   color: #0a0e0c;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .sup-counter-btn--add:hover:not(:disabled) {
   background: var(--btal-lime-d, #a3d92e);
   border-color: var(--btal-lime-d, #a3d92e);
   transform: scale(1.06);
+}
 }
 
 /* Pulso lima al pulsar el "+" · feedback de acción confirmada
@@ -707,10 +723,12 @@
   bottom: 4px;
   right: 4px;
 }
+@media (hover: hover) and (pointer: fine) {
 .sup-stat-info:hover,
 .sup-stat-reset:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--btal-t-1);
+}
 }
 .sup-stat-info:active,
 .sup-stat-reset:active {
@@ -726,9 +744,11 @@
 .sup-stat-reset {
   color: var(--btal-gold);
 }
+@media (hover: hover) and (pointer: fine) {
 .sup-stat-reset:hover {
   color: var(--btal-gold);
   background: rgba(240, 168, 56, 0.18);
+}
 }
 /* Spin 360° una vez al pulsar el botón ⟳ · feedback inmediato de
    "se acaba de resetear el contador". Como :active dura solo
@@ -851,9 +871,11 @@
   white-space: nowrap;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .sup-reset-btn:hover {
   background: rgba(240, 168, 56, 0.2);
   border-color: var(--btal-gold);
+}
 }
 
 .sup-reset-btn:active {
@@ -881,9 +903,11 @@
   color: var(--btal-coral);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .sup-reset-btn--danger:hover {
   background: rgba(255, 107, 107, 0.18);
   border-color: var(--btal-coral);
+}
 }
 
 /* Variante full-width · el botón "Reiniciar todos los contadores" va

@@ -27,9 +27,11 @@
   transition: all 0.18s;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .step-mode-card:hover:not(.active) {
   border-color: var(--btal-border-2);
   background: var(--btal-surface);
+}
 }
 
 .step-mode-card.active {
@@ -178,9 +180,11 @@
   min-width: 0;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .step-mode-scope-card:hover:not(.active) {
   border-color: var(--btal-border-2);
   background: var(--btal-surface);
+}
 }
 
 .step-mode-scope-card.active {
