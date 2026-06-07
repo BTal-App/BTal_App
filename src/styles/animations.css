@@ -107,11 +107,6 @@
 }
 
 /* Pulso de oscilación de opacidad · loading / "actualizando". */
-@keyframes btal-pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-
 /* Pop-in con rebote estilo "check añadido" · réplica del v1
    `checkPop` (BATIDO/CREATINA "TOMADO"). Para badges/chips que
    aparecen al activar un estado · sale desde scale(0) con un overshoot
@@ -123,10 +118,6 @@
 }
 
 /* ── Clases helper · aplicar con className ────────────────────────── */
-
-.btal-anim-pop-in {
-  animation: btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
-}
 
 .btal-anim-bump {
   /* `display:inline-block` para que el transform escale bien sobre
@@ -143,26 +134,10 @@
   animation: btal-fade-in 0.22s ease-out both;
 }
 
-.btal-anim-pulse-ok {
-  animation: btal-pulse-ok 0.7s ease-out;
-}
-
-.btal-anim-pulse-gold {
-  animation: btal-pulse-gold 0.7s ease-out;
-}
-
-.btal-anim-pulse-danger {
-  animation: btal-pulse-danger 0.7s ease-out;
-}
-
-.btal-anim-pulse-soft {
-  animation: btal-pulse-soft 1.8s ease-in-out infinite;
-}
-
-/* Stagger · combinar con .btal-anim-pop-in / .btal-anim-fade-up para
-   que los hijos entren escalonados. Hasta 8 elementos (suficiente
-   para grids 2x2/4x1 + extras). 40ms entre cada uno: rápido pero
-   perceptible. */
+/* Stagger · combinar con .btal-anim-fade-up para que los hijos entren
+   escalonados. Hasta 8 elementos (suficiente para grids 2x2/4x1 +
+   extras · GraphsModal y RegDayPanel los generan con btal-stagger-${i}).
+   40ms entre cada uno: rápido pero perceptible. */
 .btal-stagger-1 { animation-delay: 0.04s; }
 .btal-stagger-2 { animation-delay: 0.08s; }
 .btal-stagger-3 { animation-delay: 0.12s; }
@@ -487,14 +462,9 @@ ion-picker::part(button):active {
 /* ── Reduced motion · respeto absoluto ───────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .btal-anim-pop-in,
   .btal-anim-bump,
   .btal-anim-fade-up,
-  .btal-anim-fade-in,
-  .btal-anim-pulse-ok,
-  .btal-anim-pulse-gold,
-  .btal-anim-pulse-danger,
-  .btal-anim-pulse-soft {
+  .btal-anim-fade-in {
     animation: none !important;
   }
   button {
