@@ -523,34 +523,37 @@ ion-picker::part(button):active {
 /* ─────────────────────────────────────────────────────────────────────────
    PRESS FIABLE en tarjetas tappables · el "hundido" debe verse SIEMPRE.
 
-   Problema: las tarjetas con animación de ENTRADA (btal-pop-in / btal-fade-up
-   con `fill: both`) RETIENEN el transform del último keyframe
-   (`translateY(0) scale(1)`) para siempre. En la cascada CSS, una animación
-   GANA a una regla normal de autor → el `:active { transform: scale(0.97) }`
-   quedaba "opacado" y el hundido salía a medias o solo con pulsación fuerte.
-   `.plan-mini` (Entreno) NO tiene animación de entrada → su press iba siempre.
-
-   Fix: `!important` en el transform del :active · en la cascada, "autor
-   importante" GANA a las animaciones → el hundido se impone SIEMPRE. La
-   transición base de cada tarjeta (que ya incluye `transform`) sigue dando el
-   ease suave de ida/vuelta. `transition-duration` corto al pulsar para que se
-   vea también en toques rápidos. */
-.hoy-meal-card:active,
-.hoy-train-card:active,
-.hoy-ai-status:active,
-.menu-meal:active,
-.train-day:active,
-.compra-item:active {
+   Dos problemas resueltos:
+   1) `:active` NO es fiable en móvil dentro de listas con scroll vertical · el
+      navegador suprime/retrasa `:active` mientras decide si el toque es scroll
+      o tap → el hundido solo salía con pulsación fuerte/mantenida. Por eso el
+      disparador real es la clase `.is-pressed`, que pone/quita JS vía eventos
+      pointer (utils/pressFeedback.ts), independiente del scroll. `:active` se
+      mantiene como fallback para ratón/escritorio.
+   2) Las tarjetas con animación de ENTRADA (btal-pop-in/btal-fade-up con
+      `fill: both`) RETIENEN el transform del último keyframe para siempre, y en
+      la cascada una animación GANA a una regla normal de autor → por eso el
+      transform del press lleva `!important` (autor-importante > animaciones).
+   La transición base de cada tarjeta (que ya incluye `transform`) da el ease
+   suave · `transition-duration` corto al pulsar para que se vea al instante. */
+.hoy-meal-card.is-pressed, .hoy-meal-card:active,
+.hoy-train-card.is-pressed, .hoy-train-card:active,
+.hoy-ai-status.is-pressed, .hoy-ai-status:active,
+.menu-meal.is-pressed, .menu-meal:active,
+.train-day.is-pressed, .train-day:active,
+.plan-mini.is-pressed, .plan-mini:active,
+.compra-item.is-pressed, .compra-item:active {
   transform: scale(0.97) !important;
   transition-duration: 0.06s;
 }
 @media (prefers-reduced-motion: reduce) {
-  .hoy-meal-card:active,
-  .hoy-train-card:active,
-  .hoy-ai-status:active,
-  .menu-meal:active,
-  .train-day:active,
-  .compra-item:active {
+  .hoy-meal-card.is-pressed, .hoy-meal-card:active,
+  .hoy-train-card.is-pressed, .hoy-train-card:active,
+  .hoy-ai-status.is-pressed, .hoy-ai-status:active,
+  .menu-meal.is-pressed, .menu-meal:active,
+  .train-day.is-pressed, .train-day:active,
+  .plan-mini.is-pressed, .plan-mini:active,
+  .compra-item.is-pressed, .compra-item:active {
     transform: none !important;
   }
 }

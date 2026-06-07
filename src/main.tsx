@@ -23,6 +23,11 @@ import './index.css'
 import './styles/animations.css'
 import App from './App.tsx'
 import { bootstrapAnalytics, subscribeAnalyticsToConsent } from './services/analytics'
+import { initPressFeedback } from './utils/pressFeedback'
+
+// Feedback de pulsación fiable (clase .is-pressed vía pointer events) ·
+// :active no es fiable en listas con scroll vertical en móvil.
+initPressFeedback()
 
 // Analytics · Fase 13. Si el user ya aceptó cookies en una visita previa
 // (localStorage.btal_cookie_consent_v1 === 'accepted'), lanzamos el init
