@@ -86,6 +86,36 @@ ion-tab-bar {
      el ancho `bar_width - 2*N`, con N de margen a cada lado. */
   padding-inline: 8px;
   height: calc(58px + env(safe-area-inset-bottom));
+  /* Contexto de posicionamiento para el indicador deslizante (::before). */
+  position: relative;
+}
+
+/* ─── Indicador de color DESLIZANTE ───────────────────────────────────
+   Una línea lima en el borde superior del nav que se DESPLAZA hasta el
+   tab seleccionado (en vez de aparecer/desaparecer). La posición la marca
+   la CSS var `--nav-index` (0..4) que AppShell.tsx inyecta en el IonTabBar
+   según la ruta activa. El ancho = un slot de tab (descontando el
+   padding-inline de 8px a cada lado); translateX(index*100%) lo mueve
+   tantos slots. Transición con un pelín de overshoot = sensación "spring". */
+ion-tab-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8px;
+  width: calc((100% - 16px) / 5);
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: var(--btal-lime);
+  box-shadow: 0 0 8px rgba(181, 240, 55, 0.5);
+  transform: translateX(calc(var(--nav-index, 0) * 100%));
+  transition: transform 0.34s cubic-bezier(0.34, 1.25, 0.64, 1);
+  pointer-events: none;
+  z-index: 10;
+}
+@media (prefers-reduced-motion: reduce) {
+  ion-tab-bar::before {
+    transition: none;
+  }
 }
 
 ion-tab-button {

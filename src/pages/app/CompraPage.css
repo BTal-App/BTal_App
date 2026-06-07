@@ -637,11 +637,20 @@
   gap: 10px;
   padding: 8px 4px;
   border-radius: 8px;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.14s;
 }
 
 .compra-item:hover {
   background: var(--btal-bg-2);
+}
+/* Press · hundido idéntico al de Entreno (.plan-mini). */
+.compra-item:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .compra-item:active {
+    transform: none;
+  }
 }
 
 .compra-item-check {

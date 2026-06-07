@@ -27,6 +27,7 @@ import {
 } from '../../templates/defaultUser';
 import { badgeLabel, BADGE_BY_VAL } from '../../templates/exerciseCatalog';
 import { formatDiaSemana } from '../../utils/diaSemana';
+import { hapticTap } from '../../utils/haptics';
 import { formatTiempoEstimado } from '../../utils/timeParser';
 import { blurAndRun } from '../../utils/focus';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
@@ -403,7 +404,7 @@ const EntrenoPage: React.FC = () => {
                     + (isActivo ? ' plan-mini--activo' : '')
                     + (isRecomendado ? ' plan-mini--recommended' : '')
                   }
-                  onClick={blurAndRun(() => handleSelectPlan(p.id))}
+                  onClick={blurAndRun(() => { hapticTap(); handleSelectPlan(p.id); })}
                   aria-label={`Activar ${p.nombre}`}
                   aria-pressed={p.id === activePlanId}
                 >
@@ -627,7 +628,7 @@ const EntrenoPage: React.FC = () => {
             <DiaCard
               key={`${activePlan.id}-${idx}`}
               dia={dia}
-              onClick={() => setTrainSheetIdx(idx)}
+              onClick={() => { hapticTap(); setTrainSheetIdx(idx); }}
               onEditQuick={() => setDiaEditor({ dia, diaIdx: idx })}
             />
           ))}

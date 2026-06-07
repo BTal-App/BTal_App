@@ -349,7 +349,8 @@
   cursor: pointer;
   transition:
     border-color 0.18s,
-    background 0.18s;
+    background 0.18s,
+    transform 0.14s;
   /* Animación de entrada · pop-in suave (igual que cat-card de compra). */
   animation: btal-pop-in 0.32s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
@@ -365,6 +366,7 @@
 }
 .train-day:active {
   background: var(--btal-bg-2);
+  transform: scale(0.97);
 }
 
 .train-day-head {

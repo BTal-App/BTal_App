@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useCountUp, useFirstVisible } from '../../utils/useCountUp';
+import { hapticTap } from '../../utils/haptics';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
 import { horaToMinutes } from '../../utils/timeParser';
 import {
@@ -760,7 +761,7 @@ const MenuPage: React.FC = () => {
                       key={`meal-${row.meal}`}
                       meal={row.meal}
                       comida={row.comida}
-                      onClick={() => setOpenMeal(row.meal)}
+                      onClick={() => { hapticTap(); setOpenMeal(row.meal); }}
                     />
                   );
                 }
@@ -773,7 +774,7 @@ const MenuPage: React.FC = () => {
                       // el sheet de detalle (lectura + acciones), igual
                       // que las 4 fijas. Desde ahí se accede a edit /
                       // duplicar / borrar.
-                      onClick={() => setOpenExtra(row.extra)}
+                      onClick={() => { hapticTap(); setOpenExtra(row.extra); }}
                     />
                   );
                 }

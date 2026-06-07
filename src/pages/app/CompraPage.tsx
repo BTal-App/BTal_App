@@ -24,6 +24,7 @@ import {
   type ItemCompra,
 } from '../../templates/defaultUser';
 import { computeSupAlerts, type SupAlert } from '../../utils/supAlerts';
+import { hapticTap } from '../../utils/haptics';
 import { blurAndRun } from '../../utils/focus';
 import { useScrollTopOnEnter } from '../../utils/useScrollTopOnEnter';
 import './CompraPage.css';
@@ -668,7 +669,7 @@ function CategoriaCard({
         <button
           type="button"
           className="compra-cat-edit-btn"
-          onClick={blurAndRun(onEditCategoria)}
+          onClick={blurAndRun(() => { hapticTap(); onEditCategoria(); })}
           aria-label={`Editar categoría ${categoria.nombre}`}
           title="Editar categoría"
         >
@@ -719,7 +720,7 @@ function CategoriaCard({
               <button
                 type="button"
                 className="compra-item-edit"
-                onClick={blurAndRun(() => onEditItem(item))}
+                onClick={blurAndRun(() => { hapticTap(); onEditItem(item); })}
                 aria-label={`Editar ${item.nombre}`}
                 title="Editar"
               >

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { Redirect, Route } from 'react-router-dom';
 import {
   IonContent,
@@ -21,6 +21,7 @@ import {
 } from 'ionicons/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
+import { hapticTap } from '../../utils/haptics';
 import HoyPage from './HoyPage';
 import MenuPage from './MenuPage';
 import CompraPage from './CompraPage';
@@ -39,8 +40,18 @@ import './AppShell.css';
 //  - Invitado → se queda dentro del shell (verá empty states)
 const AppShell: React.FC = () => {
   const history = useHistory();
+  const location = useLocation();
   const { user, loading, isAuthed } = useAuth();
   const { profile: userDoc, loading: profileLoading } = useProfile();
+
+  // Índice del tab activo (0..4) para el indicador de color deslizante del
+  // nav · se inyecta como CSS var `--nav-index` en el IonTabBar y el
+  // `::before` (AppShell.css) se traslada a esa posición con transición.
+  const TAB_ORDER = ['hoy', 'menu', 'compra', 'entreno', 'registro'];
+  const activeTabIndex = Math.max(
+    0,
+    TAB_ORDER.findIndex((t) => location.pathname.startsWith(`/app/${t}`)),
+  );
 
   useEffect(() => {
     if (!loading && !isAuthed) history.replace('/');
@@ -118,24 +129,30 @@ const AppShell: React.FC = () => {
           (font-size 1.4rem en variables.css → `ion-tab-button ion-icon`).
           Mismo lenguaje visual + sizing uniforme → iconos y labels a
           la misma altura entre tabs. */}
-      <IonTabBar slot="bottom">
-        <IonTabButton tab="hoy" href="/app/hoy">
+      <IonTabBar
+        slot="bottom"
+        // CSS var para el indicador de color deslizante · ver variables.css
+        // (`ion-tab-bar::before`). IonTabBar tipa style como
+        // { [k: string]: string }, así que pasamos el índice como string.
+        style={{ '--nav-index': String(activeTabIndex) }}
+      >
+        <IonTabButton tab="hoy" href="/app/hoy" onClick={() => hapticTap()}>
           <IonIcon icon={calendarNumberOutline} />
           <IonLabel>HOY</IonLabel>
         </IonTabButton>
-        <IonTabButton tab="menu" href="/app/menu">
+        <IonTabButton tab="menu" href="/app/menu" onClick={() => hapticTap()}>
           <IonIcon icon={restaurantOutline} />
           <IonLabel>MENÚ</IonLabel>
         </IonTabButton>
-        <IonTabButton tab="compra" href="/app/compra">
+        <IonTabButton tab="compra" href="/app/compra" onClick={() => hapticTap()}>
           <IonIcon icon={cartOutline} />
           <IonLabel>COMPRA</IonLabel>
         </IonTabButton>
-        <IonTabButton tab="entreno" href="/app/entreno">
+        <IonTabButton tab="entreno" href="/app/entreno" onClick={() => hapticTap()}>
           <IonIcon icon={barbellOutline} />
           <IonLabel>ENTRENO</IonLabel>
         </IonTabButton>
-        <IonTabButton tab="registro" href="/app/registro">
+        <IonTabButton tab="registro" href="/app/registro" onClick={() => hapticTap()}>
           <IonIcon icon={listOutline} />
           <IonLabel>REGISTRO</IonLabel>
         </IonTabButton>

@@ -1563,131 +1563,21 @@
   border-color: rgba(240, 168, 56, 0.34);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   HoySkeleton · placeholder con shimmer mientras carga Auth/perfil. Imita la
-   silueta real (header + anillo + tarjetas) para que el arranque se sienta
-   instantáneo y nativo en vez de un spinner sobre fondo vacío.
-   ───────────────────────────────────────────────────────────────────────── */
-.hoy-skel {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.hoy-skel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 6px;
-}
-.hoy-skel-greet {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.hoy-skel-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.hoy-skel-ring-card {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 18px;
-  border-radius: 18px;
-  background: var(--btal-surface-1, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--btal-border, rgba(255, 255, 255, 0.07));
-}
-.hoy-skel-ring {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.hoy-skel-ring-side {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-}
-.hoy-skel-meal {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px;
-  border-radius: 16px;
-  background: var(--btal-surface-1, rgba(255, 255, 255, 0.03));
-  border: 1px solid var(--btal-border, rgba(255, 255, 255, 0.07));
-}
-.hoy-skel-meal-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  flex-shrink: 0;
-}
-.hoy-skel-meal-body {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  flex: 1;
-}
-
-/* Barras de texto · alturas/anchos variados para parecer contenido real. */
-.hoy-skel-line {
-  height: 12px;
-  border-radius: 7px;
-}
-.hoy-skel-line--title { width: 130px; height: 22px; }
-.hoy-skel-line--sub { width: 90px; height: 13px; }
-.hoy-skel-line--wide { width: 80%; }
-.hoy-skel-line--mid { width: 55%; }
-.hoy-skel-line--narrow { width: 35%; }
-
-/* Shimmer · gradiente que se desplaza. Mismo "tinte" para todas las piezas. */
-.hoy-skel-avatar,
-.hoy-skel-ring,
-.hoy-skel-meal-icon,
-.hoy-skel-line {
-  background: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0.04) 30%,
-    rgba(255, 255, 255, 0.10) 50%,
-    rgba(255, 255, 255, 0.04) 70%
-  );
-  background-size: 200% 100%;
-  animation: hoy-skel-shimmer 1.3s ease-in-out infinite;
-}
-@keyframes hoy-skel-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hoy-skel-avatar,
-  .hoy-skel-ring,
-  .hoy-skel-meal-icon,
-  .hoy-skel-line {
-    animation: none;
-  }
-}
-
-/* Feedback de pulsación · scale al tocar las tarjetas tappables (estilo iOS).
-   CLAVE: baja INSTANTÁNEO al pulsar (transition-duration casi 0 en :active) y
-   vuelve SUAVE al soltar (0.22s en el estado base). Así incluso un toque
-   rápido se ve hundirse · con una transición lenta simétrica, un tap corto no
-   daba tiempo a renderizar el scale (era lo que pasaba: solo se veía con
-   pulsación mantenida). transform en GPU = 60fps. */
+/* Feedback de pulsación · MISMO que `.plan-mini` de Entreno (estándar de la
+   app): scale 0.97 con transición transform 0.14s. Estandarizado en todas las
+   tabs vía la clase compartida `.btal-pressable` (styles/animations.css) ·
+   estas reglas de Hoy se mantienen por las tarjetas que aún no llevan la
+   clase, con los mismos valores para que el "hundido" sea idéntico. */
 .hoy-meal-card,
 .hoy-train-card,
 .hoy-ai-status {
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.14s;
   will-change: transform;
 }
 .hoy-meal-card:active,
 .hoy-train-card:active,
 .hoy-ai-status:active {
-  transform: scale(0.96);
-  transition-duration: 0.02s;
+  transform: scale(0.97);
 }
 @media (prefers-reduced-motion: reduce) {
   .hoy-meal-card:active,

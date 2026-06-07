@@ -3,6 +3,7 @@ import {
   IonAlert,
   IonContent,
   IonPage,
+  IonSpinner,
   useIonRouter,
 } from '@ionic/react';
 import { useAuth } from '../../hooks/useAuth';
@@ -93,7 +94,7 @@ const MEAL_LABEL: Record<MealKey, string> = {
 
 const HoyPage: React.FC = () => {
   const { user, loading } = useAuth();
-  const { profile: userDoc, loading: profileLoading } = useProfile();
+  const { profile: userDoc } = useProfile();
   const [aiGenOpen, setAiGenOpen] = useState(false);
   // Alert informativo al pulsar los chips de estado IA (tiempo restante / Pro).
   const [aiInfo, setAiInfo] = useState<{ header: string; message: string } | null>(null);
@@ -191,12 +192,19 @@ const HoyPage: React.FC = () => {
   const [, setExpireBump] = useState(0);
   const bumpExpire = () => setExpireBump((n) => n + 1);
 
-  // Skeleton en vez de spinner · imita la silueta de la pantalla (header +
-  // anillo + tarjetas) con un shimmer, así el arranque "se siente" instantáneo
-  // y nativo (no un spinner genérico sobre fondo vacío). Se muestra mientras
-  // se resuelve Auth o mientras el doc del perfil aún está cargando.
-  if (loading || !user || (profileLoading && !userDoc)) {
-    return <HoySkeleton />;
+  // Gate de carga · en la práctica casi nunca se ve porque AppShell ya
+  // muestra el splash de marca mientras carga auth/perfil. Lo mantenemos
+  // como red de seguridad por si HoyPage se montara suelto.
+  if (loading || !user) {
+    return (
+      <IonPage className="app-tab-page">
+        <IonContent fullscreen>
+          <div className="app-shell-loading">
+            <IonSpinner name="dots" />
+          </div>
+        </IonContent>
+      </IonPage>
+    );
   }
 
   // Saludo: preferimos el displayName de Auth (cuenta real con nombre o
@@ -691,49 +699,6 @@ const HoyPage: React.FC = () => {
 };
 
 export default HoyPage;
-
-// ──────────────────────────────────────────────────────────────────────────
-// HoySkeleton · placeholder con shimmer que imita la silueta de la pantalla
-// (header + anillo + tarjetas de comida) mientras carga Auth/perfil. Da la
-// sensación de arranque instantáneo/nativo en vez de un spinner sobre vacío.
-// ──────────────────────────────────────────────────────────────────────────
-function HoySkeleton() {
-  return (
-    <IonPage className="app-tab-page">
-      <IonContent fullscreen>
-        <div className="app-tab-content hoy-skel" aria-hidden="true">
-          {/* Header: saludo + avatar */}
-          <div className="hoy-skel-header">
-            <div className="hoy-skel-greet">
-              <span className="hoy-skel-line hoy-skel-line--title" />
-              <span className="hoy-skel-line hoy-skel-line--sub" />
-            </div>
-            <span className="hoy-skel-avatar" />
-          </div>
-          {/* Anillo de aporte */}
-          <div className="hoy-skel-ring-card">
-            <span className="hoy-skel-ring" />
-            <div className="hoy-skel-ring-side">
-              <span className="hoy-skel-line hoy-skel-line--wide" />
-              <span className="hoy-skel-line hoy-skel-line--mid" />
-              <span className="hoy-skel-line hoy-skel-line--narrow" />
-            </div>
-          </div>
-          {/* Tarjetas de comida */}
-          {[0, 1, 2, 3].map((i) => (
-            <div className="hoy-skel-meal" key={i}>
-              <span className="hoy-skel-meal-icon" />
-              <div className="hoy-skel-meal-body">
-                <span className="hoy-skel-line hoy-skel-line--mid" />
-                <span className="hoy-skel-line hoy-skel-line--wide" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </IonContent>
-    </IonPage>
-  );
-}
 
 // ──────────────────────────────────────────────────────────────────────────
 // SuplementacionBlock · Sub-fase 2B.5.b · bloque de cards en HoyPage que
