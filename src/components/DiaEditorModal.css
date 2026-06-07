@@ -425,15 +425,9 @@
   margin-bottom: 0;
 }
 
-.dia-editor-row-titulo {
-  flex: 1;
-  min-width: 0;
-}
 
-.dia-editor-row-tiempo {
-  flex: 0 0 auto;
-  width: 130px;
-}
+
+
 
 /* Wrap a 2 líneas en pantallas estrechas · evita que la duración
    se aplaste hasta hacer ilegible el placeholder "1h 20min". */

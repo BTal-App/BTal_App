@@ -506,35 +506,13 @@
 
 /* Link secundario · "📊 Stock y contadores" en BatidoInfoModal /
    CreatinaInfoModal · da acceso al modal de stock desde la vista info. */
-.sup-secondary-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin: 12px 0 0;
-  padding: 10px 12px;
-  background: rgba(90, 168, 255, 0.08);
-  border: 1px dashed rgba(90, 168, 255, 0.4);
-  border-radius: 9px;
-  color: var(--btal-blue);
-  font-family: inherit;
-  font-size: 0.84rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s, border-style 0.15s, transform 0.13s;
-}
+
 
 @media (hover: hover) and (pointer: fine) {
-.sup-secondary-link:hover {
-  background: rgba(90, 168, 255, 0.16);
-  border-style: solid;
-}
+
 }
 
-.sup-secondary-link:active {
-  transform: scale(0.98);
-}
+
 
 /* ── Counter ±1 · igual layout que el v1 modal-batido-info ──────────── */
 .sup-counter-row {
@@ -846,12 +824,7 @@
 }
 
 /* ── Grid de resets · EditSupStockModal · Sub-fase 2B.5.b ────────────── */
-.sup-reset-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 8px;
-  margin: 8px 0 0;
-}
+
 
 .sup-reset-btn {
   display: inline-flex;
@@ -927,13 +900,7 @@
   line-height: 1.3;
 }
 
-.sup-reset-msg {
-  text-align: center;
-  font-size: 0.78rem;
-  color: var(--btal-lime);
-  margin: 10px 0 0;
-  font-weight: 600;
-}
+
 
 /* Ajustes globales mobile · padding del card y tamaños de texto. */
 @media (max-width: 480px) {

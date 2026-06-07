@@ -73,17 +73,7 @@
   min-width: 0;
 }
 
-.compra-sup-row-emoji {
-  /* Sin caja · solo el emoji limpio. Antes tenía un cuadrado con
-     fondo + borde · el user lo quería más sobrio para que el bloque
-     SUPLEMENTACIÓN se diferencie de las categorías normales (cuyas
-     cards sí tienen el emoji enmarcado). */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.6rem;
-  flex-shrink: 0;
-}
+
 
 .compra-sup-row-id {
   flex: 1;

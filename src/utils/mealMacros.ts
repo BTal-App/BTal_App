@@ -45,8 +45,3 @@ export function macrosFromAlimentos(alimentos: Alimento[]): Macros {
   }
   return t;
 }
-
-// ¿Algún alimento lleva macros reales? (para mostrar UI de "datos OFF").
-export function hasRealMacros(alimentos: Alimento[]): boolean {
-  return alimentos.some((a) => typeof a.kcalPer100 === 'number');
-}

@@ -106,10 +106,10 @@ export function AiGenerateModal({
   // Toasts post-generación · éxito (verde) o error tipado (rojo).
   const [successToast, setSuccessToast] = useState(false);
   const [errorToast, setErrorToast] = useState('');
-  // GeneratingScreen overlay · activo mientras la IA está "trabajando".
-  // Por ahora simulamos 2s con setTimeout (Fase 6 reemplazará con el
-  // await de la Cloud Function `generatePlan`). Bloquea interacción para
-  // que el user no dispare doble generación.
+  // GeneratingScreen overlay · activo mientras la IA está trabajando: cubre el
+  // `await generatePlan(...)` (callable) + el polling del doc en Firestore (ver
+  // handleConfirmGenerate). Bloquea interacción para que el user no dispare
+  // doble generación.
   const [generating, setGenerating] = useState(false);
 
   // Items afectados por el scope seleccionado · se recalcula cuando cambia.
@@ -440,9 +440,9 @@ export function AiGenerateModal({
         onClose={handleEditProfileClose}
       />
 
-      {/* GeneratingScreen full-screen · se muestra mientras "trabaja" la IA.
-          En Fase 6 lo controlará el await de la Cloud Function. Por ahora
-          es un setTimeout de 2s que simula el feedback visual. */}
+      {/* GeneratingScreen full-screen · se muestra mientras trabaja la IA
+          (durante el await de la Cloud Function `generatePlan` + el polling
+          del doc en Firestore). */}
       <GeneratingScreen
         isOpen={generating}
         title="Generando con IA…"
