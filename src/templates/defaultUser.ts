@@ -553,6 +553,28 @@ export interface CreatinaConfig {
 export interface SupDayOverride {
   hora: string | null; // HH:mm en 24h
   titulo: string | null;
+  // ── Batido por-día · override de RECETA (solo lo usa el batido) ──────────
+  // Permite que el user tome un batido distinto según el día (p.ej. mismo
+  // batido lun/mié/vie y otro mar/jue) sin cambiar la receta global. Los
+  // campos son OPCIONALES · `undefined` = usa la receta global
+  // (`batidoConfig`). Cuando el user personaliza el batido de un día concreto
+  // se guardan aquí sus ingredientes + macros; el resto (gr_prot del bote,
+  // creatina) sigue siendo global para no afectar al stock de proteína.
+  // Se escriben/borran siempre los 5 juntos → anclamos "tiene override de
+  // receta" en `kcal !== undefined`. La creatina nunca los usa.
+  alimentos?: Alimento[];
+  kcal?: number;
+  prot?: number;
+  carb?: number;
+  fat?: number;
+}
+
+// ¿El override per-día tiene una RECETA de batido propia (no solo hora/título)?
+// Ancla en `kcal` porque al guardar/limpiar se escriben los 5 campos juntos.
+export function hasBatidoDayRecipe(
+  ovr: SupDayOverride | undefined,
+): boolean {
+  return ovr?.kcal !== undefined;
 }
 
 // Entrada del histórico fechado de tomas de suplementación · una por

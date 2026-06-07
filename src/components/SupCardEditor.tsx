@@ -15,10 +15,15 @@ import {
 import { pushDiff, type ChangeEntry } from '../utils/confirmDiff';
 import { ConfirmDiffAlert } from './ConfirmDiffAlert';
 import { SaveIndicator } from './SaveIndicator';
+import { AlimentosListInput } from './AlimentosListInput';
+import { macrosFromAlimentos } from '../utils/mealMacros';
+import { blockNonInteger, clampInt } from '../utils/numericInput';
 import {
   DAY_LABEL_FULL,
+  hasBatidoDayRecipe,
   SUP_HORA_DEFECTO,
   SUP_TITULO_DEFECTO,
+  type Alimento,
   type DayKey,
   type SupDayOverride,
 } from '../templates/defaultUser';
@@ -48,6 +53,9 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
       ? userDoc?.suplementos.batidoOverrides
       : userDoc?.suplementos.creatinaOverrides;
   const current = overrides?.[day];
+  // Receta global del batido · base para "Personalizar este día" y referencia
+  // del diff (lo que usa el día cuando NO hay receta propia).
+  const globalBatido = userDoc?.suplementos.batidoConfig;
 
   // Defaults para placeholder · usados también si el user vacía el campo.
   const defaultHora =
@@ -60,6 +68,18 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
   // Form state · arranca con los valores override (o defaults si no hay).
   const [titulo, setTitulo] = useState(current?.titulo ?? '');
   const [hora, setHora] = useState(current?.hora ?? defaultHora);
+
+  // ── Receta por-día (solo batido) ──────────────────────────────────────
+  // `customizeDay` = el user quiere una receta propia para ESTE día (override
+  // de ingredientes + macros). Si false, la mini-card usa la receta global.
+  // El form de receta se siembra de la receta del día (si ya hay override) o,
+  // al activar la personalización, de la receta global como base.
+  const [customizeDay, setCustomizeDay] = useState(false);
+  const [recAlimentos, setRecAlimentos] = useState<Alimento[]>([]);
+  const [recKcal, setRecKcal] = useState(0);
+  const [recProt, setRecProt] = useState(0);
+  const [recCarb, setRecCarb] = useState(0);
+  const [recFat, setRecFat] = useState(0);
 
   const [savedToast, setSavedToast] = useState(false);
   const [removedToast, setRemovedToast] = useState(false);
@@ -83,10 +103,52 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
   const resetState = () => {
     setTitulo(current?.titulo ?? '');
     setHora(current?.hora ?? defaultHora);
+    // Receta del día · si el override ya trae una, la cargamos y activamos
+    // la personalización; si no, sembramos el form con la receta global como
+    // base para cuando el user pulse "Personalizar este día".
+    if (kind === 'batido' && hasBatidoDayRecipe(current)) {
+      setCustomizeDay(true);
+      setRecAlimentos(current?.alimentos ?? []);
+      setRecKcal(current?.kcal ?? 0);
+      setRecProt(current?.prot ?? 0);
+      setRecCarb(current?.carb ?? 0);
+      setRecFat(current?.fat ?? 0);
+    } else {
+      setCustomizeDay(false);
+      setRecAlimentos(globalBatido?.alimentos ?? []);
+      setRecKcal(globalBatido?.kcal ?? 0);
+      setRecProt(globalBatido?.prot ?? 0);
+      setRecCarb(globalBatido?.carb ?? 0);
+      setRecFat(globalBatido?.fat ?? 0);
+    }
     setSavedToast(false);
     setRemovedToast(false);
     setConfirmChanges(null);
     resetSave();
+  };
+
+  // Cambio de ingredientes de la receta del día · ajusta los macros por la
+  // DIFERENCIA de la contribución de los alimentos con macros reales,
+  // preservando lo que el user haya tecleado a mano (igual que BatidoInfoModal).
+  const changeRecAlimentos = (next: Alimento[]) => {
+    const before = macrosFromAlimentos(recAlimentos);
+    const after = macrosFromAlimentos(next);
+    setRecAlimentos(next);
+    setRecKcal((v) => Math.max(0, v + (after.kcal - before.kcal)));
+    setRecProt((v) => Math.max(0, v + (after.prot - before.prot)));
+    setRecCarb((v) => Math.max(0, v + (after.carb - before.carb)));
+    setRecFat((v) => Math.max(0, v + (after.fat - before.fat)));
+  };
+
+  // Activa la personalización del día · re-siembra el form desde la receta
+  // global (base de partida) para que el user edite a partir de ahí.
+  const startCustomize = () => {
+    setRecAlimentos(globalBatido?.alimentos ?? []);
+    setRecKcal(globalBatido?.kcal ?? 0);
+    setRecProt(globalBatido?.prot ?? 0);
+    setRecCarb(globalBatido?.carb ?? 0);
+    setRecFat(globalBatido?.fat ?? 0);
+    setCustomizeDay(true);
   };
 
   // Validación de hora · acepta HH:mm en 24h, vacío también vale (default).
@@ -105,11 +167,26 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
     const horaFinal = hora.trim();
     const horaDeviates = horaFinal !== '' && horaFinal !== defaultHora;
 
+    // Receta del día · solo el batido la puede personalizar. Si el user la
+    // activó, incluimos ingredientes + macros en el override; si no, se
+    // omiten y la mini-card cae a la receta global.
+    const recipeOn = kind === 'batido' && customizeDay;
+    const recipeFields = recipeOn
+      ? {
+          alimentos: recAlimentos,
+          kcal: recKcal,
+          prot: recProt,
+          carb: recCarb,
+          fat: recFat,
+        }
+      : {};
+
     const override: SupDayOverride | null =
-      tituloDeviates || horaDeviates
+      tituloDeviates || horaDeviates || recipeOn
         ? {
             titulo: tituloDeviates ? tituloFinal : null,
             hora: horaDeviates ? horaFinal : null,
+            ...recipeFields,
           }
         : null;
 
@@ -129,6 +206,37 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
         changes.push({ label: 'Título', from: '—', to: afterTitulo });
       if (afterHora !== defaultHora)
         changes.push({ label: 'Hora', from: '—', to: afterHora });
+    }
+
+    // Diff de la receta del día (solo batido) · "Global" vs "Personalizada"
+    // + macros/ingredientes cuando la personalizada está activa.
+    if (kind === 'batido') {
+      const wasCustom = hasBatidoDayRecipe(current);
+      pushDiff(
+        changes,
+        'Receta del día',
+        wasCustom ? 'Personalizada' : 'Receta global',
+        recipeOn ? 'Personalizada' : 'Receta global',
+      );
+      if (recipeOn) {
+        const beforeAl = wasCustom
+          ? (current?.alimentos ?? [])
+          : (globalBatido?.alimentos ?? []);
+        const beforeK = wasCustom ? (current?.kcal ?? 0) : (globalBatido?.kcal ?? 0);
+        const beforeP = wasCustom ? (current?.prot ?? 0) : (globalBatido?.prot ?? 0);
+        const beforeC = wasCustom ? (current?.carb ?? 0) : (globalBatido?.carb ?? 0);
+        const beforeF = wasCustom ? (current?.fat ?? 0) : (globalBatido?.fat ?? 0);
+        pushDiff(
+          changes,
+          'Ingredientes',
+          `${beforeAl.length} ingredientes`,
+          `${recAlimentos.length} ingredientes`,
+        );
+        pushDiff(changes, 'Kcal', beforeK, recKcal);
+        pushDiff(changes, 'Proteína', beforeP, recProt);
+        pushDiff(changes, 'Carbos', beforeC, recCarb);
+        pushDiff(changes, 'Grasa', beforeF, recFat);
+      }
     }
     setConfirmChanges({ changes, cleaned: { override } });
   };
@@ -209,6 +317,10 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
                 Ajusta la hora y el título solo para el{' '}
                 {DAY_LABEL_FULL[day].toLowerCase()}. Si los dejas en blanco
                 se usarán los valores por defecto.
+                {kind === 'batido' && (
+                  <> También puedes usar una receta de batido distinta solo
+                  este día.</>
+                )}
               </p>
 
               <div className="sup-form-group">
@@ -242,6 +354,144 @@ export function SupCardEditor({ isOpen, onClose, day, kind }: Props) {
                   <span className="sup-input-error">Formato HH:mm</span>
                 )}
               </div>
+
+              {/* Receta del día · solo batido. Permite un batido distinto este
+                  día (ingredientes + macros) sin tocar la receta global. */}
+              {kind === 'batido' && (
+                <div className="sup-day-recipe">
+                  <div className="sup-section-head">
+                    <span className="sup-section-label">Receta de este día</span>
+                    {customizeDay ? (
+                      <button
+                        type="button"
+                        className="sup-config-btn"
+                        onClick={(e) => {
+                          (e.currentTarget as HTMLElement).blur();
+                          setCustomizeDay(false);
+                        }}
+                      >
+                        <MealIcon value="tb:arrow-back-up" size={16} />
+                        Volver a la global
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="sup-config-btn"
+                        onClick={(e) => {
+                          (e.currentTarget as HTMLElement).blur();
+                          startCustomize();
+                        }}
+                      >
+                        <MealIcon value="tb:wand" size={16} />
+                        Personalizar
+                      </button>
+                    )}
+                  </div>
+
+                  {!customizeDay ? (
+                    <p className="sup-macro-hint">
+                      Este día usa la <strong>receta global</strong> del batido.
+                      Pulsa «Personalizar» para usar otros ingredientes o macros
+                      solo el {DAY_LABEL_FULL[day].toLowerCase()}.
+                    </p>
+                  ) : (
+                    <>
+                      <div className="sup-form-group">
+                        <label className="sup-label">
+                          Ingredientes (leche, fruta, avena…)
+                        </label>
+                        <AlimentosListInput
+                          value={recAlimentos}
+                          onChange={changeRecAlimentos}
+                          ariaLabelPrefix="Ingrediente del batido de este día"
+                        />
+                      </div>
+
+                      <div className="sup-form-label-section">
+                        Macros de este batido
+                      </div>
+                      <p className="sup-macro-hint">
+                        Se calculan a partir de los ingredientes con macros reales
+                        (buscador) · puedes ajustarlos a mano.
+                      </p>
+                      <div className="sup-macro-grid">
+                        <div className="sup-form-group">
+                          <label className="sup-label sup-label--kcal">kcal</label>
+                          <input
+                            className="sup-input"
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={9999}
+                            step={1}
+                            maxLength={4}
+                            value={recKcal === 0 ? '' : recKcal}
+                            placeholder="0"
+                            onKeyDown={blockNonInteger}
+                            onChange={(e) =>
+                              setRecKcal(clampInt(e.target.value, 0, 9999))
+                            }
+                          />
+                        </div>
+                        <div className="sup-form-group">
+                          <label className="sup-label sup-label--prot">Prot (g)</label>
+                          <input
+                            className="sup-input"
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={9999}
+                            step={1}
+                            maxLength={4}
+                            value={recProt === 0 ? '' : recProt}
+                            placeholder="0"
+                            onKeyDown={blockNonInteger}
+                            onChange={(e) =>
+                              setRecProt(clampInt(e.target.value, 0, 9999))
+                            }
+                          />
+                        </div>
+                        <div className="sup-form-group">
+                          <label className="sup-label sup-label--carb">Carb (g)</label>
+                          <input
+                            className="sup-input"
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={9999}
+                            step={1}
+                            maxLength={4}
+                            value={recCarb === 0 ? '' : recCarb}
+                            placeholder="0"
+                            onKeyDown={blockNonInteger}
+                            onChange={(e) =>
+                              setRecCarb(clampInt(e.target.value, 0, 9999))
+                            }
+                          />
+                        </div>
+                        <div className="sup-form-group">
+                          <label className="sup-label sup-label--fat">Grasas (g)</label>
+                          <input
+                            className="sup-input"
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            max={9999}
+                            step={1}
+                            maxLength={4}
+                            value={recFat === 0 ? '' : recFat}
+                            placeholder="0"
+                            onKeyDown={blockNonInteger}
+                            onChange={(e) =>
+                              setRecFat(clampInt(e.target.value, 0, 9999))
+                            }
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               <div className="save-indicator-wrap">
                 <SaveIndicator status={saveStatus} />

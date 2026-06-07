@@ -40,6 +40,7 @@ import {
   DAY_LABEL_SHORT as DAY_LABEL,
   EXTRA_ICON_DEFAULT,
   HORA_DEFECTO,
+  hasBatidoDayRecipe,
   MAX_EXTRAS_POR_DIA,
   MEAL_ICON_DEFAULT,
   MEAL_KEYS,
@@ -115,10 +116,13 @@ function calcTotalesDia(
   // cuenta como comida adicional para el contador.
   const sup = userDoc.suplementos;
   if (sup.daysWithBatido.includes(day)) {
-    kcal += sup.batidoConfig.kcal;
-    prot += sup.batidoConfig.prot;
-    carb += sup.batidoConfig.carb;
-    fat += sup.batidoConfig.fat;
+    // Override de receta por-día si existe (batido distinto ese día) ·
+    // `?? batidoConfig` cae a la receta global cuando no hay override.
+    const ovr = sup.batidoOverrides[day];
+    kcal += ovr?.kcal ?? sup.batidoConfig.kcal;
+    prot += ovr?.prot ?? sup.batidoConfig.prot;
+    carb += ovr?.carb ?? sup.batidoConfig.carb;
+    fat += ovr?.fat ?? sup.batidoConfig.fat;
     comidasConDatos += 1;
   }
   if (sup.daysWithCreatina.includes(day)) {
@@ -191,6 +195,9 @@ type OrderedRow =
       prot?: number;
       carb?: number;
       fat?: number;
+      // Solo batido · true cuando el día usa una receta personalizada
+      // (override per-día) en vez de la global · pinta el chip "personalizado".
+      personalizado?: boolean;
       sortMinutes: number;
     };
 
@@ -226,6 +233,14 @@ function buildOrderedRows(
     const hora = ovr?.hora ?? SUP_HORA_DEFECTO.batido;
     const titulo = ovr?.titulo ?? SUP_TITULO_DEFECTO.batido;
     const c = sup.batidoConfig;
+    // Receta resuelta del día · macros + ingredientes pueden venir del
+    // override per-día (batido distinto ese día). gr_prot/creatina siguen
+    // globales (no se overridean para no tocar el stock).
+    const dayKcal = ovr?.kcal ?? c.kcal;
+    const dayProt = ovr?.prot ?? c.prot;
+    const dayCarb = ovr?.carb ?? c.carb;
+    const dayFat = ovr?.fat ?? c.fat;
+    const dayAlimentos = ovr?.alimentos ?? c.alimentos ?? [];
     rows.push({
       kind: 'batido',
       title: titulo,
@@ -235,13 +250,14 @@ function buildOrderedRows(
         + (c.includeCreatina
           ? ` + ${sup.creatinaConfig.gr_dose} g creatina`
           : '')
-        + ((c.alimentos ?? []).length > 0
-          ? ` · ${(c.alimentos ?? []).map((a) => a.nombre).join(', ')}`
+        + (dayAlimentos.length > 0
+          ? ` · ${dayAlimentos.map((a) => a.nombre).join(', ')}`
           : ''),
-      kcal: c.kcal,
-      prot: c.prot,
-      carb: c.carb,
-      fat: c.fat,
+      kcal: dayKcal,
+      prot: dayProt,
+      carb: dayCarb,
+      fat: dayFat,
+      personalizado: hasBatidoDayRecipe(ovr),
       sortMinutes: horaAMinutos(hora),
     });
   }
@@ -802,6 +818,7 @@ const MenuPage: React.FC = () => {
                     carb={row.carb}
                     fat={row.fat}
                     takenToday={takenToday}
+                    personalizado={row.kind === 'batido' && row.personalizado}
                     // Pulsar la mini-card abre el editor del día (hora +
                     // título override + quitar del día). La receta global
                     // se edita desde los botones de la toolbar de arriba.
@@ -1718,6 +1735,9 @@ interface SupCardProps {
   // Réplica de la lógica `meal-card-batido-taken` / `meal-card-creatina-taken`
   // del v1 (`applyBatidoTakenVisual`).
   takenToday?: boolean;
+  // Solo batido · true cuando este día usa una receta personalizada (override
+  // per-día) · pinta el chip "Personalizado" para distinguirlo de la global.
+  personalizado?: boolean;
   onClick: () => void;
 }
 
@@ -1736,6 +1756,7 @@ function SupCard({
   carb,
   fat,
   takenToday = false,
+  personalizado = false,
   onClick,
 }: SupCardProps) {
   // El género del tag depende del suplemento: "TOMADO" (batido masc),
@@ -1768,6 +1789,11 @@ function SupCard({
           <div className="menu-meal-name">
             {title}
             <span className="menu-sup-tag" aria-hidden="true">✓ Añadido</span>
+            {personalizado && (
+              <span className="menu-sup-tag menu-sup-tag--custom" aria-hidden="true">
+                Personalizado
+              </span>
+            )}
           </div>
           <div className="menu-meal-time">{hora}</div>
         </div>

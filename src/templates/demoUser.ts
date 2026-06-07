@@ -1008,9 +1008,48 @@ const DEMO_SUPLEMENTOS: Suplementos = {
   daysWithBatido: ['lun', 'mar', 'jue'],
   daysWithCreatina: ['lun', 'mar', 'jue', 'sab'],
   // Ejemplo de override per-día · el lunes el batido es post-entreno
-  // a las 19:30, el resto de días usan la hora default.
+  // a las 19:30. El jueves usa una RECETA distinta (batido "masa" con avena
+  // y crema de cacahuete · más calórico) para enseñar la personalización
+  // por-día: el user puede tomar un batido diferente según el día.
   batidoOverrides: {
     lun: { hora: '19:30', titulo: 'Batido post-entreno' },
+    jue: {
+      hora: null,
+      titulo: 'Batido masa',
+      alimentos: [
+        {
+          nombre: 'Leche semidesnatada',
+          cantidad: '300 ml',
+          source: 'off',
+          kcalPer100: 46,
+          protPer100: 3.1,
+          carbPer100: 4.8,
+          fatPer100: 1.6,
+        },
+        {
+          nombre: 'Avena',
+          cantidad: '60 g',
+          source: 'off',
+          kcalPer100: 389,
+          protPer100: 17,
+          carbPer100: 66,
+          fatPer100: 7,
+        },
+        {
+          nombre: 'Crema de cacahuete',
+          cantidad: '20 g',
+          source: 'off',
+          kcalPer100: 600,
+          protPer100: 25,
+          carbPer100: 20,
+          fatPer100: 50,
+        },
+      ],
+      kcal: 615,
+      prot: 60,
+      carb: 58,
+      fat: 19,
+    },
   },
   // Sábado la creatina se toma por la mañana (no es día de gym pero
   // mantiene la saturación) · muestra al user el feature de override

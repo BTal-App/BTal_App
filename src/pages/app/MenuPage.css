@@ -1082,6 +1082,14 @@
   }
 }
 
+/* Chip "Personalizado" · batido con receta propia de ese día (override
+   per-día) · acento dorado para distinguirlo del verde "✓ Añadido". */
+.menu-sup-tag--custom {
+  background: rgba(240, 168, 56, 0.16);
+  border-color: rgba(240, 168, 56, 0.55);
+  color: var(--btal-gold);
+}
+
 .menu-macro-pill--kcal {
   color: var(--btal-gold);
   background: rgba(240, 168, 56, 0.1);
