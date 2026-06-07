@@ -361,8 +361,10 @@
   }
 }
 
-.train-day:hover {
-  border-color: var(--btal-border-2);
+@media (hover: hover) and (pointer: fine) {
+  .train-day:hover {
+    border-color: var(--btal-border-2);
+  }
 }
 .train-day:active {
   background: var(--btal-bg-2);
@@ -649,7 +651,9 @@
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.train-day-empty-cta:hover {
-  background: rgba(181, 240, 55, 0.16);
-  border-color: var(--btal-lime);
+@media (hover: hover) and (pointer: fine) {
+  .train-day-empty-cta:hover {
+    background: rgba(181, 240, 55, 0.16);
+    border-color: var(--btal-lime);
+  }
 }

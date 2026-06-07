@@ -640,8 +640,10 @@
   transition: background 0.15s, transform 0.14s;
 }
 
-.compra-item:hover {
-  background: var(--btal-bg-2);
+@media (hover: hover) and (pointer: fine) {
+  .compra-item:hover {
+    background: var(--btal-bg-2);
+  }
 }
 /* Press · hundido idéntico al de Entreno (.plan-mini). */
 .compra-item:active {

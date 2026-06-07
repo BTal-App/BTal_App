@@ -27,8 +27,10 @@
   overflow: hidden;
 }
 
-.guest-banner:hover {
-  border-color: rgba(176, 122, 240, 0.55);
+@media (hover: hover) and (pointer: fine) {
+  .guest-banner:hover {
+    border-color: rgba(176, 122, 240, 0.55);
+  }
 }
 
 /* Variante in-sheet · banner dentro de ProfileSheet · quita los

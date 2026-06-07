@@ -537,9 +537,13 @@
   }
 }
 
-.menu-meal:hover {
-  border-color: var(--btal-border-2);
-  background: var(--btal-surface-2);
+/* Hover gateado a punteros con hover (escritorio) · en móvil el cambio de
+   fondo se quedaba PEGADO tras tocar. El feedback táctil lo da .is-pressed. */
+@media (hover: hover) and (pointer: fine) {
+  .menu-meal:hover {
+    border-color: var(--btal-border-2);
+    background: var(--btal-surface-2);
+  }
 }
 
 .menu-meal:active {
@@ -558,8 +562,10 @@
   border-color: var(--btal-border);
 }
 
-.menu-meal--empty:hover {
-  border-color: var(--btal-border-2);
+@media (hover: hover) and (pointer: fine) {
+  .menu-meal--empty:hover {
+    border-color: var(--btal-border-2);
+  }
 }
 
 .menu-meal-emoji {
@@ -785,8 +791,10 @@
   border-color: rgba(181, 240, 55, 0.35);
 }
 
-.menu-meal-extra:hover {
-  border-color: rgba(181, 240, 55, 0.6);
+@media (hover: hover) and (pointer: fine) {
+  .menu-meal-extra:hover {
+    border-color: rgba(181, 240, 55, 0.6);
+  }
 }
 
 /* ── Comida deshabilitada · estado "pausada" ──────────────────────
@@ -801,9 +809,11 @@
 
 /* Hover sutil · indica que sigue siendo clicable pero sin levantar
    visualmente la card como las activas. */
-.menu-meal--disabled:hover {
-  opacity: 0.75;
-  border-color: var(--btal-border-2);
+@media (hover: hover) and (pointer: fine) {
+  .menu-meal--disabled:hover {
+    opacity: 0.75;
+    border-color: var(--btal-border-2);
+  }
 }
 
 /* Si la comida deshabilitada también está marcada como EXTRA,
@@ -1134,8 +1144,10 @@ ion-popover.menu-day-popover::part(content) {
   cursor: pointer;
 }
 
-.menu-day-popover-item:hover {
-  background: var(--btal-bg-2);
+@media (hover: hover) and (pointer: fine) {
+  .menu-day-popover-item:hover {
+    background: var(--btal-bg-2);
+  }
 }
 
 .menu-day-popover-item ion-icon {
@@ -1150,8 +1162,10 @@ ion-popover.menu-day-popover::part(content) {
 .menu-day-popover-item--warn ion-icon {
   color: var(--btal-coral);
 }
-.menu-day-popover-item--warn:hover {
-  background: rgba(255, 107, 107, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .menu-day-popover-item--warn:hover {
+    background: rgba(255, 107, 107, 0.08);
+  }
 }
 
 /* ── Card "Día oculto" · placeholder cuando el día seleccionado

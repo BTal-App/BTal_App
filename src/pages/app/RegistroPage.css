@@ -38,8 +38,10 @@
   transition: border-color 0.15s, transform 0.12s;
 }
 
-.reg-stat-card:hover {
-  border-color: var(--btal-border-2);
+@media (hover: hover) and (pointer: fine) {
+  .reg-stat-card:hover {
+    border-color: var(--btal-border-2);
+  }
 }
 
 .reg-stat-card:active {
@@ -72,8 +74,10 @@
   pointer-events: none;
 }
 
-.reg-stat-card:hover .reg-stat-info-icon {
-  color: var(--btal-lime);
+@media (hover: hover) and (pointer: fine) {
+  .reg-stat-card:hover .reg-stat-info-icon {
+    color: var(--btal-lime);
+  }
 }
 
 .reg-stat-lbl {
@@ -375,8 +379,10 @@
   transition: background 0.15s, border-color 0.15s, transform 0.12s;
 }
 
-.cal-day:hover {
-  background: var(--btal-surface-3);
+@media (hover: hover) and (pointer: fine) {
+  .cal-day:hover {
+    background: var(--btal-surface-3);
+  }
 }
 
 .cal-day:active {

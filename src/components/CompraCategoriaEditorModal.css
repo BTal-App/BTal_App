@@ -17,9 +17,11 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
-.cat-editor-emoji-btn:hover {
-  background: var(--btal-surface-2);
-  border-color: var(--btal-border-2);
+@media (hover: hover) and (pointer: fine) {
+  .cat-editor-emoji-btn:hover {
+    background: var(--btal-surface-2);
+    border-color: var(--btal-border-2);
+  }
 }
 
 .cat-editor-emoji-preview {
@@ -70,8 +72,10 @@
   transition: border-color 0.15s, transform 0.15s;
 }
 
-.cat-editor-color:hover {
-  transform: scale(1.06);
+@media (hover: hover) and (pointer: fine) {
+  .cat-editor-color:hover {
+    transform: scale(1.06);
+  }
 }
 
 .cat-editor-color--active {

@@ -98,9 +98,11 @@
   justify-content: center;
 }
 
-.icon-picker-tab:hover {
-  background: var(--btal-surface);
-  color: var(--btal-t-1);
+@media (hover: hover) and (pointer: fine) {
+  .icon-picker-tab:hover {
+    background: var(--btal-surface);
+    color: var(--btal-t-1);
+  }
 }
 
 .icon-picker-tab:active {
@@ -184,10 +186,12 @@
   transition: background 0.13s, border-color 0.13s, color 0.13s, transform 0.12s;
 }
 
-.icon-picker-cell:hover {
-  background: var(--btal-surface);
-  border-color: var(--btal-border);
-  color: var(--btal-t-1);
+@media (hover: hover) and (pointer: fine) {
+  .icon-picker-cell:hover {
+    background: var(--btal-surface);
+    border-color: var(--btal-border);
+    color: var(--btal-t-1);
+  }
 }
 
 .icon-picker-cell:active {

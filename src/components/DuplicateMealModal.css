@@ -21,8 +21,10 @@
   user-select: none;
 }
 
-.dup-row:hover {
-  background: var(--btal-surface);
+@media (hover: hover) and (pointer: fine) {
+  .dup-row:hover {
+    background: var(--btal-surface);
+  }
 }
 
 .dup-row.active {

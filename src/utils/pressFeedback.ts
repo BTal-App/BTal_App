@@ -12,8 +12,24 @@
 // hundido sale SIEMPRE, en cualquier toque por rápido que sea, sin depender de
 // `:active`. `:active` se mantiene en CSS como fallback para ratón/escritorio.
 
-const PRESS_SELECTOR =
-  '.hoy-meal-card,.hoy-train-card,.hoy-ai-status,.menu-meal,.train-day,.plan-mini,.compra-item';
+// Cubre TODOS los elementos pulsables: botones (incluido ion-button vía
+// retargeting del shadow DOM) y las tarjetas (algunas son <div>, no <button>).
+// `:not(...disabled)` para no hundir botones deshabilitados.
+const PRESS_SELECTOR = [
+  'button:not([disabled])',
+  'ion-button:not(.button-disabled)',
+  '[role="button"]:not([aria-disabled="true"])',
+  '.hoy-meal-card',
+  '.hoy-train-card',
+  '.hoy-ai-status',
+  '.menu-meal',
+  '.train-day',
+  '.plan-mini',
+  '.compra-item',
+  '.cal-day',
+  '.reg-stat-card',
+  '.menu-day-popover-item',
+].join(',');
 
 // Umbral de movimiento (px) a partir del cual consideramos que es un scroll y
 // cancelamos el press · evita dejar la tarjeta hundida al deslizar la lista.

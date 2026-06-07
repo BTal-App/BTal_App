@@ -136,8 +136,10 @@
   min-width: 0;
 }
 
-.ai-item:hover {
-  background: rgba(255, 255, 255, 0.03);
+@media (hover: hover) and (pointer: fine) {
+  .ai-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
 }
 
 .ai-item.protected {

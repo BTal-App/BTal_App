@@ -141,9 +141,11 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
-.settings-row.settings-row--link:hover {
-  background: var(--btal-surface-2);
-  border-color: var(--btal-border-2);
+@media (hover: hover) and (pointer: fine) {
+  .settings-row.settings-row--link:hover {
+    background: var(--btal-surface-2);
+    border-color: var(--btal-border-2);
+  }
 }
 
 button.settings-row {
@@ -176,9 +178,11 @@ button.settings-row {
   transition: background 0.15s, border-color 0.15s;
 }
 
-.settings-profile-card:hover {
-  background: var(--btal-surface-2);
-  border-color: var(--btal-border-2);
+@media (hover: hover) and (pointer: fine) {
+  .settings-profile-card:hover {
+    background: var(--btal-surface-2);
+    border-color: var(--btal-border-2);
+  }
 }
 
 .settings-avatar {
